@@ -1,5 +1,5 @@
 ﻿// @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { KEY_EVENTS, KEY_HH_REVIEWS, KEY_POSTFLOP_EVENTS } from "../../src/persistence/keys";
 import { APP_LANGUAGE_STORAGE_KEY } from "../../src/ui/cs";
@@ -27,6 +27,13 @@ import { APP_LANGUAGE_STORAGE_KEY } from "../../src/ui/cs";
  * na 240 s. Až tohle přestane stačit, nezvedat ho popáté: to už bude
  * odpověď na příznak, ne na příčinu, a příčina je, že se při startu relace
  * dotahuje celá knihovna.
+ *
+ * **A ten zápis se týž den ukázal jako neúčinný.** Test „MTT preflop gate",
+ * kvůli kterému se strop zvedal, si nesl **vlastních 180 s** jako třetí
+ * argument `it(...)`, a ten souborový strop přebíjí. Zvednutí se ho tedy
+ * vůbec nedotklo a vypršel znovu, jakmile o stroj soupeřilo víc práce. Strop
+ * je proto jen tady, na jednom místě; kdo ho bude chtít zase zvednout, uvidí
+ * i ten odstavec nad sebou.
  */
 vi.setConfig({ testTimeout: 240000 });
 
@@ -452,74 +459,90 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector(".poker-table")).not.toBeNull();
   });
 
-  it("MTT preflop gate respektuje readiness pro vsechny format/speed/ante kombinace", async () => {
-    const { bootstrap } = await importFreshMain();
-    const cases = [
-      {
-        format: "FULL_RING_9",
-        speed: "REGULAR",
-        ante: "ON",
-        playable: true,
-        warning: "kandidátní náhled",
-      },
-      {
-        format: "FULL_RING_9",
-        speed: "REGULAR",
-        ante: "OFF",
-        playable: true,
-        warning: "kandidátní náhled",
-      },
-      {
-        format: "FULL_RING_9",
-        speed: "TURBO",
-        ante: "ON",
-        playable: true,
-        warning: "chybí produkční range",
-      },
-      {
-        format: "FULL_RING_9",
-        speed: "TURBO",
-        ante: "OFF",
-        playable: true,
-        warning: "chybí produkční range",
-      },
-      {
-        // Regular six-max plays now, from ranges derived by seats-behind.
-        // Turbo below still does not: deriving it would produce this pack under
-        // another label, which the speed audit exists to refuse.
-        format: "SIX_MAX",
-        speed: "REGULAR",
-        ante: "ON",
-        playable: true,
-      },
-      {
-        // Regular six-max plays now, from ranges derived by seats-behind.
-        // Turbo below still does not: deriving it would produce this pack under
-        // another label, which the speed audit exists to refuse.
-        format: "SIX_MAX",
-        speed: "REGULAR",
-        ante: "OFF",
-        playable: true,
-      },
-      {
-        format: "SIX_MAX",
-        speed: "TURBO",
-        ante: "ON",
-        playable: false,
-        warning: "kandidátní náhled",
-      },
-      {
-        format: "SIX_MAX",
-        speed: "TURBO",
-        ante: "OFF",
-        playable: false,
-        warning: "kandidátní náhled",
-      },
-    ] as const;
+  /**
+   * Osm kombinací formátu, rychlosti a ante - osm testů, ne jeden.
+   *
+   * Byl to jeden test a šest z těch kombinací v něm startuje relaci, tedy
+   * šestkrát dotáhne celou knihovnu. Dohromady to 24. 9. 2026 přesáhlo
+   * i zvednutý strop 240 s, a odpovědí na to není strop popáté zvedat:
+   * rozpočet má platit pro jednotku práce, a tou je jedna kombinace.
+   * Rozděleno tedy na osm testů, které sdílejí jeden import aplikace -
+   * práce je stejná, ale je vidět, která kombinace je pomalá, a vypršení
+   * ukáže na ni místo na celou osmici.
+   */
+  const cases = [
+    {
+      format: "FULL_RING_9",
+      speed: "REGULAR",
+      ante: "ON",
+      playable: true,
+      warning: "kandidátní náhled",
+    },
+    {
+      format: "FULL_RING_9",
+      speed: "REGULAR",
+      ante: "OFF",
+      playable: true,
+      warning: "kandidátní náhled",
+    },
+    {
+      format: "FULL_RING_9",
+      speed: "TURBO",
+      ante: "ON",
+      playable: true,
+      warning: "chybí produkční range",
+    },
+    {
+      format: "FULL_RING_9",
+      speed: "TURBO",
+      ante: "OFF",
+      playable: true,
+      warning: "chybí produkční range",
+    },
+    {
+      // Regular six-max plays now, from ranges derived by seats-behind.
+      // Turbo below still does not: deriving it would produce this pack under
+      // another label, which the speed audit exists to refuse.
+      format: "SIX_MAX",
+      speed: "REGULAR",
+      ante: "ON",
+      playable: true,
+    },
+    {
+      // Regular six-max plays now, from ranges derived by seats-behind.
+      // Turbo below still does not: deriving it would produce this pack under
+      // another label, which the speed audit exists to refuse.
+      format: "SIX_MAX",
+      speed: "REGULAR",
+      ante: "OFF",
+      playable: true,
+    },
+    {
+      format: "SIX_MAX",
+      speed: "TURBO",
+      ante: "ON",
+      playable: false,
+      warning: "kandidátní náhled",
+    },
+    {
+      format: "SIX_MAX",
+      speed: "TURBO",
+      ante: "OFF",
+      playable: false,
+      warning: "kandidátní náhled",
+    },
+  ] as const;
 
-    for (const scenario of cases) {
+  let gateBootstrap: Awaited<ReturnType<typeof importFreshMain>>["bootstrap"];
+  beforeAll(async () => {
+    gateBootstrap = (await importFreshMain()).bootstrap;
+  });
+
+  it.each(cases)(
+    "MTT preflop gate: $format $speed ante $ante",
+    async (scenario) => {
       const root = document.createElement("div");
-      bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+      gateBootstrap({ root, storage: new MemoryStorage(), registerSw: false });
 
       const format = root.querySelector<HTMLSelectElement>(".profile-format");
       const speed = root.querySelector<HTMLSelectElement>(".profile-speed");
@@ -545,8 +568,8 @@ describe("bootstrap - inicializacni tok", () => {
         expect(warning?.hidden).toBe(false);
         expect(warning?.textContent).toContain(scenario.warning);
       }
-    }
-  }, 180_000);
+    },
+  );
 
   it("SNG chipEV candidate profil zustane preview a nespusti produkcni scoring", async () => {
     const { bootstrap } = await importFreshMain();

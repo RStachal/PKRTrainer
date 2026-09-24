@@ -70,6 +70,36 @@ const CELL = /<td id="cid_([^"]+)"([^>]*)>(.*?)<\/td>/gs;
 const WEIGHTED = /class="mdl-color--([a-z-]+) weighted"[^>]*data-weight="(\d+)"/g;
 const LEGEND_ITEM = /<li class="[^"]*mdl-color--([a-z-]+)"([^>]*)>(.*?)<\/li>/gs;
 
+const RANKS = "AKQJT98765432".split("");
+
+/**
+ * Třídy ruk v pořadí, v jakém je mřížka 13×13 vypisuje: řádek po řádku, nad
+ * úhlopříčkou suited, pod ní offsuit.
+ */
+const HAND_BY_POSITION: readonly string[] = RANKS.flatMap((row, rowIndex) =>
+  RANKS.map((column, columnIndex) => {
+    if (rowIndex === columnIndex) return row + column;
+    return rowIndex < columnIndex ? `${row}${column}s` : `${column}${row}o`;
+  }));
+
+/**
+ * Kterou ruku buňka drží, se čte z **polohy**, ne z `id`.
+ *
+ * Naměřeno 24. 9. 2026 na celém korpusu (536 mřížek): popisek buňky sedí na
+ * polohu v tabulce u **všech 536**, kdežto `id="cid_..."` se rozchází u šesti.
+ * `ICM2-hj45bb-sb18bb` má `cid_A4s` dvakrát a `cid_KTs` vůbec ne; na dvou
+ * stránkách ICM2 nese `cid_A4s` rovnou pět buněk (A7s, A5s, A4s, A3s, A2s).
+ * Čtení podle `id` tam tiše zapsalo jednu třídu pětkrát a čtyři jiné nikdy -
+ * tedy ranži, kterou zdroj netvrdí, a bez jediné stopy v čísle kombinací,
+ * protože všech pět tříd má shodně čtyři kombinace.
+ *
+ * Poloha je struktura tabulky a popisek je text, který zdroj vypsal; když se
+ * ty dva rozejdou, stránka se **nevydá**. Dva nezávislí svědci se shodují u
+ * celého dnešního korpusu, takže tenhle práh dnes nic nestojí - je to pojistka
+ * pro soubory, které přijdou.
+ */
+const CELL_LABEL = /^([AKQJT2-9]{2}[so]?)$/;
+
 export function readRyeGrid(path: string): RyeGrid | undefined {
   const text = readFileSync(path, "utf8");
   const hands: RyeHandWeight[] = [];
@@ -80,8 +110,15 @@ export function readRyeGrid(path: string): RyeGrid | undefined {
   };
 
   let cells = 0;
+  const misplaced: string[] = [];
   for (const match of text.matchAll(CELL)) {
-    const [, hand, attributes, inner] = match;
+    const [, id, attributes, inner] = match;
+    // Poloha rozhoduje, `id` je jen třetí hlas. Viz HAND_BY_POSITION.
+    const hand = HAND_BY_POSITION[cells] ?? id;
+    const label = inner.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
+    if (CELL_LABEL.test(label) && label !== hand) {
+      misplaced.push(`buňka ${cells + 1}: poloha říká ${hand}, popisek ${label} (id ${id})`);
+    }
     const combos = combosOfHandClass(hand);
     cells += 1;
     let weighted = 0;
@@ -122,6 +159,11 @@ export function readRyeGrid(path: string): RyeGrid | undefined {
   }
 
   const mismatches: string[] = [];
+  // Poloha a popisek se musí shodovat, jinak se neví, která ruka to je.
+  for (const line of misplaced.slice(0, 5)) mismatches.push(line);
+  if (misplaced.length > 5) {
+    mismatches.push(`... a dalších ${misplaced.length - 5} buněk, kde se poloha a popisek rozcházejí`);
+  }
   // Mřížka bez legendy není ověřená, je **neověřitelná**.
   //
   // Naměřeno 26. 8. 2026: 35 stránek korpusu má 169 buněk a žádnou legendu

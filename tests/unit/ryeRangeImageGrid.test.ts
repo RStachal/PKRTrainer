@@ -71,7 +71,11 @@ const GREEN: [number, number, number] = [200, 240, 200];
 const PINK: [number, number, number] = [245, 200, 200];
 const WHITE: [number, number, number] = [250, 250, 250];
 
-interface PanelSpec { jamCells: Set<string> }
+interface PanelSpec {
+  jamCells: Set<string>;
+  /** Buňky, do kterých se nakreslí rámeček, řádek EV a znaménko. */
+  signs?: Map<string, "+" | "-">;
+}
 
 /**
  * Nakreslí obrázek s jedním nebo dvěma panely.
@@ -109,10 +113,52 @@ function drawImage(path: string, panels: PanelSpec[]): void {
             put(originX + col * cellW + x, headerH + row * cellH + y, fill);
           }
         }
+        const sign = panel.signs?.get(hand);
+        if (sign !== undefined) {
+          drawCellText(put, originX + col * cellW, headerH + row * cellH, sign);
+        }
       }
     }
   }
   writePng(path, width, height, rgb);
+}
+
+const INK: [number, number, number] = [40, 40, 40];
+
+/**
+ * Buňka tak, jak ji kreslí zdroj: rámeček **odsazený od okraje**, nad ním
+ * jméno ruky, pod ním EV se znaménkem a číslicí.
+ *
+ * Odsazení je to podstatné. Mřížka se dělí na třináctiny se zbytkem, takže
+ * rámeček skoro nikdy neleží na okraji buňky - v `10bb_reshove_BBvsBTN` je
+ * na x=6 ze 46. Dřívější čtení hledalo rámeček jen od kraje, tenhle minulo
+ * a jeho svislou čáru přečetlo jako nejlevější glyf řádku s EV.
+ *
+ * Navíc se u rámečku kreslí **přetok**: dva pixely hned vedle něj, jak je
+ * zdroj má z vyhlazování. Ty se nesmí přečíst jako znaménko.
+ */
+function drawCellText(
+  put: (x: number, y: number, color: [number, number, number]) => void,
+  x0: number, y0: number, sign: "+" | "-",
+): void {
+  for (let y = 4; y <= 35; y += 1) put(x0 + 6, y0 + y, INK);
+  for (let y = 4; y <= 35; y += 1) put(x0 + 37, y0 + y, INK);
+  for (let x = 6; x <= 37; x += 1) put(x0 + x, y0 + 4, INK);
+  // Přetok rámečku o pixel dál.
+  put(x0 + 7, y0 + 32, INK);
+  put(x0 + 7, y0 + 33, INK);
+  // Jméno ruky.
+  for (let y = 9; y <= 19; y += 1) for (let x = 12; x <= 30; x += 2) put(x0 + x, y0 + y, INK);
+  // Vodorovná čárka znaménka.
+  for (let y = 30; y <= 31; y += 1) {
+    for (let x = 10; x <= (sign === "+" ? 16 : 13); x += 1) put(x0 + x, y0 + y, INK);
+  }
+  // Svislé rameno kříže.
+  if (sign === "+") {
+    for (let y = 28; y <= 33; y += 1) for (let x = 12; x <= 13; x += 1) put(x0 + x, y0 + y, INK);
+  }
+  // Číslice za znaménkem: přes celou výšku řádku.
+  for (let y = 25; y <= 35; y += 1) for (let x = 20; x <= 24; x += 1) put(x0 + x, y0 + y, INK);
 }
 
 const RANKS = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"];
@@ -152,6 +198,25 @@ describe("dekodér obrázkových ranží", () => {
     expect(new Set(grids[1].jamHands)).toEqual(right);
     // Panely se v názvu rozliší, jinak by druhý přepsal první.
     expect(grids[0].file).not.toBe(grids[1].file);
+  });
+
+  it("znaménko se čte i tam, kde rámeček neleží na okraji buňky", () => {
+    const jam = new Set(["AA", "AKs"]);
+    const signs = new Map<string, "+" | "-">([
+      ["AA", "+"], ["AKs", "+"], ["72o", "-"], ["32o", "-"],
+    ]);
+    const path = join(dir, "znamenka.png");
+    drawImage(path, [{ jamCells: jam, signs }]);
+
+    const grid = readRyeRangeImageGrids(path)[0];
+    const signOf = (hand: string): string => grid.cells.find((cell) => cell.hand === hand)!.sign;
+    expect(signOf("AA")).toBe("+");
+    expect(signOf("AKs")).toBe("+");
+    expect(signOf("72o")).toBe("-");
+    expect(signOf("32o")).toBe("-");
+    // A hlavně: jamované buňky s křížkem nesmí hlásit spor. Dokud se rámeček
+    // hledal jen od okraje, hlásily ho všechny.
+    expect(grid.signConflicts).toEqual([]);
   });
 
   it("obrázek bez mřížky nevrátí nic - radši nic než vymyšlená range", () => {

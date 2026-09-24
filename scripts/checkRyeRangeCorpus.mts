@@ -322,6 +322,32 @@ if (process.argv.includes("--coverage")) {
     console.log(`  ${action.padEnd(24)} ${count}`);
   }
   if (failed.length > 0) {
+    // Jedno číslo „neshoda 115" neříká, kde leží práce a kde zdroj.
+    //
+    // Naměřeno 24. 9. 2026: třetina těch souborů vůbec není stránka s ranží,
+    // ale rozcestník se 169 buňkami a bez legendy. Zbytek se dělí na dvě
+    // různé věci a míchat je znamená nevědět, co je ještě k dodělání.
+    const reasonOf = (line: string): string => {
+      if (line.includes("nemá legendu")) return "rozcestník: 169 buněk, žádná legenda";
+      if (line.includes("poloha říká") || line.includes("poloha a popisek")) return "poloha buňky a popisek se rozcházejí";
+      if (/legenda ji nezná/.test(line)) return "barva v mřížce, kterou legenda nejmenuje";
+      const numbers = /mřížka ([\d.]+), legenda ([\d.]+)$/.exec(line);
+      if (numbers === null) return "jiné";
+      return Number(numbers[1]) < Number(numbers[2])
+        ? "mřížka má míň než legenda"
+        : "mřížka má víc než legenda";
+    };
+    const byReason = new Map<string, number>();
+    for (const grid of failed) {
+      for (const reason of new Set(grid.mismatches.map(reasonOf))) {
+        byReason.set(reason, (byReason.get(reason) ?? 0) + 1);
+      }
+    }
+    console.log("");
+    console.log("proč se nevydaly (souborů; jeden může mít víc důvodů):");
+    for (const [reason, count] of [...byReason].sort((left, right) => right[1] - left[1])) {
+      console.log(`  ${String(count).padStart(4)}  ${reason}`);
+    }
     console.log("");
     console.log("neshody (prvních 8):");
     for (const grid of failed.slice(0, 8)) {

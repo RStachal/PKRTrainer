@@ -27,6 +27,7 @@ function writePage(
   name: string,
   legend: { color: string; title: string; combos: string }[],
   colorOfCell: (row: number, col: number) => string,
+  rewriteCell?: (hand: string) => { id?: string; label?: string },
 ): string {
   const cells: string[] = [];
   for (let row = 0; row < 13; row += 1) {
@@ -34,7 +35,10 @@ function writePage(
       const hand = row === col
         ? `${RANKS[row]}${RANKS[row]}`
         : row < col ? `${RANKS[row]}${RANKS[col]}s` : `${RANKS[col]}${RANKS[row]}o`;
-      cells.push(`<td id="cid_${hand}" class="mdl-color--${colorOfCell(row, col)}">${hand}</td>`);
+      const rewritten = rewriteCell?.(hand) ?? {};
+      const id = rewritten.id ?? hand;
+      const label = rewritten.label ?? hand;
+      cells.push(`<td id="cid_${id}" class="mdl-color--${colorOfCell(row, col)}">${label}</td>`);
     }
   }
   const items = legend.map((entry) => (
@@ -90,5 +94,34 @@ describe("čtení mřížky ze stránky zdroje", () => {
     const grid = readRyeGrid(path);
     expect(grid!.mismatches.length).toBeGreaterThan(0);
     expect(grid!.mismatches.join(" ")).toContain("green");
+  });
+
+  it("ruku určuje poloha v mřížce, ne id buňky", () => {
+    // Šest stránek korpusu má `id="cid_A4s"` na víc buňkách a `cid_KTs` vůbec.
+    // Čtení podle `id` tam zapsalo A4s dvakrát a KTs nikdy - jinou ranži, než
+    // zdroj tvrdí, a beze stopy v počtu kombinací, protože obě třídy mají
+    // shodně čtyři. Popisek buňky přitom sedí na polohu u všech 536 mřížek.
+    const path = writePage(
+      "zdvojene-id.html",
+      [{ color: "green", title: "flatcall", combos: "676.00" }],
+      () => "green",
+      (hand) => (hand === "KTs" ? { id: "A4s" } : {}),
+    );
+    const grid = readRyeGrid(path);
+    expect(grid).toBeDefined();
+    const read = grid!.hands.map((entry) => entry.hand);
+    expect(read).toContain("KTs");
+    expect(read.filter((hand) => hand === "A4s")).toHaveLength(1);
+  });
+
+  it("když se popisek rozejde s polohou, stránka se nevydá", () => {
+    const path = writePage(
+      "prehozeny-popisek.html",
+      [{ color: "green", title: "flatcall", combos: "676.00" }],
+      () => "green",
+      (hand) => (hand === "KTs" ? { label: "A4s" } : {}),
+    );
+    const grid = readRyeGrid(path);
+    expect(grid!.mismatches.join(" ")).toContain("poloha říká KTs");
   });
 });

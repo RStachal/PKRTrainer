@@ -163,22 +163,36 @@ function readSign(
   //    okno proto jednu z nich rozřízne v půlce slova a znaménko se pak čte
   //    z jeho spodní poloviny - naměřeno 23. 9. 2026, že pak sedí zhruba
   //    každé druhé.
-  // Rámeček se **najde**, ne odhadne: je jednou pixel široký, jinde tři, a
-  // pevné odsazení ho proto jednou minulo a jindy ukouslo text. Sloupec
-  // rámečku má inkoust skoro po celé výšce buňky, textový nikdy.
-  const fullColumn = (x: number): boolean => {
+  // Rámeček se **najde kdekoli v buňce**, ne jen u jejího kraje.
+  //
+  // Tohle byl sedmý pokus a šest předchozích padlo na témže: odsazení se
+  // počítalo od okraje buňky a končilo na prvním sloupci bez inkoustu, takže
+  // stačilo, aby rámeček ležel o pár pixelů dovnitř, a pravidlo ho minulo.
+  // Leží tam skoro vždycky - mřížka se dělí na třináctiny s desetinnou zbytkem
+  // a okraj buňky proto na rámeček nesedne. Vykreslený `10bb_reshove_BBvsBTN`
+  // má levý rámeček na x=6 ze 46: nejlevější inkoust řádku s EV byl pak on,
+  // jeho svislý rozsah je celá výška řádku, a čtení skončilo na „nečitelné".
+  //
+  // Rámeček se pozná tím, čím se od textu liší vždy: **táhne se skoro přes
+  // celou buňku**. Sloupec rámečku má inkoust přes 70 % výšky, řádek rámečku
+  // přes 70 % šířky; žádná číslice ani písmeno takhle dlouhé nejsou. Oboje se
+  // z měření vyřadí, a tím zmizí i spodní linka zelené buňky, kterou dřívější
+  // pravidla četla jako minus.
+  const borderCol: boolean[] = [];
+  for (let x = 0; x < w; x += 1) {
     let count = 0;
     for (let y = 0; y < h; y += 1) if (ink(x, y)) count += 1;
-    return count >= h * 0.7;
-  };
-  let inset = 1;
-  while (inset < w / 3 && fullColumn(inset - 1)) inset += 1;
-  inset = Math.max(inset, 2);
+    borderCol.push(count >= h * 0.7);
+  }
+  const textCols: number[] = [];
+  for (let x = 0; x < w; x += 1) if (!borderCol[x]) textCols.push(x);
+
   const inkRows: boolean[] = [];
   for (let y = 0; y < h; y += 1) {
     let count = 0;
-    for (let x = inset; x < w - inset; x += 1) if (ink(x, y)) count += 1;
-    inkRows.push(y >= inset && y < h - inset && count >= 2);
+    for (const x of textCols) if (ink(x, y)) count += 1;
+    // Řádek rámečku: inkoust přes celou šířku. Text takhle široký nikdy není.
+    inkRows.push(count >= 2 && count < Math.max(3, textCols.length * 0.7));
   }
   const groups: { from: number; to: number }[] = [];
   for (let y = 0; y < h; y += 1) {
@@ -193,22 +207,8 @@ function readSign(
   const from = evLine.from;
   const to = evLine.to;
 
-  // Nejlevější inkoust toho řádku je znaménko - a pozná se podle **svislého
-  // rozsahu**, ne podle mezer mezi glyfy. Mezery nefungují: u 73 % buněk splyne
-  // znaménko s první číslicí do jednoho shluku. Rozsah je jednoznačný, protože
-  // každý ze tří tvarů zabírá jinou část výšky řádku: minus je čárka uprostřed,
-  // plus kříž, číslice celou výšku.
-  let first = -1;
-  for (let x = inset; x < w - inset; x += 1) {
-    let count = 0;
-    for (let y = from; y <= to; y += 1) if (ink(x, y)) count += 1;
-    if (count > 0) { first = x; break; }
-  }
-  if (first < 0) return "?";
-
   const lineHeight = to - from + 1;
-  let signExtent = 0;
-  for (let x = first; x < w - inset; x += 1) {
+  const extentAt = (x: number): number => {
     let lowest = -1;
     let highest = -1;
     for (let y = from; y <= to; y += 1) {
@@ -216,12 +216,65 @@ function readSign(
       if (lowest < 0) lowest = y;
       highest = y;
     }
-    if (lowest < 0) break;
-    const extent = highest - lowest + 1;
+    return lowest < 0 ? 0 : highest - lowest + 1;
+  };
+
+  // Nejlevější inkoust ještě není glyf.
+  //
+  // Rámeček buňky je dva až tři pixely široký a na některých řádcích přetéká
+  // o jeden dál; ten přetok pak leží v textové části jako samotná tečka. Na
+  // `Openshove_10bb/BTN` to u A8s dalo sloupec s dvěma pixely hned vedle
+  // rámečku, čtení ho vzalo za znaménko (rozsah 2 = minus) a na dalším prázdném
+  // sloupci skončilo - takže jamovaná ruka s křížkem v obrázku hlásila „-".
+  // Glyf se od přetoku pozná množstvím inkoustu: i ten nejmenší, dvoupixelový
+  // minus, zabírá aspoň dva sloupce a čtyři pixely.
+  const runs: { start: number; end: number; ink: number }[] = [];
+  let previous = -2;
+  for (const x of textCols) {
+    let inked = 0;
+    for (let y = from; y <= to; y += 1) if (ink(x, y)) inked += 1;
+    if (inked === 0) { previous = -2; continue; }
+    const last = runs[runs.length - 1];
+    if (last !== undefined && x - previous === 1) { last.ink += inked; last.end = x; }
+    else runs.push({ start: x, end: x, ink: inked });
+    previous = x;
+  }
+  const signRun = runs.find((run) => run.ink >= 3);
+  if (signRun === undefined) return "?";
+
+  const startIndex = textCols.indexOf(signRun.start);
+  let signExtent = 0;
+  for (let index = startIndex; index < textCols.length; index += 1) {
+    const extent = extentAt(textCols[index]);
+    if (extent === 0) break;
     // Sloupec vysoký jako číslice: znaménko skončilo.
     if (extent >= lineHeight * 0.8) break;
     signExtent = Math.max(signExtent, extent);
   }
+
+  // Znaménko se pozná svislým rozsahem sloupců, dokud nepřijde číslice.
+  //
+  // Zůstává to takhle po měření čtyř pravidel vedle sebe (24. 9. 2026, 38
+  // mřížek, 6 422 buněk), protože ostatní tři byly horší:
+  //
+  // | pravidlo | jam se znaménkem - | fold se znaménkem + |
+  // |---|---|---|
+  // | tohle (rozsah sloupce) | **24** | **1 506** |
+  // | rostoucí sjednocení | 24 | 1 722 |
+  // | výška celého běhu, prahy z rozložení | 306 | 1 987 |
+  // | první tři sloupce | 937 | 155 |
+  //
+  // `jam se znaménkem -` je ta chyba, která se pozná bezpečně: jamovaná ruka
+  // se zápornou EV by znamenala, že si obrázek odporuje sám. Dvacet čtyři
+  // z 1 664 je 1,4 %, tedy čtení není náhodné. Zbylé `fold se znaménkem +`
+  // je druhá strana téhož: **splynutí čárky s číslicí za ní**. `Q2s` na
+  // `Openshove_10bb/BTN` má čárku na x=10..12 a nulu od x=13 a v řádku čárky
+  // jsou spojené, takže se z levého oblouku nuly stane rameno kříže.
+  //
+  // Rozložení výšky glyfu ukazuje, proč na to pravidlo nestačí: vrcholy jsou
+  // na 0,2 (čárka) a 0,45 (kříž) výšky řádku, ale splynulé buňky mají 1,0 a
+  // odříznout je znamená ztratit i část skutečných křížů. **Tohle potřebuje
+  // vzory glyfů, ne osmé pravidlo** - a do té doby se nic nepropaguje.
   if (signExtent === 0) return "?";
   if (signExtent <= Math.max(2, lineHeight * 0.3)) return "-";
   if (signExtent < lineHeight * 0.8) return "+";
