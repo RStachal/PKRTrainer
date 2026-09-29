@@ -336,6 +336,50 @@ def should_yield_to_new_families():
     )
 
 
+def why_not_yielded():
+    """Proč se neustoupilo, slovy a v číslech.
+
+    Nekonané ustoupení se musí zapsat, jinak se ráno nepozná od nekonaného
+    rozhodnutí. Do 29. 9. 2026 se priorita vyhodnotila a mlčela: v logu po ní
+    následoval rovnou ``boards worked 0``. Čtyři noci po sobě stála
+    v ``tonight.json`` priorita ``NEW_FAMILIES`` a čtyřikrát se nekonala,
+    protože všech 348 nastagovaných desek už mělo checkpoint - a nikde to
+    nebylo vidět. Vlastník to 24. 9. 2026 žádal rozhodnutím 1a: co orchestrátor
+    uplatnil a co by udělal bez toho, má být napsané.
+    """
+    decision = {}
+    if os.path.exists(NIGHT_PRIORITY):
+        try:
+            with open(NIGHT_PRIORITY, encoding="utf8") as handle:
+                decision = json.load(handle)
+        except Exception:
+            decision = {}
+    priority = decision.get("priority", "nezapsána")
+    if priority != "NEW_FAMILIES":
+        return (
+            f"rozkládám: priorita je {priority}"
+            f" ({decision.get('reason', 'bez důvodu')})"
+        )
+    boards = staged_boards_without_checkpoint()
+    families = staged_families_without_checkpoint()
+    runner = monolithic_runner_installed()
+    if boards < YIELD_MIN_BOARDS:
+        why = (
+            f"nastagováno jen {boards} desek bez checkpointu, práh je"
+            f" {YIELD_MIN_BOARDS}"
+        )
+    elif not runner:
+        why = "monolitický runner není nainstalovaný, okno by nikdo nepřevzal"
+    else:
+        why = "podmínky splněny, ale ustoupení se přesto nekonalo"
+    return (
+        f"rozkládám, ačkoli priorita je NEW_FAMILIES: {why}"
+        f" (rodin bez jediného checkpointu {len(families)}, runner"
+        f" {'ano' if runner else 'ne'}). Rozhodnutí se dnes nekonalo -"
+        " nová práce se musí nastagovat, jinak se nebude mít co převzít."
+    )
+
+
 # Kolik smí běh přetáhnout deadline, než ho rodič ukončí.
 #
 # Deadline dosud hlídalo jen dítě, a to **před spuštěním další podhry**. Běžící
@@ -663,6 +707,7 @@ def main():
     if yielded is not None:
         log(yielded)
         return
+    log(why_not_yielded())
     boards = board_parameter_files()
 
     def depth(key):

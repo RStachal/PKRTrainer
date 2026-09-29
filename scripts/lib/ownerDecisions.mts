@@ -487,6 +487,83 @@ export const OWNER_DECISIONS_2026_09_24: readonly OwnerDecision[] = [
   },
 ];
 
+/**
+ * Rozhodnutí z 29. 9. 2026: čtyři noci běžely naplno a nikdo z nich nepoznal,
+ * že se vlastníkova priorita nekoná.
+ */
+export const OWNER_DECISIONS_2026_09_29: readonly OwnerDecision[] = [
+  {
+    id: 1,
+    title: "Noci jedou naplno, ale nové rodiny nemají odkud přijít - fronta je prázdná už od 23. 9.",
+    context: "Od 25. do 29. 9. odpracovaly čtyři noci <b>1 085 riverových vrstev a 131 655 podher</b>, "
+      + "a trefa byla stoprocentní: všechno šlo pod pravidla, která se hráči dodávají. Pokrytí turnových "
+      + "pravidel kompletní riverovou vrstvou stouplo z <b>58,8 % na 74,2 %</b> a přibylo 262 745 oceněných "
+      + "buněk. <b>Žádné doporučení se ale nezměnilo</b> - z 4,72 milionu už dřív oceněných buněk se hnulo "
+      + "291, tedy 0,006 %, a otisk žádného ze 48 packů se nezměnil. Riverová strategie z toho nedostala nic, "
+      + "protože všech 48 riverových packů sedí na stropu. "
+      + "V <code>tonight.json</code> přitom od 28. 9. stojí priorita <b>NEW_FAMILIES</b>. Nekonala se ani "
+      + "jednou: rozklad ustoupí jen tehdy, když je aspoň 8 nastagovaných desek bez checkpointu, a dnes je "
+      + "<b>všech 348 nastagovaných desek odsolvených</b>. Poslední nová práce se nastagovala <b>23. 9. v 8:04</b>. "
+      + "Dvě cesty, jak frontu naplnit, stojí každá na něčem jiném: <code>mtt:seat-pair-expansion</code> hlásí "
+      + "nula dvojic (tři poslední blokuje chybějící obrana UTG+1 a UTG+2 na 25 bb), a <code>mtt:board-growth</code> "
+      + "má připraveno <b>29 rodin a 58 desek</b> (asi 11 h, tedy 1,1 noci), ale odmítá to zapsat, protože "
+      + "u těch rodin nesedí ranže: šest desek mají odsolvených na červencových, nové by měly dnešní.",
+    options: [
+      { code: "a", label: "Dosolvit desky i na nových ranžích", detail: "29 rodin, 58 desek, 1,1 noci; rodina pak bude mít půl desek na červencových ranžích a půl na dnešních." },
+      { code: "b", label: "Přesolvit těch 29 rodin celé", detail: "rodina zůstane vnitřně jednotná, ale je to násobně víc nocí a starý obsah se zahodí." },
+      { code: "c", label: "Nechat noci prohlubovat river dál", detail: "dnešní stav; turnová EV poroste asi o 3 body pokrytí za noc, doporučení se měnit nebudou." },
+      { code: "d", label: "Noci zastavit, dokud nebude co solvit", detail: "stroj v noci odpočívá; ušetří se elektřina a nic se nezkazí, ale ani nepřibude." },
+    ],
+    recommended: "a",
+    diary: "274",
+  },
+  {
+    id: 2,
+    title: "Když zdroj kreslí jen agresivní akce, je neobarvená ruka call, nebo fold?",
+    context: "Otázka zbyla z 24. 9. <b>49 stránek ze 421</b> kreslí jen jednu větev strategie: procenta "
+      + "v legendě sečtou sto, ale obarvená je zlomek mřížky. U squeeze stránek jsou obarvená <b>4 až 10 %</b>. "
+      + "Takové záznamy teď do packu nepouštíme vůbec, protože <code>fillFolds</code> by ze zbytku udělal fold "
+      + "a hráč by se učil skládat ruce, o kterých zdroj mlčí (u nejhorší stránky 159 tříd ze 169). "
+      + "Je to ale <b>obsah, který jinak leží</b> - a tvoje odpověď rozhoduje, jestli se dá použít.",
+    options: [
+      { code: "a", label: "Hodnotit jen squeeze/nesqueeze", detail: "u těch záznamů se ptáme jen na to, co zdroj kreslí; ostatní ruce uznají call i fold. Mění drill, ne jen import." },
+      { code: "b", label: "Nechat je ležet", detail: "dnešní stav; hráč nedostane nic, co by zdroj netvrdil, ale 49 stránek zůstane stranou." },
+      { code: "c", label: "Doplnit zbytek callem", detail: "kdo nesqueezuje, dorovnává; jednoduché, ale je to tvrzení za zdroj - stejná chyba jako dnešní fold, jen opačná." },
+    ],
+    recommended: "a",
+    diary: "272",
+  },
+  {
+    id: 3,
+    title: "RYE pro placené vydání: tvoje povolení mluví o vývoji",
+    context: "24. 9. jsi napsal, že <b>RYE máme zaplacené a můžeme použít pro náš vývoj</b>, jen se podoba "
+      + "musí lišit. Zapsal jsem to doslova a paletu matice jsem odsunul (čtyři barvy byly blíž zdroji, než je "
+      + "práh splývání; <code>JAM</code> byla od jeho červené vzdálená 35). <code>payment-model.md</code> ale "
+      + "řadí oba ty packy do <b>placených tierů</b> - regular do Pro, turbo do Pro Plus. To je něco jiného než "
+      + "vývoj a nechci, aby se za rok jedno četlo jako druhé. Ptám se teď, dokud to nic nestojí.",
+    options: [
+      { code: "a", label: "Zatím jen vývoj a staging za heslem", detail: "dnešní zápis; před placeným vydáním se zeptám znovu a bude potřeba buď licence, nebo přepočítat vlastním solverem." },
+      { code: "b", label: "Platí i pro placené vydání", detail: "zapíšu do povolení; ber prosím v potaz, že podmínky RYE mluví o osobním užití - nejsem právník, jen to čtu." },
+      { code: "c", label: "RYE záznamy před vydáním vypnout", detail: "přidám přepínač podle provenance a test, že pack projde i bez nich; obsah se vrátí na vlastní export." },
+    ],
+    recommended: "a",
+    diary: "273",
+  },
+];
+
+/** Úvod stránky k rozhodnutím z 29. 9. 2026. */
+export const OWNER_DECISIONS_2026_09_29_INTRO = `<p><b>Tři otázky.</b> První je ta, kvůli které jsem psal: stroj v noci
+jede naplno a přitom ti od 23. 9. nemá co nového spočítat.</p>
+<ol>
+<li><b>Čtyři noci</b> (25.-29. 9.) daly 1 085 vrstev a 131 655 podher, trefa 100 %. Pokrytí turnové EV
+58,8 % → 74,2 %, ale <b>doporučení se nezměnilo ani jednou</b>.</li>
+<li><b>Opravil jsem si dvě vlastní čísla:</b> noc z 25. na 26. 9. <b>proběhla</b> (report tvrdil opak kvůli chybě
+v detekci, opraveno), a build po jednořádkové změně podle tvého 4a projde za <b>10,7 s</b> místo aby padal na paměti.</li>
+<li><b>Ke čtení máš pořád 54 mřížek</b> z 24. 9. (<code>ranze-nove</code>); dokud je nepřečteš, squeeze do packu nejde.</li>
+</ol>
+<p>U každé otázky je doporučení a číslo, ze kterého plyne. Vyplň, ulož stránku (Ctrl+S) nebo zkopíruj
+odpovědi tlačítkem, a pošli.</p>`;
+
 /** Úvod stránky k rozhodnutím z 24. 9. 2026. */
 export const OWNER_DECISIONS_2026_09_24_INTRO = `<p><b>Pět otázek.</b> Dvě z nich blokují obsah, který je hotový a čeká.</p>
 <ol>

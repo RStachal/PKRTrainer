@@ -130,10 +130,24 @@ function lastRunWasRefusal(): boolean {
     .filter((path) => existsSync(path))
     .map((path) => ({ at: statSync(path).mtime, text: readFileSync(path, "utf8") }));
   if (tails.length === 0) return false;
-  const newest = tails.reduce((best, item) => (item.at > best.at ? item : best));
-  const lines = newest.text.split("\n").filter((line) => line.trim() !== "");
-  const last = lines[lines.length - 1] ?? "";
-  return /spouští mimo noční okno|není co solvit|okno by trvalo/.test(last);
+  // Ptá se každý log sám za sebe, ne jen ten čerstvější.
+  //
+  // Dva logy píšou dva různé runnery a jeden umí odmítnout, zatímco druhý
+  // zrovna pracuje. Zpráva z 26. 9. 2026 proto tvrdila „NOC NEPROBĚHLA",
+  // ačkoli noc odvedla **297 vrstev a 32 562 podher**: rozklad startoval o deset
+  // minut později, expanze mezitím ve 21:10:50 zapsala „není co solvit", a
+  // protože denní vyhodnocení běželo v 21:11:40, byl `expansion.log` čerstvější
+  // než `night.log`, jehož poslední zápis byl z 06:55:38. Detekce se tak
+  // zeptala toho logu, který o noci nic neříká.
+  //
+  // Odmítnutí platí jen tehdy, když **žádný** z logů nekončí prací. Stačí
+  // jeden, který pracoval, a noc proběhla - ať je čerstvější kterýkoli.
+  const refused = (text: string): boolean => {
+    const lines = text.split("\n").filter((line) => line.trim() !== "");
+    const last = lines[lines.length - 1] ?? "";
+    return /spouští mimo noční okno|není co solvit|okno by trvalo/.test(last);
+  };
+  return tails.every((item) => refused(item.text));
 }
 
 /** Jak dopadla poslední noc, přečtené z jejího vlastního logu. */
@@ -355,6 +369,38 @@ out.push("", "## Co má dělat dnešní noc", "");
 /** Kořen checkpointů solveru; táž cesta, jakou čte cyklus po noci. */
 const CHECKPOINT_ROOT = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
 
+/**
+ * Práh, od kterého noc ustoupí - **desky**, ne rodiny.
+ *
+ * Musí sedět na `YIELD_MIN_BOARDS` v `run_night_decomposition.py`. Do 29. 9.
+ * 2026 tu zpráva počítala rodiny bez jediného checkpointu, kdežto runner
+ * rozhoduje podle desek nad prahem, takže si věta ve zprávě a chování noci
+ * mohly odporovat - a v historii si odporovaly (`night.log:12646` hlásí
+ * ustoupení při „0 rodin").
+ */
+const YIELD_MIN_BOARDS = 8;
+
+/** Nastagované desky, které ještě nemají odsolvený checkpoint. */
+function stagedBoardsWithoutCheckpoint(): number {
+  const stagedRoot = join(
+    "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters",
+    "pkrtrainer_mtt_seat_pair_expansion_v1",
+  );
+  if (!existsSync(stagedRoot)) return 0;
+  let pending = 0;
+  for (const name of readdirSync(stagedRoot, { recursive: true, encoding: "utf8" })) {
+    if (!name.endsWith(".txt")) continue;
+    const stem = basename(name, ".txt").replace(/^[0-9]+_/, "");
+    const match = /(MTT9_[0-9]+BB_[A-Z0-9_]+?_(?:SRP|3BP)[A-Z0-9_]*)_([^_]+)$/.exec(stem);
+    if (match === null) continue;
+    const raw = join(CHECKPOINT_ROOT, match[1], "raw");
+    const solved = existsSync(raw)
+      && readdirSync(raw).some((file) => file.includes(match[2]) && file.endsWith(".json"));
+    if (!solved) pending += 1;
+  }
+  return pending;
+}
+
 function stagedFamiliesWithoutCheckpoint(): string[] {
   const stagedRoot = join(
     "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters",
@@ -498,7 +544,15 @@ if (asked === null || held === null) {
       say("  nelze - je to rozhodnutí o zdroji dat, ne úloha na noc.");
     }
   } else {
-    say(`  Nastagováno ${staged.length} rodin bez checkpointu, noc jim ustoupí.`);
+    // Ustoupí se podle desek nad prahem, ne podle rodin - viz YIELD_MIN_BOARDS.
+    const boards = stagedBoardsWithoutCheckpoint();
+    say(boards >= YIELD_MIN_BOARDS
+      ? `  Nastagováno ${boards} desek bez checkpointu (${staged.length} rodin), noc jim ustoupí.`
+      : `  POZOR: priorita je NEW_FAMILIES, ale nastagováno je jen ${boards} desek bez`);
+    if (boards < YIELD_MIN_BOARDS) {
+      say(`  checkpointu proti prahu ${YIELD_MIN_BOARDS} - noc neustoupí a rozhodnutí se nekoná.`);
+      say("  Dokud se nenastaguje nová práce, jede se rozklad do rodin na stropu.");
+    }
   }
 } else {
   say("  DOPORUČENÍ: pokračovat v hloubce - šířka vzorů je pokrytá.");
@@ -512,11 +566,23 @@ if (write) {
   // Strojově čitelné rozhodnutí vedle lidského reportu. Runner ho čte, aby
   // neprohluboval tam, kde chybí šířka - dosud to rozhodoval sám podle pravidla
   // ve svém kódu, které nikdo od napsání nepřeměřil.
+  // Vedle rozhodnutí i čísla, ze kterých plyne.
+  //
+  // Priorita bez nich je tvrzení, které nikdo nepřepočítá. Od 25. do 29. 9.
+  // 2026 stála v tomhle souboru `NEW_FAMILIES` a **nekonala se ani jednou**,
+  // protože všech 348 nastagovaných desek už mělo checkpoint - a poznat to šlo
+  // jen čtením dvou logů. S `willYield` je to vidět ráno na jeden pohled.
+  const stagedBoards = stagedBoardsWithoutCheckpoint();
+  const stagedFamilies = stagedFamiliesWithoutCheckpoint().length;
   writeFileSync(join(REPORT_DIR, "tonight.json"), `${JSON.stringify({
-    schemaVersion: "PKRTRAINER_NIGHT_PRIORITY_V1",
+    schemaVersion: "PKRTRAINER_NIGHT_PRIORITY_V2",
     decidedAt: today,
     priority,
     reason: priorityReason,
+    stagedBoards,
+    stagedFamilies,
+    yieldMinBoards: YIELD_MIN_BOARDS,
+    willYield: priority === "NEW_FAMILIES" && stagedBoards >= YIELD_MIN_BOARDS,
   }, null, 2)}
 `, "utf8");
   const path = join(REPORT_DIR, `${today}.md`);

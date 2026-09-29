@@ -51,6 +51,29 @@ export default defineConfig({
       },
     },
   ],
+  /**
+   * Generované packy se do bundlu čtou jako text, ne jako objektový literál.
+   *
+   * Bez tohohle vite převádí každý JSON přes `dataToEsm` na modul s objektovým
+   * literálem, a rollup si k němu drží celý AST. Naměřeno 29. 9. 2026 nad
+   * dnešními 240 packy (80,6 MiB): literálový tvar zabere **2 039 MiB haldy**
+   * a 19,1 s parsování, kdežto `export default JSON.parse("…")` **281 MiB**
+   * a 1,6 s. Produkční build přitom od 24. 9. padal na stropu 12 288 MB
+   * s vrcholem 11 422 - těch ušetřených 1 758 MiB je rozdíl mezi červenou
+   * a zelenou bránou.
+   *
+   * Je to vlastníkova odpověď **4a** z 24. 9. 2026 („líné načítání i pro build
+   * a testy“) v nejmenším možném tvaru: pack se při buildu přestane rozkládat
+   * na AST a rozbalí ho až ten, kdo ho chce. Zvedat strop podruhé bylo
+   * zakázané, a tohle strop nezvedá.
+   *
+   * Cena: chunk ve tvaru `JSON.parse` je zhruba velký jako zdroj, kdežto
+   * literálový byl o 8-10 % menší. Naměřeno sondou na skutečném buildu, že se
+   * všechny vejdou (nejhorší river 496,3 z 528 KiB, turn-ev 1 022,9 z 1 100)
+   * a gzip se nehne; součtový raw rozpočet to stojí asi 3,6 MB. Rezerva na
+   * chunk je tím 28 KiB, ne 80 - viz poznámka v `checkBundleBudget.mts`.
+   */
+  json: { stringify: true },
   build: {
     outDir: "dist",
     target: "es2020",
