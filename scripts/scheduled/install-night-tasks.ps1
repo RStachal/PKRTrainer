@@ -75,7 +75,12 @@ foreach ($spec in $nightTasks) {
   $boot = New-ScheduledTaskTrigger -AtStartup
   $boot.Delay = $spec.BootDelay
 
-  $principal = New-ScheduledTaskPrincipal -UserId $account -LogonType S4U -RunLevel Limited
+  # Nejvyšší práva **jen u nočních úloh**, a jen kvůli jedné věci: wrapper si
+  # musí každou noc sám nastavit akci víka (`powercfg -setacvalueindex`), protože
+  # nastavit ji jednou nedrží - naměřeno 30. 9. 2026, po restartu ve 16:35 byla
+  # zpátky na hibernaci ve všech čtyřech schématech a v 17:05 stroj po zavření
+  # víka usnul. Ranní úloha zůstává na `Limited`: powercfg nepotřebuje.
+  $principal = New-ScheduledTaskPrincipal -UserId $account -LogonType S4U -RunLevel Highest
 
   $settings = (Get-ScheduledTask -TaskName $name).Settings
   $settings.WakeToRun = $true
