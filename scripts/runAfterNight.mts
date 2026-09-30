@@ -258,6 +258,51 @@ const onlyFamilies = process.argv
  * produktu se nedostal. Vyrobit ho a nedodat je horší než ho nevyrobit, protože
  * se za něj zaplatil strojový čas.
  */
+/**
+ * Rodiny, které se právě přesolvují a nejsou hotové.
+ *
+ * ## Proč to tu je
+ *
+ * Změřeno 30. 9. 2026 na ostrých datech: ranní cyklus přegeneroval flopové
+ * packy dvanácti rodin, které měly odsolvenou **půlku desek**, a obsah se tím
+ * zmenšil - `36 → 18` pravidel u jedenácti rodin a `48 → 4` u `LJ_SB`, celkem
+ * **389 pravidel ubráno a 141 přidáno**. Rada se nezměnila u žádného pravidla,
+ * které zůstalo; prostě jich zůstalo o 248 méně. Hráč by dostal méně obsahu než
+ * den předtím.
+ *
+ * Příčina byla v `families()`: brala rodinu, která má **aspoň jeden** checkpoint
+ * (`.some`). Po přestagování k přesolvení (bod 278) přitom rodina projde stavem
+ * „šest z dvanácti desek hotových" - a v tom stavu není z čeho postavit celý
+ * pack. Stará brána se ptala jen „je nějaký checkpoint novější než pack",
+ * což je pravda hned po první desce.
+ *
+ * Brána proto padá **do zavřena**: dokud rodina nemá checkpoint ke **každé**
+ * nastagované desce, do generování nejde vůbec. Její dosavadní pack zůstane
+ * ležet - je celý a vnitřně jednotný, jen z dřívějších ranží, což je přesně to,
+ * co vlastník zvolil rozhodnutím 1b.
+ */
+const STAGED_PARAMS = join(
+  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters",
+  "pkrtrainer_mtt_seat_pair_expansion_v1",
+);
+function stagedProgress(): Map<string, { have: number; want: number }> {
+  const progress = new Map<string, { have: number; want: number }>();
+  if (!existsSync(STAGED_PARAMS)) return progress;
+  for (const name of readdirSync(STAGED_PARAMS)) {
+    if (!name.endsWith(".txt")) continue;
+    const stem = name.slice(0, -4).replace(/^[0-9]+_/, "");
+    const match = /(MTT9_[0-9]+BB_[A-Z0-9_]+?_(?:SRP|3BP)[A-Z0-9_]*)_([^_]+)$/.exec(stem);
+    if (match === null) continue;
+    const [, family, board] = match;
+    const row = progress.get(family) ?? { have: 0, want: 0 };
+    row.want += 1;
+    const checkpoint = join(CHECKPOINT_ROOT, family, "raw", `pkrtrainer_${family}_${board}.json`);
+    if (existsSync(checkpoint) && statSync(checkpoint).size > 0) row.have += 1;
+    progress.set(family, row);
+  }
+  return progress;
+}
+
 function families(): string[] {
   if (onlyFamilies.length > 0) return [...onlyFamilies].sort();
   const decomposed = readdirSync(WORK)
@@ -269,7 +314,21 @@ function families(): string[] {
       && readdirSync(join(CHECKPOINT_ROOT, name, "raw")).some((file) => file.endsWith(".json"))
     ))
     : [];
-  return [...new Set([...decomposed, ...solved])].sort();
+  const all = [...new Set([...decomposed, ...solved])].sort();
+
+  const progress = stagedProgress();
+  const held: string[] = [];
+  const ready = all.filter((family) => {
+    const row = progress.get(family);
+    if (row === undefined || row.have >= row.want) return true;
+    held.push(`${family} (${row.have}/${row.want})`);
+    return false;
+  });
+  if (held.length > 0) {
+    console.log(`zdrženo ${held.length} rodin rozdělaných přesolvením - půlka desek nestaví celý pack:`);
+    for (const line of held) console.log(`  ${line}`);
+  }
+  return ready;
 }
 
 // Bez zpětných lomítek schválně: v tomhle projektu se `\d` cestou přes vrstvy
