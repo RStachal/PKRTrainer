@@ -178,6 +178,7 @@
     "mtt:solved-coverage": "node scripts/run-cli.mjs scripts/checkSolvedSpotCoverage.mts",
     "mtt:post-answer": "node scripts/run-cli.mjs scripts/measurePostAnswerFeedback.mts",
     "mtt:rye-corpus": "node scripts/run-cli.mjs scripts/checkRyeRangeCorpus.mts",
+    "mtt:rye-partial-shape": "node scripts/run-cli.mjs scripts/measureRyePartialShape.mts",
     "mtt:rye-import": "node scripts/run-cli.mjs scripts/importRyeRangeCorpus.mts",
     "mtt:rye-candidate": "node scripts/run-cli.mjs scripts/buildRyeRefinedCandidate.mts",
     "mtt:rye-images": "node scripts/run-cli.mjs scripts/readRyeRangeImages.mts",

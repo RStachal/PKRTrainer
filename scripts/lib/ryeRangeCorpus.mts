@@ -231,7 +231,51 @@ export function readRyeGrid(path: string): RyeGrid | undefined {
   );
   const coloured = [...combosByColor.values()].reduce((sum, value) => sum + value, 0);
   const colouredShare = coloured / 1326;
-  const partial = Math.abs(legendPercentSum - 100) <= 2 && colouredShare < 0.9;
+
+  /*
+   * Stránka kreslí jen jednu větev - druhá odrůda.
+   *
+   * Podmínka výš (legenda sečte sto, obarvená je část) chytá 49 stránek ze 421,
+   * protože u nich RYE počítá procenta ze zvolené podmnožiny. **Jsou ale i
+   * stránky, kde je počítá ze všech rukou**, takže legenda sečte 6 az 29 % a
+   * s mřížkou se shodne - a přesto o neobarvených rukách nic netvrdí. Naměřeno
+   * 30. 9. 2026 nad celým korpusem: **31 takových stránek** dnešní bránou
+   * propadá (RE 26, SQU 3, F3B 2).
+   *
+   * Rozlišovač není pokrytí. Proti těm 31 stojí **32 stránek jam-or-fold**
+   * (PU, ICM, MUL), které mají taky jen agresivní akci a taky malé pokrytí -
+   * a u nich je neobarvené legitimně fold. Rozdíl je v tom, **jaká** akce je
+   * jmenovaná:
+   *
+   * - Je-li jediná jmenovaná akce **all-in** (`Jam`, `All in`, `GTO all in`),
+   *   je fold jediná zbývající možnost: hrdina shovuje, nebo skládá. Neobarvené
+   *   = fold platí a stránka je celá.
+   * - Jsou-li jmenované akce **sázky s velikostí** (3bet, squeeze, 4bet), zbývají
+   *   možnosti dvě - dorovnat, nebo složit - a stránka neříká, která. Takovou
+   *   se `fillFolds` nesmí dotknout.
+   *
+   * Ta první odrážka je **úsudek o pokeru, ne měření**: opírá se o to, že na
+   * krátkých stackách se nedorovnává, což vlastník už jednou přijal u obsahu
+   * push-fold na 20 bb (body 143 a 264). Kdyby to přestalo platit, přestane
+   * platit i tahle podmínka.
+   *
+   * `flatcall` a `defend` se hledají **bez hranic slova**: legenda je píše
+   * jedním slovem a `\bcall\b` na `flatcall` nesedí. První měření kvůli tomu
+   * zařadilo tři stránky ICM3 mezi propadající, přestože `flatcall` mají.
+   */
+  const PASSIVE_ACTION = /(call|flat|limp|check|defend)/i;
+  /** `3B/Call` je odpověď na 4bet, ne první akce; za pasivní se počítat nesmí. */
+  const COMPOUND_RAISE = /(squeeze|3b|4b|sq|iso)\s*\/\s*(call|fold|f|c|broke)/i;
+  const ALL_IN = /(jam|all\s*in|allin|shove|push)/i;
+
+  const namesPassive = legend.some(
+    (entry) => PASSIVE_ACTION.test(entry.action) && !COMPOUND_RAISE.test(entry.action),
+  );
+  const onlyAllIn = legend.length > 0 && legend.every((entry) => ALL_IN.test(entry.action));
+  // Strop pokrytí je pojistka, ne rozlišovač: všech 31 naměřených leží pod 29 %.
+  const branchOnly = !namesPassive && !onlyAllIn && colouredShare < 0.5;
+
+  const partial = (Math.abs(legendPercentSum - 100) <= 2 && colouredShare < 0.9) || branchOnly;
 
   return {
     file: path, title, legend, hands, combosByColor, mismatches,

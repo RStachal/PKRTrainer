@@ -38,7 +38,12 @@ function writePage(
       const rewritten = rewriteCell?.(hand) ?? {};
       const id = rewritten.id ?? hand;
       const label = rewritten.label ?? hand;
-      cells.push(`<td id="cid_${id}" class="mdl-color--${colorOfCell(row, col)}">${label}</td>`);
+      // Prázdná barva znamená **neobarvenou** buňku, tedy žádnou třídu
+      // `mdl-color--`: čtečka pozná obarvenou jen podle ní, takže `grey` by
+      // se počítalo za akci a podíl obarvených by vyšel 100 %.
+      const color = colorOfCell(row, col);
+      const klass = color === "" ? "" : ` class="mdl-color--${color}"`;
+      cells.push(`<td id="cid_${id}"${klass}>${label}</td>`);
     }
   }
   const items = legend.map((entry) => (
@@ -123,5 +128,71 @@ describe("čtení mřížky ze stránky zdroje", () => {
     );
     const grid = readRyeGrid(path);
     expect(grid!.mismatches.join(" ")).toContain("poloha říká KTs");
+  });
+});
+
+describe("stránka, která kreslí jen jednu větev strategie", () => {
+  /**
+   * Obarví jen několik buněk v levém horním koutu - tedy malý podíl mřížky,
+   * jako squeeze chart nebo jam range.
+   */
+  const fewCells = (row: number, col: number): string => (row < 2 && col < 2 ? "red" : "");
+
+  it("jen all-in se za jednu větev nepočítá: fold je jediná zbylá možnost", () => {
+    // Na krátkých stackách se nedorovnává, takže neobarvená ruka **je** fold.
+    // Naměřeno 30. 9. 2026: takových stránek je v korpusu 19 (PU, MUL, ICM)
+    // a všechny by se bez téhle výjimky odmítly.
+    const path = writePage("jen-jam.html", [{ color: "red", title: "All in", combos: "40.00" }], fewCells);
+    expect(readRyeGrid(path)!.partial).toBe(false);
+  });
+
+  it("jen sázky s velikostí jednou větví jsou: stránka neříká, jestli se zbytek dorovnává", () => {
+    const path = writePage(
+      "jen-3bet.html",
+      [
+        { color: "red", title: "3B / Broke", combos: "20.00" },
+        { color: "red", title: "3B / Fold", combos: "20.00" },
+      ],
+      fewCells,
+    );
+    expect(readRyeGrid(path)!.partial).toBe(true);
+  });
+
+  it("sázka i all-in vedle sebe je pořád jedna větev", () => {
+    // Tohle je ten tvar, který do 30. 9. 2026 propadal: `3b/call | 3b/f | Jam`
+    // bez pasivní akce. Třináct stránek ICM, obarveno 20 az 22 %.
+    const path = writePage(
+      "3bet-a-jam.html",
+      [
+        { color: "red", title: "3b/call", combos: "14.00" },
+        { color: "red", title: "3b/f", combos: "13.00" },
+        { color: "red", title: "Jam", combos: "13.00" },
+      ],
+      fewCells,
+    );
+    expect(readRyeGrid(path)!.partial).toBe(true);
+  });
+
+  it("`flatcall` jedním slovem se musí poznat jako pasivní akce", () => {
+    // `\bcall\b` na `flatcall` nesedí. První měření kvůli tomu zařadilo tři
+    // stránky ICM3 mezi propadající, přestože pasivní akci mají.
+    const path = writePage(
+      "flatcall.html",
+      [
+        { color: "red", title: "flatcall", combos: "20.00" },
+        { color: "red", title: "3b/f", combos: "20.00" },
+      ],
+      fewCells,
+    );
+    expect(readRyeGrid(path)!.partial).toBe(false);
+  });
+
+  it("`Defend` je taky pasivní akce", () => {
+    const path = writePage(
+      "defend.html",
+      [{ color: "red", title: "Defend ( Create your own Ranges )", combos: "40.00" }],
+      fewCells,
+    );
+    expect(readRyeGrid(path)!.partial).toBe(false);
   });
 });
