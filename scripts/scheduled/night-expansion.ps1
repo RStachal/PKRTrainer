@@ -9,6 +9,7 @@ $log = Join-Path $repo "artifacts\decomposition\expansion.log"
 . (Join-Path $PSScriptRoot "lib-night-window.ps1")
 if (-not (Test-NightWindow -Log $log)) { exit 0 }
 Set-LidIgnoredOnAc -Log $log
+Set-NoIdleSleepOnAc -Log $log
 $command = "/c set PYTHONIOENCODING=utf-8 && `"$python`" `"$script`" --until=07:00 --workers=8 --river-workers=16 --river-threads=1 >> `"$log`" 2>&1"
 $process = Start-Process -FilePath "cmd.exe" -ArgumentList $command -WindowStyle Hidden -Wait -PassThru
 exit $process.ExitCode

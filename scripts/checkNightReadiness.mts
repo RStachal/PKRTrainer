@@ -127,6 +127,33 @@ add("víko na síti nic nedělá (nastaví i wrapper)", lidAc === "0", lidAc ===
 const lidDc = powershell(LID_READ("DC"));
 add("víko na baterii pořád uspává", lidDc !== "" && lidDc !== "0", lidDc === "" ? "nepřečteno" : lidDc, "1 nebo 2");
 
+/*
+ * Uspání nečinností a časovače probuzení.
+ *
+ * Víko není jediná cesta, jak noc zastavit. Kdyby se na síti zapnulo uspávání
+ * nečinností, stroj usne uprostřed vrstvy a žádný softwarový zámek to nepřebije
+ * (bod 158). Naměřeno 1. 10. 2026: dnes je `STANDBYIDLE AC=0` (nikdy) a
+ * `RTCWAKE AC=1`, takže je to v pořádku - **ale víko se po restartu vrátilo
+ * z 0 na 2**, takže se na trvalost spoléhat nedá a kontrolovat se to musí.
+ *
+ * Časovače probuzení jsou tu proto, že bez nich nemá `WakeToRun` čím probudit.
+ * Pozor na výklad: za 20 dní **nezpůsobil probuzení ani jeden časovač**
+ * (`WakeSource` je u všech probuzení prázdný), takže že se stroj ve 21:00
+ * probudí, není odpozorované - jen umožněné. Spolehlivá cesta je neuspat ho.
+ */
+const SLEEP_READ = (setting: string): string => [
+  "$s = ((powercfg /getactivescheme) -replace '.*GUID: ([0-9a-f-]+).*', '$1').Trim()",
+  "$k = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Power\\User\\PowerSchemes\\$s"
+    + `\\238c9fa8-0aad-41ed-83f4-97be242c8f20\\${setting}"`,
+  "(Get-ItemProperty -Path $k -ErrorAction Stop).ACSettingIndex",
+].join("; ");
+
+const idleSleep = powershell(SLEEP_READ("29f6c1db-86da-48c5-9fdb-f2b67b1f44da"));
+add("na síti neusne nečinností", idleSleep === "0", idleSleep === "" ? "nepřečteno" : `${idleSleep} s`, "0 (nikdy)");
+
+const wakeTimers = powershell(SLEEP_READ("bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d"));
+add("časovače probuzení na síti povolené", wakeTimers === "1", wakeTimers === "" ? "nepřečteno" : wakeTimers, "1");
+
 /** Nastagované desky a jejich checkpointy, po rodinách. */
 function stagedProgress(): Map<string, { have: number; want: number; failed: number; order: number }> {
   const progress = new Map<string, { have: number; want: number; failed: number; order: number }>();
@@ -193,6 +220,33 @@ const stuck = [...progress.entries()].filter(
 add("žádná rodina není zaseknutá na spadlé desce", stuck.length === 0,
   stuck.length === 0 ? "žádná" : stuck.map(([family, row]) => `${family} ${row.have}/${row.want}`).join(", "),
   "žádná");
+
+/*
+ * Dobral ranní cyklus, nebo jen začal?
+ *
+ * Naměřeno 1. 10. 2026: cyklus v 07:05 vypsal hlavičku „[1/3] generuji packy pro
+ * 32 rodin" a **skončil** - žádné „[1/3] hotovo", žádná fáze 2 ani 3, žádné
+ * ověření. Plánovač přitom hlásil `LastTaskResult: 0` a stav `Ready`, takže
+ * ráno vypadalo úspěšně. Packy po něm zůstaly v pořádku (změřeno: 2013 → 2013
+ * pravidel, nic neubráno), ale to je štěstí, ne zásluha: stejná smrt o minutu
+ * později by nechala rozepsaný pack.
+ *
+ * Cyklus svůj konec hlásí sám („Necommitováno schválně…"), jen to nikdo nečetl.
+ * Tahle kontrola čte **poslední** blok logu, protože běhy se do něj přidávají
+ * za sebou.
+ */
+const CYCLE_LOG = "artifacts/after-night-turn-ev.log";
+const CYCLE_START = "Cyklus po noční práci";
+const CYCLE_END = "Necommitováno schválně";
+if (!existsSync(CYCLE_LOG)) {
+  add("poslední ranní cyklus dobral", false, "log chybí", `blok končí „${CYCLE_END}“`);
+} else {
+  const log = readFileSync(CYCLE_LOG, "utf8");
+  const lastRun = log.slice(log.lastIndexOf(CYCLE_START));
+  add("poslední ranní cyklus dobral", lastRun.includes(CYCLE_END),
+    lastRun.includes(CYCLE_END) ? "ano" : "skončil uprostřed, bez ověření",
+    `blok končí „${CYCLE_END}“`);
+}
 
 console.log("Připravenost noci 21:00-07:00");
 console.log("");

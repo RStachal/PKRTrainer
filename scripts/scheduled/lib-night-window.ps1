@@ -42,6 +42,37 @@ function Test-NightWindow {
   return $false
 }
 
+# Na síti se nesmí uspat nečinností a časovače probuzení musí zůstat povolené.
+#
+# Naměřeno 1. 10. 2026: dnes je `STANDBYIDLE AC=0` (nikdy) a `RTCWAKE AC=1`,
+# takže na síti stroj sám neusne. **Ale víko se po restartu vrátilo z 0 na 2**,
+# takže se na trvalost žádné z těchhle hodnot spoléhat nedá. Nastavují se proto
+# znovu při každém startu noci, jako víko.
+#
+# Na baterii se nesahá: tam má stroj spát (`STANDBYIDLE DC=10800`, tedy 3 h).
+function Set-NoIdleSleepOnAc {
+  param([string]$Log)
+  $SUB_SLEEP = "238c9fa8-0aad-41ed-83f4-97be242c8f20"
+  $STANDBYIDLE = "29f6c1db-86da-48c5-9fdb-f2b67b1f44da"
+  $RTCWAKE = "bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d"
+  try {
+    powercfg -setacvalueindex SCHEME_CURRENT $SUB_SLEEP $STANDBYIDLE 0 2>$null
+    powercfg -setacvalueindex SCHEME_CURRENT $SUB_SLEEP $RTCWAKE 1 2>$null
+    powercfg -setactive SCHEME_CURRENT 2>$null
+    $scheme = ((powercfg /getactivescheme) -replace '.*GUID: ([0-9a-f-]+).*', '$1').Trim()
+    $base = "HKLM:\SYSTEM\CurrentControlSet\Control\Power\User\PowerSchemes\$scheme\$SUB_SLEEP"
+    $idle = (Get-ItemProperty -Path "$base\$STANDBYIDLE" -ErrorAction Stop).ACSettingIndex
+    $wake = (Get-ItemProperty -Path "$base\$RTCWAKE" -ErrorAction Stop).ACSettingIndex
+    if ($idle -eq 0 -and $wake -eq 1) {
+      Write-NightLog -Log $Log -Message "na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)"
+    } else {
+      Write-NightLog -Log $Log -Message "POZOR: necinnost=$idle (ma byt 0), casovace=$wake (ma byt 1); stroj muze v noci usnout"
+    }
+  } catch {
+    Write-NightLog -Log $Log -Message "POZOR: usporu se nepodarilo nastavit ($($_.Exception.Message)); solve pokracuje"
+  }
+}
+
 # Víko na síti na „nedělat nic"; na baterii beze změny.
 function Set-LidIgnoredOnAc {
   param([string]$Log)

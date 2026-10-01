@@ -242,13 +242,32 @@ function reportDelivery(approved: readonly DraftRecord[]): void {
     if (open.length > 8) console.log(`  … a dalších ${open.length - 8}`);
   }
 
+  // Dvě různé příčiny, dvě různá vysvětlení. Do 1. 10. 2026 se obojí vysvětlovalo
+  // rozložením stacků, přestože u srážky uvnitř jednoho rozložení jde o něco
+  // jiného - a hlavně: řádek „chipEV mřížka přistane sama" tvrdil u šesti buněk
+  // něco, co neplatilo, protože se počítala rozložení místo mřížek.
+  const sameSetup = open.filter((row) => row.chipEvGrids > 1);
   console.log("");
   console.log(
     "Otvírač je od 16. 9. 2026 v klíči (bod 253), takže mřížky lišící se jen\n"
-    + "otvíračem se už nesráží. Tyhle se liší rozložením stacků - hloubkou\n"
-    + "protihráče nebo scénářem ICM - a tu osu klíč packu nemá. Pro chipEV pack\n"
-    + "to nevadí: ICM mřížka do něj nejde vůbec. Srážka to bude pro $EV pack, až\n"
-    + "bude, a řeší se scénářem v klíči (`RangeRefinement.stackSetupId`).",
+    + "otvíračem se už nesráží. Co zbývá, jsou dvě různé věci.",
+  );
+  if (sameSetup.length > 0) {
+    console.log("");
+    console.log(
+      `Do ${sameSetup.length} buněk míří víc chipEV mřížek **téhož** rozložení. Rodina MUL\n`
+      + "nese v názvu i toho, kdo otevření dorovnal (EP_CO, EP_MP, EP_SB…), a ten se\n"
+      + "do klíče nedostane - takže se ty mřížky nedají rozlišit a která přistane,\n"
+      + "neurčuje žádné napsané pravidlo. Dvě cesty: dát dorovnávajícího do klíče,\n"
+      + "nebo u srážky vybírat deterministicky a to pravidlo napsat.",
+    );
+  }
+  console.log("");
+  console.log(
+    "Zbytek se liší rozložením stacků - hloubkou protihráče nebo scénářem ICM -\n"
+    + "a tu osu klíč packu nemá. Pro chipEV pack to nevadí: ICM mřížka do něj nejde\n"
+    + "vůbec. Srážka to bude pro $EV pack, až bude, a řeší se scénářem v klíči\n"
+    + "(`RangeRefinement.stackSetupId`).",
   );
 }
 

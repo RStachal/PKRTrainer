@@ -418,11 +418,21 @@ const blocks = sorted.map((record, index) => {
       ? '<p class="meta"><b class="new">Do téhle buňky míří víc mřížek</b>'
         + ` (rozložení ${escapeHtml(collision.setups.join(", "))}), ale tahle je jediná chipEV,`
         + " takže po schválení přistane; ICM čekají na $EV pack se scénářem v klíči.</p>"
-      : '<p class="meta"><b class="unlock">Tahle buňka se sráží o rozložení stacků.</b>'
-        + ` Míří do ní mřížky pro ${escapeHtml(collision.setups.join(", "))}`
-        + ` a neshodnou se u ${collision.disagreeing} tříd. Klíč packu scénář nemá,`
-        + " takže tahle sama nepřistane - schválení je platné, ale doručení čeká na"
-        + " $EV pack se scénářem v klíči. Proto je níž v pořadí.</p>";
+      // Dvě různé srážky, dvě různé věty. Do 1. 10. 2026 se obojí schovávalo
+      // pod „sráží se o rozložení stacků", přestože srážka **uvnitř** jednoho
+      // rozložení má jinou příčinu i jiné řešení: chybí v klíči ten, kdo
+      // otevření dorovnal.
+      : collision.chipEvGrids > 1
+        ? '<p class="meta"><b class="unlock">O tuhle buňku se dělí'
+          + ` ${collision.chipEvGrids} chipEV mřížky</b> a neshodnou se u ${collision.disagreeing}`
+          + " tříd ze 169. Klíč packu nemá toho, kdo otevření dorovnal, takže se tyhle mřížky"
+          + " nedají rozlišit - a která z nich přistane, neurčuje žádné napsané pravidlo."
+          + " Schválení je platné, ale doručení čeká na rozhodnutí o klíči. Proto je níž v pořadí.</p>"
+        : '<p class="meta"><b class="unlock">Tahle buňka se sráží o rozložení stacků.</b>'
+          + ` Míří do ní mřížky pro ${escapeHtml(collision.setups.join(", "))}`
+          + ` a neshodnou se u ${collision.disagreeing} tříd. Klíč packu scénář nemá,`
+          + " takže tahle sama nepřistane - schválení je platné, ale doručení čeká na"
+          + " $EV pack se scénářem v klíči. Proto je níž v pořadí.</p>";
   return `<section id="${anchorOf(record, index)}">
   <h2>${escapeHtml(record.context)} &middot; ${escapeHtml(record.position)} ${record.bucket} BB &middot; ${escapeHtml(versus)}</h2>
   ${answerNote(record).html}

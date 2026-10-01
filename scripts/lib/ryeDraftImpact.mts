@@ -215,6 +215,16 @@ export interface SeatCollision {
    * `undefined`, když jsou v buňce dvě chipEV, nebo žádné (samé ICM).
    */
   chipEvSetup?: string;
+  /**
+   * Kolik **mřížek** (ne rozložení) si tu buňku nárokuje v chipEV.
+   *
+   * Do 1. 10. 2026 se počítala jen rozložení, takže tři mřížky rodiny MUL
+   * v jedné buňce daly `setups = ["MUL"]`, tedy „jedno chipEV" - a stránka
+   * ke kontrole pak tvrdila **u každé ze tří**, že je ta jediná. Změřeno na
+   * id 138, 139 a 140: všechny tři chipEV, liší se o 2 az 10 tříd ze 169.
+   * Rozložení je osa klíče; mřížka je to, co doopravdy přistane.
+   */
+  chipEvGrids: number;
   /** Přistane v chipEV packu bez rozhodování? */
   resolved: boolean;
 }
@@ -276,15 +286,21 @@ export function seatCollisions(records: readonly DraftRecord[]): SeatCollision[]
     if (disagreeing === 0) continue;
     const setups = [...new Set(group.map((record) => record.stackSetupId))].sort();
     const chipEv = setups.filter(isChipEvSetup);
+    // Mřížky, ne rozložení: rodina MUL nese v názvu i toho, kdo otevření
+    // dorovnal, a ten se do klíče nedostane - takže se v jedné buňce sejde víc
+    // mřížek téhož rozložení. Viz `chipEvGrids`.
+    const chipEvGrids = group.filter((record) => isChipEvSetup(record.stackSetupId)).length;
     collisions.push({
       cell,
       setups,
       disagreeing,
-      // Fail-closed: dvě chipEV mřížky v jedné buňce se nerozhodují odhadem.
+      // Fail-closed: dvě chipEV **mřížky** v jedné buňce se nerozhodují odhadem.
       // Vybrat libovolnou by znamenalo tvrdit o range něco, co pro ni nikdo
-      // nezvolil.
-      ...(chipEv.length === 1 ? { chipEvSetup: chipEv[0] } : {}),
-      resolved: chipEv.length === 1,
+      // nezvolil - a do 1. 10. 2026 se přesně to dělo mlčky, protože podmínka
+      // počítala rozložení.
+      ...(chipEvGrids === 1 ? { chipEvSetup: chipEv[0] } : {}),
+      chipEvGrids,
+      resolved: chipEvGrids === 1,
     });
   }
   return collisions.sort((left, right) => right.disagreeing - left.disagreeing);
