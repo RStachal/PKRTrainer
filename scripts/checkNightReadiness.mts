@@ -128,8 +128,8 @@ const lidDc = powershell(LID_READ("DC"));
 add("víko na baterii pořád uspává", lidDc !== "" && lidDc !== "0", lidDc === "" ? "nepřečteno" : lidDc, "1 nebo 2");
 
 /** Nastagované desky a jejich checkpointy, po rodinách. */
-function stagedProgress(): Map<string, { have: number; want: number; order: number }> {
-  const progress = new Map<string, { have: number; want: number; order: number }>();
+function stagedProgress(): Map<string, { have: number; want: number; failed: number; order: number }> {
+  const progress = new Map<string, { have: number; want: number; failed: number; order: number }>();
   if (!existsSync(STAGED_PARAMS)) return progress;
   for (const name of readdirSync(STAGED_PARAMS).sort()) {
     if (!name.endsWith(".txt")) continue;
@@ -137,10 +137,13 @@ function stagedProgress(): Map<string, { have: number; want: number; order: numb
     const match = /(MTT9_[0-9]+BB_[A-Z0-9_]+?_(?:SRP|3BP)[A-Z0-9_]*)_([^_]+)$/.exec(stem);
     if (match === null) continue;
     const [, family, board] = match;
-    const row = progress.get(family) ?? { have: 0, want: 0, order: Number.MAX_SAFE_INTEGER };
+    const row = progress.get(family) ?? { have: 0, want: 0, failed: 0, order: Number.MAX_SAFE_INTEGER };
     row.want += 1;
     const checkpoint = join(CHECKPOINT_ROOT, family, "raw", `pkrtrainer_${family}_${board}.json`);
     if (existsSync(checkpoint) && statSync(checkpoint).size > 0) row.have += 1;
+    // Deska s `.failed` už se nikdy nenabídne, takže ji noc nedokončí a rodina
+    // zůstane navždy nehotová. Do „kolik stihne noc" se počítat nesmí.
+    else if (existsSync(`${checkpoint}.failed`)) row.failed += 1;
     else row.order = Math.min(row.order, Number(/^([0-9]+)_/.exec(name)?.[1] ?? Number.MAX_SAFE_INTEGER));
     progress.set(family, row);
   }
@@ -181,6 +184,16 @@ const willFinish = [...progress.entries()]
 add("noc dokončí aspoň jednu rodinu", willFinish.families.length > 0,
   `${willFinish.families.length} rodin do ${BOARDS_PER_NIGHT} desek`, "aspoň 1");
 
+// Rodina, které zbývají jen desky s `.failed`, se sama nedokončí **nikdy** -
+// a bez téhle kontroly by „18 z 18 sedí" mlčelo o tom, že její obsah je zamčený
+// (naměřeno 1. 10. 2026 na CO_BTN: dvě desky na timeout 30 min).
+const stuck = [...progress.entries()].filter(
+  ([, row]) => row.have < row.want && row.have + row.failed >= row.want,
+);
+add("žádná rodina není zaseknutá na spadlé desce", stuck.length === 0,
+  stuck.length === 0 ? "žádná" : stuck.map(([family, row]) => `${family} ${row.have}/${row.want}`).join(", "),
+  "žádná");
+
 console.log("Připravenost noci 21:00-07:00");
 console.log("");
 for (const check of checks) {
@@ -199,5 +212,10 @@ if (failed.length === 0) {
   console.log(`${failed.length} z ${checks.length} nesedí. Stroj spraví (jako správce):`);
   console.log("  powershell -NoProfile -ExecutionPolicy Bypass -File scripts/scheduled/install-night-tasks.ps1");
   console.log("Prázdnou frontu tím nespravíš - ta chce mtt:resolve-stage nebo mtt:seat-pair-expansion.");
+  if (stuck.length > 0) {
+    console.log("Zaseknutou rodinu taky ne: deska opakovaně spadla a monolit ji už nenabídne.");
+    console.log("Buď smazat její `.failed` a zkusit znovu s vyšším stropem času, nebo ji z dávky");
+    console.log("vyřadit. Obojí je rozhodnutí o rozpočtu noci, ne úklid - proto to nedělá skript.");
+  }
   process.exitCode = 1;
 }

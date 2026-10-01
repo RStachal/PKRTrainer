@@ -285,8 +285,8 @@ const STAGED_PARAMS = join(
   "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters",
   "pkrtrainer_mtt_seat_pair_expansion_v1",
 );
-function stagedProgress(): Map<string, { have: number; want: number }> {
-  const progress = new Map<string, { have: number; want: number }>();
+function stagedProgress(): Map<string, { have: number; want: number; failed: string[] }> {
+  const progress = new Map<string, { have: number; want: number; failed: string[] }>();
   if (!existsSync(STAGED_PARAMS)) return progress;
   for (const name of readdirSync(STAGED_PARAMS)) {
     if (!name.endsWith(".txt")) continue;
@@ -294,10 +294,15 @@ function stagedProgress(): Map<string, { have: number; want: number }> {
     const match = /(MTT9_[0-9]+BB_[A-Z0-9_]+?_(?:SRP|3BP)[A-Z0-9_]*)_([^_]+)$/.exec(stem);
     if (match === null) continue;
     const [, family, board] = match;
-    const row = progress.get(family) ?? { have: 0, want: 0 };
+    const row = progress.get(family) ?? { have: 0, want: 0, failed: [] };
     row.want += 1;
     const checkpoint = join(CHECKPOINT_ROOT, family, "raw", `pkrtrainer_${family}_${board}.json`);
     if (existsSync(checkpoint) && statSync(checkpoint).size > 0) row.have += 1;
+    // Deska, která opakovaně spadla, nosí `.failed` a monolit ji už nenabídne.
+    // Bez tohohle rozlišení by rodina s jednou takovou deskou vypadala navždy
+    // jako „rozdělaná" a její pack by se **nikdy** nepřegeneroval - naměřeno
+    // 1. 10. 2026 na MTT9_25BB_CO_BTN_SRP, dvě desky na timeout 30 min.
+    else if (existsSync(`${checkpoint}.failed`)) row.failed.push(board);
     progress.set(family, row);
   }
   return progress;
@@ -318,15 +323,29 @@ function families(): string[] {
 
   const progress = stagedProgress();
   const held: string[] = [];
+  const stuck: string[] = [];
   const ready = all.filter((family) => {
     const row = progress.get(family);
     if (row === undefined || row.have >= row.want) return true;
-    held.push(`${family} (${row.have}/${row.want})`);
+    // Zaseknutá rodina se drží **taky** - pack z deseti desek ze dvanácti je
+    // pořád menší obsah než ten dnešní (bod 280). Ale hlásí se zvlášť, protože
+    // „čeká na další noc" a „sama se nedokončí" chtějí jiný krok.
+    if (row.have + row.failed.length >= row.want) {
+      stuck.push(`${family} (${row.have}/${row.want}, natrvalo odložené: ${row.failed.join(", ")})`);
+    } else {
+      held.push(`${family} (${row.have}/${row.want})`);
+    }
     return false;
   });
   if (held.length > 0) {
     console.log(`zdrženo ${held.length} rodin rozdělaných přesolvením - půlka desek nestaví celý pack:`);
     for (const line of held) console.log(`  ${line}`);
+  }
+  if (stuck.length > 0) {
+    console.log(`POZOR: ${stuck.length} rodin se samo nedokončí - deska opakovaně spadla a monolit ji už nenabídne:`);
+    for (const line of stuck) console.log(`  ${line}`);
+    console.log("  Rozhodnutí je na člověku: buď smazat .failed a zkusit znovu (jiný strop času),");
+    console.log("  nebo tu desku z dávky vyřadit. Dokud leží, pack té rodiny se nepřegeneruje.");
   }
   return ready;
 }

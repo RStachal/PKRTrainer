@@ -209,6 +209,26 @@ def staged_boards_without_checkpoint():
     return count
 
 
+def _priority_is_fresh():
+    """Je rozhodnutí o noci z **téhle** noci?
+
+    Noc přesahuje půlnoc, takže „z dneška" nestačí: tik ve 02:00 by hlásil jiný
+    den než tik ve 22:00 téže noci. Hranicí je proto poslední 20:45 - spodní
+    okraj okna, od kterého se noc počítá (viz brána ve wrapperech).
+    """
+    if not os.path.exists(NIGHT_PRIORITY):
+        return False
+    now = datetime.now()
+    boundary = now.replace(hour=20, minute=45, second=0, microsecond=0)
+    if now < boundary:
+        boundary -= timedelta(days=1)
+    try:
+        written = datetime.fromtimestamp(os.path.getmtime(NIGHT_PRIORITY))
+    except OSError:
+        return False
+    return written >= boundary
+
+
 def refresh_night_priority():
     """Nechat denní vyhodnocení rozhodnout, co má tahle noc dělat.
 
@@ -227,7 +247,19 @@ def refresh_night_priority():
     Selhání se **nepřenáší dál**: když vyhodnocení spadne, noc pokračuje podle
     toho, co v souboru je. Prázdná noc kvůli nefunkční poradě je horší než noc
     podle starší rady.
+
+    ## Proč jen jednou za noc
+
+    Od 30. 9. 2026 startuje úloha **každých 30 minut** (opakovaný spouštěč proti
+    restartu uprostřed okna, bod 277). Každý start sem původně vešel a pustil
+    vyhodnocení znovu - naměřeno v noci na 1. 10.: šest zápisů jen mezi 04:00
+    a 06:30, a jedno vyhodnocení trvá **105 s**. Za noc to je kolem dvaceti tiků,
+    tedy **půl hodiny procesorového času sebraného solveru**, který vedle běží na
+    šestnácti procesech. Porada má cenu jednou za noc; podruhé už jen škodí.
     """
+    if _priority_is_fresh():
+        log("porada už dnešní noc proběhla, vyhodnocení se nepouští znovu")
+        return
     started = time.time()
     try:
         result = subprocess.run(
