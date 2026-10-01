@@ -61,11 +61,24 @@ const PASSIVE = /(call|flat|limp|check|defend)/i;
 const COMPOUND = /(squeeze|3b|4b|sq|iso)\s*\/\s*(call|fold|f|c|broke)/i;
 const JAMLIKE = /\b(jam|all\s*in|allin|shove|push)\b/i;
 
+/**
+ * Akce, která znamená „a tady se skládá".
+ *
+ * Když ji legenda jmenuje, stránka o neobarvených rukách **něco tvrdí** - a pak
+ * je `fillFolds` v souladu se zdrojem, ne tvrzení za něj.
+ */
+const FOLD_ACTION = /(fold|broke)/i;
+
 type Row = {
   file: string;
   section: string;
   legendSum: number;
   coloured: number;
+  /** Součet kombinací, které legenda rozdává mezi akce. */
+  legendCombos: number;
+  /** Hloubka hrdiny z názvu souboru, nebo 0. */
+  depth: number;
+  hasFold: boolean;
   passive: boolean;
   jam: boolean;
   actions: string;
@@ -82,11 +95,15 @@ function run(source: string): void {
     if (grid === undefined) { unreadable += 1; continue; }
     if (grid.mismatches.length > 0) { mismatched += 1; continue; }
     const actions = grid.legend.map((entry) => entry.action);
+    const base = file.split(/[\\/]/).pop() ?? file;
     rows.push({
-      file: file.split(/[\\/]/).pop() ?? file,
+      file: base,
       section: sectionOf(file),
       legendSum: grid.legendPercentSum,
       coloured: grid.colouredShare,
+      legendCombos: grid.legend.reduce((sum, entry) => sum + (Number.isFinite(entry.combos) ? entry.combos : 0), 0),
+      depth: Number(/(\d+)\s*bb/i.exec(base)?.[1] ?? 0),
+      hasFold: actions.some((a) => FOLD_ACTION.test(a)),
       passive: actions.some((a) => PASSIVE.test(a) && !COMPOUND.test(a)),
       jam: actions.some((a) => JAMLIKE.test(a)),
       actions: actions.join(" | "),
@@ -136,6 +153,51 @@ function run(source: string): void {
   // Tam je fold legitimní alternativa, takže každá taková je podezřelá.
   show("A se jamem v legendě - ověřit, jestli je chycení správné", groupA.filter((row) => row.jam), 20);
   console.log("");
+  /*
+   * Dvě otázky, které jsem 1. 10. 2026 chtěl dát vlastníkovi - a obě se dají
+   * změřit, takže se dávat nemají.
+   *
+   * (1) Účtuje legenda **všech 1326 kombinací**? Když ano, stránka o zbytku
+   *     mřížky něco tvrdí (typicky `limp/fold`) a `fillFolds` je s ní v souladu.
+   *     Odmítat takovou stránku je chyba opačným směrem.
+   * (2) V jaké hloubce zdroj přestává nabízet pasivní akci? Když chybí jen na
+   *     krátkých stackách, je to vlastnost pokeru, ne mezera ve stránce.
+   */
+  console.log("=== (1) účtuje legenda celou mřížku? (1326 kombinací) ===");
+  const accounted = (row: Row): boolean => Math.abs(row.legendCombos - 1326) <= 13;
+  const aFull = groupA.filter(accounted);
+  const aPartial = groupA.filter((row) => !accounted(row));
+  console.log(`  z ${groupA.length} dnes odmítaných účtuje celou mřížku ${aFull.length}, jen část ${aPartial.length}`);
+  console.log(`  celou mřížku po sekcích: ${bySection(aFull)}`);
+  console.log(`  jen část po sekcích:     ${bySection(aPartial)}`);
+  console.log("");
+  for (const row of [...aFull].sort((a, b) => a.file.localeCompare(b.file)).slice(0, 10)) {
+    console.log(
+      `  ${row.file.padEnd(44)} legenda ${Math.round(row.legendCombos).toString().padStart(5)} komb.`
+      + `  obarveno ${Math.round(row.coloured * 1326).toString().padStart(5)}  fold v legendě: ${row.hasFold ? "ano" : "NE"}`,
+    );
+  }
+  if (aFull.length > 10) console.log(`  … a dalších ${aFull.length - 10}`);
+  console.log("");
+
+  console.log("=== (2) kde zdroj přestává nabízet pasivní akci? ===");
+  const buckets = new Map<string, { bez: number; s: number }>();
+  for (const row of rows) {
+    if (row.depth === 0) continue;
+    const key = row.depth <= 20 ? "do 20 bb" : row.depth <= 30 ? "21-30 bb" : row.depth <= 50 ? "31-50 bb" : "nad 50 bb";
+    const cell = buckets.get(key) ?? { bez: 0, s: 0 };
+    if (row.passive) cell.s += 1; else cell.bez += 1;
+    buckets.set(key, cell);
+  }
+  for (const key of ["do 20 bb", "21-30 bb", "31-50 bb", "nad 50 bb"]) {
+    const cell = buckets.get(key);
+    if (cell === undefined) continue;
+    const total = cell.bez + cell.s;
+    console.log(`  ${key.padEnd(10)} bez pasivní akce ${String(cell.bez).padStart(3)} z ${String(total).padStart(3)}`
+      + `  (${Math.round((cell.bez / total) * 100)} %)`);
+  }
+  console.log("");
+
   show("B - propadají dnešní bránou", groupB, 20);
   console.log("");
   show("C - jam-or-fold, tyhle se chytit nesmí", groupC, 8);

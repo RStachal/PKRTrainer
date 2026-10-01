@@ -551,6 +551,99 @@ export const OWNER_DECISIONS_2026_09_29: readonly OwnerDecision[] = [
   },
 ];
 
+/**
+ * Rozhodnutí z 1. 10. 2026: dvě otázky o významu zdroje, které se nepodařilo
+ * změřit, a dvě o rozpočtu noci.
+ */
+export const OWNER_DECISIONS_2026_10_01: readonly OwnerDecision[] = [
+  {
+    id: 1,
+    title: "Na 18 bb zdroj nenabízí dorovnání - je neobarvená ruka fold, nebo o ní zdroj mlčí?",
+    context: "Brána „jen jedna větev\" odmítá **11 záznamů ICM na 18 bb**, protože jejich legenda jmenuje "
+      + "jen agresivní akce (<code>3b/call | 3b/f | Jam</code>) a žádnou pasivní. Pravidlo zní: když je jmenovaná "
+      + "jen sázka s velikostí, zbývá dorovnat **i** složit a stránka neříká která - takže se záznam nepouští. "
+      + "Měřil jsem, jestli to tady platí, a <b>vyšlo mi jen podpůrné, ne průkazné</b>. Vynechaná pasivní akce "
+      + "je vlastnost krátkých stacků: do 20 bb ji nemá <b>33 ze 112</b> stránek (29 %), na 21-30 bb <b>2 z 62</b> "
+      + "(3 %), na 31-50 bb <b>12 ze 110</b> (11 %) a nad 50 bb <b>ani jedna z 82</b>. Čím hlouběji, tím jistěji "
+      + "zdroj flat jmenuje. To mluví pro to, že na 18 bb flat prostě není a neobarvené <b>je</b> fold - ale těch "
+      + "11 % na 31-50 bb říká, že to není čistě hloubkou, takže z toho nedělám pravidlo sám. "
+      + "Ty stránky jsou věrné (169 ze 169 tříd sedí na barvu i váhu); jde jen o to, co znamená prázdno.",
+    options: [
+      { code: "a", label: "Na 20 bb a méně brát prázdno jako fold", detail: "odemkne 11 záznamů ICM; opírá se o to, že na krátkých stackách se nedorovnává. Riziko: u 11 % stránek na 31-50 bb pasivní akce taky chybí, takže hranice není ostrá." },
+
+      { code: "b", label: "Nechat je odmítnuté", detail: "dnešní stav; nic se nezkazí, ale 11 záznamů leží. Brána padá do zavřena." },
+      { code: "c", label: "Rozhodnout podle akcí, ne hloubky", detail: "pustit jen stránky, kde je jamu v legendě (tam je fold jediná alternativa) - dnes už to tak funguje; tohle by jen přidalo 3bet vedle jamu. Nejmenší změna pravidla." },
+    ],
+    recommended: "b",
+    diary: "282",
+  },
+  {
+    id: 2,
+    title: "Šestnáct stránek HU barví 55 až 87 % mřížky - je ten zbytek fold, nebo nevyslovený?",
+    context: "Tady jsem si opravil vlastní domněnku. Napsal jsem ti, že těch 16 stránek HU a 2 BBSTR "
+      + "odmítáme možná zbytečně, protože jmenují výslovný <code>limp/fold</code>. Pak jsem změřil, jestli "
+      + "legenda účtuje celou mřížku - a <b>ani jedna z 93 odmítaných stránek neúčtuje všech 1326 kombinací</b>. "
+      + "Platí to i pro stránky, které za celé považujeme, takže ten test nerozhoduje nic a moje domněnka "
+      + "podložená není: <code>limp/fold</code> je akce s vlastními obarvenými buňkami, ne výrok o zbytku. "
+      + "Zůstává jediný rozdíl, a ten je kvantitativní: tyhle stránky mají <b>nevysvětlených 13 az 45 %</b> "
+      + "mřížky, kdežto squeeze stránky 94 az 96 %. U limpovací strategie v heads-upu je „zbytek složím\" "
+      + "věrohodné; u squeeze taky, jen o moc větším kusu. Rozhodnout to může jen ten, kdo ví, jak zdroj myslí.",
+    options: [
+      { code: "a", label: "Pustit stránky, kde je nevysvětleno pod 50 %", detail: "odemkne 16 HU a 2 BBSTR. Hranice je volená, ne naměřená - a to je na ní nejslabší." },
+      { code: "b", label: "Nechat odmítnuté", detail: "dnešní stav; 18 stránek leží, zato hráč nedostane nic, co zdroj neřekl." },
+      { code: "c", label: "Přečtu ty stránky sám a rozhodnu po jedné", detail: "nejpřesnější a nejdražší; připravím je do stránky ke kontrole jako zvláštní skupinu." },
+    ],
+    recommended: "c",
+    diary: "282",
+  },
+  {
+    id: 3,
+    title: "Dvě desky se nedosolví ani na třetí pokus - zkusit je dráž, nebo je vyřadit?",
+    context: "Rodina <code>MTT9_25BB_CO_BTN_SRP</code> stojí na <b>10/12</b> a sama se nedokončí nikdy: dvě "
+      + "desky (<code>J73r</code>, <code>T84r</code>) spadly na třicetiminutový strop a nesou <code>.failed</code>, "
+      + "takže je monolit už nenabídne. Dokud tam ty značky leží, pack té rodiny se **nepřegeneruje** - drží ho "
+      + "brána proti půlce rodiny, a správně, protože deset desek ze dvanácti je menší obsah než dnešní. "
+      + "Ty dvě desky už sebraly <b>60 minut</b> nočního okna (dva pokusy po 30).",
+    options: [
+      { code: "a", label: "Zkusit je s vyšším stropem, třeba 60 minut", detail: "rodina se dokončí, ale v nejhorším to sebere dvě hodiny okna, tedy asi 14 desek jinde." },
+      { code: "b", label: "Vyřadit je z dávky", detail: "rodina bude mít 10 desek místo 12 a pack se přegeneruje menší - to je přesně ta ztráta z bodu 280, jen dobrovolná." },
+      { code: "c", label: "Nechat rodinu stát na starém packu", detail: "dnešní stav; obsah té rodiny zůstane z červencových ranží, ale celý a vnitřně jednotný." },
+    ],
+    recommended: "a",
+    diary: "283",
+  },
+  {
+    id: 4,
+    title: "Klíč packu nemá toho, kdo otevření dorovnal - 11 z 12 buněk se proto dělí o víc mřížek",
+    context: "Rodina MUL nese v názvu i dorovnávajícího (<code>EP_CO</code>, <code>EP_MP</code>, "
+      + "<code>EP_SB</code>…) a ten se do klíče nedostane. Změřeno: <b>11 z 12 srážejících se buněk</b> je tenhle "
+      + "případ, mřížky se v nich neshodnou u 6 az 16 tříd ze 169, nejhůř 31. Která z nich přistane, "
+      + "<b>neurčuje žádné napsané pravidlo</b> - do 1. 10. to hlídač navíc hlásil obráceně a u šesti buněk "
+      + "tvrdil „tahle přistane sama\", což neplatilo ani jednou (počítal rozložení místo mřížek).",
+    options: [
+      { code: "a", label: "Dát dorovnávajícího do klíče", detail: "data jsou - rodina MUL ho má v názvu u všech 41 souborů. Ale trenažér se na něj musí ptát, jinak se na to nedá odpovědět a záznamy zůstanou nerozdané." },
+      { code: "b", label: "Vybírat deterministicky s napsaným pravidlem", detail: "třeba „nejširší range\" nebo „nejbližší dorovnávající\". Levné a hned, ale je to volba za zdroj." },
+      { code: "c", label: "Nechat ty buňky nedodané", detail: "dnešní stav; schválení je platné, doručení čeká. Hráč dostává dnešní obecný záznam." },
+    ],
+    recommended: "a",
+    diary: "285",
+  },
+];
+
+/** Úvod stránky k rozhodnutím z 1. 10. 2026. */
+export const OWNER_DECISIONS_2026_10_01_INTRO = `<p><b>Čtyři otázky.</b> První dvě jsou o tom, co zdroj
+znamená, a obě jsem se pokusil změřit, abych je nemusel posílat. Nepovedlo se - a u druhé mi měření
+<b>vyvrátilo</b> to, co jsem ti psal včera.</p>
+<ol>
+<li><b>Noc běží dobře:</b> šest rodin dokončeno, 163 desek zbývá, zhruba tři noci. Víko ani hibernace
+noc nezastaví - na síti se stroj neuspí a nastavení se obnovuje před každým solvem.</li>
+<li><b>Opravil jsem si domněnku:</b> těch 16 stránek HU neodmítáme zbytečně kvůli chybějícímu foldu
+v legendě. Ani jedna z 93 odmítaných stránek neúčtuje všech 1326 kombinací, takže ten test nerozhoduje.</li>
+<li><b>Ke čtení máš pořád 54 mřížek</b> z 24. 9.; squeeze bez nich do packu nejde.</li>
+</ol>
+<p>U každé otázky je doporučení a číslo, ze kterého plyne. Vyplň, ulož stránku (Ctrl+S) nebo zkopíruj
+odpovědi tlačítkem, a pošli.</p>`;
+
 /** Úvod stránky k rozhodnutím z 29. 9. 2026. */
 export const OWNER_DECISIONS_2026_09_29_INTRO = `<p><b>Tři otázky.</b> První je ta, kvůli které jsem psal: stroj v noci
 jede naplno a přitom ti od 23. 9. nemá co nového spočítat.</p>
