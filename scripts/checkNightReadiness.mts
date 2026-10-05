@@ -438,6 +438,17 @@ if (failed.length === 0) {
   console.log(`${failed.length} z ${checks.length} nesedí. Stroj spraví (jako správce):`);
   console.log("  powershell -NoProfile -ExecutionPolicy Bypass -File scripts/scheduled/install-night-tasks.ps1");
   console.log("Prázdnou frontu tím nespravíš - ta chce mtt:resolve-stage nebo mtt:seat-pair-expansion.");
+  /*
+   * A když ani ty nic nevrátí, je to rozhodnutí, ne úklid. K 5. 10. 2026 je osa
+   * 25 bb vyčerpaná na všech třech směrech (dvojice 29/29, šablona textur došla,
+   * přesolvení hlásí „liší se 0"), takže další práce znamená jinou hloubku - a
+   * ta stojí jinak: 25 bb je 148 s na desku, 100 bb přes 2,5 h. Hlídač to
+   * nerozhodne a nemá předstírat, že na to má příkaz.
+   */
+  if (nightsAhead < NIGHTS_AHEAD_MIN) {
+    console.log("Když obojí vrátí nulu, je osa vyčerpaná a další práce chce rozhodnutí");
+    console.log("o hloubce - měřené ceny a možnosti jsou v Agents/MTT_ORCHESTRATOR.md, vrstva 7.");
+  }
   if (stuck.length > 0) {
     console.log(`Zaseknutou rodinu taky ne: deska vyčerpala všechny ${ESCALATION_STEPS} stupně`);
     console.log("žebříku pokusů, takže ji runner už nenabídne. Zbývá ji z dávky vyřadit, nebo");
