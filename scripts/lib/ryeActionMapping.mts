@@ -148,7 +148,25 @@ const ACTIONS_BY_CONTEXT: ReadonlyMap<MappedContext, ReadonlyMap<string, MappedA
       // kontext se hledá podle **všech** barev, padala celá stránka. Plán proti
       // 4betu tu zdroj neuvádí, takže se ani nepředstírá.
       ["squeeze", { action: "SQUEEZE", lost: "" }],
-      ["3bet/call", { action: "3BET", lost: "zdroj říká, že proti 4betu se dorovnává" }],
+      /*
+       * `3bet/call` ve squeeze spotu je **squeeze**, ne 3bet.
+       *
+       * Do 1. 10. 2026 šel na 3BET, protože se čte doslova. Jenže tady už před
+       * hrdinou leží otevření **a** dorovnání, takže navýšení na 9 bb je jedna
+       * a tatáž akce, ať ji zdroj pojmenuje `3bet/call to 9bb` (hodnota) nebo
+       * `Bluff Squeeze to 9bb` (blaf) - a přesně takhle smíchané to osm stránek
+       * MUL na 40 bb píše. Trenažér nabízí FOLD, CALL, 3BET i SQUEEZE
+       * (`actionTree.ts`) a hodnotí přesnou shodou (`scoring.ts`), takže hráč
+       * s AA by za SQUEEZE dostal chybu, kdežto s AQo by SQUEEZE zmáčknout
+       * musel - jedna mřížka, dvě různé správné odpovědi na tutéž akci.
+       *
+       * Vlastník to našel čtením mřížek 1. 10. 2026: osm stránek (id154-161)
+       * odmítl s „sloučení akcí vadí". Opora, že je to vada překladu a ne
+       * strategie: stránky, kde zdroj píše `Squeeze/call to …` (SB, BB a všechny
+       * 100bb), mají hodnotu i blaf jako SQUEEZE, a produkční pack ve squeeze
+       * kontextu 3BET nepoužívá vůbec - 58 záznamů, jen CALL, SQUEEZE a JAM.
+       */
+      ["3bet/call", { action: "SQUEEZE", lost: "zdroj říká, že proti 4betu se dorovnává" }],
     ])],
     // BB proti limpu malého blindu (odpověď vlastníka 2a, 22. 9. 2026).
     //

@@ -1,5 +1,7 @@
 import { readFileSync } from "node:fs";
 
+import { situationFromFileName } from "./ryeActionMapping.mts";
+
 /**
  * Čtení mřížek ranží z vlastníkova Rangevieweru.
  *
@@ -119,6 +121,59 @@ const HAND_BY_POSITION: readonly string[] = RANKS.flatMap((row, rowIndex) =>
  * pro soubory, které přijdou.
  */
 const CELL_LABEL = /^([AKQJT2-9]{2}[so]?)$/;
+
+/**
+ * Akce, které znamenají „hrdina pokračuje pasivně".
+ *
+ * `flatcall` a `defend` se hledají **bez hranic slova**: legenda je píše jedním
+ * slovem a `\bcall\b` na `flatcall` nesedí. První měření 30. 9. 2026 kvůli tomu
+ * zařadilo tři stránky ICM3 mezi propadající, přestože `flatcall` mají.
+ */
+const PASSIVE_ACTION = /(call|flat|limp|check|defend)/i;
+
+/**
+ * `3B/Call` je odpověď na 4bet, ne první akce; za pasivní se počítat nesmí.
+ *
+ * Korpus píše tenhle pojem **třemi pravopisy** a do 1. 10. 2026 vzor znal jen
+ * jeden: chtěl lomítko hned za `3b`, takže `3bet/call` (delší jméno akce) ani
+ * `Squeeze call` (mezera místo lomítka) nesedly a počítaly se za pasivní akci.
+ * `SQU-40BBMais-BB-vs-EP-MP` tím bránou prošla, ačkoli kreslí jen squeeze
+ * (5,7 % kombinací) - jako záznam by BB na 40, 50, 60 a 75 bb učila skládat
+ * 94 % rukou, kdežto MUL pro týž typ spotu dorovnává 506 kombinací. Našel to
+ * vlastník při čtení mřížek 1. 10. 2026 (odpovědi 1 a 2); ostatní čtyři SQU
+ * stránky brána držela správně, takže ta jedna vypadala jako výjimka a byla
+ * to vada pravopisu.
+ */
+const COMPOUND_RAISE = /(squeeze|3b(?:et)?|4b(?:et)?|sq|iso)(?:\s*\/\s*|\s+)(call|fold|f|c|broke)\b/i;
+
+const ALL_IN = /(jam|all\s*in|allin|shove|push)/i;
+
+/** Strop, pod kterým vlastník bere jmenovaný jam bez flatu za jam-or-fold (1a). */
+const SHORT_STACK_BB = 20;
+
+/** Sedačka se svou hloubkou, `sb18bb` i `ep30bb`; stejný tvar jako v mapování. */
+const SEAT_WITH_STACK = /(utg1|utg2|utg|ep|mp|lj|hj|co|bu|btn|sb|bb)(\d+)bb/gi;
+
+/**
+ * Efektivní stack ze jména souboru: nejmenší hloubka, kterou jméno jmenuje.
+ *
+ * `ICM3-sb18bb-ep30bb` nese dvě hloubky a o tom, jestli se dá dorovnávat,
+ * rozhoduje ta kratší - proto minimum, ne hloubka hrdiny (upřesnění vlastníka
+ * k 1a). Jména s jedinou hloubkou vrátí ji; jména bez hloubky vrátí 0 a volající
+ * je tím pádem za krátký stack nevezme.
+ *
+ * Hodnoty pod dva blindy se zahazují jako artefakt čtení: `utg20bb` je „UTG na
+ * 20 bb", ne „UTG+2 na 0 bb" (naměřeno 1. 9. 2026 na `ICM14-utg20bb-btn8bb`,
+ * dvanáct jmen tohohle tvaru v korpusu). Minimum by na takovém jménu spadlo na
+ * nulu a udělalo by z každé takové stránky krátký stack.
+ */
+export function effectiveStackBB(path: string): number {
+  const stem = (path.split(/[\\/]/).pop() ?? path).replace(/\.html$/i, "");
+  const depths = [...stem.matchAll(SEAT_WITH_STACK)]
+    .map((match) => Number(match[2]))
+    .filter((depth) => depth >= 2);
+  return depths.length === 0 ? 0 : Math.min(...depths);
+}
 
 export function readRyeGrid(path: string): RyeGrid | undefined {
   const text = readFileSync(path, "utf8");
@@ -258,24 +313,60 @@ export function readRyeGrid(path: string): RyeGrid | undefined {
    * krátkých stackách se nedorovnává, což vlastník už jednou přijal u obsahu
    * push-fold na 20 bb (body 143 a 264). Kdyby to přestalo platit, přestane
    * platit i tahle podmínka.
-   *
-   * `flatcall` a `defend` se hledají **bez hranic slova**: legenda je píše
-   * jedním slovem a `\bcall\b` na `flatcall` nesedí. První měření kvůli tomu
-   * zařadilo tři stránky ICM3 mezi propadající, přestože `flatcall` mají.
    */
-  const PASSIVE_ACTION = /(call|flat|limp|check|defend)/i;
-  /** `3B/Call` je odpověď na 4bet, ne první akce; za pasivní se počítat nesmí. */
-  const COMPOUND_RAISE = /(squeeze|3b|4b|sq|iso)\s*\/\s*(call|fold|f|c|broke)/i;
-  const ALL_IN = /(jam|all\s*in|allin|shove|push)/i;
-
   const namesPassive = legend.some(
     (entry) => PASSIVE_ACTION.test(entry.action) && !COMPOUND_RAISE.test(entry.action),
   );
   const onlyAllIn = legend.length > 0 && legend.every((entry) => ALL_IN.test(entry.action));
-  // Strop pokrytí je pojistka, ne rozlišovač: všech 31 naměřených leží pod 29 %.
-  const branchOnly = !namesPassive && !onlyAllIn && colouredShare < 0.5;
+  const namesAllIn = legend.some((entry) => ALL_IN.test(entry.action));
 
-  const partial = (Math.abs(legendPercentSum - 100) <= 2 && colouredShare < 0.9) || branchOnly;
+  /*
+   * Krátký stack: jmenovaný jam a žádný flat znamená jam-or-fold (rozhodnutí
+   * vlastníka 1a, 1. 10. 2026).
+   *
+   * `onlyAllIn` výš chce, aby all-in byla **jediná** jmenovaná akce. Dvanáct
+   * stránek SB 18 bb (ICM3, ICM5, ICM7) má vedle jamu ještě 3bet - legenda zní
+   * `3b/call | 3b/f | Jam` - takže jím neprojdou, přesto je u nich neobarvené
+   * fold. Vlastník to rozhodl z obsahu těch stránek, ne z hloubkové statistiky:
+   * 70 tříd je tam obarvených jen zčásti a zbytek každé z nich je prázdný
+   * (A3o 90 %, A4o 67 %, A5o-A9o a ATo 50-90 %, K3s-K5s a QJo 50 %). Kdyby
+   * prázdno znamenalo „zdroj mlčí", tvrdil by zdroj, že SB s 18 bb pod ICM
+   * flatuje A3o v devíti případech z deseti. Druhý důkaz je od téhož autora:
+   * flat na 18 bb ze SB nakreslí, když ho chce - v rodině ICM ho má na dvou
+   * stránkách ze čtyř, v ICM3, ICM5 a ICM7 ani jednou.
+   *
+   * Tři podmínky, každá z vlastníkova upřesnění:
+   *
+   * - **Efektivní stack**, tedy menší z hrdiny a otvírače, ne hloubka hrdiny:
+   *   o tom, jestli se dá dorovnávat, rozhoduje ten kratší.
+   * - **Strop 20 bb.** Naměřená opora je jen podpůrná, ne průkazná: pasivní
+   *   akci nemá 29 % stránek do 20 bb, ale i 11 % na 31-50 bb - proto je
+   *   strop vlastníkova volba a ne odvozené číslo.
+   * - **BB je venku.** Tam je prázdno často call nebo check, ne fold
+   *   (`ICM11-bb13bb-sb9bb-l` proti limpu check nejmenuje a barví 40 %).
+   */
+  const situation = situationFromFileName(path.split(/[\\/]/).pop() ?? path);
+  const effectiveStack = effectiveStackBB(path);
+  const shortStackJamOrFold = namesAllIn
+    && effectiveStack > 0 && effectiveStack <= SHORT_STACK_BB
+    && situation?.seat !== "BB";
+
+  /*
+   * Účtuje stránka i neobarvené ruce? Když ano, `fillFolds` je s ní v souladu.
+   *
+   * Do 1. 10. 2026 tenhle test hlídal jen druhou odrůdu (`branchOnly`), kdežto
+   * první - legenda sečte sto, obarvená je část - platila bez výjimky. Tím
+   * padalo 16 stránek HU a 2 BBSTR, které pasivní akci jmenují výslovně
+   * (`limp/fold`, `Call vs 2x raise (otherwise fold)`) a prázdné mají jen dno
+   * range: J4o-J2o, T5o-T2o, 9xo az 4xo, 32o. Vlastník je přečetl všech 18
+   * a rozhodl (2a), že rozdíl proti squeeze stránkám není v tom, **kolik** je
+   * prázdna, ale **co** je jmenované - takže hranice pokrytí se za rozlišovač
+   * brát nesmí a obě odrůdy teď stojí na témže testu.
+   */
+  const accountsForRest = namesPassive || onlyAllIn || shortStackJamOrFold;
+  // Strop pokrytí je pojistka, ne rozlišovač: všech 31 naměřených leží pod 29 %.
+  const partial = !accountsForRest
+    && ((Math.abs(legendPercentSum - 100) <= 2 && colouredShare < 0.9) || colouredShare < 0.5);
 
   return {
     file: path, title, legend, hands, combosByColor, mismatches,

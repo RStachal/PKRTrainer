@@ -39,6 +39,29 @@ describe("slovník importu ranží", () => {
     ).toBeUndefined();
   });
 
+  it("`3bet/call` ve squeeze spotu je SQUEEZE, ve vs-open pořád 3BET", () => {
+    /*
+     * Vlastníkovo čtení mřížek 1. 10. 2026, osm stránek (id154-161) odmítnutých
+     * s „sloučení akcí vadí".
+     *
+     * Ve squeeze spotu už před hrdinou leží otevření **a** dorovnání, takže
+     * navýšení na 9 bb je jedna a tatáž akce, ať ji zdroj píše `3bet/call to
+     * 9bb` (hodnota) nebo `Bluff Squeeze to 9bb` (blaf). Do 1. 10. šlo první na
+     * 3BET a druhé na SQUEEZE, takže jedna mřížka měla na tutéž akci dvě různé
+     * správné odpovědi - a trenažér hodnotí přesnou shodou.
+     *
+     * Druhá polovina testu je ta důležitější: v `VS_OPEN` se nic nezměnilo.
+     * Tam hrdina čelí otevření, žádné dorovnání před ním není a `3bet/call` je
+     * doopravdy 3bet.
+     */
+    expect(mapAction("SQUEEZE", "3bet/call")?.action).toBe("SQUEEZE");
+    expect(mapAction("SQUEEZE", "3bet/call to 9bb")?.action).toBe("SQUEEZE");
+    expect(mapAction("SQUEEZE", "Bluff Squeeze to 9bb")?.action).toBe("SQUEEZE");
+    expect(mapAction("VS_OPEN", "3bet/call")?.action).toBe("3BET");
+    // Velikost se ztrácí do poznámky, ne do akce - squeeze má produkt jeden.
+    expect(mapAction("SQUEEZE", "3bet/call to 9bb")?.lost).toContain("velikost 9 bb");
+  });
+
   it("„All in | Call“ se jménem souboru rozhodne tak, jak rozhodl majitel", () => {
     // Bod 249, 14. 9. 2026: `MUL-*` je squeeze multiway a `All in` je vlastní
     // squeeze-jam; `ICM*-r` je obrana proti raisu a `All in` je 3bet-jam.

@@ -1,0 +1,46 @@
+# DrillEV — 1. 10. 2026, návrh odpovědí na rozhodnutí (otisk e2e8ca77)
+# Vyplnil Claude na pokyn vlastníka „vyplň přiložené soubory z podkladů v PKR, co nenajdeš,
+# dohledej" - tedy návrh, ne vlastníkův vlastní zápis (stejná výhrada jako 24. a 29. 9.).
+# Vlastník ho 1. 10. přeposlal jako svoje rozhodnutí se slovy „zde mas vyplnene drafty".
+# Zpracuje: npm run mtt:decision-answers -- --answers-file=<tenhle soubor>
+# U otázek 1 a 2 volí jinak než doporučení (a místo b, a místo c) - důvod je v T1 a T2.
+
+DRILLEV-DECISIONS-V1 e2e8ca77 1a 2a 3a 4a
+T1: Volím a), jinak než doporučení, ale s upřesněním: hloubka je efektivní stack (menší z hrdiny a otvírače), BB je z pravidla venku a legenda musí jmenovat jam. Rozhoduje důkaz přímo z těch stránek, ne jen hloubková statistika. Dvanáct stránek SB 18 bb (ICM3, ICM5, ICM7) má 70 tříd obarvených jen zčásti a zbytek každé z nich je prázdný: A3o 90 %, A4o 67 %, A5o až A9o 50-90 %, ATo 50-90 %, K3s až K5s 50 %, QJo 50 %. Kdyby prázdno znamenalo „zdroj mlčí", mohl by to být i call - jenže pak by zdroj tvrdil, že SB s 18 bb pod ICM flatuje A3o v 90 % případů. To nedělá žádný kouč ani solver; ta zbylá část je fold. Druhý důkaz je od téhož autora: flat na 18 bb ze SB umí nakreslit, když ho chce. V rodině ICM ho má na dvou stránkách ze čtyř (proti CO 60 bb T9s, 98s, KJo; proti HJ 45 bb 77-66, A9s a půlky AJs, ATs, A8s), v ICM3, ICM5 a ICM7 ani jednou. Pokerově to sedí: SB s 18 bb s BB za zády skoro neflatuje (squeeze riziko, mimo pozici, ICM), hraje 3bet/jam nebo fold, a přesně to ty stránky kreslí. BB vyjímám, protože tam je prázdno často call nebo check: ICM11-bb13bb-sb9bb-l proti limpu check nejmenuje a obarvené má jen 40 %. Proti c): jam v legendě sám nestačí - na 30-40 bb by stránka „3bet a jam" bez flatu byla neúplná, takže hloubka podmínkou zůstat musí. Dvě věci k tomu. (1) Brána dnes rozhoduje podle pravopisu: COMPOUND_RAISE chce lomítko hned za „3b" nebo „squeeze", takže „3bet/call" a „Squeeze call" bez lomítka čte jako pasivní call. Proto id78 (ICM-sb18bb-ep20bb) a id76 (ICM-sb18bb-btn35bb) bránou prošly, ačkoli jsou stejného druhu jako těch jedenáct odmítnutých. Po a) je to náhodou správně, ale id209 (SQU-40BBMais-BB-vs-EP-MP, legenda „Squeeze call | Squeeze / Fold") propouští omylem dodnes: jako záznam by BB na 40-75 bb skládal 94 % rukou. Opravit regulární výraz na tvar s mezerou i s „3bet". (2) id100 (ICM3-sb18bb-ep30bb) a) neodemkne: jamuje 55 a skládá 66-88, a legenda 55 do jamu počítá, takže je to chyba ve zdroji. V ranze-nove má x3.
+T2: Volím a), ale ne přes hranici 50 % - přes pravidlo, které jsem ověřil na všech 18 stránkách. Prázdno je fold, když (1) jde o první akci (HU ze SB: open, limp nebo shove, nic jiného než fold nezbývá), nebo (2) legenda jmenuje pasivní akci (limp, call, check, flat, defend) a prázdné jsou jen nejslabší ruce. Přečetl jsem všech 16 HU a obě BBSTR. U každé je neobarvené dno range (J4o-J2o, T5o-T2o, 9xo až 4xo, 32o), legendy limp i call jmenují a u BB proti raisu stojí dokonce „Call vs 2x raise (otherwise fold)". Rozdíl proti squeeze stránkám tedy není v tom, kolik je prázdna, ale co je jmenované. SQU jmenuje jen sázky (squeeze/call, squeeze/fold), takže zbytek může být call i fold. HU a BBSTR jmenují i pasivní akci, takže zbývá jen fold. Podmínka (2) potřebuje stejnou opravu pravopisu jako otázka 1, jinak se za pasivní akci počítá „squeeze call". Totéž pravidlo by správně pustilo F3B-100BB-UTG1-vs-UTG (flatcall jmenovaný) a SQU-40BBMais-SB-vs-20BB-CO-OPEN-Mais-BU-Flat (flat jmenovaný), a SQU bez flatu nechá stranou. Dvě výhrady, aby a) nevypadalo jako hotový import. HU stránky dnes nemají kontext (contextFromFileName předponu HU- nezná). Obě BBSTR jsou mapy hloubek („Jam < 20bb" až „< 35bb"), takže čekají na rozklad po hloubkách stejně jako rejam. U nich a) znamená, že je přestane držet brána, ne že jdou do packu.
+T3: Volím a). Ty dvě desky nejsou rozbité, jsou pomalé, a strop 30 min je na ně těsný. V téže rodině na nových ranžích trvaly ostatní rainbow desky 20,0 min (742r) a 23,2 min (654r). J73r a T84r jsou taky rainbow, tedy bez izomorfie barev, a nová CO range proti BTN je širší než původní, na které tytéž dvě desky v téže rodině doběhly za 5,8 a 5,7 min. K tomu běžely 21:15-22:15, v jediném úseku noci, kdy se zpomalovalo všechno: A76tt 14,6 min proti 4-6 min ve třech dalších rodinách téže noci. Navíc tehdy při každém tiku běžela porada z bodu 283, což je od 1. 10. pryč. Odhad: na klidném stroji a se stropem 60 min doběhnou kolem 30-40 min, celkem asi hodina jednou, ne dvě. Prakticky: smazat .failed, pustit je až na konec noci po ostatních nastagovaných deskách, strop 60 min. Kdyby spadly i potom, strop dál nezvedat a u těch dvou desek povolit accuracy 1 % místo 0,5 % (pro trenažér pořád bohatě přesné). Proti b): J73r a T84r jsou suché rainbow flopy s J nebo T nahoře, nejčastější textura, jakou rodina CO vs BTN potká; vypustit je znamená díru přesně tam, kde se hraje nejvíc. Proti c): starý pack stojí na starých preflop ranžích, takže by si postflop odporoval s RFI, kterou hráč dnes trénuje podle RYE.
+T4: Volím a), a tím potvrzuji 3a z 24. 9. Že na dorovnávajícím záleží, je vidět přímo v mřížkách z dnešní stránky. BTN 100 bb proti UTG squeezuje 67 kombinací, když flatnul EP, 84 při MP a 102 při CO. BB 40 bb callne 506 kombinací proti EP/MP flatu, 644 proti CO/BU a 751 proti SB. Pravidlo z b) tohle nevystihne: „nejširší" by hráče učilo squeezovat do EP flatu o polovinu víc a „nejbližší" je náhoda podle sedačky. K a) tři věci: (1) klíč je seznam dorovnávajících, ne jedno pole, protože dvě SQU stránky mají dva; (2) skupinu (EP/MP, CO/BU, LP) drill rozdá jako konkrétní sedačku mezi otvíračem a hrdinou a ukáže ji, a „EP" jako dorovnávající při otvírači UTG je UTG+1 nebo UTG+2; (3) když na rozdanou situaci sedí víc stránek, vyhrává přesná hloubka před „40+", jmenovaná sedačka před skupinou a úplná strategie (MUL) před squeeze-only (SQU). A jedna věc do doby, než to trenažér umí: c) není neutrální. Dnešní obecný squeeze záznam je stejný pro všechny hloubky od 15 do 150 bb (BTN call 9 tříd, squeeze 12), na 20 bb v něm stojí squeeze s velikostí tam, kde všechny RYE stránky jamují, a od RYE se liší skoro ve všech porovnaných třídách (u 20bb mřížek 13 z 13 až 17 z 18). Jestli bude a) trvat déle než pár dní, je lepší dočasně pustit mřížku proti nejtěsnějšímu dorovnávajícímu (nejranější sedačka) než nechat obecný záznam.
+
+# -- Z čeho odpovědi stojí (dá se přepočítat) ---------------------------------
+#
+# Otázka 1 - korpus RYE db, všech 12 stránek SB 18 bb v rodinách ICM3, ICM5, ICM7:
+#   legenda všude „3b/call | 3b/f | Jam", 70 tříd obarvených jen zčásti, zbytek prázdný
+#   (ICM3-sb18bb-btn75bb: K5s, K4s, K3s 50 %, QJo 50 %, A7o-A5o 50 %, A4o 67 %, A3o 90 % prázdno;
+#    ICM3-sb18bb-co60bb: A9o, A8o 80 %, A5o 90 %; ICM7-sb18bb-co60bb: A9o, A8o 85 % …).
+#   Rodina ICM (jiné rozložení stacků) flat na 18 bb ze SB kreslí: proti CO 60 bb T9s, 98s, KJo;
+#   proti HJ 45 bb 77-66, A9s a půlky AJs, ATs, A8s. Proti BTN 35 bb a EP 20 bb flat nekreslí.
+#   Brána (scripts/lib/ryeRangeCorpus.mts): COMPOUND_RAISE nesedí na „3bet/call" ani na
+#   „Squeeze call", takže se počítají jako pasivní akce.
+#   Draft: id76 ICM-sb18bb-btn35bb, id78 ICM-sb18bb-ep20bb, id209 SQU-40BBMais-BB-vs-EP-MP
+#   nemají poznámku „jen jedna větev", i když jsou stejného druhu jako ty, které ji mají.
+#
+# Otázka 2 - všech 16 HU a obě BBSTR (vs-EP-multiway-vs-2x, vs-MP-BU-CO-vs-2x):
+#   neobarvené je u každé dno range (např. HU-25BB-OOP-15-20BB-vs-Raise: 82s, 72s, J4o-J2o,
+#   T5o-T2o, 95o-92o, 84o-82o, 74o-72o, 63o-62o, 53o-52o, 42o+, 32o). HU stránky nemají
+#   kontext v contextFromFileName; BBSTR jsou mapy hloubek.
+#
+# Otázka 3 - artifacts/decomposition/expansion.log a raw/ rodiny MTT9_25BB_CO_BTN_SRP:
+#   30. 9. 21:01 A76tt 14,6 min; 21:15 J73r a 21:45 T84r „SELHALO po 30.0 min (rc=timeout)";
+#   22:15 654r 23,2 min; 22:38 QQ7r 21,4 min; 23:00 955tt 7,2 min.
+#   Noc 29./30. 9.: 986tt 6,5, AT4mono 3,9, 742r 20,0, K98tt 12,7 min.
+#   Tytéž desky téže noci v jiných rodinách: HJ_BTN J73r 18,6 / T84r 18,9, HJ_CO J73r 7,7 /
+#   T84r 15,7 min. Na původních ranžích: CO_BTN J73r 5,8 / T84r 5,7 min.
+#   Parametry desky: set_accuracy 0.5, set_max_iteration 1200, 12 vláken, izomorfie zapnutá.
+#
+# Otázka 4 - draft.json z 30. 9. a produkční pack regular ante ON:
+#   BTN 100 bb proti UTG squeeze 67 (EP flat, id126), 84 (MP, id127), 102 (CO, id125) kombinací;
+#   BB 40 bb proti UTG call 506 (EP/MP, id150), 644 (CO/BU, id149), 751 (SB, id152).
+#   Obecný squeeze záznam packu: stejný na 15-150 bb, BTN call 9 tříd a squeeze 12; 58 squeeze
+#   záznamů používá jen CALL, SQUEEZE a JAM.
+#
+# Kde píšu „zdroj tvrdí", myslím tím jen to, co je na jeho stránkách nakreslené a napočítané.
