@@ -304,9 +304,17 @@ níž, se hlásí jako ztrátová, i když všechny ostatní brány svítí zele
    neudělá sám. Naměřené ceny:
 
    - **jiná hloubka** — 25 bb stojí 148 s na desku, **100 bb přes 2,5 h**
-     (měřeno generátorem dávky). Mezi tím je 40 a 50 bb nezměřených. Jedna
-     hloubka navíc je 29 rodin × 6 az 18 desek, tedy při 25bb tempu 3 az 5
-     nocí, při 100bb tempu měsíce.
+     (měřeno generátorem dávky). Jedna hloubka navíc je 16 rodin × 6 desek.
+
+     **40 bb změřeno 5. 10. 2026 a založeno:** jedna deska
+     (`MTT9_40BB_UTG_2_HJ_SRP A72r`) doběhla za **546 s, tedy 9,3 min**,
+     exploitabilita 0,40 % proti cíli 0,5 %. Je to 3,7x dráž než 25 bb při 1,6x
+     hloubce (SPR 4,1 → 6,8), vejde se pod třicetiminutový strop, a 96 desek je
+     asi patnáct hodin, tedy půl druhé noci. Měřeno **jednou deskou**, takže je
+     to řádová cena, ne rozdělení - textura s ní hýbe.
+
+     **50 bb a výš zůstává nezměřené** a stagovat se na odhad nemá: deska nad
+     stropem stojí celých třicet minut okna a spotřebuje stupeň žebříku.
    - **tři zablokované dvojice** — `UTG_UTG_1`, `UTG_UTG_2`, `UTG_1_UTG_2` se
      nedají založit, protože preflop pack nemá `VS_OPEN|UTG+1|25` ani
      `VS_OPEN|UTG+2|25`. Není to práce pro solver, je to **mezera v obsahu

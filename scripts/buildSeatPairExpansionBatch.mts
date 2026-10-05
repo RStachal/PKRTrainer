@@ -110,6 +110,23 @@ const BOARD_IDS = ["A72r", "883r", "986tt", "AT4mono", "742r", "K98tt"] as const
  * sotva čtyři na 100BB. Šířka vzorů je dnes to, co chybí - dvaatřicet vzorů
  * proti pěti - takže mělká hloubka napříč vzory přinese mnohem víc než hloubka
  * u jednoho. Hlubší jde zapnout přes `--depths`, ale má se to dělat vědomě.
+ *
+ * ## 40BB změřeno 5. 10. 2026
+ *
+ * Osa 25BB se toho dne vyčerpala (dvojice 29/29, šablona textur došla,
+ * přesolvení hlásí „liší se 0"), takže další hloubka přestala být volbou a
+ * stala se nutností. Místo odhadu jedna deska:
+ * `MTT9_40BB_UTG_2_HJ_SRP A72r` doběhla za **546 s, tedy 9,3 min**, s celkovou
+ * exploitabilitou 0,40 % - pod cílem 0,5 %, takže konvergovala.
+ *
+ * Proti 148 s na 25BB je to **3,7x dráž** při 1,6x hloubce; efektivní stack
+ * roste z 2250 na 3750 žetonů, tedy SPR 4,1 na 6,8. Devadesát šest desek je tím
+ * asi patnáct hodin, tedy **půl druhé noci**, a vejde se to pod třicetiminutový
+ * strop runneru i pod dvanáctiminutový plán `BOARD_MINUTES`.
+ *
+ * Je to **jedna deska, ne rozdělení**: A72r je ace-high rainbow, a textura
+ * s cenou hýbe (na 25BB šly rainbow desky 20-23 min proti 4-6 min u ostatních).
+ * Na 50BB a výš cena naměřená není a odhadovat se nemá.
  */
 const DEPTHS: readonly StackBucket[] = ((): readonly StackBucket[] => {
   const raw = process.argv.find((arg) => arg.startsWith("--depths="))?.split("=")[1];
