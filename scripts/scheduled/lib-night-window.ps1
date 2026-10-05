@@ -31,6 +31,40 @@ function Write-NightLog {
   try { Add-Content -Path $Log -Value $line -Encoding utf8 } catch { }
 }
 
+# Zapsat, z čeho stroj doopravdy jede.
+#
+# ## Proč to tu je
+#
+# Noc 1.-2. 10. 2026 přišla o 8 hodin 21 minut: v 23:15:51 stroj usnul a vzbudil
+# se v 7:36:50. Systémový log uvádí důvod bez obalu - `Důvod spánku: Battery`.
+# Notebook nebyl v zásuvce.
+#
+# A log noci o tom mlčel. Každý tik poslušně hlásil „viko na siti: nedelat nic"
+# a „na siti: neuspavat necinnosti" - obě věty jsou pravdivé o tom, co se
+# nastavilo (`ACSettingIndex`), a obě se čtou jako záruka, že noc doběhne.
+# Přitom když stroj na síti není, platí hodnoty pro baterii a nastavení pro síť
+# je bez účinku. Dvě zelené věty tedy stály nad nocí, která spala.
+#
+# Proto se od 2. 10. 2026 zapisuje zdroj napájení zvlášť a jako první: je to
+# jediný řádek, ze kterého se dá poznat, jestli ty dva pod ním něco znamenají.
+function Write-PowerSource {
+  param([string]$Log)
+  try {
+    $b = @(Get-CimInstance Win32_Battery -ErrorAction Stop)
+    if ($b.Count -eq 0) {
+      Write-NightLog -Log $Log -Message "napajeni: sit (stroj bez baterie)"
+    } elseif ($b[0].BatteryStatus -eq 2) {
+      Write-NightLog -Log $Log -Message "napajeni: sit"
+    } else {
+      Write-NightLog -Log $Log -Message ("POZOR: napajeni je BATERIE ({0} %); nastaveni pro sit " +
+        "neplati a Windows uspi stroj, az baterie dojde. Okno neni jiste - zapoj stroj." -f
+        $b[0].EstimatedChargeRemaining)
+    }
+  } catch {
+    Write-NightLog -Log $Log -Message "napajeni: nezjisteno ($($_.Exception.Message))"
+  }
+}
+
 # Brána okna. Runner se sám brání jen oknu delšímu než 11 h
 # (`MAX_WINDOW_HOURS`), což pustí i běh začatý v 19:00. Spouštěč při startu
 # systému může padnout kdykoli za dne, a to se má zapsat a skončit, ne solvit.

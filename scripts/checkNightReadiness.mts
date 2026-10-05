@@ -116,6 +116,84 @@ for (const task of TASKS) {
   }
 }
 
+/*
+ * Je stroj v zásuvce?
+ *
+ * Tohle je ta kontrola, která tu do 2. 10. 2026 chyběla - a kvůli tomu měl
+ * hlídač 21 zelených řádků nad nocí, která přišla o **8 hodin 21 minut**.
+ * Noc 1.-2. 10. 2026 usnula v 23:15:51 a probudila se v 7:36:50; systémový log
+ * uvádí důvod bez obalu: `Důvod spánku: Battery`. Z pětatřiceti desek udělala
+ * čtrnáct.
+ *
+ * Proč to ostatní řádky nechytily: `víko na síti`, `na síti neusne nečinností`
+ * i `časovače probuzení` čtou `ACSettingIndex`, tedy chování **při napájení ze
+ * sítě**. Když stroj na síti není, platí hodnoty pro baterii - a tam víko
+ * uspává (správně, notebook v tašce se jinak uvaří). Všechny tři tedy mohou
+ * být zelené a noc přesto spí. Kontrolovaly nastavení, ne skutečnost.
+ *
+ * `keep_system_awake` v runneru proti tomu nepomůže a pomoct nemůže:
+ * `PowerSetRequest(PowerRequestExecutionRequired)` říká „tenhle proces musí
+ * běžet dál", ne „nevypínej se, až dojde baterie".
+ *
+ * Řádek je varování, ne zákaz: pár desek na baterii je lepší než žádná a
+ * runner kvůli tomu neskončí. Jen to už nikdo nesmí přehlédnout.
+ */
+/*
+ * Řádky se spojují **novou řádkou, ne středníkem**: `; elseif` ani `; else`
+ * PowerShell nebere a celý příkaz spadne na „The term 'elseif' is not
+ * recognized". Ostatní čtení v tomhle souboru středník snesou, protože žádné
+ * z nich nemá větev.
+ *
+ * `BatteryStatus -eq 2` znamená „na síti" (`Win32_Battery`). Stroj bez baterie
+ * žádnou instanci nemá, a ten v zásuvce je vždycky.
+ */
+const POWER_READ = [
+  "$b = @(Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue)",
+  "if ($b.Count -eq 0) { 'sit-bez-baterie' }",
+  "elseif ($b[0].BatteryStatus -eq 2) { 'sit' }",
+  "else { 'baterie ' + $b[0].EstimatedChargeRemaining + ' %' }",
+].join("\n");
+const power = powershell(POWER_READ);
+add(
+  "stroj je v zásuvce (na baterii noc usne)",
+  power.startsWith("sit"),
+  power === "" ? "nepřečteno" : power,
+  "sit",
+);
+
+/*
+ * Prospala poslední noc část okna?
+ *
+ * Zpětná kontrola, ne předpověď - a jediná, která o uplynulé noci říká pravdu
+ * nezávisle na runneru. Noc 1.-2. 10. 2026 ohlásila „hotovo 14, selhalo 0",
+ * což zní jako úspěch; teprve systémový log ukázal, že mezi 23:15:51 a 7:36:50
+ * stroj spal, takže čtrnáct desek je třetina toho, co okno uneslo.
+ *
+ * Čte se `Kernel-Power` ID 42 („Systém přechází do režimu spánku"), protože
+ * ten nese i důvod - u té noci `Battery`. ID 506/507 (moderní úsporný režim)
+ * se tu nepočítají: těch je i za normální noci hodně a o ztrátě okna neříkají
+ * nic.
+ */
+const NIGHT_SLEPT_READ = [
+  "$now = Get-Date",
+  "$end = $now.Date.AddHours(7)",
+  "if ($end -gt $now) { $end = $end.AddDays(-1) }",
+  "$start = $end.AddHours(-10)",
+  "$e = Get-WinEvent -FilterHashtable @{LogName='System';"
+    + "StartTime=$start;EndTime=$end;ID=42} -ErrorAction SilentlyContinue",
+  "if ($null -eq $e) { 'nespala' } else {"
+    + " $d = ($e | ForEach-Object { if ($_.Message -match 'Dů?vod spánku: *(.+)') "
+    + "{ $Matches[1].Trim() } else { 'neuveden' } }) -join ','; "
+    + "\"spala {0}x ({1})\" -f @($e).Count, $d }",
+].join("; ");
+const slept = powershell(NIGHT_SLEPT_READ);
+add(
+  "poslední noc neprospala část okna",
+  slept === "nespala",
+  slept === "" ? "nepřečteno" : slept,
+  "nespala",
+);
+
 // Víko na síti kontroluju, ale **nepočítám na něj**: hodnotu vrací něco zpátky
 // na hibernaci (30. 9. po restartu ve všech čtyřech schématech), takže ji
 // nastavuje znovu wrapper na začátku každé noci. Tenhle řádek proto říká, jak
@@ -155,8 +233,39 @@ const wakeTimers = powershell(SLEEP_READ("bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d")
 add("časovače probuzení na síti povolené", wakeTimers === "1", wakeTimers === "" ? "nepřečteno" : wakeTimers, "1");
 
 /** Nastagované desky a jejich checkpointy, po rodinách. */
-function stagedProgress(): Map<string, { have: number; want: number; failed: number; order: number }> {
-  const progress = new Map<string, { have: number; want: number; failed: number; order: number }>();
+/**
+ * Kolik stupňů má žebřík pokusů - čte se **z runneru**, ne z konstanty tady.
+ *
+ * Dvě čísla na dvou místech se rozejdou; tohle se rozejít nemůže. Když se vzor
+ * nenajde, vrátí se 1, takže hlídač spadne na bezpečnou stranu: každá spadlá
+ * deska se bude počítat za vyčerpanou a nahlásí se jako zaseknutá rodina.
+ */
+function escalationSteps(): number {
+  try {
+    const source = readFileSync(
+      "Agents/solver-input/decomposition/run_night_expansion.py",
+      "utf8",
+    );
+    const found = /^ESCALATION = \((.+)\)\s*$/m.exec(source);
+    return found === null ? 1 : (found[1].match(/\(/g) ?? []).length || 1;
+  } catch {
+    return 1;
+  }
+}
+const ESCALATION_STEPS = escalationSteps();
+
+/** Stupeň ze značky `.failed`; značky bez stupně jsou z doby před žebříkem. */
+function failureLevel(marker: string): number {
+  try {
+    const found = /stupen=(\d+)/.exec(readFileSync(marker, "utf8"));
+    return found === null ? 1 : Number(found[1]);
+  } catch {
+    return 1;
+  }
+}
+
+function stagedProgress(): Map<string, { have: number; want: number; retrying: number; exhausted: number; order: number }> {
+  const progress = new Map<string, { have: number; want: number; retrying: number; exhausted: number; order: number }>();
   if (!existsSync(STAGED_PARAMS)) return progress;
   for (const name of readdirSync(STAGED_PARAMS).sort()) {
     if (!name.endsWith(".txt")) continue;
@@ -164,18 +273,44 @@ function stagedProgress(): Map<string, { have: number; want: number; failed: num
     const match = /(MTT9_[0-9]+BB_[A-Z0-9_]+?_(?:SRP|3BP)[A-Z0-9_]*)_([^_]+)$/.exec(stem);
     if (match === null) continue;
     const [, family, board] = match;
-    const row = progress.get(family) ?? { have: 0, want: 0, failed: 0, order: Number.MAX_SAFE_INTEGER };
+    const row = progress.get(family) ?? { have: 0, want: 0, retrying: 0, exhausted: 0, order: Number.MAX_SAFE_INTEGER };
     row.want += 1;
     const checkpoint = join(CHECKPOINT_ROOT, family, "raw", `pkrtrainer_${family}_${board}.json`);
     if (existsSync(checkpoint) && statSync(checkpoint).size > 0) row.have += 1;
-    // Deska s `.failed` už se nikdy nenabídne, takže ji noc nedokončí a rodina
-    // zůstane navždy nehotová. Do „kolik stihne noc" se počítat nesmí.
-    else if (existsSync(`${checkpoint}.failed`)) row.failed += 1;
+    /*
+     * Spadlá deska je od 2. 10. 2026 dvojí, a splést je dohromady by znamenalo
+     * lhát v obě strany.
+     *
+     * Runner má žebřík tří stupňů (rozhodnutí vlastníka 3a): 30 min, 60 min,
+     * 60 min s přesností 1 %. Deska, které stupně zbývají, se **příští noc
+     * nabídne** - je to čekající práce, ne mrtvý konec. Teprve deska, která
+     * žebřík vyčerpala, drží rodinu nehotovou navždy.
+     *
+     * Do 2. 10. tu stálo „deska s `.failed` už se nikdy nenabídne", což tehdy
+     * platilo a dnes neplatí; nechat to tak by hlásilo zaseknutou rodinu nad
+     * deskou, která má dnes v noci přijít na řadu.
+     */
+    else if (existsSync(`${checkpoint}.failed`)) {
+      if (failureLevel(`${checkpoint}.failed`) >= ESCALATION_STEPS) row.exhausted += 1;
+      else row.retrying += 1;
+    }
     else row.order = Math.min(row.order, Number(/^([0-9]+)_/.exec(name)?.[1] ?? Number.MAX_SAFE_INTEGER));
     progress.set(family, row);
   }
   return progress;
 }
+
+/*
+ * Že se žebřík podařilo přečíst, je samo kontrola.
+ *
+ * `escalationSteps()` padá na 1, když vzor v runneru nenajde - a to je bezpečná
+ * strana (každá spadlá deska se počítá za vyčerpanou), ale **tiše** by to
+ * hlásilo zaseknuté rodiny nad deskami, které mají dnes v noci přijít na řadu.
+ * Radši jeden řádek, který zčervená, než sedm, které lžou.
+ */
+add("žebřík pokusů se přečetl z runneru", ESCALATION_STEPS > 1,
+  `${ESCALATION_STEPS} ${ESCALATION_STEPS === 1 ? "stupeň (nepřečteno?)" : "stupně"}`,
+  "víc než 1");
 
 const progress = stagedProgress();
 const pending = [...progress.values()].reduce((sum, row) => sum + (row.want - row.have), 0);
@@ -211,11 +346,36 @@ const willFinish = [...progress.entries()]
 add("noc dokončí aspoň jednu rodinu", willFinish.families.length > 0,
   `${willFinish.families.length} rodin do ${BOARDS_PER_NIGHT} desek`, "aspoň 1");
 
+/*
+ * Na kolik nocí práce ve frontě vydrží.
+ *
+ * Tohle je pohled dopředu, a do 5. 10. 2026 ho hlídač neměl. Všechny ostatní
+ * řádky se ptají „je připravená **dnešní** noc" - a ta otázka má zelenou
+ * odpověď i večer předtím, než fronta doběhne. Změřeno: 2. 10. zbývalo 151
+ * desek, noci 2.-5. 10. udělaly 70, 64 a 17, takže 4. 10. v 01:13 byla fronta
+ * na nule a 5. 10. v 19:07 neměla noc na čem jet. Útes byl spočitatelný tři
+ * dny dopředu a nikdo se nedíval.
+ *
+ * Práh je dvě noci: nastagovat další dávku stojí minuty, ale vědět se o tom
+ * musí den dopředu, ne v devatenáct hodin.
+ *
+ * Prázdná fronta **neznamená prázdnou noc**: rozklad si okno vezme na riverové
+ * vrstvy, jak udělal 4. 10. od 01:13 do 06:37. Znamená ale, že se nedodá žádná
+ * nová rodina, a to je ta dražší polovina.
+ */
+const NIGHTS_AHEAD_MIN = 2;
+const pendingBoards = [...progress.values()]
+  .reduce((sum, row) => sum + Math.max(0, row.want - row.have - row.exhausted), 0);
+const nightsAhead = pendingBoards / BOARDS_PER_NIGHT;
+add("fronta vydrží aspoň dvě noci", nightsAhead >= NIGHTS_AHEAD_MIN,
+  `${pendingBoards} desek, tedy ${nightsAhead.toFixed(1)} noci`,
+  `aspoň ${NIGHTS_AHEAD_MIN} noci (${NIGHTS_AHEAD_MIN * BOARDS_PER_NIGHT} desek)`);
+
 // Rodina, které zbývají jen desky s `.failed`, se sama nedokončí **nikdy** -
 // a bez téhle kontroly by „18 z 18 sedí" mlčelo o tom, že její obsah je zamčený
 // (naměřeno 1. 10. 2026 na CO_BTN: dvě desky na timeout 30 min).
 const stuck = [...progress.entries()].filter(
-  ([, row]) => row.have < row.want && row.have + row.failed >= row.want,
+  ([, row]) => row.have < row.want && row.have + row.exhausted >= row.want,
 );
 add("žádná rodina není zaseknutá na spadlé desce", stuck.length === 0,
   stuck.length === 0 ? "žádná" : stuck.map(([family, row]) => `${family} ${row.have}/${row.want}`).join(", "),
@@ -259,6 +419,18 @@ if (willFinish.families.length > 0) {
   for (const family of willFinish.families) console.log(`  ${family}`);
   console.log("");
 }
+
+// Opakované pokusy se vypisují zvlášť: jdou **na konec** noci a mají vlastní
+// strop, takže do „kolik rodin noc dokončí" nepatří, ale vědět se o nich má.
+const retrying = [...progress.entries()].filter(([, row]) => row.retrying > 0);
+if (retrying.length > 0) {
+  console.log(`desky na opakovaný pokus (až po čerstvých, s vyšším stropem): `
+    + `${retrying.reduce((sum, [, row]) => sum + row.retrying, 0)}`);
+  for (const [family, row] of retrying) {
+    console.log(`  ${family} ${row.have}/${row.want}, k opakování ${row.retrying}`);
+  }
+  console.log("");
+}
 const failed = checks.filter((check) => !check.ok);
 if (failed.length === 0) {
   console.log(`${checks.length} z ${checks.length} sedí; noc poběží i bez přihlášení, přes zavřené víko a po restartu.`);
@@ -267,9 +439,9 @@ if (failed.length === 0) {
   console.log("  powershell -NoProfile -ExecutionPolicy Bypass -File scripts/scheduled/install-night-tasks.ps1");
   console.log("Prázdnou frontu tím nespravíš - ta chce mtt:resolve-stage nebo mtt:seat-pair-expansion.");
   if (stuck.length > 0) {
-    console.log("Zaseknutou rodinu taky ne: deska opakovaně spadla a monolit ji už nenabídne.");
-    console.log("Buď smazat její `.failed` a zkusit znovu s vyšším stropem času, nebo ji z dávky");
-    console.log("vyřadit. Obojí je rozhodnutí o rozpočtu noci, ne úklid - proto to nedělá skript.");
+    console.log(`Zaseknutou rodinu taky ne: deska vyčerpala všechny ${ESCALATION_STEPS} stupně`);
+    console.log("žebříku pokusů, takže ji runner už nenabídne. Zbývá ji z dávky vyřadit, nebo");
+    console.log("rodinu nechat na starém packu - rozhodnutí o rozpočtu, ne úklid.");
   }
   process.exitCode = 1;
 }

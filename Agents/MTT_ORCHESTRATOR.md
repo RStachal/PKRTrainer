@@ -269,6 +269,51 @@ níž, se hlásí jako ztrátová, i když všechny ostatní brány svítí zele
    věc, která to rozsvítí, a je to vstup zvenčí.
 6. **Porovnání dnů** — sbírá se od 20. 8., zatím jeden bod. Až bude historie,
    půjde ptát: přineslo doporučení z minulé noci to, co slibovalo?
+7. **Zásoba práce pro noc** — nová vrstva, otevřená 5. 10. 2026, protože se
+   ukázalo, že ji nikdo neměřil.
+
+   Hlídač `mtt:night-ready` se do 5. 10. ptal jen „je připravená **dnešní**
+   noc". Ta otázka má zelenou odpověď i večer předtím, než fronta doběhne -
+   a tak se to stalo: 2. 10. zbývalo 151 desek, noci 2.-5. 10. udělaly 70, 64
+   a 17, fronta byla 4. 10. v 01:13 na nule a 5. 10. v 19 hodin neměla noc na
+   čem jet. Útes byl spočitatelný tři dny dopředu.
+
+   Doplněn řádek **„fronta vydrží aspoň dvě noci"** (`pendingBoards /
+   BOARDS_PER_NIGHT`). Dvě noci proto, že nastagovat dávku stojí minuty, ale
+   vědět se o tom musí den dopředu.
+
+   **Prázdná fronta neznamená prázdnou noc:** rozklad si okno vezme na riverové
+   vrstvy, jak udělal 4. 10. od 01:13 do 06:37 (751 desek s checkpointem).
+   Znamená ale, že se nedodá žádná **nová rodina**, a to je ta dražší polovina.
+
+   ### Osa 25 BB je k 5. 10. 2026 vyčerpaná na všech třech směrech
+
+   | směr | nástroj | stav k 5. 10. | čím změřeno |
+   |---|---|---|---|
+   | chybějící dvojice sedaček | `mtt:seat-pair-expansion` | **29/29 rodin hotovo** | fronta 0 desek |
+   | víc desek na rodinu | `mtt:board-growth` | šablona textur došla (posledních 28 desek jde do noci 5.-6. 10.) | `--max-boards=12` dá 0 desek |
+   | přesolvení na nové ranže | `mtt:resolve-stage --depth=25` | **u všech 18 rodin „liší se 0"** | tentýž výpis |
+
+   Přesolvování, které začalo 29. 9., je tím **hotové**: každá rodina na 25 bb
+   stojí na dnešních preflop ranžích z RYE, ne na červencových. Dodáno 17 packů
+   s jiným obsahem (stejný počet pravidel, jiné strategie - `contentHash`).
+
+   ### Co může přijít dál, a co to stojí
+
+   Rozhodnutí o další ose je **rozpočtové, ne technické**, takže ho stroj
+   neudělá sám. Naměřené ceny:
+
+   - **jiná hloubka** — 25 bb stojí 148 s na desku, **100 bb přes 2,5 h**
+     (měřeno generátorem dávky). Mezi tím je 40 a 50 bb nezměřených. Jedna
+     hloubka navíc je 29 rodin × 6 az 18 desek, tedy při 25bb tempu 3 az 5
+     nocí, při 100bb tempu měsíce.
+   - **tři zablokované dvojice** — `UTG_UTG_1`, `UTG_UTG_2`, `UTG_1_UTG_2` se
+     nedají založit, protože preflop pack nemá `VS_OPEN|UTG+1|25` ani
+     `VS_OPEN|UTG+2|25`. Není to práce pro solver, je to **mezera v obsahu
+     preflopu** - a je to tentýž druh mezery, jakou zavírá vlastníkovo čtení
+     ranží z RYE.
+   - **squeeze obsah z RYE** — leží hotový a čeká na přečtení 54 mřížek
+     vlastníkem; bez něj do packu nejde (viz `Agents/range-intake`).
 
 ## Co zůstává mimo dosah stroje
 
