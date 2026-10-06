@@ -136,22 +136,6 @@ const SCRIPT_PATH: Readonly<Record<string, string>> = {
   "mtt:postflop-bet-sizing": "scripts/buildPostflopBetSizing.mts",
 };
 
-/** Kdy cyklus začal; od toho se odvozuje, kolik času do stropu úlohy zbývá. */
-const CYCLE_STARTED = Date.now();
-
-/*
- * Strop úlohy v Plánovači, od jehož začátku se odpočítává.
- *
- * `install-night-tasks.ps1` `ExecutionTimeLimit` **nenastavuje**, takže platí
- * výchozí PT5H Plánovače úloh. Je to tedy číslo přečtené z chování systému, ne
- * z našeho instalátoru - kdyby ho tam někdo nastavil, musí se změnit i tady.
- */
-const TASK_LIMIT_MINUTES = 300;
-/** Rezerva, ať se fáze stihne dopsat a zalogovat, než přijde sekyra. */
-const TASK_LIMIT_MARGIN_MINUTES = 10;
-/** Pod tímhle se přepočet EV nezačíná: rozdělaný a zabitý je horší než nezačatý. */
-const TURN_EV_MIN_BUDGET_MINUTES = 15;
-
 /**
  * Halda pro potomky.
  *
@@ -900,68 +884,39 @@ if (!write) {
       // držela ranní cyklus přes celé dopoledne. Po vypršení se běh ukončí;
       // rodina, kterou zrovna počítal, zůstane u starší tabulky - ta je platná,
       // jen bez posledních vrstev - a detektor ji ohlásí zase zítra.
-      const askedMinutes = Number(
+      const budgetMinutes = Number(
         process.argv.find((arg) => arg.startsWith("--turn-ev-minutes="))?.split("=")[1] ?? 150,
       );
-      /*
-       * Strop fáze se musí vejít do stropu **úlohy**, jinak ji Plánovač zabije
-       * uprostřed a práce se zahodí celá.
-       *
-       * Naměřeno 6. 10. 2026: úloha začala v 07:05, generování packů a mechanická
-       * kontrola běžely do 09:44 (159 min), a fáze EV si pak vzala strop 210 min,
-       * tedy do 13:14. Plánovač ale úlohu ukončí v **12:05**, protože
-       * `ExecutionTimeLimit` je výchozí PT5H - instalátor ho nenastavuje. Těch
-       * 69 minut rozdílu nejde mít, a na rozdíl od vypršení vlastního stropu
-       * (kde se fáze ukončí sama a tabulka zůstane u starší, platné verze) po
-       * zabití zůstane jen zahozený čas.
-       *
-       * Rozpočet se proto krátí podle **skutečně uplynulého času**: délka
-       * generování packů se mezi nocemi liší, takže pevné číslo ve wrapperu
-       * tohle neuhlídá.
-       */
-      const elapsedMinutes = (Date.now() - CYCLE_STARTED) / 60_000;
-      const leftMinutes = TASK_LIMIT_MINUTES - elapsedMinutes - TASK_LIMIT_MARGIN_MINUTES;
-      const budgetMinutes = Math.floor(Math.min(askedMinutes, Math.max(0, leftMinutes)));
-      if (budgetMinutes < TURN_EV_MIN_BUDGET_MINUTES) {
-        console.log(`  zastaralo ${stale.length} tabulek, ale do stropu úlohy zbývá jen`
-          + ` ${Math.round(leftMinutes)} min - přepočet se nezačíná, aby se nezahodil.`);
-        console.log(`  Detektor je ohlásí zítra; tabulky zůstávají u starší platné verze.`);
-      } else {
-        const shortened = budgetMinutes < askedMinutes
-          ? `, zkráceno z ${askedMinutes} podle stropu úlohy`
-          : "";
-        console.log(`  zastaralo ${stale.length} tabulek, přepočítávám ve ${lanes} bězích`
-          + ` (strop ${budgetMinutes} min${shortened},`
-          + ` volná paměť ${(freemem() / 1024 ** 3).toFixed(1)} GB)`);
-        const started = Date.now();
-        // Výstup každého běhu jde na disk **průběžně** (`artifacts/turn-ev-run-<k>.log`).
-        // Do 17. 9. 2026 se zahazoval; od 17. 9. se psal až po doběhnutí všech
-        // běhů, takže se v půlce dopoledne nedalo přečíst, který běh co dělá, a
-        // zabitý cyklus po sobě nenechal nic. Prázdný log s kódem 0 (18. 9. 2026,
-        // dva ze čtyř běhů) byl závod o bundle v `run-cli.mjs`, bod 258.
-        const results = await Promise.all(
-          Array.from({ length: lanes }, (_, index) => runLane(index + 1, lanes, [
-            `--families-file=${listPath}`, `--shard=${index + 1}/${lanes}`, "--write", "--no-manifest",
-          ], budgetMinutes * 60_000)),
-        );
-        for (const result of results) {
-          if (result.exitCode === 0 && !result.killed && result.bytes > 0) continue;
-          const why = result.killed ? "vypršel strop" : result.bytes === 0 ? "skončil bez výstupu" : `selhal (kód ${result.exitCode})`;
-          console.log(`  běh ${result.lane}/${lanes} ${why} (${result.logPath})`);
-          process.exitCode = 1;
-        }
-        // Manifest až na konec a z disku: běhy ho nepíšou, aby si ho nepřepsaly.
-        run("mtt:turn-ev-pack", ["--manifest-only"]);
-        const left = run("mtt:turn-ev-stale")
-          .split("\n").map((line) => line.trim())
-          .filter((line) => line.length > 0);
-        console.log(`  hotovo za ${Math.round((Date.now() - started) / 60_000)} min,`
-          + ` zůstává zastaralých: ${left.length}`);
-        if (left.length > 0) {
-          console.log(`  zbývá ${left.length} rodin bez turnové EV, první: ${left[0]}`);
-          console.log(`    npm run mtt:turn-ev-pack -- --family=${left[0]} --write`);
-          process.exitCode = 1;
-        }
+      console.log(`  zastaralo ${stale.length} tabulek, přepočítávám ve ${lanes} bězích`
+        + ` (strop ${budgetMinutes} min, volná paměť ${(freemem() / 1024 ** 3).toFixed(1)} GB)`);
+      const started = Date.now();
+      // Výstup každého běhu jde na disk **průběžně** (`artifacts/turn-ev-run-<k>.log`).
+      // Do 17. 9. 2026 se zahazoval; od 17. 9. se psal až po doběhnutí všech
+      // běhů, takže se v půlce dopoledne nedalo přečíst, který běh co dělá, a
+      // zabitý cyklus po sobě nenechal nic. Prázdný log s kódem 0 (18. 9. 2026,
+      // dva ze čtyř běhů) byl závod o bundle v `run-cli.mjs`, bod 258.
+      const results = await Promise.all(
+        Array.from({ length: lanes }, (_, index) => runLane(index + 1, lanes, [
+          `--families-file=${listPath}`, `--shard=${index + 1}/${lanes}`, "--write", "--no-manifest",
+        ], budgetMinutes * 60_000)),
+      );
+      for (const result of results) {
+        if (result.exitCode === 0 && !result.killed && result.bytes > 0) continue;
+        const why = result.killed ? "vypršel strop" : result.bytes === 0 ? "skončil bez výstupu" : `selhal (kód ${result.exitCode})`;
+        console.log(`  běh ${result.lane}/${lanes} ${why} (${result.logPath})`);
+        process.exitCode = 1;
+      }
+      // Manifest až na konec a z disku: běhy ho nepíšou, aby si ho nepřepsaly.
+      run("mtt:turn-ev-pack", ["--manifest-only"]);
+      const left = run("mtt:turn-ev-stale")
+        .split("\n").map((line) => line.trim())
+        .filter((line) => line.length > 0);
+      console.log(`  hotovo za ${Math.round((Date.now() - started) / 60_000)} min,`
+        + ` zůstává zastaralých: ${left.length}`);
+      if (left.length > 0) {
+        console.log(`  zbývá ${left.length} rodin bez turnové EV, první: ${left[0]}`);
+        console.log(`    npm run mtt:turn-ev-pack -- --family=${left[0]} --write`);
+        process.exitCode = 1;
       }
     }
   }
