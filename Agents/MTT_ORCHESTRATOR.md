@@ -323,6 +323,64 @@ níž, se hlásí jako ztrátová, i když všechny ostatní brány svítí zele
    - **squeeze obsah z RYE** — leží hotový a čeká na přečtení 54 mřížek
      vlastníkem; bez něj do packu nejde (viz `Agents/range-intake`).
 
+8. **Cena a výtěžnost** — nová vrstva, otevřená 6. 10. 2026 na vlastníkovo
+   zadání „musíme vědět, co děláme; nemůžeme pálit čas a peníze zbytečně".
+
+   ### Čeho si framework nevšimne
+
+   Vrstva 0 měří, **co dorazí k hráči**. Vrstvy 5 a 6 měří, **co se vyrobí**.
+   Ani jedna neměří, **co to stálo** - a proto může fáze spálit desítky hodin
+   stroje a všechny brány zůstanou zelené.
+
+   Změřeno z `artifacts/after-night-turn-ev.log`, posledních šest běhů fáze
+   turnové EV:
+
+   | běh | minut | zastaralých po běhu |
+   |---|---|---|
+   | 1 | 210 | 1 |
+   | 2 | 210 | 1 |
+   | 3 | 554 | 1 |
+   | 4 | 253 | 1 |
+   | 5 | 210 | 1 |
+   | 6 | 211 | 1 |
+
+   **1 648 minut, tedy 27,5 hodiny, a počet zastaralých tabulek se nezměnil.**
+   Z patnácti neúspěšných běhů (z celkem 21) padá **13 na dvě rodiny na 100 bb**:
+   `MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR` (8x) a
+   `MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR` (5x). Fáze jinak funguje - šest běhů
+   dojelo na nulu - takže to není vada fáze, ale dvou rodin, které se do jejího
+   stropu nevejdou a zkoušejí se dál každé ráno.
+
+   Noční strana má svoji obdobu: ze dvanácti posledních nocí **čtyři skončily
+   s prázdnou frontou** (`zbývá 0`) a jedna přišla o osm hodin na baterii, tedy
+   pět z dvanácti nedoběhlo na plný výkon. Frontu od 5. 10. hlídá vrstva 7,
+   baterii od 2. 10. hlídač noci.
+
+   ### Proč se to dělo: cena desky je zapsaná na čtyřech místech
+
+   | kde | hodnota | k čemu |
+   |---|---|---|
+   | `run_night_expansion.py` | `BOARD_MINUTES = 12` | rezerva před deadlinem |
+   | `checkProcessRegistry.mts` | 715 s = 11,9 min | odhad délky fronty |
+   | `checkNightReadiness.mts` | 9 / 19,3 min podle hloubky | výhled na noci |
+   | `buildTurnEvPacks.mts` | `chosen.length * 10` | odhad délky fáze EV |
+
+   Čtyři čísla o téže věci, každé se posouvá samo. Dva dnešní omyly jsou jeho
+   následek: odhad fáze EV hlásil 10 minut u běhu, který trval 211, a dávka na
+   40 bb se plánovala podle jedné sondy (9,3 min) místo podle rozdělení
+   (medián 19,3). Dokud cenu nevlastní jedno místo, bude se to opakovat.
+
+   ### Co z toho plyne pro plán
+
+   - **Nejdřív zastavit opakované pálení**, protože je to jediná položka, kde se
+     čas ztrácí měřitelně a bez výstupu. Rodina, která opakovaně nedoběhne, se
+     nemá zkoušet každé ráno znovu; má se **jednou nahlásit** a čekat na
+     rozhodnutí, jako spadlá deska po vyčerpání žebříku.
+   - **Pak sjednotit cenu do jednoho místa** a nechat ji měřit, ne odhadovat.
+     Teprve pak má smysl plánovat dávky dopředu.
+   - **Rozhodnutí o těch dvou rodinách je rozpočtové**, ne technické: vlastní
+     dlouhý běh v noci (16 jader proti denním 3), nebo tabulku nechat zastaralou.
+
 ## Co zůstává mimo dosah stroje
 
 Nic z toho nejde odvodit ani změřit; potřebuje to vstup zvenčí.

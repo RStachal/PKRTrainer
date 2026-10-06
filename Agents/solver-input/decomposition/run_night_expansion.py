@@ -135,14 +135,29 @@ ESCALATION = ((0, 0.5), (30, 0.5), (30, 1.0))
 # Hloubka, kterou se ze jména přečíst nedaří, bere řádek pro 25 bb. Je to tatáž
 # hodnota, jaká tu platila pro všechno do 6. 10. 2026, takže neznámé jméno se
 # nechová nijak nově.
-BASE_CAP_MINUTES = ((25, 30), (50, 60))
-RESERVE_MINUTES = ((25, 12), (50, 25))
+# Řádek pro 50 bb je **extrapolace, ne měření**, a je tak označený schválně.
+# Naměřená je jedna deska 6. 10. 2026: `MTT9_50BB_UTG_2_HJ_SRP A72r` doběhla za
+# 1 154 s, tedy 19,2 min, exploitabilita 0,32 %. Jenže je to **tatáž rodina a
+# textura, která byla na 40 bb nejrychlejší** (9,3 min proti mediánu 19,3), takže
+# poměr medián/nejrychlejší 2,08 dává na 50 bb medián kolem 40 minut a konec
+# rozdělení kolem 60. Strop 90 z toho plyne stejným pravidlem jako u 40 bb
+# (dvojnásobek horního konce).
+#
+# Volný strop nestojí nic: je to jen víko, deska skončí, až skončí. Těsný strop
+# stojí celé víko a navíc stupeň žebříku - to je ta nesymetrie, kvůli které se
+# tady radši nadsadí. První noc na 50 bb rozdělení naměří a čísla se opraví.
+BASE_CAP_MINUTES = ((25, 30), (40, 60), (50, 90))
+RESERVE_MINUTES = ((25, 12), (40, 25), (50, 45))
 # Nad devadesát minut se nejde: deska, která potřebuje víc, není deska, je to
 # noc. Strop se nad 60 nezvedá u 25 bb, jak vlastník výslovně uvedl; u hlubších
 # je tohle tentýž úsudek o rozpočtu, jen na jiné základně.
 CAP_CEILING_MINUTES = 90
 DEEPEST_KNOWN_CAP = 90
-DEEPEST_KNOWN_RESERVE = 40
+# Hlubší než 50 bb nemá smysl rezervovat **méně** než 50 bb: 100 bb je podle
+# generátoru dávky přes 2,5 h na desku. Do 6. 10. 2026 tu stálo 40, tedy méně
+# než u 50 bb - nesrovnalost, kterou jsem si sám založil, když jsem přidával
+# řádek pro 50.
+DEEPEST_KNOWN_RESERVE = 60
 
 
 def depth_of(family: str) -> int:

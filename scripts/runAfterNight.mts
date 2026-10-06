@@ -136,6 +136,37 @@ const SCRIPT_PATH: Readonly<Record<string, string>> = {
   "mtt:postflop-bet-sizing": "scripts/buildPostflopBetSizing.mts",
 };
 
+/*
+ * Kolikrát se smí rodina pokusit o turnovou EV, než se odloží k rozhodnutí.
+ *
+ * Změřeno 6. 10. 2026 z `after-night-turn-ev.log`: posledních šest běhů fáze
+ * spotřebovalo **1 648 minut (27,5 h)** a počet zastaralých tabulek se nezměnil -
+ * zůstávala jedna. Z patnácti neúspěšných běhů padá **13 na dvě rodiny na
+ * 100 bb**, které se do stropu fáze nevejdou a zkoušely se dál každé ráno.
+ * Fáze jinak funguje: šest běhů z jednadvaceti dojelo na nulu.
+ *
+ * Je to tentýž tvar jako u spadlé desky, takže se řeší stejně, jak to vlastník
+ * rozhodl pro desky (3a): **konečný počet pokusů a pak jedno nahlášení.**
+ * Rodina se neztrácí ani tiše nevypadne - jen se přestane zkoušet naslepo a čeká
+ * na rozpočtové rozhodnutí (vlastní dlouhý běh v noci se šestnácti jádry proti
+ * denním třem, nebo tabulka zůstane zastaralá).
+ *
+ * Počítadlo se **nuluje úspěchem**: rodina, která dojede, začíná od nuly, takže
+ * ji zdražení z nových vrstev neodloží kvůli staré historii.
+ */
+const EV_ATTEMPT_LIMIT = 3;
+const EV_ATTEMPTS_PATH = "artifacts/turn-ev-attempts.json";
+
+/** Kolik pokusů už která rodina na turnovou EV spotřebovala. */
+function evAttempts(): Record<string, number> {
+  try {
+    const raw = JSON.parse(readFileSync(EV_ATTEMPTS_PATH, "utf8")) as Record<string, number>;
+    return typeof raw === "object" && raw !== null ? raw : {};
+  } catch {
+    return {};
+  }
+}
+
 /**
  * Halda pro potomky.
  *
@@ -850,8 +881,19 @@ if (!write) {
     const stale = run("mtt:turn-ev-stale")
       .split("\n").map((line) => line.trim())
       .filter((line) => line.length > 0);
+    const attempts = evAttempts();
+    const parked = stale.filter((family) => (attempts[family] ?? 0) >= EV_ATTEMPT_LIMIT);
+    const tryNow = stale.filter((family) => (attempts[family] ?? 0) < EV_ATTEMPT_LIMIT);
+    if (parked.length > 0) {
+      console.log(`  POZOR: ${parked.length} rodin vyčerpalo ${EV_ATTEMPT_LIMIT} pokusy a dál se nezkouší:`);
+      for (const family of parked) console.log(`    ${family} (${attempts[family]} pokusů)`);
+      console.log("    Rozhodnutí je rozpočtové: vlastní dlouhý běh v noci, nebo nechat zastaralou.");
+      console.log(`    Vynulovat a zkusit znovu: smaž ${EV_ATTEMPTS_PATH}`);
+    }
     if (stale.length === 0) {
       console.log("  žádná tabulka nezastarala");
+    } else if (tryNow.length === 0) {
+      console.log("  všechny zastaralé tabulky jsou odložené k rozhodnutí; fáze se nepouští");
     } else {
       // Rozpočet zvlášť, ne sdílený s riverem: měřeno 10. 9. 2026 na šesti
       // rodinách 95 az 1 242 s, medián kolem 300. Osmačtyřicet rodin je tím
@@ -877,7 +919,7 @@ if (!write) {
       const memoryLanes = Math.floor(freemem() / (3 * 1024 ** 3));
       const lanes = Math.max(1, Math.min(4, Math.floor(cpus().length / 4), memoryLanes));
       const listPath = "artifacts/turn-ev-stale.txt";
-      writeFileSync(listPath, `${stale.join("\n")}\n`, "utf8");
+      writeFileSync(listPath, `${tryNow.join("\n")}\n`, "utf8");
       // Časový strop na celou fázi, ne na rodinu. Změřeno 14. 9. 2026:
       // `MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR` stojí kolem tří hodin sama
       // (0,9 s na vrstvu proti mediánu 0,037), a bez stropu by jedna rodina
@@ -887,7 +929,7 @@ if (!write) {
       const budgetMinutes = Number(
         process.argv.find((arg) => arg.startsWith("--turn-ev-minutes="))?.split("=")[1] ?? 150,
       );
-      console.log(`  zastaralo ${stale.length} tabulek, přepočítávám ve ${lanes} bězích`
+      console.log(`  zkouším ${tryNow.length} z ${stale.length} zastaralých ve ${lanes} bězích`
         + ` (strop ${budgetMinutes} min, volná paměť ${(freemem() / 1024 ** 3).toFixed(1)} GB)`);
       const started = Date.now();
       // Výstup každého běhu jde na disk **průběžně** (`artifacts/turn-ev-run-<k>.log`).
@@ -911,12 +953,37 @@ if (!write) {
       const left = run("mtt:turn-ev-stale")
         .split("\n").map((line) => line.trim())
         .filter((line) => line.length > 0);
+      // Úspěch nuluje, neúspěch přičítá. Zapisuje se až **po** běhu, aby zabitý
+      // cyklus nespotřeboval pokus, který neproběhl - tatáž zásada jako u desky,
+      // kterou usekl spánek.
+      const stillStale = new Set(left);
+      const nextAttempts: Record<string, number> = { ...attempts };
+      for (const family of tryNow) {
+        if (stillStale.has(family)) nextAttempts[family] = (nextAttempts[family] ?? 0) + 1;
+        else delete nextAttempts[family];
+      }
+      writeFileSync(EV_ATTEMPTS_PATH, JSON.stringify(nextAttempts, null, 2), "utf8");
       console.log(`  hotovo za ${Math.round((Date.now() - started) / 60_000)} min,`
         + ` zůstává zastaralých: ${left.length}`);
+      /*
+       * Chybový kód jen za práci, kterou cyklus **chtěl** udělat a nedokázal.
+       *
+       * Odložená rodina zastaralá zůstává a má se o ní vědět, ale není to
+       * selhání běhu - je to otevřené rozhodnutí vlastníka. Kdyby za ni cyklus
+       * hlásil chybu, hlásil by ji od teď **každé ráno navždy**, a tím by
+       * přestalo být poznat, že se pokazilo něco nového. Je to tentýž vzor jako
+       * hlídač, který křičí pořád: po třetím ránu ho nikdo nečte.
+       */
+      const unplanned = left.filter((family) => !parked.includes(family));
       if (left.length > 0) {
         console.log(`  zbývá ${left.length} rodin bez turnové EV, první: ${left[0]}`);
         console.log(`    npm run mtt:turn-ev-pack -- --family=${left[0]} --write`);
+      }
+      if (unplanned.length > 0) {
+        console.log(`  z toho ${unplanned.length} mělo dnes doběhnout a nedoběhlo`);
         process.exitCode = 1;
+      } else if (left.length > 0) {
+        console.log("  všechny zbylé jsou odložené k rozhodnutí, takže to není selhání běhu");
       }
     }
   }

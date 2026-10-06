@@ -91,7 +91,17 @@ const WINDOW_MINUTES = 587;
  * (monotóny, trojice), které jsou levnější než průřez. Devět drží tempo
  * 8,8 min/deska, na kterém stála předchozí plánování.
  */
-const MINUTES_PER_BOARD: readonly (readonly [number, number])[] = [[25, 9], [50, 19.3]];
+/*
+ * Řádek pro 50 bb je **extrapolace, ne měření.** Naměřená je jedna deska
+ * (6. 10. 2026, `MTT9_50BB_UTG_2_HJ_SRP A72r`, 19,2 min), ale je to táž rodina
+ * a textura, která byla na 40 bb nejrychlejší z celé rodiny - 9,3 min proti
+ * mediánu 19,3. Poměr 2,08 dává medián kolem 40 minut, a to je to, co tu stojí.
+ *
+ * Nadsazený odhad tu škodí **méně** než podsazený: výhled fronty vyjde kratší,
+ * takže se dávka nastaguje dřív. Podsazený by naopak ohlásil zásobu, která není -
+ * a to je přesně ta chyba, kterou tenhle řádek 6. 10. ráno opravoval.
+ */
+const MINUTES_PER_BOARD: readonly (readonly [number, number])[] = [[25, 9], [40, 19.3], [50, 40]];
 const MINUTES_PER_BOARD_DEEP = 40;
 
 /** Hloubka ze jména rodiny, `MTT9_40BB_UTG_2_HJ_SRP` → 40; 0 když to nejde. */
