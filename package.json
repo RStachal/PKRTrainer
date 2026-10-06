@@ -196,7 +196,8 @@
     "mtt:resolve-stage": "node scripts/run-cli.mjs scripts/stageFamilyResolve.mts",
     "mtt:flop-ev-nights": "python Agents/solver-input/decomposition/measure_flop_ev_nights.py",
     "mtt:solver-range-drift": "node scripts/run-cli.mjs scripts/measureSolverInputRangeDrift.mts",
-    "mtt:processes": "node scripts/run-cli.mjs scripts/checkProcessRegistry.mts"
+    "mtt:processes": "node scripts/run-cli.mjs scripts/checkProcessRegistry.mts",
+    "mtt:board-cost": "node scripts/run-cli.mjs scripts/measureBoardCost.mts"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",

@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, statSync } from "node:fs";
+import { costForDepth, depthOfFamily, readBoardCostTable } from "./lib/boardCost.mts";
 import { join } from "node:path";
 
 /**
@@ -65,10 +66,13 @@ function runningHeavy(): { name: string; count: number }[] {
   return found;
 }
 
-function countStagedPending(): { total: number; pending: number } {
-  if (!existsSync(STAGED)) return { total: 0, pending: 0 };
+function countStagedPending(): { total: number; pending: number; minutes: number; unpriced: number } {
+  if (!existsSync(STAGED)) return { total: 0, pending: 0, minutes: 0, unpriced: 0 };
+  const cost = readBoardCostTable();
   let total = 0;
   let pending = 0;
+  let minutes = 0;
+  let unpriced = 0;
   for (const name of readdirSync(STAGED)) {
     if (!name.endsWith(".txt")) continue;
     total += 1;
@@ -78,9 +82,17 @@ function countStagedPending(): { total: number; pending: number } {
     const checkpoint = join(OUTPUT_BASE, match[1], "raw", `pkrtrainer_${match[1]}_${match[2]}.json`);
     // Soubor, ne adresář: `raw/` zakládá generátor prázdný, aby měl solver kam
     // psát, takže existence adresáře o hotové práci neříká nic.
-    if (!existsSync(checkpoint) || statSync(checkpoint).size === 0) pending += 1;
+    if (existsSync(checkpoint) && statSync(checkpoint).size > 0) continue;
+    pending += 1;
+    // Cena podle hloubky, ne jedno číslo na všechno. Do 6. 10. 2026 tu stálo
+    // `pending * 715 / 3600` s komentářem „měřeno 715 s na desku" - jenže 715 s
+    // bylo z jediné desky z 20. 8. a od té doby se přeměřilo dvakrát. Jiné
+    // kopie téhož čísla už mezitím hlásily 12 min a 9 min.
+    const row = costForDepth(cost, depthOfFamily(match[1]));
+    if (row === undefined) unpriced += 1;
+    else minutes += row.planMinutes;
   }
-  return { total, pending };
+  return { total, pending, minutes, unpriced };
 }
 
 function countDecomposition(): { boards: number; riverLayers: number } {
@@ -120,7 +132,8 @@ console.log("fronty");
 const staged = countStagedPending();
 const decomposition = countDecomposition();
 console.log(`  nastagované desky k solvu: ${staged.pending} z ${staged.total}` +
-  (staged.pending > 0 ? `  (~${(staged.pending * 715 / 3600).toFixed(1)} h, měřeno 715 s na desku)` : ""));
+  (staged.pending > 0 ? `  (~${(staged.minutes / 60).toFixed(1)} h podle měřené ceny)` : "") +
+  (staged.unpriced > 0 ? `  POZOR: ${staged.unpriced} desek bez ceny` : ""));
 console.log(`  rozložené desky:           ${decomposition.boards}`);
 console.log(`  riverové vrstvy:           ${decomposition.riverLayers}`);
 

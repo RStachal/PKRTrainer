@@ -120,13 +120,23 @@ const BOARD_IDS = ["A72r", "883r", "986tt", "AT4mono", "742r", "K98tt"] as const
  * exploitabilitou 0,40 % - pod cílem 0,5 %, takže konvergovala.
  *
  * Proti 148 s na 25BB je to **3,7x dráž** při 1,6x hloubce; efektivní stack
- * roste z 2250 na 3750 žetonů, tedy SPR 4,1 na 6,8. Devadesát šest desek je tím
- * asi patnáct hodin, tedy **půl druhé noci**, a vejde se to pod třicetiminutový
- * strop runneru i pod dvanáctiminutový plán `BOARD_MINUTES`.
+ * roste z 2250 na 3750 žetonů, tedy SPR 4,1 na 6,8.
  *
  * Je to **jedna deska, ne rozdělení**: A72r je ace-high rainbow, a textura
  * s cenou hýbe (na 25BB šly rainbow desky 20-23 min proti 4-6 min u ostatních).
- * Na 50BB a výš cena naměřená není a odhadovat se nemá.
+ *
+ * ## Co z toho noc 5.-6. 10. vyvrátila
+ *
+ * Z těch 9,3 min jsem tady odvodil, že 96 desek je asi patnáct hodin, tedy půl
+ * druhé noci, a že se to vejde pod třicetiminutový strop runneru. **Obojí bylo
+ * špatně.** Noc naměřila na 40 bb medián 19,3 min (17 desek), takže 96 desek je
+ * kolem 31 hodin, tedy spíš tři noci; a dvě desky `742r` na třicetiminutový
+ * strop **narazily**, takže se strop musel zvednout na 60.
+ *
+ * Příčina: 9,3 min byla ruční sonda přes den, a ta cenu noci neříká. Noc tutéž
+ * texturu ve třech sesterských rodinách solvila 26,5, 28,6 a 29,1 min - `A72r`
+ * je na 40 bb **nejdražší** textura, ne nejlevnější. Odsud se tedy nemá plánovat
+ * dávka; cena je měřená v `board-cost.generated.json` (`npm run mtt:board-cost`).
  */
 const DEPTHS: readonly StackBucket[] = ((): readonly StackBucket[] => {
   const raw = process.argv.find((arg) => arg.startsWith("--depths="))?.split("=")[1];

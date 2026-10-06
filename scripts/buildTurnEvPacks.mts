@@ -698,13 +698,54 @@ let filledTotal = 0;
 let ruleTotal = 0;
 const written: { familyId: string; packId: string; slug: string }[] = [];
 
-// Odhad délky z šesti změřených rodin (bod 228): 485 az 789 s u hlubokých,
-// méně u mělkých. Deset minut na rodinu je střed, se kterým se dá počítat.
-// Jádra se hlásí podle počtu běhů, ne podle tohohle procesu. Jeden proces bere
-// jedno jádro, ale čtyři běhy dohromady čtyři - a strop se týká stroje, ne
-// procesu. Hlásit „1 z 16" ze čtyř míst najednou by bylo formálně pravdivé a
-// věcně zavádějící.
-console.log(windowNotice(shardCount, chosen.length * 10));
+/*
+ * Odhad délky fáze. Jádra se hlásí podle počtu běhů, ne podle tohohle procesu:
+ * jeden proces bere jedno jádro, ale čtyři běhy dohromady čtyři, a strop se týká
+ * stroje. Hlásit „1 z 16" ze čtyř míst najednou by bylo formálně pravdivé a
+ * věcně zavádějící.
+ *
+ * Minuty na rodinu se berou **z měření**, když nějaké je. Do 6. 10. 2026 tu
+ * stálo `chosen.length * 10` podle šesti rodin z bodu 228 (485 az 789 s), a
+ * z toho se stal nejhlasitější omyl vrstvy 8: běh, který se do logu zapsal jako
+ * „odhad 10 min", trval **211 minut** a pak 3,5 hodiny, a já podle té desítky
+ * plánoval rozpočet fáze. Jednou jsem kvůli tomu commitnul rozpočet, který
+ * úlohu zabíjel, a musel ho revertovat.
+ *
+ * Měření sem nejde přenést z historie: per-rodinové časy se píšou do
+ * `artifacts/turn-ev-run-<k>.log`, a ten se každé ráno přepíše. Proto si je
+ * fáze od teď ukládá do `artifacts/turn-ev-cost.json` a odhad bere jejich
+ * medián. Dokud tam nic není, drží se desítka - ale **řekne se, že je to odhad**,
+ * ne měření. To je ten rozdíl, který tahle vrstva vynucuje; vyměnit jednu
+ * konstantu za jinou by bylo totéž znovu.
+ */
+const EV_COST_PATH = "artifacts/turn-ev-cost.json";
+const DEFAULT_FAMILY_MINUTES = 10;
+
+function recordedFamilyMinutes(): Record<string, number> {
+  try {
+    return JSON.parse(readFileSync(EV_COST_PATH, "utf8")) as Record<string, number>;
+  } catch {
+    return {};
+  }
+}
+
+const recorded = recordedFamilyMinutes();
+/** Totéž, ale pro zápis: čte se při startu, doplňuje se za každou hotovou rodinu. */
+const measuredMinutes: Record<string, number> = { ...recorded };
+const knownMinutes = chosen
+  .map((name) => recorded[familyOfFile(name)])
+  .filter((minutes): minutes is number => typeof minutes === "number");
+// Medián, ne průměr: jedna rodina na 100 bb stojí hodiny a průměr by jí dala
+// vážit celou dávku. Měřeno 14. 9. 2026 na `..._SB_BB_SRP_OOP_CBET_HIGHSPR`:
+// 0,9 s na vrstvu proti mediánu 0,037, tedy pětadvacetinásobek.
+const perFamily = knownMinutes.length === 0
+  ? DEFAULT_FAMILY_MINUTES
+  : [...knownMinutes].sort((left, right) => left - right)[Math.floor(knownMinutes.length / 2)];
+console.log(windowNotice(shardCount, Math.round(chosen.length * perFamily)));
+console.log(knownMinutes.length === 0
+  ? `  cena rodiny je ODHAD ${DEFAULT_FAMILY_MINUTES} min, nic naměřeno není`
+  : `  cena rodiny ${perFamily.toFixed(1)} min, medián z ${knownMinutes.length}`
+    + ` z ${chosen.length} naměřených rodin`);
 console.log("");
 
 // Vypsat, co by se stavělo, a skončit. Bez tohohle se rozdělení na běhy nedá
@@ -734,6 +775,17 @@ for (const name of chosen) {
   if (result === undefined) {
     console.log(`${name}: pack nemá rodinu, přeskočeno`);
     continue;
+  }
+  // Cena té rodiny na disk, hned po ní, ne na konci dávky: běh, který sebere
+  // strop fáze, by jinak neodložil nic - a zrovna ty dlouhé rodiny jsou ty,
+  // jejichž cenu je potřeba znát. Zapisuje se celý soubor, protože běhů je
+  // nejvýš čtyři a každý píše jiné rodiny; poslední zápis vyhrává, takže se
+  // nejhůř ztratí jedno číslo, které se příště naměří znovu.
+  measuredMinutes[result.familyId] = Math.round((Date.now() - started) / 600) / 100;
+  try {
+    writeFileSync(EV_COST_PATH, `${JSON.stringify(measuredMinutes, null, 2)}\n`, "utf8");
+  } catch {
+    // Neměřit je lepší než spadnout: tabulka je pro odhad, ne pro výsledek.
   }
   const raw = Buffer.byteLength(result.document, "utf8");
   const gzip = gzipSync(result.document).length;

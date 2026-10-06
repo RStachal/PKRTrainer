@@ -134,6 +134,7 @@ const SCRIPT_PATH: Readonly<Record<string, string>> = {
   "mtt:turn-ev-stale": "scripts/checkTurnEvStaleness.mts",
   "mtt:turn-ev-pack": "scripts/buildTurnEvPacks.mts",
   "mtt:postflop-bet-sizing": "scripts/buildPostflopBetSizing.mts",
+  "mtt:board-cost": "scripts/measureBoardCost.mts",
 };
 
 /*
@@ -715,6 +716,28 @@ if (!write) {
     }
   }
 
+  /*
+   * Přeměřit cenu desky z logu noci, která právě skončila.
+   *
+   * Bez tohohle kroku by `board-cost.generated.json` zestárl - a to je tentýž
+   * druh vady, jakou tabulka ruší: číslo, které vypadá jako měření, ale měří
+   * noc z minulého týdne. Ráno je na to jediná správná chvíle: log je čerstvý
+   * a nikdo do něj zatím nepíše.
+   *
+   * Hodnota navíc je u nové hloubky: 50 bb je dnes extrapolace a první noc,
+   * která ji odsolví, ji **sama přepíše na měření**, aniž bych na to musel
+   * přijít. Z toho taky plyne, proč to nesmí shodit cyklus - selhání měření je
+   * horší zpráva než stará tabulka, ale pořád malá proti ztrátě všech packů.
+   */
+  try {
+    const cost = await runAsync("mtt:board-cost", ["--write"], 1024);
+    const line = cost.split("\n").find((row) => /^\s*\d+bb/.test(row))?.trim();
+    console.log(`cena desky přeměřena${line === undefined ? "" : ` (${line})`}`);
+  } catch (error) {
+    console.log(`POZOR: cenu desky se přeměřit nepodařilo (${String(error).slice(0, 120)})`);
+    console.log("  Runner i hlídač pojedou podle dosavadní tabulky; hlídač to pozná.");
+  }
+
   if (!generateNothing) await generateAll(list, "1/3");
 
   const verdictsBefore = verdictSnapshot();
@@ -917,7 +940,13 @@ if (!write) {
       // Běh turnové EV bere kolem 3 GB; víc běhů, než se vejde do volné
       // paměti, si navzájem vezmou stroj, ne práci.
       const memoryLanes = Math.floor(freemem() / (3 * 1024 ** 3));
-      const lanes = Math.max(1, Math.min(4, Math.floor(cpus().length / 4), memoryLanes));
+      // ...a taky podle **množství práce**. Bez `tryNow.length` se pouštěly
+      // běhy do prázdna: ráno 6. 10. 2026 byla ve frontě jedna rodina a fáze
+      // pustila tři běhy. Běhy 2 a 3 skončily po **čtyřech sekundách** s „žádný
+      // turnový pack neodpovídá zadání", zatímco běh 1 mlel tu jednu rodinu
+      // 3,5 hodiny, než ho sebral strop. Stojí to sice jen ty čtyři sekundy, ale
+      // log tím o fázi lhal: vypadalo to, že se dělí práce, a nedělilo se nic.
+      const lanes = Math.max(1, Math.min(4, Math.floor(cpus().length / 4), memoryLanes, tryNow.length));
       const listPath = "artifacts/turn-ev-stale.txt";
       writeFileSync(listPath, `${tryNow.join("\n")}\n`, "utf8");
       // Časový strop na celou fázi, ne na rodinu. Změřeno 14. 9. 2026:

@@ -306,15 +306,20 @@ níž, se hlásí jako ztrátová, i když všechny ostatní brány svítí zele
    - **jiná hloubka** — 25 bb stojí 148 s na desku, **100 bb přes 2,5 h**
      (měřeno generátorem dávky). Jedna hloubka navíc je 16 rodin × 6 desek.
 
-     **40 bb změřeno 5. 10. 2026 a založeno:** jedna deska
-     (`MTT9_40BB_UTG_2_HJ_SRP A72r`) doběhla za **546 s, tedy 9,3 min**,
-     exploitabilita 0,40 % proti cíli 0,5 %. Je to 3,7x dráž než 25 bb při 1,6x
-     hloubce (SPR 4,1 → 6,8), vejde se pod třicetiminutový strop, a 96 desek je
-     asi patnáct hodin, tedy půl druhé noci. Měřeno **jednou deskou**, takže je
-     to řádová cena, ne rozdělení - textura s ní hýbe.
+     **40 bb změřeno nocí 5.-6. 10. 2026:** medián **19,3 min** ze 17 desek,
+     p90 28,6, maximum 29,1. Devadesát šest desek je tím kolem 31 hodin, tedy
+     **tři noci**.
 
-     **50 bb a výš zůstává nezměřené** a stagovat se na odhad nemá: deska nad
-     stropem stojí celých třicet minut okna a spotřebuje stupeň žebříku.
+     Ruční sonda z 5. 10. (`MTT9_40BB_UTG_2_HJ_SRP A72r`, 546 s = 9,3 min,
+     exploitabilita 0,40 %) z toho odhadla půl druhé noci a strop 30 min - a
+     **obojí bylo špatně**. Dvě desky `742r` na třicetiminutový strop narazily
+     a strop se musel zvednout na 60. `A72r` je totiž na 40 bb v nočním logu
+     **nejdražší** textura (26,5 / 28,6 / 29,1 ve třech sesterských rodinách),
+     ne nejlevnější: ruční sonda přes den cenu noci neříká.
+
+     **50 bb je nastagované (96 desek) a v tabulce jako extrapolace**, plán
+     39,8 min na desku z poměru dvou ručních sond. První noc na 50 bb ten řádek
+     přepíše na měření sama.
    - **tři zablokované dvojice** — `UTG_UTG_1`, `UTG_UTG_2`, `UTG_1_UTG_2` se
      nedají založit, protože preflop pack nemá `VS_OPEN|UTG+1|25` ani
      `VS_OPEN|UTG+2|25`. Není to práce pro solver, je to **mezera v obsahu
@@ -356,28 +361,84 @@ níž, se hlásí jako ztrátová, i když všechny ostatní brány svítí zele
    pět z dvanácti nedoběhlo na plný výkon. Frontu od 5. 10. hlídá vrstva 7,
    baterii od 2. 10. hlídač noci.
 
-   ### Proč se to dělo: cena desky je zapsaná na čtyřech místech
+   ### Proč se to dělo: cena desky byla zapsaná na pěti místech
 
    | kde | hodnota | k čemu |
    |---|---|---|
-   | `run_night_expansion.py` | `BOARD_MINUTES = 12` | rezerva před deadlinem |
+   | `run_night_expansion.py` | `BOARD_MINUTES = 12` | **nic - nikdo ho nečetl** |
+   | `run_night_decomposition.py` | 715 s = 11,9 min | práh ustoupení (v komentáři) |
    | `checkProcessRegistry.mts` | 715 s = 11,9 min | odhad délky fronty |
    | `checkNightReadiness.mts` | 9 / 19,3 min podle hloubky | výhled na noci |
    | `buildTurnEvPacks.mts` | `chosen.length * 10` | odhad délky fáze EV |
 
-   Čtyři čísla o téže věci, každé se posouvá samo. Dva dnešní omyly jsou jeho
-   následek: odhad fáze EV hlásil 10 minut u běhu, který trval 211, a dávka na
-   40 bb se plánovala podle jedné sondy (9,3 min) místo podle rozdělení
-   (medián 19,3). Dokud cenu nevlastní jedno místo, bude se to opakovat.
+   Pět čísel o téže věci, každé se posouvalo samo, a dvě z nich si v jednom
+   souboru odporovala (osm desek je „půl hodiny" na řádku 178 a „dvě hodiny"
+   na řádku 355). `BOARD_MINUTES` byl nejčistší příznak: dvakrát přeměřený,
+   dvakrát opravený a **v kódu bez jediné reference**. Číslo, které se posouvá
+   a přitom nic neovlivňuje, je horší než žádné - vypadá jako zdroj pravdy.
+
+   Dva omyly z 5. a 6. 10. jsou toho následek: odhad fáze EV hlásil 10 minut
+   u běhu, který trval 211, a dávka na 40 bb se plánovala podle jedné sondy
+   (9,3 min) místo podle rozdělení (medián 19,3).
+
+   ### Hotovo 6. 10.: jedno měření, tři odvozená čísla
+
+   Sjednotit to na **jednu** konstantu nejde, a to je ta past. Každý konzument
+   potřebuje jinou statistiku téhož rozdělení a každý se smí mýlit na jinou
+   stranu:
+
+   | k čemu | statistika | bezpečný směr omylu |
+   |---|---|---|
+   | zásoba na noci | medián | **podstřelit** - nadsazená cena hlásí zásobu, která není |
+   | strop jedné desky | p90 x 2, 30 az 90 | **přestřelit** - těsný strop stojí strop a stupeň žebříku |
+   | rezerva na konci okna | p90 | je to přesně „co s pravděpodobností 0,9 nedoběhne" |
+
+   Směr u zásoby jsem měl ráno 6. 10. v komentáři **napsaný obráceně** („nadsazený
+   odhad škodí méně"). Výhled je minuty děleno oknem, takže dražší deska dá víc
+   nahlášených nocí - kdo cenu nadsadí, ohlásí zásobu, která není.
+
+   Měří to `npm run mtt:board-cost` z nočního logu (715 desek) a zapisuje do
+   `board-cost.generated.json`; čtou runner, hlídač noci i registr procesů.
+   Přeměřuje se v ranním cyklu, takže nová hloubka se z extrapolace stane
+   měřením sama. Odvozené stropy vyšly **shodně s ručními** (30 / 60 / 90), což
+   je ověření pravidla proti úsudku, ne pravidlo dopsané k číslům.
+
+   Dvě věci, které to vyvrátilo:
+
+   - **Ruční sonda přes den neříká cenu noci.** `A72r` na 40 bb mi ručně doběhla
+     za 9,3 min; noc tutéž texturu ve třech sesterských rodinách solvila 26,5,
+     28,6 a 29,1 min. Rodinou to není - `UTG_2_HJ` má ostatní desky v řadě
+     s ostatními. Takže `A72r` je na 40 bb **nejdražší** textura, ne nejlevnější,
+     jak jsem 6. 10. ráno zapsal na dvě místa. Přenositelný je jen **poměr dvou
+     ručních sond**, a tak je 50 bb v tabulce zapsané: jako extrapolace.
+   - **Jedna prospaná noc zvedala průměr.** Deska `955tt` začala 1. 10. ve 23:09
+     a „dokončila" v 07:36, tedy 507,5 min. Nad stropem stropů (90 min) není co
+     měřit: runner by solve zabil, takže delší čas na hodinách znamená pohyb
+     hodin bez procesu.
 
    ### Co z toho plyne pro plán
 
-   - **Nejdřív zastavit opakované pálení**, protože je to jediná položka, kde se
-     čas ztrácí měřitelně a bez výstupu. Rodina, která opakovaně nedoběhne, se
-     nemá zkoušet každé ráno znovu; má se **jednou nahlásit** a čekat na
-     rozhodnutí, jako spadlá deska po vyčerpání žebříku.
-   - **Pak sjednotit cenu do jednoho místa** a nechat ji měřit, ne odhadovat.
-     Teprve pak má smysl plánovat dávky dopředu.
+   - ~~**Nejdřív zastavit opakované pálení.**~~ Hotovo 6. 10.: fáze EV má tři
+     pokusy na rodinu, pak jedno nahlášení a čekání na rozpočtové rozhodnutí.
+   - ~~**Pak sjednotit cenu do jednoho místa** a nechat ji měřit.~~ Hotovo 6. 10.
+   - **Zbývá práh ustoupení v minutách, ne v deskách.** `YIELD_MIN_BOARDS = 8`
+     je osm desek, a to je podle hloubky 51 minut, nebo 5,3 hodiny. Dnešní
+     frontě 173 desek práh nevadí, takže to nespěchá; chce to čtecí modul
+     i pro Python rozkladu a dotýká se to kontraktu `tonight.json`.
+   - **Odhad fáze EV je od 6. 10. měřený, ale ještě nic nenaměřil.** Je to jiná
+     jednotka než deska (rodina, ne deska), takže ho neocení tabulka desek.
+     Per-rodinové časy fáze už do logu psala, jenže `turn-ev-run-<k>.log` se
+     každé ráno přepíše - od teď se ukládají do `artifacts/turn-ev-cost.json`
+     a odhad bere jejich medián. Dokud je soubor prázdný, drží se desítka, ale
+     **napíše se, že je to odhad**. To je ten rozdíl: vyměnit jednu konstantu za
+     jinou by bylo totéž znovu.
+   - **Fáze EV pouštěla běhy do prázdna.** Počet běhů se počítal z jader a
+     paměti, nikdy z množství práce: ráno 6. 10. byla ve frontě jedna rodina a
+     fáze pustila tři běhy. Běhy 2 a 3 skončily po **čtyřech sekundách** s „žádný
+     turnový pack neodpovídá zadání", zatímco běh 1 mlel tu jednu rodinu
+     3,5 hodiny, dokud ho nesebral strop. Stojí to jen ty čtyři sekundy, ale log
+     tím o fázi lhal - vypadalo to, že se dělí práce. Opraveno, běhů je nejvýš
+     tolik, kolik je rodin.
    - **Rozhodnutí o těch dvou rodinách je rozpočtové**, ne technické: vlastní
      dlouhý běh v noci (16 jader proti denním 3), nebo tabulku nechat zastaralou.
 

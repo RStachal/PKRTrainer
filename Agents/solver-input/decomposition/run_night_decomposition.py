@@ -352,8 +352,18 @@ def should_yield_to_new_families():
     boards = staged_boards_without_checkpoint()
     if boards < YIELD_MIN_BOARDS:
         # Ustoupit na celou noc kvůli hodině práce je horší než neustoupit
-        # vůbec: zbytek okna by stál prázdný. Naměřeno 715 s na desku, takže
-        # osm desek jsou zhruba dvě hodiny - pod tím se to nevyplatí.
+        # vůbec: zbytek okna by stál prázdný.
+        #
+        # Kolik je osm desek hodin, **tady nestojí**, a do 6. 10. 2026 tu stálo
+        # „715 s na desku, takže zhruba dvě hodiny" - v rozporu s komentářem
+        # u `YIELD_MIN_BOARDS` o deset řádků výš, který na týchž osmi deskách
+        # říkal půl hodiny. Dvě čísla o téže věci v jednom souboru.
+        #
+        # Práh je navíc v **deskách**, a to už neplatí: deska na 25 bb stojí
+        # 6,4 min, na 50 bb kolem 40. Osm desek je tedy 51 min, nebo 5,3 h,
+        # podle hloubky. Převést práh na minuty (ze změřené tabulky, jako to
+        # dělá expanze) je další bod vrstvy 8; dnešní frontě 173 desek práh
+        # tak či tak nevadí, proto se to nedělá hodinu před nocí.
         return None
     if not monolithic_runner_installed():
         # Ustoupit do prázdna je horší než prohlubovat tam, kde už odpověď je:

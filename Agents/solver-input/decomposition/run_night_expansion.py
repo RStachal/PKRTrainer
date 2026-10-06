@@ -38,6 +38,7 @@ Spadlou desku zkusí podruhé a po druhém pádu ji odloží značkou `.failed`,
 fronta přestala nabízet. A když frontu vyprázdní dřív, než skončí okno, **předá
 zbytek noci rozkladu** - jinak by noc s krátkou frontou prostála.
 """
+import json
 import os
 import re
 import shutil
@@ -61,12 +62,15 @@ OUTPUT_BASE = os.path.join(
     REPO, "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver",
 )
 
-# Naměřeno na 163 deskách za noc 20.-21. 8. 2026: průměr 4,0 min, medián 3,7,
-# maximum 9,1. Dřív tu stálo 15 podle jediného měření (715 s), a bylo to skoro
-# čtyřnásobek - noc kvůli tomu skončila 13 minut před deadlinem, přestože se
-# ještě tři desky vešly. Dvanáct je maximum plus rezerva; deska, která se
-# nestihne, znamená zahozený solve, ne uložený mezivýsledek.
-BOARD_MINUTES = 12
+# Cena desky **tady nestojí**. Měří ji `npm run mtt:board-cost` z nočního logu
+# a čte se z `board-cost.generated.json` (viz `board_cost()` níž).
+#
+# Do 6. 10. 2026 tu byl `BOARD_MINUTES = 12` a byl to nejčistší příznak toho,
+# proč tahle vrstva vznikla: **nikdo ho nečetl.** Konstanta se dvakrát
+# přeměřovala a opravovala (15 podle jediné desky, pak 12 podle noci z 20. na
+# 21. 8.), žila v hlavě při každém plánování dávky - a v kódu nebyla ani jedna
+# reference. Číslo, které se posouvá a přitom nic neovlivňuje, je horší než
+# žádné: vypadá jako zdroj pravdy a není.
 MIN_FREE_GB = 8
 # O hodinu víc, než je okno. Od 10. 9. 2026 je okno 21:00-07:00, tedy deset
 # hodin; guard má chytat spuštění mimo noc, ne noc samotnou.
@@ -119,45 +123,60 @@ BOARD_ATTEMPTS = 2
 # 60 / 90 / 90.
 ESCALATION = ((0, 0.5), (30, 0.5), (30, 1.0))
 
-# Základní strop a rezerva před deadlinem podle hloubky. Naměřeno v noci
-# 5.-6. 10. 2026, kdy se poprvé solvily obě hloubky za sebou:
+# Strop a rezerva se **čtou z měření**, ne odsud: `board-cost.generated.json`
+# drží na každou hloubku jeden změřený řádek a tři odvozená čísla. Jak se
+# odvozují a proč nejde udělat jedna konstanta pro všechny tři, je rozepsané
+# v `scripts/lib/boardCost.mts`.
+BOARD_COST_PATH = os.path.join(
+    REPO, "Agents/solver-input/decomposition/board-cost.generated.json",
+)
+
+# Poslední známá dobrá tabulka, **jen pro případ, že se soubor nepřečte**.
 #
-# | hloubka | desek | medián | max | přes 30 min |
-# |---|---|---|---|---|
-# | 25 bb | 28 | 6,4 | 20,1 | 0 |
-# | 40 bb | 19 | 19,3 | 29,1 | 2 |
-#
-# Strop je dvojnásobek naměřeného maxima, ne medián: deska, která se do stropu
-# nevejde, stojí celý strop a navíc stupeň žebříku, takže těsný strop je dražší
-# než volný. Rezerva naopak stojí na mediánu - je to otázka „vejde se ještě
-# jedna deska", ne „vejde se ta nejhorší".
-#
-# Hloubka, kterou se ze jména přečíst nedaří, bere řádek pro 25 bb. Je to tatáž
-# hodnota, jaká tu platila pro všechno do 6. 10. 2026, takže neznámé jméno se
-# nechová nijak nově.
-# Řádek pro 50 bb je **extrapolace, ne měření**, a je tak označený schválně.
-# Naměřená je jedna deska 6. 10. 2026: `MTT9_50BB_UTG_2_HJ_SRP A72r` doběhla za
-# 1 154 s, tedy 19,2 min, exploitabilita 0,32 %. Jenže je to **tatáž rodina a
-# textura, která byla na 40 bb nejrychlejší** (9,3 min proti mediánu 19,3), takže
-# poměr medián/nejrychlejší 2,08 dává na 50 bb medián kolem 40 minut a konec
-# rozdělení kolem 60. Strop 90 z toho plyne stejným pravidlem jako u 40 bb
-# (dvojnásobek horního konce).
-#
-# Volný strop nestojí nic: je to jen víko, deska skončí, až skončí. Těsný strop
-# stojí celé víko a navíc stupeň žebříku - to je ta nesymetrie, kvůli které se
-# tady radši nadsadí. První noc na 50 bb rozdělení naměří a čísla se opraví.
-BASE_CAP_MINUTES = ((25, 30), (40, 60), (50, 90))
-RESERVE_MINUTES = ((25, 12), (40, 25), (50, 45))
+# Runner kvůli chybějící ceně padnout nesmí: spadlý runner stojí celou noc,
+# kdežto o něco vedle padnoucí strop stojí jednu desku. Proto se tady drží kopie
+# a hlásí se to do logu - opačná volba (zavřená brána) patří hlídači, ne noci.
+# Čísla jsou ta, která z měření 6. 10. 2026 vyšla, takže záloha a měření si
+# neodporují.
+FALLBACK_CAP_MINUTES = ((25, 30), (40, 60), (50, 90))
+FALLBACK_RESERVE_MINUTES = ((25, 14), (40, 29), (50, 59))
 # Nad devadesát minut se nejde: deska, která potřebuje víc, není deska, je to
 # noc. Strop se nad 60 nezvedá u 25 bb, jak vlastník výslovně uvedl; u hlubších
 # je tohle tentýž úsudek o rozpočtu, jen na jiné základně.
 CAP_CEILING_MINUTES = 90
 DEEPEST_KNOWN_CAP = 90
 # Hlubší než 50 bb nemá smysl rezervovat **méně** než 50 bb: 100 bb je podle
-# generátoru dávky přes 2,5 h na desku. Do 6. 10. 2026 tu stálo 40, tedy méně
-# než u 50 bb - nesrovnalost, kterou jsem si sám založil, když jsem přidával
-# řádek pro 50.
+# generátoru dávky přes 2,5 h na desku.
 DEEPEST_KNOWN_RESERVE = 60
+
+_COST_CACHE = {}
+
+
+def board_cost():
+    """Změřená tabulka ceny desky jako `{hloubka: řádek}`, nebo prázdno.
+
+    Čte se **jednou** a do logu se o tom řekne, ať je v nočním záznamu vidět,
+    podle čeho noc jela. Prázdný výsledek znamená „ber zálohu", ne „nula minut".
+    """
+    if "rows" in _COST_CACHE:
+        return _COST_CACHE["rows"]
+    rows = {}
+    try:
+        with open(BOARD_COST_PATH, encoding="utf-8") as handle:
+            table = json.load(handle)
+        for row in table.get("depths", []):
+            rows[int(row["depthBB"])] = row
+        log(f"cena desky změřena {table.get('measuredAt', '?')}"
+            f" na {table.get('solves', '?')} deskách: "
+            + ", ".join(f"{depth} bb {row['planMinutes']} min"
+                        f"{'' if row.get('basis') == 'měřeno' else ' (extrapolace)'}"
+                        for depth, row in sorted(rows.items())))
+    except Exception as problem:  # noqa: BLE001 - noc nesmí padnout kvůli tabulce
+        log(f"POZOR: cenu desky se přečíst nepodařilo ({problem}); "
+            "beru poslední známou zálohu v runneru")
+        rows = {}
+    _COST_CACHE["rows"] = rows
+    return rows
 
 
 def depth_of(family: str) -> int:
@@ -173,16 +192,27 @@ def _by_depth(table, depth: int, fallback: int) -> int:
     return fallback
 
 
+def _measured(family: str, key: str):
+    """Hodnota z měření pro hloubku té rodiny, nebo `None`."""
+    row = board_cost().get(depth_of(family))
+    return None if row is None else row.get(key)
+
+
 def caps_for(family: str, level: int):
     """`(strop v minutách, přesnost)` pro danou rodinu a stupeň žebříku."""
-    base = _by_depth(BASE_CAP_MINUTES, depth_of(family), DEEPEST_KNOWN_CAP)
+    base = _measured(family, "capMinutes")
+    if base is None:
+        base = _by_depth(FALLBACK_CAP_MINUTES, depth_of(family), DEEPEST_KNOWN_CAP)
     extra, accuracy = ESCALATION[level]
     return (min(base + extra, CAP_CEILING_MINUTES), accuracy)
 
 
 def reserve_for(family: str) -> int:
     """Kolik minut nechat před deadlinem, aby se čerstvá deska ještě vešla."""
-    return _by_depth(RESERVE_MINUTES, depth_of(family), DEEPEST_KNOWN_RESERVE)
+    reserve = _measured(family, "reserveMinutes")
+    if reserve is None:
+        reserve = _by_depth(FALLBACK_RESERVE_MINUTES, depth_of(family), DEEPEST_KNOWN_RESERVE)
+    return int(reserve)
 
 
 def failure_level(checkpoint: str) -> int:
@@ -436,6 +466,20 @@ def main():
             if solved(checkpoint):
                 size = os.path.getsize(checkpoint) / (1024 ** 2)
                 done += 1
+                # Úspěch **uklízí značku po pádu**. Bez tohohle zůstala ležet
+                # vedle hotového checkpointu a dál se čte jako fakt: desky
+                # `J73r` a `T84r` v `MTT9_25BB_CO_BTN_SRP` dosolvily 5. 10. 2026
+                # (46 MB, kolem 46 min každá), a jejich značky z 30. 9. tam
+                # ležely i 6. 10. Vlastníkovi se kvůli nim pořád nabízelo
+                # rozhodnutí o rodině, která už byla 12/12, a každý konzument
+                # značek musel zvlášť ověřovat, že checkpoint přece existuje.
+                marker = checkpoint + ".failed"
+                if os.path.exists(marker):
+                    try:
+                        os.remove(marker)
+                        log("  (uklizena značka po dřívějším pádu)")
+                    except OSError as problem:
+                        log(f"  POZOR: značku po pádu nejde smazat ({problem})")
                 again = "" if attempt == 1 else " (napodruhé)"
                 if overslept:
                     log(f"  hotovo, ale stroj mezi tím SPAL: na hodinách "

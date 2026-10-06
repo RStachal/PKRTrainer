@@ -1,0 +1,41 @@
+{
+  "measuredAt": "2026-10-06 04:51",
+  "source": "artifacts/decomposition/expansion.log",
+  "solves": 715,
+  "depths": [
+    {
+      "depthBB": 25,
+      "boards": 698,
+      "median": 6.4,
+      "p90": 13.1,
+      "max": 46.7,
+      "planMinutes": 6.4,
+      "capMinutes": 30,
+      "reserveMinutes": 14,
+      "basis": "měřeno"
+    },
+    {
+      "depthBB": 40,
+      "boards": 17,
+      "median": 19.3,
+      "p90": 28.6,
+      "max": 29.1,
+      "planMinutes": 19.3,
+      "capMinutes": 60,
+      "reserveMinutes": 29,
+      "basis": "měřeno"
+    },
+    {
+      "depthBB": 50,
+      "boards": 0,
+      "median": 39.8,
+      "p90": 59,
+      "max": 0,
+      "planMinutes": 39.8,
+      "capMinutes": 90,
+      "reserveMinutes": 59,
+      "basis": "extrapolace",
+      "note": "poměr ručních sond 19.2 / 9.3 = 2.06 krát noční 40 bb (17 desek)"
+    }
+  ]
+}

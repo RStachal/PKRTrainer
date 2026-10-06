@@ -36,6 +36,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 
+import { costForDepth, depthOfFamily, readBoardCostTable } from "./lib/boardCost.mts";
 import { escalationSteps, failureLevel } from "./lib/nightEscalation.mts";
 import { join } from "node:path";
 
@@ -77,42 +78,47 @@ const CHECKPOINT_ROOT = "Agents/solver-input/gto-plus/sample-postflop-v1/output/
 const WINDOW_MINUTES = 587;
 
 /*
- * Kolik minut stojí deska, podle hloubky. Naměřeno v noci 5.-6. 10. 2026, kdy
- * se poprvé solvily dvě hloubky za sebou: medián 6,4 min na 25 bb (28 desek)
- * a **19,3 min na 40 bb** (19 desek).
+ * Kolik minut stojí deska, podle hloubky. **Nečte se to odsud** - čte se to
+ * z `board-cost.generated.json`, který měří `npm run mtt:board-cost` z nočního
+ * logu. Do 6. 10. 2026 to tu byla ručně psaná tabulka a byla to jedna z pěti
+ * kopií téhož čísla; proč to nejde sjednotit do jedné konstanty, je rozepsané
+ * v `scripts/lib/boardCost.mts`.
  *
- * Do 6. 10. tu stálo jedno číslo pro všechno - `BOARDS_PER_NIGHT = 66`, tedy
- * 8,8 min na desku - a bylo z éry, kdy se solvilo jen 25 bb. S 40 bb ve frontě
- * to **nadhodnocuje průtok dvojnásobně**: 78 desek na 40 bb vyšlo jako 1,2
- * noci, a je to spíš 2,6. Hlídač, který výhled přepočítá podle hloubky, drží
- * tenhle rozdíl i pro hloubky, které přijdou.
+ * Dvě věci, které tu do 6. 10. stály špatně, ať se nevrátí:
  *
- * 25 bb je 9, ne naměřených 6,4: růstová dávka té noci byly nové textury
- * (monotóny, trojice), které jsou levnější než průřez. Devět drží tempo
- * 8,8 min/deska, na kterém stála předchozí plánování.
+ * 1. Stálo tu, že **nadsazený odhad škodí méně**, protože „výhled fronty vyjde
+ *    kratší". Je to naopak. Výhled je `minuty / okno`, takže dražší deska dá
+ *    **víc** nahlášených nocí. Kdo cenu nadsadí, ohlásí zásobu, která není, a
+ *    noc běží naprázdno. Bezpečné je cenu podstřelit, tedy medián - a `plán`
+ *    v té tabulce je přesně medián.
+ * 2. Stálo tu, že `A72r` na 40 bb byla nejrychlejší deska rodiny (9,3 proti
+ *    mediánu 19,3). Noc z 5. na 6. 10. to vyvrátila: `A72r` je na 40 bb ve
+ *    třech sesterských rodinách **nejdražší** textura (26,5, 28,6, 29,1).
+ *    Těch 9,3 byla ruční sonda přes den, a ta cenu noci neříká.
  */
 /*
- * Řádek pro 50 bb je **extrapolace, ne měření.** Naměřená je jedna deska
- * (6. 10. 2026, `MTT9_50BB_UTG_2_HJ_SRP A72r`, 19,2 min), ale je to táž rodina
- * a textura, která byla na 40 bb nejrychlejší z celé rodiny - 9,3 min proti
- * mediánu 19,3. Poměr 2,08 dává medián kolem 40 minut, a to je to, co tu stojí.
- *
- * Nadsazený odhad tu škodí **méně** než podsazený: výhled fronty vyjde kratší,
- * takže se dávka nastaguje dřív. Podsazený by naopak ohlásil zásobu, která není -
- * a to je přesně ta chyba, kterou tenhle řádek 6. 10. ráno opravoval.
+ * Chybějící tabulka nesmí hlídače **shodit**. Nenulový konec by sice byl taky
+ * červená, ale výstupem by byl stack trace místo pojmenovaného řádku - a hlídač
+ * má říkat, co je špatně, ne že spadl. Prázdná tabulka proto projde dál a
+ * zčervená na řádku „každá hloubka ve frontě má změřenou cenu".
  */
-const MINUTES_PER_BOARD: readonly (readonly [number, number])[] = [[25, 9], [40, 19.3], [50, 40]];
-const MINUTES_PER_BOARD_DEEP = 40;
+const BOARD_COST = (() => {
+  try {
+    return readBoardCostTable();
+  } catch {
+    return { measuredAt: "chybí", source: "chybí", solves: 0, depths: [] };
+  }
+})();
 
-/** Hloubka ze jména rodiny, `MTT9_40BB_UTG_2_HJ_SRP` → 40; 0 když to nejde. */
-function depthOf(family: string): number {
-  return Number(/_(\d+)BB_/.exec(family)?.[1] ?? 0);
-}
-
-/** Kolik minut si deska té rodiny vezme. Neznámá hloubka bere řádek pro 25 bb. */
-function minutesPerBoard(family: string): number {
-  const depth = depthOf(family);
-  return MINUTES_PER_BOARD.find(([limit]) => depth <= limit)?.[1] ?? MINUTES_PER_BOARD_DEEP;
+/**
+ * Kolik minut si deska té rodiny vezme.
+ *
+ * Neznámá hloubka vrací `undefined`, ne číslo. Dřív tu bylo
+ * `MINUTES_PER_BOARD_DEEP = 40`, tedy tichá odpověď na hloubku, kterou nikdo
+ * nezměřil - a hlídač má o takové hloubce **zčervenat**, ne ji ocenit.
+ */
+function minutesPerBoard(family: string): number | undefined {
+  return costForDepth(BOARD_COST, depthOfFamily(family))?.planMinutes;
 }
 
 type Check = { label: string; ok: boolean; got: string; want: string };
@@ -352,7 +358,12 @@ const willFinish = [...progress.entries()]
   .reduce<{ seen: number; families: string[] }>((acc, [family, row]) => {
     // Rozpočet noci je v **minutách**, ne v deskách: deska na 40 bb stojí
     // dvakrát tolik co na 25, takže počítat je po kusech nadhodnocuje průtok.
-    const next = acc.seen + (row.want - row.have) * minutesPerBoard(family);
+    const minutes = minutesPerBoard(family);
+    // Rodina bez ceny se do „dokončí se" nepočítá: tvrdit, že doběhne, by
+    // znamenalo mít její cenu za nulovou, a to je ta nejhorší možná odpověď.
+    // Že cena chybí, hlásí vlastní řádek níž.
+    if (minutes === undefined) return acc;
+    const next = acc.seen + (row.want - row.have) * minutes;
     if (next <= WINDOW_MINUTES) return { seen: next, families: [...acc.families, family] };
     return acc;
   }, { seen: 0, families: [] });
@@ -381,12 +392,39 @@ add("noc dokončí aspoň jednu rodinu", willFinish.families.length > 0,
 const NIGHTS_AHEAD_MIN = 2;
 const queue = [...progress.entries()].reduce((acc, [family, row]) => {
   const boards = Math.max(0, row.want - row.have - row.exhausted);
-  return { boards: acc.boards + boards, minutes: acc.minutes + boards * minutesPerBoard(family) };
+  // Rodina bez změřené ceny přidá desky, ale **nula minut**. Je to schválně na
+  // tuhle stranu: výhled tím vyjde kratší, hlídač zčervená dřív a nastaguje se
+  // dávka. Opačná volba by ohlásila zásobu, která není.
+  const minutes = minutesPerBoard(family) ?? 0;
+  return { boards: acc.boards + boards, minutes: acc.minutes + boards * minutes };
 }, { boards: 0, minutes: 0 });
 const nightsAhead = queue.minutes / WINDOW_MINUTES;
 add("fronta vydrží aspoň dvě noci", nightsAhead >= NIGHTS_AHEAD_MIN,
   `${queue.boards} desek za ~${Math.round(queue.minutes / 60)} h, tedy ${nightsAhead.toFixed(1)} noci`,
   `aspoň ${NIGHTS_AHEAD_MIN} noci (${Math.round(NIGHTS_AHEAD_MIN * WINDOW_MINUTES / 60)} h práce)`);
+
+/*
+ * Má každá nastagovaná hloubka změřenou cenu?
+ *
+ * Bez tohohle řádku je výhled fronty **tiše nepravdivý**: hloubka bez ceny
+ * přidá nula minut, takže 96 desek na 50 bb vypadá jako nic. Nula je správná
+ * volba uvnitř výpočtu (chybí na bezpečnou stranu), ale nesmí být nevidět.
+ *
+ * Extrapolovaný řádek projde, ale řekne se to: je to dohoda, ne měření, a do
+ * tabulky se dostal proto, že nastagovat hloubku jde dřív, než ji noc změří.
+ */
+const pricedDepths = new Set(BOARD_COST.depths.map((row) => row.depthBB));
+const unpriced = [...new Set([...progress.entries()]
+  .filter(([, row]) => row.want - row.have - row.exhausted > 0)
+  .map(([family]) => depthOfFamily(family)))]
+  .filter((depth) => !pricedDepths.has(depth))
+  .sort((left, right) => left - right);
+add("každá hloubka ve frontě má změřenou cenu", unpriced.length === 0,
+  unpriced.length === 0
+    ? `${BOARD_COST.depths.map((row) => `${row.depthBB}bb ${row.planMinutes} min`
+      + `${row.basis === "měřeno" ? "" : " (extrapolace)"}`).join(", ")}`
+    : `bez ceny: ${unpriced.map((depth) => `${depth}bb`).join(", ")}`,
+  "npm run mtt:board-cost -- --write");
 
 // Rodina, které zbývají jen desky s `.failed`, se sama nedokončí **nikdy** -
 // a bez téhle kontroly by „18 z 18 sedí" mlčelo o tom, že její obsah je zamčený
