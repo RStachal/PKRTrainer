@@ -106,10 +106,68 @@ BOARD_ATTEMPTS = 2
 #
 # Kdyby se spadlá deska zkoušela každou noc, vrátí se přesně ta škoda, proti
 # které `.failed` vznikla: noc by hořela na desce, která nedoběhne. Proto má
-# každá deska **tři stupně a dost** - 30 min, 60 min, 60 min s přesností 1 %
-# (pro trenažér pořád bohatě přesné) - a po třetím pádu je odložená natrvalo.
-# Strop se nad 60 minut nezvedá, jak vlastník výslovně uvedl.
-ESCALATION = ((30, 0.5), (60, 0.5), (60, 1.0))
+# každá deska **tři stupně a dost** a po třetím pádu je odložená natrvalo.
+#
+# ## Žebřík přidává ke stropu, nenastavuje ho
+#
+# Do 6. 10. 2026 tu stála absolutní čísla - 30, 60, 60 - a platila pro každou
+# hloubku. Na 25 bb to sedělo, na 40 bb ne: první noc na 40 bb (5.-6. 10.)
+# naměřila na 19 deskách **medián 19,3 min, maximum 29,1** a **dvě desky přes
+# třicet**, tedy 11 % okna zahozených na stropu, který byl těsný. Žebřík proto
+# přidává minuty k **základnímu stropu podle hloubky**: pro 25 bb z toho vyjde
+# přesně vlastníkových 30 / 60 / 60 s přesností 1 % (rozhodnutí 3a), pro 40 bb
+# 60 / 90 / 90.
+ESCALATION = ((0, 0.5), (30, 0.5), (30, 1.0))
+
+# Základní strop a rezerva před deadlinem podle hloubky. Naměřeno v noci
+# 5.-6. 10. 2026, kdy se poprvé solvily obě hloubky za sebou:
+#
+# | hloubka | desek | medián | max | přes 30 min |
+# |---|---|---|---|---|
+# | 25 bb | 28 | 6,4 | 20,1 | 0 |
+# | 40 bb | 19 | 19,3 | 29,1 | 2 |
+#
+# Strop je dvojnásobek naměřeného maxima, ne medián: deska, která se do stropu
+# nevejde, stojí celý strop a navíc stupeň žebříku, takže těsný strop je dražší
+# než volný. Rezerva naopak stojí na mediánu - je to otázka „vejde se ještě
+# jedna deska", ne „vejde se ta nejhorší".
+#
+# Hloubka, kterou se ze jména přečíst nedaří, bere řádek pro 25 bb. Je to tatáž
+# hodnota, jaká tu platila pro všechno do 6. 10. 2026, takže neznámé jméno se
+# nechová nijak nově.
+BASE_CAP_MINUTES = ((25, 30), (50, 60))
+RESERVE_MINUTES = ((25, 12), (50, 25))
+# Nad devadesát minut se nejde: deska, která potřebuje víc, není deska, je to
+# noc. Strop se nad 60 nezvedá u 25 bb, jak vlastník výslovně uvedl; u hlubších
+# je tohle tentýž úsudek o rozpočtu, jen na jiné základně.
+CAP_CEILING_MINUTES = 90
+DEEPEST_KNOWN_CAP = 90
+DEEPEST_KNOWN_RESERVE = 40
+
+
+def depth_of(family: str) -> int:
+    """Hloubka ze jména rodiny, `MTT9_40BB_UTG_2_HJ_SRP` → 40; 0 když to nejde."""
+    found = re.search(r"_(\d+)BB_", family)
+    return int(found.group(1)) if found else 0
+
+
+def _by_depth(table, depth: int, fallback: int) -> int:
+    for limit, value in table:
+        if depth <= limit:
+            return value
+    return fallback
+
+
+def caps_for(family: str, level: int):
+    """`(strop v minutách, přesnost)` pro danou rodinu a stupeň žebříku."""
+    base = _by_depth(BASE_CAP_MINUTES, depth_of(family), DEEPEST_KNOWN_CAP)
+    extra, accuracy = ESCALATION[level]
+    return (min(base + extra, CAP_CEILING_MINUTES), accuracy)
+
+
+def reserve_for(family: str) -> int:
+    """Kolik minut nechat před deadlinem, aby se čerstvá deska ještě vešla."""
+    return _by_depth(RESERVE_MINUTES, depth_of(family), DEEPEST_KNOWN_RESERVE)
 
 
 def failure_level(checkpoint: str) -> int:
@@ -298,15 +356,16 @@ def main():
     done = failed = 0
     slept_minutes = 0.0
     for param, family, board, checkpoint, level in (todo[:limit] if limit else todo):
-        cap_minutes, accuracy = ESCALATION[level]
+        cap_minutes, accuracy = caps_for(family, level)
         remaining = (deadline - datetime.now()).total_seconds() / 60
         if remaining <= 0:
             log("deadline; končím mezi deskami")
             break
-        # Čerstvá deska potřebuje v průměru čtyři minuty, takže stačí rezerva
-        # `BOARD_MINUTES`. Opakovaný pokus má strop 60 minut a smysl má jen
-        # celý - usekne-li ho deadline, je to zahozená hodina.
-        need = cap_minutes if level > 0 else BOARD_MINUTES
+        # Čerstvá deska potřebuje typicky medián své hloubky, takže stačí
+        # rezerva podle `RESERVE_MINUTES`. Opakovaný pokus má smysl jen celý -
+        # usekne-li ho deadline, je to zahozená hodina, takže se mu rezervuje
+        # celý jeho strop.
+        need = cap_minutes if level > 0 else reserve_for(family)
         if remaining < need:
             log(f"končím {remaining:.0f} min před deadline: "
                 f"{'opakovaný pokus' if level > 0 else 'deska'} potřebuje asi {need}")
@@ -388,7 +447,7 @@ def main():
                 handle.write(f"{datetime.now():%Y-%m-%d %H:%M} rc={rc} "
                              f"po {attempt} pokusech stupen={next_level}\n")
             if next_level < len(ESCALATION):
-                next_cap, next_accuracy = ESCALATION[next_level]
+                next_cap, next_accuracy = caps_for(family, next_level)
                 log(f"  SELHALO po {minutes:.1f} min (rc={rc}); příští noc "
                     f"stupeň {next_level} - strop {next_cap} min, přesnost {next_accuracy} %")
             else:

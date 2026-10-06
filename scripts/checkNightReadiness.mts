@@ -35,6 +35,8 @@
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+
+import { escalationSteps, failureLevel } from "./lib/nightEscalation.mts";
 import { join } from "node:path";
 
 const TASKS = [
@@ -71,11 +73,42 @@ const STAGED_PARAMS = join(
 );
 const CHECKPOINT_ROOT = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
 
-/** Kolik desek stihne noc; z naměřeného tempa 8,8 min/deska za 587 minut okna. */
-const BOARDS_PER_NIGHT = 66;
+/** Kolik minut má noční okno (21:00-07:00 minus rezerva na konci). */
+const WINDOW_MINUTES = 587;
+
+/*
+ * Kolik minut stojí deska, podle hloubky. Naměřeno v noci 5.-6. 10. 2026, kdy
+ * se poprvé solvily dvě hloubky za sebou: medián 6,4 min na 25 bb (28 desek)
+ * a **19,3 min na 40 bb** (19 desek).
+ *
+ * Do 6. 10. tu stálo jedno číslo pro všechno - `BOARDS_PER_NIGHT = 66`, tedy
+ * 8,8 min na desku - a bylo z éry, kdy se solvilo jen 25 bb. S 40 bb ve frontě
+ * to **nadhodnocuje průtok dvojnásobně**: 78 desek na 40 bb vyšlo jako 1,2
+ * noci, a je to spíš 2,6. Hlídač, který výhled přepočítá podle hloubky, drží
+ * tenhle rozdíl i pro hloubky, které přijdou.
+ *
+ * 25 bb je 9, ne naměřených 6,4: růstová dávka té noci byly nové textury
+ * (monotóny, trojice), které jsou levnější než průřez. Devět drží tempo
+ * 8,8 min/deska, na kterém stála předchozí plánování.
+ */
+const MINUTES_PER_BOARD: readonly (readonly [number, number])[] = [[25, 9], [50, 19.3]];
+const MINUTES_PER_BOARD_DEEP = 40;
+
+/** Hloubka ze jména rodiny, `MTT9_40BB_UTG_2_HJ_SRP` → 40; 0 když to nejde. */
+function depthOf(family: string): number {
+  return Number(/_(\d+)BB_/.exec(family)?.[1] ?? 0);
+}
+
+/** Kolik minut si deska té rodiny vezme. Neznámá hloubka bere řádek pro 25 bb. */
+function minutesPerBoard(family: string): number {
+  const depth = depthOf(family);
+  return MINUTES_PER_BOARD.find(([limit]) => depth <= limit)?.[1] ?? MINUTES_PER_BOARD_DEEP;
+}
 
 type Check = { label: string; ok: boolean; got: string; want: string };
 const checks: Check[] = [];
+const ESCALATION_STEPS = escalationSteps();
+
 const add = (label: string, ok: boolean, got: string, want: string): void => {
   checks.push({ label, ok, got, want });
 };
@@ -233,37 +266,6 @@ const wakeTimers = powershell(SLEEP_READ("bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d")
 add("časovače probuzení na síti povolené", wakeTimers === "1", wakeTimers === "" ? "nepřečteno" : wakeTimers, "1");
 
 /** Nastagované desky a jejich checkpointy, po rodinách. */
-/**
- * Kolik stupňů má žebřík pokusů - čte se **z runneru**, ne z konstanty tady.
- *
- * Dvě čísla na dvou místech se rozejdou; tohle se rozejít nemůže. Když se vzor
- * nenajde, vrátí se 1, takže hlídač spadne na bezpečnou stranu: každá spadlá
- * deska se bude počítat za vyčerpanou a nahlásí se jako zaseknutá rodina.
- */
-function escalationSteps(): number {
-  try {
-    const source = readFileSync(
-      "Agents/solver-input/decomposition/run_night_expansion.py",
-      "utf8",
-    );
-    const found = /^ESCALATION = \((.+)\)\s*$/m.exec(source);
-    return found === null ? 1 : (found[1].match(/\(/g) ?? []).length || 1;
-  } catch {
-    return 1;
-  }
-}
-const ESCALATION_STEPS = escalationSteps();
-
-/** Stupeň ze značky `.failed`; značky bez stupně jsou z doby před žebříkem. */
-function failureLevel(marker: string): number {
-  try {
-    const found = /stupen=(\d+)/.exec(readFileSync(marker, "utf8"));
-    return found === null ? 1 : Number(found[1]);
-  } catch {
-    return 1;
-  }
-}
-
 function stagedProgress(): Map<string, { have: number; want: number; retrying: number; exhausted: number; order: number }> {
   const progress = new Map<string, { have: number; want: number; retrying: number; exhausted: number; order: number }>();
   if (!existsSync(STAGED_PARAMS)) return progress;
@@ -338,13 +340,16 @@ const willFinish = [...progress.entries()]
   .filter(([, row]) => row.have < row.want)
   .sort((a, b) => a[1].order - b[1].order)
   .reduce<{ seen: number; families: string[] }>((acc, [family, row]) => {
-    const next = acc.seen + (row.want - row.have);
-    if (next <= BOARDS_PER_NIGHT) return { seen: next, families: [...acc.families, family] };
+    // Rozpočet noci je v **minutách**, ne v deskách: deska na 40 bb stojí
+    // dvakrát tolik co na 25, takže počítat je po kusech nadhodnocuje průtok.
+    const next = acc.seen + (row.want - row.have) * minutesPerBoard(family);
+    if (next <= WINDOW_MINUTES) return { seen: next, families: [...acc.families, family] };
     return acc;
   }, { seen: 0, families: [] });
 
 add("noc dokončí aspoň jednu rodinu", willFinish.families.length > 0,
-  `${willFinish.families.length} rodin do ${BOARDS_PER_NIGHT} desek`, "aspoň 1");
+  `${willFinish.families.length} rodin do ${Math.round(willFinish.seen)} z ${WINDOW_MINUTES} min`,
+  "aspoň 1");
 
 /*
  * Na kolik nocí práce ve frontě vydrží.
@@ -364,12 +369,14 @@ add("noc dokončí aspoň jednu rodinu", willFinish.families.length > 0,
  * nová rodina, a to je ta dražší polovina.
  */
 const NIGHTS_AHEAD_MIN = 2;
-const pendingBoards = [...progress.values()]
-  .reduce((sum, row) => sum + Math.max(0, row.want - row.have - row.exhausted), 0);
-const nightsAhead = pendingBoards / BOARDS_PER_NIGHT;
+const queue = [...progress.entries()].reduce((acc, [family, row]) => {
+  const boards = Math.max(0, row.want - row.have - row.exhausted);
+  return { boards: acc.boards + boards, minutes: acc.minutes + boards * minutesPerBoard(family) };
+}, { boards: 0, minutes: 0 });
+const nightsAhead = queue.minutes / WINDOW_MINUTES;
 add("fronta vydrží aspoň dvě noci", nightsAhead >= NIGHTS_AHEAD_MIN,
-  `${pendingBoards} desek, tedy ${nightsAhead.toFixed(1)} noci`,
-  `aspoň ${NIGHTS_AHEAD_MIN} noci (${NIGHTS_AHEAD_MIN * BOARDS_PER_NIGHT} desek)`);
+  `${queue.boards} desek za ~${Math.round(queue.minutes / 60)} h, tedy ${nightsAhead.toFixed(1)} noci`,
+  `aspoň ${NIGHTS_AHEAD_MIN} noci (${Math.round(NIGHTS_AHEAD_MIN * WINDOW_MINUTES / 60)} h práce)`);
 
 // Rodina, které zbývají jen desky s `.failed`, se sama nedokončí **nikdy** -
 // a bez téhle kontroly by „18 z 18 sedí" mlčelo o tom, že její obsah je zamčený

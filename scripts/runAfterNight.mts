@@ -4,6 +4,8 @@ import { cpus, freemem } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 
+import { escalationSteps, failureLevel } from "./lib/nightEscalation.mts";
+
 /**
  * Celý cyklus po noční práci jedním příkazem.
  *
@@ -131,6 +133,7 @@ const SCRIPT_PATH: Readonly<Record<string, string>> = {
   "mtt:river-ev-stale": "scripts/checkRiverEvStaleness.mts",
   "mtt:turn-ev-stale": "scripts/checkTurnEvStaleness.mts",
   "mtt:turn-ev-pack": "scripts/buildTurnEvPacks.mts",
+  "mtt:postflop-bet-sizing": "scripts/buildPostflopBetSizing.mts",
 };
 
 /**
@@ -285,8 +288,10 @@ const STAGED_PARAMS = join(
   "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters",
   "pkrtrainer_mtt_seat_pair_expansion_v1",
 );
-function stagedProgress(): Map<string, { have: number; want: number; failed: string[] }> {
-  const progress = new Map<string, { have: number; want: number; failed: string[] }>();
+const ESCALATION_STEPS = escalationSteps();
+
+function stagedProgress(): Map<string, { have: number; want: number; retrying: string[]; exhausted: string[] }> {
+  const progress = new Map<string, { have: number; want: number; retrying: string[]; exhausted: string[] }>();
   if (!existsSync(STAGED_PARAMS)) return progress;
   for (const name of readdirSync(STAGED_PARAMS)) {
     if (!name.endsWith(".txt")) continue;
@@ -294,15 +299,27 @@ function stagedProgress(): Map<string, { have: number; want: number; failed: str
     const match = /(MTT9_[0-9]+BB_[A-Z0-9_]+?_(?:SRP|3BP)[A-Z0-9_]*)_([^_]+)$/.exec(stem);
     if (match === null) continue;
     const [, family, board] = match;
-    const row = progress.get(family) ?? { have: 0, want: 0, failed: [] };
+    const row = progress.get(family) ?? { have: 0, want: 0, retrying: [], exhausted: [] };
     row.want += 1;
     const checkpoint = join(CHECKPOINT_ROOT, family, "raw", `pkrtrainer_${family}_${board}.json`);
     if (existsSync(checkpoint) && statSync(checkpoint).size > 0) row.have += 1;
-    // Deska, která opakovaně spadla, nosí `.failed` a monolit ji už nenabídne.
-    // Bez tohohle rozlišení by rodina s jednou takovou deskou vypadala navždy
-    // jako „rozdělaná" a její pack by se **nikdy** nepřegeneroval - naměřeno
-    // 1. 10. 2026 na MTT9_25BB_CO_BTN_SRP, dvě desky na timeout 30 min.
-    else if (existsSync(`${checkpoint}.failed`)) row.failed.push(board);
+    /*
+     * Spadlá deska je dvojí a splést je dohromady lže v obě strany.
+     *
+     * Deska, které zbývají stupně žebříku, se **příští noc nabídne** - rodina
+     * tedy čeká na práci, ne na člověka. Teprve deska, která žebřík vyčerpala,
+     * drží pack nehotový navždy, a bez toho rozlišení by rodina s jednou
+     * takovou deskou vypadala navždy jako „rozdělaná" (naměřeno 1. 10. 2026 na
+     * MTT9_25BB_CO_BTN_SRP, dvě desky na timeout 30 min).
+     *
+     * Do 6. 10. 2026 tady stálo „monolit ji už nenabídne" u obou druhů. Noc
+     * 5.-6. 10. to vyvrátila sama: runner obě desky `742r` tu noc znovu nabídl,
+     * a ranní cyklus přesto hlásil, že rozhodnutí je na člověku.
+     */
+    else if (existsSync(`${checkpoint}.failed`)) {
+      if (failureLevel(`${checkpoint}.failed`) >= ESCALATION_STEPS) row.exhausted.push(board);
+      else row.retrying.push(board);
+    }
     progress.set(family, row);
   }
   return progress;
@@ -330,8 +347,8 @@ function families(): string[] {
     // Zaseknutá rodina se drží **taky** - pack z deseti desek ze dvanácti je
     // pořád menší obsah než ten dnešní (bod 280). Ale hlásí se zvlášť, protože
     // „čeká na další noc" a „sama se nedokončí" chtějí jiný krok.
-    if (row.have + row.failed.length >= row.want) {
-      stuck.push(`${family} (${row.have}/${row.want}, natrvalo odložené: ${row.failed.join(", ")})`);
+    if (row.have + row.exhausted.length >= row.want) {
+      stuck.push(`${family} (${row.have}/${row.want}, natrvalo odložené: ${row.exhausted.join(", ")})`);
     } else {
       held.push(`${family} (${row.have}/${row.want})`);
     }
@@ -342,10 +359,10 @@ function families(): string[] {
     for (const line of held) console.log(`  ${line}`);
   }
   if (stuck.length > 0) {
-    console.log(`POZOR: ${stuck.length} rodin se samo nedokončí - deska opakovaně spadla a monolit ji už nenabídne:`);
+    console.log(`POZOR: ${stuck.length} rodin se samo nedokončí - deska vyčerpala všech ${ESCALATION_STEPS} stupňů žebříku:`);
     for (const line of stuck) console.log(`  ${line}`);
-    console.log("  Rozhodnutí je na člověku: buď smazat .failed a zkusit znovu (jiný strop času),");
-    console.log("  nebo tu desku z dávky vyřadit. Dokud leží, pack té rodiny se nepřegeneruje.");
+    console.log("  Rozhodnutí je na člověku: buď tu desku z dávky vyřadit, nebo rodinu nechat");
+    console.log("  na starém packu. Dokud značka leží, pack té rodiny se nepřegeneruje.");
   }
   return ready;
 }
@@ -632,6 +649,41 @@ if (!write) {
   const generateNothing = turnEvOnly || streetsWanted.size === 0;
   if (turnEvOnly) console.log("\n--turn-ev-only: packy se negenerují, jde se rovnou na turnovou EV");
   else if (streetsWanted.size === 0) console.log("\nžádná ulice ke generování, jde se rovnou na turnovou EV");
+  /*
+   * Tabulka velikostí sázek se obnovuje **před** generováním packů.
+   *
+   * `postflopBetSizing.generated.ts` se odvozuje z checkpointů, takže každá noc,
+   * která dosolví desku v nové rodině, ji nechá zastaralou - a packy se pak
+   * generují proti tabulce, která tu rodinu nezná. Do 6. 10. 2026 to cyklus
+   * nedělal a chytala to až brána: `postflopBetSizing.test.ts` zčervenal ráno
+   * 6. 10., protože noc přidala tři rodiny na 40 bb. Dvakrát za dva dny, takže
+   * to není náhoda, ale chybějící krok.
+   *
+   * Pořadí je podstatné: packy nesou velikosti z téhle tabulky, takže obnovit ji
+   * po generování by znamenalo pack z jedné verze a tabulku z druhé.
+   */
+  if (!generateNothing) {
+    // Prázdný řádek zvlášť, ne `\n` v šabloně - stejný důvod jako v
+    // `generateAll`, a dnes se mi to zpětné lomítko ztratilo znovu.
+    console.log("");
+    /*
+     * Selhání tohohle kroku **nesmí shodit noc.**
+     *
+     * `runAsync` hází při nenulovém konci, takže bez téhle pojistky by neúspěch
+     * generátoru velikostí sebral celý ranní cyklus - tedy všechny packy, EV
+     * i kontrolu. Zastaralá tabulka je proti tomu malá škoda a navíc ji chytá
+     * brána (`postflopBetSizing.test.ts`). Horší ze dvou výsledků se nevybírá.
+     */
+    try {
+      const sizing = await runAsync("mtt:postflop-bet-sizing", ["--write"], 2048);
+      const sized = /families: (\d+)/.exec(sizing)?.[1] ?? "?";
+      console.log(`velikosti sázek obnoveny pro ${sized} rodin`);
+    } catch (error) {
+      console.log(`POZOR: velikosti sázek se obnovit nepodařilo (${String(error).slice(0, 120)})`);
+      console.log("  Packy se vygenerují proti dosavadní tabulce; brána to pozná.");
+    }
+  }
+
   if (!generateNothing) await generateAll(list, "1/3");
 
   const verdictsBefore = verdictSnapshot();
