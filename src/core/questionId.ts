@@ -30,6 +30,16 @@ export interface QuestionIdParams {
   vsSeat?: Position;
   /** Rozložení stacků u stolu, pro které odpověď platí. Viz `vsSeat`. */
   stackSetupId?: string;
+  /**
+   * Kdo otevření dorovnal; jen když spot dostal odpověď zpřesněnou o tuhle osu
+   * (rozhodnutí 4a). Bez ní se ID nemění.
+   *
+   * Musí v ID být ze stejného důvodu jako `vsSeat`: je to jiná otázka. Změřeno,
+   * že BTN na 100 bb squeezuje 67 kombinací proti flatu z EP a 102 proti CO -
+   * kdyby obě spadly pod jedno ID, statistika by sčítala úspěšnost ve dvou
+   * různých situacích a hráč by v obou viděl smyšlený průměr.
+   */
+  flatCallers?: readonly string[];
 }
 
 /**
@@ -59,5 +69,8 @@ export interface QuestionIdParams {
 export function questionId(p: QuestionIdParams): string {
   const versus = p.vsSeat ? `|vs${p.vsSeat}` : "";
   const setup = p.stackSetupId ? `|#${p.stackSetupId}` : "";
-  return `${p.context}|${p.heroPos}|${p.effStack}|${p.hand}${versus}${setup}|${p.ante}`;
+  // Prázdný seznam nepřipojuje nic - stejně jako v klíči packu. Jinak by se ID
+  // změnilo i tam, kde se odpověď nezpřesnila, a rozešlo by se s historií.
+  const flat = p.flatCallers?.length ? `|@${p.flatCallers.join("+")}` : "";
+  return `${p.context}|${p.heroPos}|${p.effStack}|${p.hand}${versus}${setup}${flat}|${p.ante}`;
 }

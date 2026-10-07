@@ -68,6 +68,16 @@ export interface RangeKey {
    */
   vsSeat?: Position;
   /**
+   * Kdo otevření dorovnal, zkratkami zdroje a v pořadí akce - osa
+   * dorovnávajícího (rozhodnutí 4a, 1. 10. 2026).
+   *
+   * Chová se jako ostatní osy: zkusí se přesnější záznam, a když není, spadne
+   * se na obecnější. Klíč bez téhle osy se chová jako dřív, takže dnešní obsah
+   * ani Question_ID se nehnou. Prázdný seznam je totéž jako osa nepředaná -
+   * „otevření nikdo nedorovnal" je přesně to, co znamená `vsSeat` sám.
+   */
+  flatCallers?: readonly string[];
+  /**
    * Scénář - rozložení stacků u stolu (ICM). Zkusí se záznam pro sedačku
    * i scénář, pak pro sedačku, pak obecný; klíč bez scénáře se chová jako
    * dřív. Katalog scénářů nese pack (`RangeStore.stackSetups`).
@@ -99,6 +109,14 @@ export interface RangeEntry {
   vsSeat?: Position;
   /** Scénář, pro který záznam platí; chybí u záznamů bez scénáře. Viz `vsSeat`. */
   stackSetupId?: string;
+  /**
+   * Dorovnávající, pro které záznam platí; chybí u záznamů bez té osy.
+   *
+   * Volající to musí umět poznat ze stejného důvodu jako u `vsSeat`: klíč
+   * s dorovnávajícími může dostat obecnější záznam (pád v `lookup`), a jen
+   * zpřesněná odpověď mění Question_ID.
+   */
+  flatCallers?: readonly string[];
 }
 
 /** Lookup API nad referenčními ranges (čtení; žádné I/O). */
@@ -139,6 +157,7 @@ function toRangeEntry(record: RangeRecord): RangeEntry {
     ...(record.actionEvs ? { actionEvs: record.actionEvs } : {}),
     ...(record.vsSeat ? { vsSeat: record.vsSeat } : {}),
     ...(record.stackSetupId ? { stackSetupId: record.stackSetupId } : {}),
+    ...(record.flatCallers?.length ? { flatCallers: record.flatCallers } : {}),
   };
 }
 
@@ -184,9 +203,13 @@ export function createRangeStore(deps: RangeStoreDeps = DEFAULT_DEPS): RangeStor
         key.position,
         key.bucket,
         key.context,
-        key.vsSeat === undefined && key.stackSetupId === undefined
+        key.vsSeat === undefined && key.stackSetupId === undefined && !key.flatCallers?.length
           ? undefined
-          : { ...(key.vsSeat === undefined ? {} : { vsSeat: key.vsSeat }), ...(key.stackSetupId === undefined ? {} : { stackSetupId: key.stackSetupId }) },
+          : {
+            ...(key.vsSeat === undefined ? {} : { vsSeat: key.vsSeat }),
+            ...(key.stackSetupId === undefined ? {} : { stackSetupId: key.stackSetupId }),
+            ...(key.flatCallers?.length ? { flatCallers: key.flatCallers } : {}),
+          },
       );
       return record === undefined ? undefined : toRangeEntry(record);
     },

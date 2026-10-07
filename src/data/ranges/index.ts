@@ -62,6 +62,21 @@ export interface RangeRefinement {
   vsSeat?: Position;
   /** Rozložení stacků u stolu, pro které záznam platí. */
   stackSetupId?: string;
+  /**
+   * Kdo otevření dorovnal, zkratkami zdroje a v pořadí akce - osa dorovnávajícího
+   * (rozhodnutí 4a, 1. 10. 2026).
+   *
+   * Range proti otevření, které někdo dorovnal, je jiná než proti otevření
+   * samotnému, a liší se **i podle toho kdo**: změřeno na mřížkách zdroje, že
+   * BTN na 100 bb squeezuje 67 kombinací proti flatu z EP, 84 proti MP a 102
+   * proti CO; BB na 40 bb callne 506 proti EP/MP, 644 proti CO/BU a 751 proti SB.
+   *
+   * Seznam, ne jedno pole: čtrnáct záznamů korpusu má dorovnávající dva.
+   * Prázdný seznam se do klíče **nepřipojuje** - „otevření nikdo nedorovnal" je
+   * přesně to, co znamená `vsSeat` sám, a kdyby si na to vyrobil vlastní klíč,
+   * rozdělil by dnešní obsah na dvě poloviny bez důvodu.
+   */
+  flatCallers?: readonly string[];
 }
 
 /**
@@ -75,7 +90,10 @@ function refinementSuffix(refinement?: RangeRefinement): string {
   if (refinement === undefined) return "";
   const vs = refinement.vsSeat ? `|vs${refinement.vsSeat}` : "";
   const scenario = refinement.stackSetupId ? `|#${refinement.stackSetupId}` : "";
-  return `${vs}${scenario}`;
+  // Prázdný seznam nepřipojuje nic - viz `RangeRefinement.flatCallers`. Proto
+  // `?.length`, ne `!== undefined`: `[]` se musí chovat jako „bez osy".
+  const flat = refinement.flatCallers?.length ? `|@${refinement.flatCallers.join("+")}` : "";
+  return `${vs}${scenario}${flat}`;
 }
 
 export function rangeIndexKey(
@@ -138,7 +156,11 @@ function aggregate(variants: readonly RangeFile[]): AggregationResult {
           record.position,
           record.bucket,
           record.context,
-          { vsSeat: record.vsSeat, stackSetupId: record.stackSetupId },
+          {
+            vsSeat: record.vsSeat,
+            stackSetupId: record.stackSetupId,
+            flatCallers: record.flatCallers,
+          },
         );
         if (index.has(key)) {
           errors.push(`duplicate index key during aggregation: ${key}.`);
@@ -238,10 +260,29 @@ export function getRangeRecord(
   // dnešní záznam - **nezpřesněná odpověď je pořád odpověď** a je lepší než
   // žádná. Je to tentýž postup, jakým vybírá vyřešený postflop.
   const attempts: RangeRefinement[] = [];
-  if (refinement?.vsSeat !== undefined || refinement?.stackSetupId !== undefined) {
+  const hasFlat = (refinement?.flatCallers?.length ?? 0) > 0;
+  if (refinement !== undefined
+    && (refinement.vsSeat !== undefined || refinement.stackSetupId !== undefined || hasFlat)) {
     attempts.push(refinement);
-    // Rozložení stacků se pouští dřív než sedačka: bez správné sedačky je
-    // odpověď o jiné situaci, kdežto bez rozložení jen o něco méně přesná.
+    /*
+     * Osy se zahazují od nejméně důležité, a to pořadí je úsudek o obsahu:
+     *
+     * 1. **rozložení stacků** padá první - bez něj je odpověď o téže situaci,
+     *    jen o něco méně přesná (tak to tu stálo od 16. 9. 2026);
+     * 2. **dorovnávající** padá druhý - je to pořád táž otázka („čelím otevření
+     *    z UTG"), jen bez toho, kdo ho dorovnal. Změřeno, že ten rozdíl je velký
+     *    (67 proti 102 kombinacím), takže se nezahazuje dřív než rozložení;
+     * 3. **sedačka** padá poslední: bez ní je odpověď o **jiné situaci**.
+     *
+     * Když se žádná z přesnějších variant nenajde, vrátí se obecný záznam -
+     * nezpřesněná odpověď je pořád odpověď.
+     */
+    if (hasFlat && refinement.stackSetupId !== undefined) {
+      attempts.push({ ...(refinement.vsSeat === undefined ? {} : { vsSeat: refinement.vsSeat }), flatCallers: refinement.flatCallers });
+    }
+    if (hasFlat && refinement.vsSeat !== undefined) {
+      attempts.push({ vsSeat: refinement.vsSeat, ...(refinement.stackSetupId === undefined ? {} : { stackSetupId: refinement.stackSetupId }) });
+    }
     if (refinement.stackSetupId !== undefined && refinement.vsSeat !== undefined) {
       attempts.push({ vsSeat: refinement.vsSeat });
     }

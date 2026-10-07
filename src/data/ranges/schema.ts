@@ -82,6 +82,28 @@ export interface RangeRecord {
    * jen podle něj vybírá. Hráči se nikdy neukáže.
    */
   stackSetupId?: string;
+  /**
+   * Kdo otevření dorovnal, zkratkami zdroje a v pořadí akce (`["MP"]`,
+   * `["BU", "SB"]`). Chybí u záznamu, kterému na tom nezáleží.
+   *
+   * ## Proč přibyla
+   *
+   * Rozhodnutí 4a, 1. 10. 2026. Range proti otevření, které někdo dorovnal, je
+   * jiná než proti otevření samotnému, a liší se i podle toho **kdo** dorovnal.
+   * Změřeno na vlastníkově korpusu: BTN na 100 bb squeezuje 67 kombinací proti
+   * flatu z EP, 84 proti MP a 102 proti CO; BB na 40 bb callne 506 proti EP/MP,
+   * 644 proti CO/BU a 751 proti SB. Bez tohohle pole se **7 z 8 zbylých
+   * rozporných buněk** nedalo rozlišit a která mřížka přistane, neurčovalo
+   * žádné napsané pravidlo.
+   *
+   * Seznam, ne jedno pole: čtrnáct záznamů korpusu má dorovnávající dva.
+   *
+   * Drží se tu **zkratka zdroje** (`EP`, `LP`), ne sedačka produktu: `EP` je
+   * skupina a při otvírači UTG je dorovnávající `EP` podle vlastníkova T4
+   * UTG+1 nebo UTG+2, tedy ne UTG. Přeložit skupinu může jen místo, které zná
+   * otvírače i hrdinu - tedy drill, až rozdává stůl. Hráči se zkratka neukáže.
+   */
+  flatCallers?: readonly string[];
   /** ruka → přijatelné Akční_klíče (LENIENT). Prázdné/chybějící = fold. */
   lenient: Record<HandLabel, ActionKey[]>;
   /** ruka → přesné Akční_klíče vč. sizingu (STRICT). */
