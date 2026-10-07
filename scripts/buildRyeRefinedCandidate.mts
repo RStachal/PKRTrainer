@@ -217,6 +217,7 @@ const REASON_LABEL: Record<RefusalReason, string> = {
   notDealt: "sedačka nebo hloubka, na kterou se drill v tom kontextu neptá",
   duplicateCell: "táž buňka a otvírač podruhé",
   partialPage: "stránka kreslí jen jednu větev strategie",
+  flatCallersUnknown: "ze jména se nepozná, kdo otevření dorovnal (dvě rozestavení)",
 };
 
 console.log("Kandidát produkčního packu se zpřesněnými záznamy");

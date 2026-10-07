@@ -48,6 +48,12 @@ export interface MttPreflopImportRecord {
   vsSeat?: Position;
   stackSetupId?: string;
   /**
+   * Osa dorovnávajícího (rozhodnutí 4a, 1. 10. 2026): kdo otevření dorovnal,
+   * zkratkami zdroje a v pořadí akce. Chová se jako `vsSeat` - je to nadstavba
+   * nad obecným záznamem, do úplnosti packu se nepočítá.
+   */
+  flatCallers?: readonly string[];
+  /**
    * Odkud záznam je, když to není odkud je celý pack. Pack má jeden
    * `licenseKind`; záznam z jiného zdroje (koupené charty vlastníka) to musí
    * říct sám, jinak by pack tvrdil o jeho původu něco jiného.
@@ -343,6 +349,7 @@ function normalizeRecord(record: MttPreflopImportRecord): RangePackRecord {
     context: record.context,
     ...(record.vsSeat ? { vsSeat: record.vsSeat } : {}),
     ...(record.stackSetupId ? { stackSetupId: record.stackSetupId } : {}),
+    ...(record.flatCallers?.length ? { flatCallers: record.flatCallers } : {}),
     ...(record.provenance ? { provenance: record.provenance } : {}),
     lenient: normalizeActionMap(record.lenient),
     strict: normalizeActionMap(record.strict),
@@ -575,7 +582,11 @@ function missingHandClasses(record: MttPreflopImportRecord): HandLabel[] {
 
 function recordKey(record: MttPreflopImportRecord): string {
   return `${record.position}|${record.bucket}|${record.context}`
-    + `${record.vsSeat ? `|vs${record.vsSeat}` : ""}${record.stackSetupId ? `|#${record.stackSetupId}` : ""}`;
+    + `${record.vsSeat ? `|vs${record.vsSeat}` : ""}${record.stackSetupId ? `|#${record.stackSetupId}` : ""}`
+    // Bez dorovnávajících v klíči by dvě mřížky lišící se jen jimi hlásily
+    // duplicitu a jedna by se zahodila - tatáž vada, jakou mel do 16. 9. 2026
+    // zahazovaný `vsSeat` (bod 234).
+    + `${record.flatCallers?.length ? `|@${record.flatCallers.join("+")}` : ""}`;
 }
 
 function semanticWarningsForRecord(record: MttPreflopImportRecord): string[] {

@@ -16,6 +16,12 @@ import { selectGeneralOverrides, selectRefinedRecords } from "../../scripts/lib/
 
 function grid(overrides: Partial<DraftRecord>): DraftRecord {
   return {
+    // `flatCallers: []` je výchozí, protože to je **to, co parser vrací** u stránky,
+    // na které otevření nikdo nedorovnal - a takové jsou skoro všechny. Chybějící
+    // seznam znamená „ze jména se to nepozná" a výběr takový záznam odmítá
+    // (`flatCallersUnknown`), takže fixtura bez téhle hodnoty by popisovala stav,
+    // jaký z importu nevyjde.
+    flatCallers: [],
     position: "BB", bucket: 20, context: "VS_OPEN", vsSeat: "BTN", stackSetupId: "F3B",
     sourceStackBB: 20, strict: { AA: ["3BET"], KQs: ["CALL"] }, lenient: { AA: ["3BET"], KQs: ["CALL"] },
     mix: {}, notes: [], sourceFile: "F3B-20BB-BB-vs-BTN.html",
@@ -105,6 +111,7 @@ describe("výběr zpřesněných záznamů", () => {
     expect(counts).toEqual({
       unanswered: 1, rejected: 1, stale: 1, icm: 1, noOpponent: 0, contextNotRefined: 1,
       actionNotOffered: 1, notDealt: 1, duplicateCell: 1, partialPage: 0,
+      flatCallersUnknown: 0,
     });
     expect(refused.find((row) => row.reason === "actionNotOffered")?.detail).toContain("AA:JAM");
     expect(refused.find((row) => row.reason === "duplicateCell")?.detail).toContain("F3B-20BB-BB-vs-BTN.html");
@@ -232,5 +239,81 @@ describe("obecné záznamy nahrazené RYE (push/fold, otevření)", () => {
     expect(accepted[1].provenance).toContain("22. 9. 2026, 6a");
     expect(counts.actionNotOffered).toBe(1);
     expect(refused.find((row) => row.reason === "actionNotOffered")?.sourceFile).toBe("OP-25BB-BU.html");
+  });
+});
+
+describe("osa dorovnávajícího ve výběru (rozhodnutí 4a)", () => {
+  it("dvě mřížky lišící se jen dorovnávajícím se obě dostanou do packu", () => {
+    // Do 7. 10. 2026 si o tutéž buňku řekly obě a druhá dostala `duplicateCell`,
+    // tedy se **zahodila** - a která to byla, rozhodovalo pořadí v draftu.
+    // Rozdíl mezi nimi je přitom velký: BTN na 100 bb squeezuje 67 kombinací
+    // proti flatu z EP a 102 proti CO.
+    const viaMp = grid({ sourceFile: "MUL-20BB-BB-vs-BTN_MP.html", flatCallers: ["MP"] });
+    const viaCo = grid({ sourceFile: "MUL-20BB-BB-vs-BTN_CO.html", flatCallers: ["CO"] });
+    const { accepted, refused } = selectRefinedRecords(
+      [viaMp, viaCo],
+      history([approved(viaMp), approved(viaCo)]),
+    );
+    expect(refused).toEqual([]);
+    expect(accepted).toHaveLength(2);
+    expect(accepted.map((row) => row.flatCallers?.join("+")).sort()).toEqual(["CO", "MP"]);
+  });
+
+  it("prázdný seznam se do záznamu nepíše - je to obecná odpověď pro tu sedačku", () => {
+    // „Otevření nikdo nedorovnal" je přesně to, co znamená `vsSeat` sám. Vlastní
+    // klíč by dnešní obsah rozdělil na dvě poloviny a jedna by se přestala
+    // nacházet.
+    const record = grid({ flatCallers: [] });
+    const { accepted } = selectRefinedRecords([record], history([approved(record)]));
+    expect(accepted).toHaveLength(1);
+    expect(accepted[0].flatCallers).toBeUndefined();
+  });
+
+  it("stejní dorovnávající se o buňku pořád dělit nesmí", () => {
+    // Opačný směr, a je důležitější: kdyby klíč rozlišoval něco, co se neliší,
+    // obě mřížky by prošly a jedna by druhou v packu přebila podle ničeho.
+    const first = grid({ sourceFile: "MUL-a.html", flatCallers: ["MP"] });
+    const second = grid({ sourceFile: "MUL-b.html", flatCallers: ["MP"] });
+    const { accepted, counts } = selectRefinedRecords(
+      [first, second],
+      history([approved(first), approved(second)]),
+    );
+    expect(accepted).toHaveLength(1);
+    expect(counts.duplicateCell).toBe(1);
+  });
+
+  it("záznam, u kterého se dorovnávající ze jména nepoznali, do packu nejde", () => {
+    // Klíč packu „nevíme" neumí: takový záznam by dostal klíč obecného záznamu
+    // pro tu sedačku a tiše by přebil mřížku, která o sobě ví víc. Jméno
+    // `SQU-40BBMais-MP-vs-EP-EP-or-EP-MP` nabízí dvě rozestavení.
+    const record = grid({ sourceFile: "SQU-dve-rozestaveni.html" });
+    delete (record as { flatCallers?: readonly string[] }).flatCallers;
+    const { accepted, counts } = selectRefinedRecords([record], history([approved(record)]));
+    expect(accepted).toEqual([]);
+    expect(counts.flatCallersUnknown).toBe(1);
+  });
+
+  it("úplná strategie (MUL) bere buňku před squeeze-only (SQU)", () => {
+    /*
+     * Vlastníkovo pravidlo z T4, bod 3. Do 7. 10. 2026 to vycházelo správně, ale
+     * **náhodou**: buňku bral první, kdo o ni požádal, a `MUL` je v abecedě před
+     * `SQU`. Přejmenovat rodinu by obsah tiše obrátil.
+     *
+     * Proč MUL: SQU kreslí jen squeeze (pro BB na 40 bb 5,7 % kombinací), kdežto
+     * MUL celou strategii proti témuž otevření a dorovnání (506 kombinací callu).
+     * Ze squeeze-only stránky by `fillFolds` dodal fold na zbytku, takže by se
+     * hráč učil skládat 94 % rukou tam, kde zdroj dorovnává.
+     *
+     * Pořadí na vstupu je schválně **obrácené**, aby test měřil pravidlo, ne abecedu.
+     */
+    const squeezeOnly = grid({ sourceFile: "SQU-20BB-BB-vs-BTN_MP.html", flatCallers: ["MP"] });
+    const fullStrategy = grid({ sourceFile: "MUL-20BB-BB-vs-BTN_MP.html", flatCallers: ["MP"] });
+    const { accepted, refused } = selectRefinedRecords(
+      [squeezeOnly, fullStrategy],
+      history([approved(squeezeOnly), approved(fullStrategy)]),
+    );
+    expect(accepted).toHaveLength(1);
+    expect(accepted[0].provenance).toContain("MUL-20BB-BB-vs-BTN_MP.html");
+    expect(refused[0]?.sourceFile).toBe("SQU-20BB-BB-vs-BTN_MP.html");
   });
 });

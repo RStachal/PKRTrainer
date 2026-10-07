@@ -57,6 +57,12 @@ export interface RangePackRecord {
   /** Rozložení stacků u stolu, pro které záznam platí. Viz `vsSeat`. */
   stackSetupId?: string;
   /**
+   * Kdo otevření dorovnal, zkratkami zdroje a v pořadí akce - osa
+   * dorovnávajícího (rozhodnutí 4a). Viz `vsSeat`: taky se nezapočítává do
+   * úplnosti, protože je to nadstavba nad obecnou odpovědí.
+   */
+  flatCallers?: readonly string[];
+  /**
    * Odkud záznam je, když to není odkud je celý pack (zdroj, soubor, kdy a
    * kým schváleno). Pack nese jeden `licenseKind`; záznam z jiného zdroje to
    * říká sám. Produkt z toho nic neodvozuje.
@@ -165,6 +171,7 @@ export function rangePackRecordToRangeRecord(record: RangePackRecord): RangeReco
     // jednoho klíče a validace by je hlásila jako duplicitu.
     ...(record.vsSeat ? { vsSeat: record.vsSeat } : {}),
     ...(record.stackSetupId ? { stackSetupId: record.stackSetupId } : {}),
+    ...(record.flatCallers?.length ? { flatCallers: record.flatCallers } : {}),
     ...(record.actionEvs ? { actionEvs: record.actionEvs } : {}),
   };
 }

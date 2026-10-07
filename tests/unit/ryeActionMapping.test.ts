@@ -97,10 +97,14 @@ describe("slovník importu ranží", () => {
   });
 
   it("push/fold jméno bez soupeře se čte jako situace", () => {
+    // `flatCallers: []`, ne chybějící: u push/fold **nikdo nedorovnal**, a to je
+    // odpověď. Chybějící seznam znamená „ze jména se to nepozná" a zpřesněná cesta
+    // takový záznam odmítá - naměřeno 7. 10. 2026, že záměna těch dvou shodila čtyři
+    // schválené BBSTR záznamy (69 přijatých → 63).
     // `PU-10bb-BU` nemá `-vs-`, takže do 15. 9. 2026 propadalo jako „bez
     // situace" a draft neměl ani jednu skutečnou push/fold stránku.
-    expect(situationFromFileName("PU-10bb-BU.html")).toEqual({ seat: "BTN", stackBB: 10, villains: 0 });
-    expect(situationFromFileName("PU-10bb-UTG1.html")).toEqual({ seat: "UTG+1", stackBB: 10, villains: 0 });
+    expect(situationFromFileName("PU-10bb-BU.html")).toEqual({ seat: "BTN", stackBB: 10, villains: 0, flatCallers: [] });
+    expect(situationFromFileName("PU-10bb-UTG1.html")).toEqual({ seat: "UTG+1", stackBB: 10, villains: 0, flatCallers: [] });
     // BB nemá push/fold první do potu; jméno s ním se nevydá.
     expect(situationFromFileName("PU-10bb-BB.html")).toBeUndefined();
   });
@@ -170,9 +174,9 @@ describe("slovník importu ranží", () => {
   it("otevírací stránka: každá barva je otevření s plánem proti 3betu v poznámce, OpenJam je shove, limp/raise SB se nevydá", () => {
     // Nabídka „Openraising" (rozhodnutí 6a, 22. 9. 2026): barva říká, co
     // s rukou po 3betu, ne jestli se otevírá - otevírá se každá barvená.
-    expect(situationFromFileName("OP-100BB-BU.html")).toEqual({ seat: "BTN", stackBB: 100, villains: 0 });
-    expect(situationFromFileName("OP-30BB-BTN.html")).toEqual({ seat: "BTN", stackBB: 30, villains: 0 });
-    expect(situationFromFileName("OP-40BB-MP.html")).toEqual({ seat: "LJ", stackBB: 40, villains: 0 });
+    expect(situationFromFileName("OP-100BB-BU.html")).toEqual({ seat: "BTN", stackBB: 100, villains: 0, flatCallers: [] });
+    expect(situationFromFileName("OP-30BB-BTN.html")).toEqual({ seat: "BTN", stackBB: 30, villains: 0, flatCallers: [] });
+    expect(situationFromFileName("OP-40BB-MP.html")).toEqual({ seat: "LJ", stackBB: 40, villains: 0, flatCallers: [] });
     expect(contextForVocabulary(["Call 3B", "Fold vs 3B", "4B Bluff"], "OP-100BB-BU.html")).toBe("RFI");
     expect(mapAction("RFI", "Call 3B or 4B")).toEqual({ action: "OPEN", lost: "plán proti 3betu: Call 3B or 4B" });
     expect(mapAction("RFI", "Broke vs BU - BB")).toEqual({ action: "OPEN", lost: "plán proti 3betu: Broke vs BU - BB" });

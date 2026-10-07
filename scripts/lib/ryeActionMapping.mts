@@ -595,7 +595,13 @@ export function situationFromFileName(name: string): RyeSituation | undefined {
   // horní. Bere se spodní hranice (tam range začíná platit) a celé pásmo si
   // záznam odnese v `bucketSpan`, ať se pack může doplnit i na hloubky mezi.
   const limp = /^BBSTR-vs-SB-Limp-(\d+)(?:-(\d+))?BB/i.exec(stem);
-  if (limp !== null) return { seat: "BB", stackBB: Number(limp[1]), villains: 1 };
+  // `flatCallers: []`, ne chybějící: u limpu ze SB **nikdo nedorovnal**, a to je
+  // odpověď. Chybějící seznam znamená „ze jména se to nepozná" a zpřesněná cesta
+  // takový záznam odmítá - naměřeno 7. 10. 2026, že bez tohohle rozlišení spadly
+  // čtyři schválené BBSTR záznamy, které do packu patří.
+  if (limp !== null) {
+    return { seat: "BB", stackBB: Number(limp[1]), villains: 1, flatCallers: [] };
+  }
 
   // Tvar 4: squeeze stránky zdroje, `SQU-40BBMais-BU-vs-HJ-CO`.
   //
@@ -695,14 +701,14 @@ export function situationFromFileName(name: string): RyeSituation | undefined {
   if (depth !== null && push !== null) {
     const seat = SEAT_ALIASES.get(push[2].toUpperCase());
     if (seat === undefined) return undefined;
-    return { seat, stackBB: Number(push[1]), villains: 0 };
+    return { seat, stackBB: Number(push[1]), villains: 0, flatCallers: [] };
   }
   // Tvar 4: otevření, `OP-100BB-BU` - hloubka a hrdina, žádný soupeř (22. 9. 2026, 6a).
   const open = /^OP-(\d+)BB-(UTG1|UTG2|UTG|MP|LJ|HJ|CO|BU|BTN|SB)$/i.exec(stem);
   if (open !== null) {
     const seat = SEAT_ALIASES.get(open[2].toUpperCase());
     if (seat === undefined) return undefined;
-    return { seat, stackBB: Number(open[1]), villains: 0 };
+    return { seat, stackBB: Number(open[1]), villains: 0, flatCallers: [] };
   }
   return undefined;
 }

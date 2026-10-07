@@ -45,7 +45,26 @@ export type RefusalReason =
   | "actionNotOffered"
   | "notDealt"
   | "duplicateCell"
-  | "partialPage";
+  | "partialPage"
+  /**
+   * Ze jména se nepoznalo, kdo otevření dorovnal.
+   *
+   * Klíč packu umí „nikdo nedorovnal" i jmenovaný seznam, ale **neumí „nevíme"**
+   * - a kdyby takový záznam prošel, dostal by klíč obecného záznamu pro tu
+   * sedačku a tiše by přebil nebo byl přebit mřížkou, která o sobě ví víc.
+   *
+   * Dnes to nepotká ani jeden záznam, ale **první verze téhle podmínky shodila
+   * čtyři**, a chytlo to až měření přijatých záznamů před a po (69 → 63).
+   * Záměna byla v tom, co znamená chybějící seznam: stránky `BBSTR-vs-SB-Limp-…`
+   * nemají soupeře ve jméně vůbec (nese ho rodina), takže jim seznam chyběl -
+   * jenže u limpu ze SB **nikdo nedorovnal**, a to je odpověď, ne nejistota.
+   * Parser teď u takových tvarů vrací prázdný seznam a chybějící zůstal jen pro
+   * jméno, které nabízí dvě rozestavení.
+   *
+   * Je to tedy pojistka, ne oprava - ale bez ní by se první takové jméno zařadilo
+   * mlčky, a s ní se málem tiše ztratil obsah, který do packu patří.
+   */
+  | "flatCallersUnknown";
 
 export interface Refusal {
   sourceFile: string;
@@ -124,8 +143,68 @@ export function fillFolds(map: Record<string, string[]>): Partial<Record<HandLab
   return out;
 }
 
-export function refinedCellKey(record: Pick<DraftRecord, "position" | "bucket" | "context" | "vsSeat">): string {
-  return `${record.context}|${record.position}|${record.bucket}|vs${record.vsSeat}`;
+export function refinedCellKey(
+  record: Pick<DraftRecord, "position" | "bucket" | "context" | "vsSeat" | "flatCallers">,
+): string {
+  return `${record.context}|${record.position}|${record.bucket}|vs${record.vsSeat}`
+    + `|@${flatSuffix(record.flatCallers)}`;
+}
+
+/**
+ * Část buňky za dorovnávající - rozhodnutí 4a.
+ *
+ * Bez ní se dvě mřížky lišící se jen dorovnávajícím hádaly o tutéž buňku a
+ * druhá z nich dostala `duplicateCell`, tedy se **zahodila**. Která z nich to
+ * byla, rozhodovalo pořadí v draftu, ne pravidlo - a rozdíl mezi nimi je velký:
+ * BTN na 100 bb squeezuje 67 kombinací proti flatu z EP a 102 proti CO.
+ *
+ * Tři stavy, tři různé buňky, stejně jako u `flatKey` v `ryeDraftImpact`:
+ * `—` nikdo nedorovnal, `?` ze jména se to nepozná, jinak seznam. Záznam s `?`
+ * se do packu nedostane vůbec (`flatCallersUnknown`), ale buňku má mít vlastní -
+ * jinak by se sloučil s „nikdo nedorovnal" a jeden z nich by zmizel jako
+ * duplicitní, podle pořadí v draftu.
+ */
+function flatSuffix(flatCallers: readonly string[] | undefined): string {
+  if (flatCallers === undefined) return "?";
+  return flatCallers.length === 0 ? "—" : flatCallers.join("+");
+}
+
+/**
+ * Pořadí, ve kterém se o buňku hlásí - vlastníkovo pravidlo z T4, bod 3.
+ *
+ * „Když na rozdanou situaci sedí víc stránek, vyhrává přesná hloubka před
+ * ‚40+', jmenovaná sedačka před skupinou a **úplná strategie (MUL) před
+ * squeeze-only (SQU)**."
+ *
+ * ## Proč to musí být napsané pravidlo
+ *
+ * Buňku bere první, kdo o ni požádá; druhý dostane `duplicateCell` a zahodí se.
+ * Do 7. 10. 2026 o tom rozhodovalo **abecední pořadí jmen souborů** - `MUL`
+ * je před `SQU`, takže to vycházelo správně, ale náhodou. Přesně na to si
+ * vlastník stěžoval u rozhodnutí 4: „která z nich přistane, neurčuje žádné
+ * napsané pravidlo". Stačilo by přejmenovat rodinu a obsah by se tiše obrátil.
+ *
+ * Proč MUL vyhrává: SQU stránka kreslí **jen squeeze**, kdežto MUL celou
+ * strategii proti témuž otevření a dorovnání. Měřeno na mřížkách z 1. 10.: SQU
+ * pro BB na 40 bb obarví 5,7 % kombinací, kdežto MUL pro týž typ spotu callne
+ * 506 kombinací. Ze squeeze-only stránky by `fillFolds` dodal fold na zbytku,
+ * takže by se hráč učil skládat 94 % rukou tam, kde zdroj dorovnává.
+ *
+ * Ostatní dvě části pravidla tady nejsou, a je to tak správně: přesnou hloubku
+ * proti pásmu řeší druhý průchod (`spanQueue`), a jmenovanou sedačku proti
+ * skupině nejde rozhodnout při importu - skupina se na konkrétní sedačku
+ * přeloží až při rozdávání, kdy je vidět otvírač i hrdina.
+ */
+const FAMILY_RANK: ReadonlyMap<string, number> = new Map([["MUL", 0], ["SQU", 1]]);
+
+export function preferredOrder(records: readonly DraftRecord[]): DraftRecord[] {
+  const rank = (record: DraftRecord): number => (
+    FAMILY_RANK.get(/^[A-Za-z]+/.exec(record.sourceFile)?.[0]?.toUpperCase() ?? "") ?? 0.5
+  );
+  // Stabilní řazení: rodiny mimo pravidlo si drží pořadí, jaké měly, a vejdou
+  // se mezi MUL a SQU. Měnit pořadí něčeho, o čem pravidlo nemluví, by znamenalo
+  // tiše přerovnat obsah, který se dodává dnes.
+  return [...records].sort((left, right) => rank(left) - rank(right));
 }
 
 /** Kontexty bez otvírače, kde schválená mřížka RYE nahrazuje obecný záznam packu. */
@@ -158,7 +237,7 @@ export function selectGeneralOverrides(
   const refused: Refusal[] = [];
   const counts: Record<RefusalReason, number> = {
     unanswered: 0, rejected: 0, stale: 0, icm: 0, noOpponent: 0, contextNotRefined: 0,
-    actionNotOffered: 0, notDealt: 0, duplicateCell: 0, partialPage: 0,
+    actionNotOffered: 0, notDealt: 0, duplicateCell: 0, partialPage: 0, flatCallersUnknown: 0,
   };
   const takenCells = new Map<string, string>();
   const refuse = (record: DraftRecord, reason: RefusalReason, detail = ""): void => {
@@ -224,7 +303,7 @@ export function selectRefinedRecords(
   const refused: Refusal[] = [];
   const counts: Record<RefusalReason, number> = {
     unanswered: 0, rejected: 0, stale: 0, icm: 0, noOpponent: 0, contextNotRefined: 0,
-    actionNotOffered: 0, notDealt: 0, duplicateCell: 0, partialPage: 0,
+    actionNotOffered: 0, notDealt: 0, duplicateCell: 0, partialPage: 0, flatCallersUnknown: 0,
   };
   const takenCells = new Map<string, string>();
   // Stránky s pásmem hloubek počkají na druhý průchod (viz níž).
@@ -241,7 +320,7 @@ export function selectRefinedRecords(
     refused.push({ sourceFile: record.sourceFile, reason, detail });
   };
 
-  for (const record of records) {
+  for (const record of preferredOrder(records)) {
     const answer = history.bySourceFile.get(record.sourceFile);
     if (answer === undefined) { refuse(record, "unanswered"); continue; }
     if (answer.verdict !== "sedí") { refuse(record, "rejected", answer.verdict); continue; }
@@ -260,6 +339,8 @@ export function selectRefinedRecords(
     if (/^ICM/i.test(record.stackSetupId)) { refuse(record, "icm", record.stackSetupId); continue; }
     if (!REFINED_CONTEXTS.has(record.context)) { refuse(record, "contextNotRefined", record.context); continue; }
     if (record.vsSeat === "") { refuse(record, "noOpponent"); continue; }
+    // Klíč packu „nevíme" neumí - viz `flatCallersUnknown`.
+    if (record.flatCallers === undefined) { refuse(record, "flatCallersUnknown"); continue; }
     const context = record.context as ActionContext;
     // Záznam, na který se drill nikdy nezeptá, je mrtvý obsah
     // (`shippedRecordsAreDealable`): obranu proti otevření drill rozdává
@@ -289,6 +370,10 @@ export function selectRefinedRecords(
       bucket: record.bucket as StackBucket,
       context,
       vsSeat: record.vsSeat as Position,
+      // Prázdný seznam se nepředává: „otevření nikdo nedorovnal" je přesně to,
+      // co znamená `vsSeat` sám, a vlastní klíč by dnešní obsah rozdělil na dvě
+      // poloviny bez důvodu.
+      ...(record.flatCallers.length > 0 ? { flatCallers: record.flatCallers } : {}),
       provenance,
       strict,
       lenient,

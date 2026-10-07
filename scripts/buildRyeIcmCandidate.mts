@@ -161,6 +161,7 @@ const REASON_LABEL: Record<RefusalReason, string> = {
   notDealt: "sedačka nebo hloubka, na kterou se drill v tom kontextu neptá",
   duplicateCell: "táž buňka, otvírač i scénář podruhé",
   partialPage: "stránka kreslí jen jednu větev strategie",
+  flatCallersUnknown: "ze jména se nepozná, kdo otevření dorovnal (dvě rozestavení)",
 };
 
 console.log("Kandidát $EV packu se scénářem (ICM preview)");

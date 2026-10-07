@@ -54,7 +54,7 @@ const SIX_MAX_SEATS = new Set<string>(positionsForFormat("SIX_MAX"));
 function emptyCounts(): Record<RefusalReason, number> {
   return {
     unanswered: 0, rejected: 0, stale: 0, icm: 0, noOpponent: 0, contextNotRefined: 0,
-    actionNotOffered: 0, notDealt: 0, duplicateCell: 0, partialPage: 0,
+    actionNotOffered: 0, notDealt: 0, duplicateCell: 0, partialPage: 0, flatCallersUnknown: 0,
   };
 }
 
