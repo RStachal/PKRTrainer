@@ -28,6 +28,16 @@ export interface DraftRecord {
   context: string;
   /** Sedačka, která otevřela. Prázdná u kontextů, kde otvírač není. */
   vsSeat: string;
+  /**
+   * Kdo otevření dorovnal, zkratkami zdroje a v pořadí ze jména (`["MP"]`,
+   * `["BU", "SB"]`). Prázdný seznam znamená „nikdo", `undefined` znamená „ze
+   * jména se to nepozná" - viz `flatKey`, kde ten rozdíl rozhoduje o klíči.
+   *
+   * Drží se tu **zkratka zdroje**, ne sedačka produktu: `EP` je skupina a při
+   * otvírači UTG je dorovnávající `EP` podle vlastníkova T4 UTG+1 nebo UTG+2.
+   * Přeložit to může jen místo, které zná otvírače - tedy drill, ne import.
+   */
+  flatCallers?: readonly string[];
   stackSetupId: string;
   /** Stacky u stolu podle scénáře ICM (sedačka → bb); jen u ICM stránek. */
   stackSetup?: Record<string, number>;
@@ -176,7 +186,37 @@ export function impactOf(record: DraftRecord): DraftImpact {
  * nesráží: každá je vlastní odpověď na vlastní otázku.
  */
 export function cellOf(record: DraftRecord): string {
-  return `${record.context}|${record.position}|${record.bucket}|vs${record.vsSeat || "—"}`;
+  return `${record.context}|${record.position}|${record.bucket}|vs${record.vsSeat || "—"}`
+    + `|flat${flatKey(record)}`;
+}
+
+/**
+ * Část klíče za dorovnávající - rozhodnutí 4a z 1. 10. 2026.
+ *
+ * Do 7. 10. tu nebyla a bylo to **7 z 8 srážejících se buněk**: rodina MUL nese
+ * dorovnávajícího v názvu (`EP_CO`, `EP_MP`, `EP_SB`…), do klíče se nedostal, a
+ * tak se v jedné buňce sešly mřížky, které si odporují u 6 az 16 tříd ze 169 -
+ * a která přistane, neurčovalo žádné napsané pravidlo.
+ *
+ * Že na dorovnávajícím záleží, je změřené: BTN na 100 bb squeezuje 67 kombinací
+ * proti flatu z EP, 84 proti MP a 102 proti CO; BB na 40 bb callne 506 proti
+ * EP/MP, 644 proti CO/BU a 751 proti SB.
+ *
+ * **Tři různé stavy, tři různé klíče**, a ten rozdíl je tu podstatný:
+ *
+ * - `—` nikdo nedorovnal (otevření heads-up). Je to **odpověď**, ne mezera.
+ * - `?` ze jména se dorovnávající nepoznali (jméno nabízí dvě rozestavení,
+ *   `SQU-40BBMais-MP-vs-EP-EP-or-EP-MP`). Takový záznam se nesmí srazit
+ *   s žádným jmenovaným, protože o něm nevíme, kterému by odpovídal.
+ * - jmenovaný seznam, v pořadí ze jména (pořadí = pořadí akce u zdroje).
+ *
+ * Seznam, ne jedno pole: dvě SQU stránky mají dorovnávající dva
+ * (`SQU-40BBMais-BB-vs-CO-BU-SB`), na což vlastník v T4 výslovně upozornil.
+ */
+export function flatKey(record: Pick<DraftRecord, "flatCallers">): string {
+  if (record.flatCallers === undefined) return "?";
+  if (record.flatCallers.length === 0) return "—";
+  return record.flatCallers.join("+");
 }
 
 /** Rozložení stacků, které je chipEV: všechno kromě scénářů ICM. */

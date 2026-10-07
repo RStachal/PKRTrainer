@@ -61,6 +61,8 @@ interface DraftRecord {
   bucket: number;
   context: string;
   vsSeat: string;
+  /** Kdo otevření dorovnal, zkratkami zdroje; viz `DraftRecord` v `ryeDraftImpact`. */
+  flatCallers?: readonly string[];
   stackSetupId: string;
   /**
    * Stacky u stolu podle scénáře ICM (sedačka → bb), jen u ICM stránek.
@@ -348,6 +350,16 @@ for (const file of htmlFiles(source).sort()) {
     context,
     // Prázdné u kontextů, kde soupeř není - viz `facingContexts` výš.
     vsSeat: opponent?.seat ?? "",
+    // Dorovnávající do záznamu, ne jen jejich počet (rozhodnutí 4a).
+    //
+    // Zkratkami zdroje, protože skupina se musí přeložit tam, kde je vidět
+    // otvírač: `EP` jako dorovnávající při otvírači UTG je UTG+1 nebo UTG+2.
+    // `undefined` se nepřepisuje na prázdný seznam - prázdný znamená „nikdo
+    // nedorovnal", kdežto chybějící „ze jména se to nepozná", a klíč ty dva
+    // stavy rozlišuje.
+    ...(situation.flatCallers === undefined
+      ? {}
+      : { flatCallers: situation.flatCallers.map((villain) => villain.source) }),
     // Sada odlišuje rozložení stacků u stolu; bez ní si dvě ICM stránky
     // odporují. Bere se z předpony jména, protože tak je zdroj člení.
     stackSetupId: scenario?.id ?? prefix,

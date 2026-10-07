@@ -89,3 +89,64 @@ describe("srážky mřížek v jedné buňce", () => {
     expect(collisions).toHaveLength(0);
   });
 });
+
+describe("dorovnávající v klíči buňky", () => {
+  /**
+   * Rozhodnutí 4a z 1. 10. 2026.
+   *
+   * Změřeno před a po: srážek bylo **8 buněk a 76 tříd v rozporu**, z toho 7 byl
+   * tenhle případ. Po zavedení dorovnávajícího do klíče zbývá **1 buňka a 8 tříd**,
+   * a ta zbylá je jiná věc - dva scénáře ICM lišící se rozložením stacků, které
+   * do chipEV packu nejdou vůbec.
+   */
+  const withFlat = (file: string, flatCallers: string[] | undefined, strict: Record<string, string[]>): DraftRecord => ({
+    ...record(file, "MUL", strict),
+    ...(flatCallers === undefined ? {} : { flatCallers }),
+  });
+
+  it("mřížky lišící se jen dorovnávajícím se už nesrazí", () => {
+    // Měřeno na mřížkách z 1. 10.: BTN na 100 bb squeezuje 67 kombinací proti
+    // flatu z EP, 84 proti MP a 102 proti CO. Jedna odpověď pro všechny tři by
+    // učila squeezovat do nejtěsnějšího flatu o polovinu víc, než zdroj říká.
+    const collisions = seatCollisions([
+      withFlat("MUL-100BB-BTN-vs-EP_EP.html", ["EP"], { AA: ["SQUEEZE"], QQ: ["CALL"] }),
+      withFlat("MUL-100BB-BTN-vs-EP_MP.html", ["MP"], { AA: ["SQUEEZE"], QQ: ["SQUEEZE"] }),
+      withFlat("MUL-100BB-BTN-vs-EP_CO.html", ["CO"], { AA: ["SQUEEZE"], QQ: ["JAM"] }),
+    ]);
+    expect(collisions).toHaveLength(0);
+  });
+
+  it("dva dorovnávající jsou jiná buňka než jeden", () => {
+    // Seznam, ne jedno pole: `SQU-40BBMais-BB-vs-CO-BU-SB` má dorovnávající dva
+    // a vlastník na to v T4 výslovně upozornil. V korpusu je takových záznamů 14.
+    const collisions = seatCollisions([
+      withFlat("SQU-a.html", ["BU"], { AA: ["SQUEEZE"], QQ: ["CALL"] }),
+      withFlat("SQU-b.html", ["BU", "SB"], { AA: ["SQUEEZE"], QQ: ["FOLD"] }),
+    ]);
+    expect(collisions).toHaveLength(0);
+  });
+
+  it("stejní dorovnávající se srazí dál - klíč nesmí srážku schovat", () => {
+    // Opačný směr, a je důležitější: kdyby klíč rozlišoval něco, co se ve
+    // skutečnosti neliší, srážka by zmizela z hlášení a mřížka by přistála
+    // podle ničeho. Tohle je ta kontrola, že se 4a neopravilo zametením.
+    const collisions = seatCollisions([
+      withFlat("MUL-x.html", ["MP"], { AA: ["SQUEEZE"], QQ: ["CALL"] }),
+      withFlat("MUL-y.html", ["MP"], { AA: ["SQUEEZE"], QQ: ["JAM"] }),
+    ]);
+    expect(collisions).toHaveLength(1);
+    expect(collisions[0].disagreeing).toBe(1);
+    expect(collisions[0].cell).toContain("flatMP");
+  });
+
+  it("nikdo nedorovnal je jiná odpověď než nevíme, kdo dorovnal", () => {
+    // `—` znamená „otevření nikdo nedorovnal", tedy odpověď. `?` znamená, že
+    // jméno nabízí dvě rozestavení (`SQU-40BBMais-MP-vs-EP-EP-or-EP-MP`), takže
+    // se neví, kterému by záznam odpovídal - a nesmí se srazit s jmenovaným.
+    const collisions = seatCollisions([
+      withFlat("F3B-heads-up.html", [], { AA: ["3BET"], QQ: ["CALL"] }),
+      withFlat("SQU-or.html", undefined, { AA: ["3BET"], QQ: ["FOLD"] }),
+    ]);
+    expect(collisions).toHaveLength(0);
+  });
+});
