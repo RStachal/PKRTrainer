@@ -38,6 +38,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 
 import { costForDepth, depthOfFamily, readBoardCostTable } from "./lib/boardCost.mts";
 import { escalationSteps, failureLevel } from "./lib/nightEscalation.mts";
+import { shouldYield, yieldThresholds } from "./lib/nightYield.mts";
 import { join } from "node:path";
 
 const TASKS = [
@@ -345,9 +346,42 @@ if (!existsSync(TONIGHT)) {
   const schema = String(tonight.schemaVersion ?? "chybí");
   add("rozhodnutí o noci je čitelné strojem", schema === "PKRTRAINER_NIGHT_PRIORITY_V2",
     schema, "PKRTRAINER_NIGHT_PRIORITY_V2");
-  const threshold = Number(tonight.yieldMinBoards ?? 8);
-  add("rozklad monolitu ustoupí", pending >= threshold && tonight.priority === "NEW_FAMILIES",
-    `${pending} desek, priorita ${String(tonight.priority)}`, `aspoň ${threshold} a NEW_FAMILIES`);
+  /*
+   * Kontroluje se to, podle čeho runner **doopravdy** rozhoduje.
+   *
+   * Od 7. 10. 2026 je to práh v **minutách** (`YIELD_MIN_MINUTES`), ne v deskách:
+   * osm desek je podle hloubky 51 minut, nebo 5,3 hodiny. Hlídač, který by se
+   * ptal po deskách, by u fronty na 50 bb hlásil „neustoupí" tam, kde runner
+   * ustoupí - a tahle dvojice si už jednou odporovala (29. 9. 2026 počítala
+   * zpráva rodiny a runner desky).
+   *
+   * Desky zůstávají jako záloha pro případ, že cena desky není; tehdy se podle
+   * nich rozhoduje i runner.
+   */
+  const limits = yieldThresholds();
+  const minutesHave = tonight.stagedMinutes === null || tonight.stagedMinutes === undefined
+    ? undefined
+    : Number(tonight.stagedMinutes);
+  const boardsHave = Number(tonight.stagedBoards ?? pending);
+  const yields = shouldYield({
+    ...(minutesHave === undefined ? {} : { minutes: minutesHave }),
+    boards: boardsHave,
+    priority: String(tonight.priority),
+    thresholds: limits,
+  });
+  add("rozklad monolitu ustoupí", yields,
+    minutesHave === undefined
+      ? `${boardsHave} desek (cena desky není), priorita ${String(tonight.priority)}`
+      : `${Math.round(minutesHave / 60)} h práce (${boardsHave} desek), priorita ${String(tonight.priority)}`,
+    minutesHave === undefined
+      ? `aspoň ${limits.boards} desek a NEW_FAMILIES`
+      : `aspoň ${limits.minutes} min a NEW_FAMILIES`);
+  // Práh přečtený ze runneru je sám předpoklad: kdyby se literál přejmenoval,
+  // hlídač by tiše hlásil podle zálohy a noc by se rozhodovala podle něčeho
+  // jiného. Tentýž řádek má žebřík pokusů.
+  add("práh ustoupení se přečetl z runneru", limits.fromRunner,
+    limits.fromRunner ? `${limits.minutes} min, záloha ${limits.boards} desek` : "čte se záloha",
+    "YIELD_MIN_MINUTES v run_night_decomposition.py");
 }
 
 // Tohle je ta otázka, kterou si nikdo nepoložil a stála celou noc (bod 279):

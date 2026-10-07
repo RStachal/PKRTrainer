@@ -180,12 +180,61 @@ def task_usable(returncode, stdout) -> bool:
 # Práh přesto zůstává nízký, protože expanze od té noci **zbytek okna vrací**
 # rozkladu, jakmile jí dojde fronta - ustoupit kvůli hodině práce už tedy
 # neznamená prostát deset hodin.
+# Práh je v **minutách práce**, ne v deskách.
+#
+# Osm desek je podle hloubky 51 minut, nebo 5,3 hodiny: deska na 25 bb stojí
+# 6,4 min, na 50 bb kolem 40. Práh v deskách tedy znamenal dvě různé věci podle
+# toho, co bylo zrovna ve frontě - a komentář výš u `YIELD_MIN_BOARDS` si sám
+# protiřečil s komentářem u rozhodnutí: na týchž osmi deskách tvrdil jednou
+# „půl hodiny" a jednou „dvě hodiny".
+#
+# Třicet minut je ta hranice, kterou ten původní komentář mínil („osm desek je
+# půl hodiny"), jen vyjádřená přímo. Nízká zůstává proto, že expanze od 14. 9.
+# 2026 **zbytek okna vrací** rozkladu, jakmile jí dojde fronta - ustoupit kvůli
+# půlhodině práce už tedy neznamená prostát deset hodin.
+YIELD_MIN_MINUTES = 30
+
+# Záloha pro případ, že se cena desky nepřečte: tehdy se rozhoduje po deskách
+# jako do 7. 10. 2026. Noc nesmí padnout kvůli chybějící tabulce - spadlý runner
+# stojí celé okno, kdežto práh vedle stojí jedno rozhodnutí.
 YIELD_MIN_BOARDS = 8
 
 
-def staged_boards_without_checkpoint():
-    """Kolik nastagovaných desek ještě nemá checkpoint."""
+def _board_cost_table():
+    """Změřená cena desky jako `{hloubka: řádek}`, nebo prázdno.
+
+    Čte se **přímo ten vygenerovaný soubor**, ne přes import expanze, a je to
+    vědomé ze dvou důvodů. Za prvé se tenhle runner spouští i mimo svůj adresář
+    (`nightPriorityYield.test.ts` ho nahrává přes `importlib` z kořene repa),
+    takže by import souseda spadl na `sys.path`. Za druhé `board_cost()` tam
+    loguje, a log uvnitř funkce, kterou volá test čtoucí stdout, by ten test
+    rozbil.
+
+    Zdrojem pravdy je ten JSON, ne kód, takže se tím nic nerozdvojuje: obě
+    strany čtou týž soubor.
+    """
+    path = os.path.join(REPO, "Agents/solver-input/decomposition/board-cost.generated.json")
+    rows = {}
+    try:
+        with open(path, encoding="utf-8") as handle:
+            for row in json.load(handle).get("depths", []):
+                rows[int(row["depthBB"])] = row
+    except Exception:  # noqa: BLE001 - noc nesmí padnout kvůli tabulce
+        return {}
+    return rows
+
+
+def staged_work_without_checkpoint():
+    """`(desek, minut)` čekající práce; minuty jsou `None`, když cena není.
+
+    Minuty se berou ze změřené tabulky (`board-cost.generated.json`, viz
+    `run_night_expansion.board_cost`), takže deska na 50 bb váží sedmkrát víc než
+    na 25 - a právě o to u prahu jde.
+    """
+    cost = _board_cost_table()
     count = 0
+    minutes = 0.0
+    priced = cost != {}
     if not os.path.isdir(STAGED_PARAMS):
         return count
     for base, _dirs, files in os.walk(STAGED_PARAMS):
@@ -206,7 +255,21 @@ def staged_boards_without_checkpoint():
             # přeskočila, takže by noc shořela na dvanácti vteřinách.
             if not os.path.exists(checkpoint) and not os.path.exists(checkpoint + ".failed"):
                 count += 1
-    return count
+                depth = re.search(r"_(\d+)BB_", family)
+                row = None if depth is None else cost.get(int(depth.group(1)))
+                if row is None:
+                    # Hloubka bez ceny: minuty by lhaly, takže se nepočítají vůbec
+                    # a rozhodne záloha po deskách. Tiše přičíst nulu by znamenalo
+                    # tvrdit, že ta deska je zdarma.
+                    priced = False
+                else:
+                    minutes += float(row.get("planMinutes", 0))
+    return (count, minutes if priced else None)
+
+
+def staged_boards_without_checkpoint():
+    """Jen počet - nechává se pro volající, kteří minuty nepotřebují."""
+    return staged_work_without_checkpoint()[0]
 
 
 def _priority_is_fresh():
@@ -349,21 +412,23 @@ def should_yield_to_new_families():
     # s dvanácti vlákny vedle šestnácti riverových procesů, a obě práce by
     # jely na půl. Čekající práce je deska bez checkpointu, ať rodina má
     # ostatní desky nebo ne.
-    boards = staged_boards_without_checkpoint()
-    if boards < YIELD_MIN_BOARDS:
-        # Ustoupit na celou noc kvůli hodině práce je horší než neustoupit
+    boards, minutes = staged_work_without_checkpoint()
+    dost_prace = boards >= YIELD_MIN_BOARDS if minutes is None else minutes >= YIELD_MIN_MINUTES
+    # Že se rozhoduje podle zálohy, se **tady neloguje**: tahle funkce vrací
+    # hlášku a `nightPriorityYield.test.ts` čte její stdout jako JSON, takže by
+    # jediný `log()` test rozbil. Chybějící cenu hlásí hlídač noci dvěma řádky
+    # („práh ustoupení se přečetl z runneru" a „rozklad monolitu ustoupí"), tedy
+    # ještě **před** nocí, kdy se s tím dá něco udělat.
+    if not dost_prace:
+        # Ustoupit na celou noc kvůli půlhodině práce je horší než neustoupit
         # vůbec: zbytek okna by stál prázdný.
         #
-        # Kolik je osm desek hodin, **tady nestojí**, a do 6. 10. 2026 tu stálo
-        # „715 s na desku, takže zhruba dvě hodiny" - v rozporu s komentářem
-        # u `YIELD_MIN_BOARDS` o deset řádků výš, který na týchž osmi deskách
-        # říkal půl hodiny. Dvě čísla o téže věci v jednom souboru.
-        #
-        # Práh je navíc v **deskách**, a to už neplatí: deska na 25 bb stojí
-        # 6,4 min, na 50 bb kolem 40. Osm desek je tedy 51 min, nebo 5,3 h,
-        # podle hloubky. Převést práh na minuty (ze změřené tabulky, jako to
-        # dělá expanze) je další bod vrstvy 8; dnešní frontě 173 desek práh
-        # tak či tak nevadí, proto se to nedělá hodinu před nocí.
+        # Do 7. 10. 2026 se to měřilo v **deskách**, a dva komentáře v tomhle
+        # souboru si na týchž osmi deskách protiřečily - jednou „půl hodiny",
+        # jednou „dvě hodiny". Obojí mohlo být pravda: deska na 25 bb stojí
+        # 6,4 min, na 50 bb kolem 40, takže osm desek je 51 min nebo 5,3 h podle
+        # toho, co je zrovna ve frontě. Práh je proto v minutách a cena se bere
+        # ze změřené tabulky.
         return None
     if not monolithic_runner_installed():
         # Ustoupit do prázdna je horší než prohlubovat tam, kde už odpověď je:
@@ -373,7 +438,9 @@ def should_yield_to_new_families():
     pending = staged_families_without_checkpoint()
     return (
         f"ustupuji: priorita je NEW_FAMILIES ({decision.get('reason', 'bez důvodu')}), "
-        f"nastagováno {boards} desek bez checkpointu ({len(pending)} rodin bez jediného). "
+        f"nastagováno {boards} desek bez checkpointu"
+        + ("" if minutes is None else f", {minutes / 60:.1f} h práce")
+        + f" ({len(pending)} rodin bez jediného). "
         "Okno patří monolitickému solveru, rozklad by mu vzal stroj."
     )
 

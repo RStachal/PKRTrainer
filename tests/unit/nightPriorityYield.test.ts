@@ -68,12 +68,14 @@ describe("noční priorita", () => {
 
   it("neustoupí, když není nastagovaná práce", () => {
     // Priorita bez čekající práce znamená, že se má rozkládat dál. Práce jsou
-    // desky bez checkpointu (od 14. 9. 2026), ne rodiny bez jediného.
+    // desky bez checkpointu (od 14. 9. 2026), ne rodiny bez jediného - a od
+    // 7. 10. 2026 se měří v **minutách**, protože osm desek je podle hloubky
+    // 51 minut nebo 5,3 hodiny.
     if (python() === undefined || !existsSync(RUNNER)) return;
     const out = evaluate([
       "m.should_yield_to_new_families.__globals__['monolithic_runner_installed'] = lambda: True",
       "m.should_yield_to_new_families.__globals__['staged_families_without_checkpoint'] = lambda: set()",
-      "m.should_yield_to_new_families.__globals__['staged_boards_without_checkpoint'] = lambda: 0",
+      "m.should_yield_to_new_families.__globals__['staged_work_without_checkpoint'] = lambda: (0, 0.0)",
       "import json, tempfile, os",
       "path = os.path.join(tempfile.mkdtemp(), 'tonight.json')",
       "open(path, 'w', encoding='utf8').write(json.dumps({'priority': 'NEW_FAMILIES', 'reason': 'test'}))",
@@ -85,12 +87,13 @@ describe("noční priorita", () => {
 
   it("neustoupí kvůli hrstce desek: uvolnit noc kvůli hodině práce je horší", () => {
     // Pod prahem se ustoupit nevyplatí. Expanze by frontu vyprázdnila za chvíli
-    // a zbytek okna by stál - proto se rozkládá dál.
+    // a zbytek okna by stál - proto se rozkládá dál. Tři desky na 25 bb je
+    // 19,2 minuty, tedy pod třicetiminutovým prahem.
     if (python() === undefined || !existsSync(RUNNER)) return;
     const out = evaluate([
       "m.should_yield_to_new_families.__globals__['monolithic_runner_installed'] = lambda: True",
       "m.should_yield_to_new_families.__globals__['staged_families_without_checkpoint'] = lambda: {'A', 'B'}",
-      "m.should_yield_to_new_families.__globals__['staged_boards_without_checkpoint'] = lambda: 3",
+      "m.should_yield_to_new_families.__globals__['staged_work_without_checkpoint'] = lambda: (3, 19.2)",
       "import json, tempfile, os",
       "path = os.path.join(tempfile.mkdtemp(), 'tonight.json')",
       "open(path, 'w', encoding='utf8').write(json.dumps({'priority': 'NEW_FAMILIES', 'reason': 'test'}))",
@@ -105,10 +108,10 @@ describe("noční priorita", () => {
     const out = evaluate([
       "m.should_yield_to_new_families.__globals__['monolithic_runner_installed'] = lambda: True",
       "m.should_yield_to_new_families.__globals__['staged_families_without_checkpoint'] = lambda: {'A', 'B'}",
-      // Počet desek se podstrkuje taky. Bez toho četl test skutečný disk a
-      // procházel jen proto, že tam zrovna čekalo dost práce - takže měřil
-      // prostředí, ne kód. Když se všechny nastagované desky odsolvily, spadl.
-      "m.should_yield_to_new_families.__globals__['staged_boards_without_checkpoint'] = lambda: 24",
+      // Práce se podstrkuje taky. Bez toho četl test skutečný disk a procházel
+      // jen proto, že tam zrovna čekalo dost práce - takže měřil prostředí, ne
+      // kód. Když se všechny nastagované desky odsolvily, spadl.
+      "m.should_yield_to_new_families.__globals__['staged_work_without_checkpoint'] = lambda: (24, 153.6)",
       "import json, tempfile, os",
       "path = os.path.join(tempfile.mkdtemp(), 'tonight.json')",
       "open(path, 'w', encoding='utf8').write(json.dumps({'priority': 'NEW_FAMILIES', 'reason': 'malo vzoru'}))",
@@ -131,7 +134,7 @@ describe("noční priorita", () => {
     const out = evaluate([
       "m.should_yield_to_new_families.__globals__['monolithic_runner_installed'] = lambda: True",
       "m.should_yield_to_new_families.__globals__['staged_families_without_checkpoint'] = lambda: set()",
-      "m.should_yield_to_new_families.__globals__['staged_boards_without_checkpoint'] = lambda: 174",
+      "m.should_yield_to_new_families.__globals__['staged_work_without_checkpoint'] = lambda: (174, 1113.6)",
       "import json, tempfile, os",
       "path = os.path.join(tempfile.mkdtemp(), 'tonight.json')",
       "open(path, 'w', encoding='utf8').write(json.dumps({'priority': 'NEW_FAMILIES', 'reason': 'river nasycený'}))",
@@ -142,6 +145,26 @@ describe("noční priorita", () => {
     expect(message).not.toBeNull();
     expect(message).toContain("174 desek");
     expect(message).toContain("0 rodin bez jediného");
+  });
+
+  it("bez změřené ceny se rozhoduje po deskách jako dřív", () => {
+    // Záloha pro případ, že `board-cost.generated.json` chybí nebo některá
+    // hloubka ve frontě cenu nemá. Noc nesmí padnout kvůli tabulce: spadlý
+    // runner stojí celé okno, kdežto práh vedle stojí jedno rozhodnutí.
+    // Minuty `None` **nejsou nula** - nula by tvrdila, že deska je zdarma.
+    if (python() === undefined || !existsSync(RUNNER)) return;
+    const run = (boards: number): string => evaluate([
+      "m.should_yield_to_new_families.__globals__['monolithic_runner_installed'] = lambda: True",
+      "m.should_yield_to_new_families.__globals__['staged_families_without_checkpoint'] = lambda: {'A'}",
+      `m.should_yield_to_new_families.__globals__['staged_work_without_checkpoint'] = lambda: (${boards}, None)`,
+      "import json, tempfile, os",
+      "path = os.path.join(tempfile.mkdtemp(), 'tonight.json')",
+      "open(path, 'w', encoding='utf8').write(json.dumps({'priority': 'NEW_FAMILIES', 'reason': 'test'}))",
+      "m.should_yield_to_new_families.__globals__['NIGHT_PRIORITY'] = path",
+      "print(json.dumps(m.should_yield_to_new_families()))",
+    ].join("\n"));
+    expect(JSON.parse(run(8)), "osm desek je práh zálohy").not.toBeNull();
+    expect(JSON.parse(run(7)), "sedm desek je pod ní").toBeNull();
   });
 
   it("běžící úloha nástupce platí jako nainstalovaná", () => {

@@ -1,6 +1,8 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
+import { costForDepth, depthOfFamily, readBoardCostTable } from "./lib/boardCost.mts";
+import { shouldYield, yieldThresholds } from "./lib/nightYield.mts";
 import { nightFamilyRows, riverPhaseRate } from "./lib/nightLog.mts";
 import { MODULE_BUDGET_BYTES } from "./lib/solvedPackBuilding.mts";
 
@@ -370,15 +372,14 @@ out.push("", "## Co má dělat dnešní noc", "");
 const CHECKPOINT_ROOT = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
 
 /**
- * Práh, od kterého noc ustoupí - **desky**, ne rodiny.
+ * Práh, od kterého noc ustoupí - **čtený z runneru**, ne vlastní.
  *
- * Musí sedět na `YIELD_MIN_BOARDS` v `run_night_decomposition.py`. Do 29. 9.
- * 2026 tu zpráva počítala rodiny bez jediného checkpointu, kdežto runner
- * rozhoduje podle desek nad prahem, takže si věta ve zprávě a chování noci
- * mohly odporovat - a v historii si odporovaly (`night.log:12646` hlásí
- * ustoupení při „0 rodin").
+ * „Musí sedět na runneru" tu stálo od 29. 9. 2026 jako komentář, a nesedělo:
+ * zpráva počítala rodiny bez checkpointu, runner desky. Teď ten literál vlastní
+ * runner a tohle ho čte, takže se rozejít nemohou. Proč je v minutách a ne
+ * v deskách, je v `nightYield`.
  */
-const YIELD_MIN_BOARDS = 8;
+const YIELD = yieldThresholds();
 
 /** Nastagované desky, které ještě nemají odsolvený checkpoint. */
 function stagedBoardsWithoutCheckpoint(): number {
@@ -394,11 +395,54 @@ function stagedBoardsWithoutCheckpoint(): number {
     const match = /(MTT9_[0-9]+BB_[A-Z0-9_]+?_(?:SRP|3BP)[A-Z0-9_]*)_([^_]+)$/.exec(stem);
     if (match === null) continue;
     const raw = join(CHECKPOINT_ROOT, match[1], "raw");
-    const solved = existsSync(raw)
-      && readdirSync(raw).some((file) => file.includes(match[2]) && file.endsWith(".json"));
-    if (!solved) pending += 1;
+    const files = existsSync(raw) ? readdirSync(raw) : [];
+    const solved = files.some((file) => file.includes(match[2]) && file.endsWith(".json"));
+    // Deska odložená natrvalo není čekající práce - **týž filtr jako v runneru**.
+    // Bez něj hlásil orchestrátor 155 desek tam, kde runner viděl 154, a u malé
+    // fronty by se ty dva mohly rozejít i v rozhodnutí: orchestrátor by napsal
+    // `willYield: true` a runner by neustoupil. Komentář u prahu si na to, že
+    // tahle dvojice musí sedět, stěžuje od 29. 9. 2026.
+    const parked = files.some((file) => file.includes(match[2]) && file.endsWith(".failed"));
+    if (!solved && !parked) pending += 1;
   }
   return pending;
+}
+
+/**
+ * Minuty čekající práce podle **změřené** ceny desky, nebo `undefined`.
+ *
+ * `undefined` znamená „některá hloubka ve frontě cenu nemá", a tehdy se rozhoduje
+ * po deskách jako do 7. 10. 2026. Tiše přičíst nulu by znamenalo tvrdit, že ta
+ * deska je zdarma - a práh by pak mlčel přesně tam, kde má mluvit.
+ */
+function stagedMinutesWithoutCheckpoint(): number | undefined {
+  const stagedRoot = join(
+    "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters",
+    "pkrtrainer_mtt_seat_pair_expansion_v1",
+  );
+  if (!existsSync(stagedRoot)) return 0;
+  let cost;
+  try {
+    cost = readBoardCostTable();
+  } catch {
+    return undefined;
+  }
+  let minutes = 0;
+  for (const name of readdirSync(stagedRoot, { recursive: true, encoding: "utf8" })) {
+    if (!name.endsWith(".txt")) continue;
+    const stem = basename(name, ".txt").replace(/^[0-9]+_/, "");
+    const match = /(MTT9_[0-9]+BB_[A-Z0-9_]+?_(?:SRP|3BP)[A-Z0-9_]*)_([^_]+)$/.exec(stem);
+    if (match === null) continue;
+    const raw = join(CHECKPOINT_ROOT, match[1], "raw");
+    const files = existsSync(raw) ? readdirSync(raw) : [];
+    const solved = files.some((file) => file.includes(match[2]) && file.endsWith(".json"));
+    const parked = files.some((file) => file.includes(match[2]) && file.endsWith(".failed"));
+    if (solved || parked) continue;
+    const row = costForDepth(cost, depthOfFamily(match[1]));
+    if (row === undefined) return undefined;
+    minutes += row.planMinutes;
+  }
+  return minutes;
 }
 
 function stagedFamiliesWithoutCheckpoint(): string[] {
@@ -519,7 +563,7 @@ if (asked === null || held === null) {
   // psalo majiteli. Doporučení, které stroj nečte, není doporučení.
   //
   // Ustoupit se tím nevynucuje: runner ustoupí jen tehdy, když je vedle co
-  // spustit (nastagované rodiny bez checkpointu nad `YIELD_MIN_BOARDS`).
+  // spustit (nastagovaná práce nad prahem z `nightYield`).
   // Když není, rozkládá dál - prázdná noc nikomu nepomůže.
   priority = "NEW_FAMILIES";
   priorityReason = `river je nasycený: ${saturated.length}/${riverPacks.length} packů na stropu`
@@ -544,13 +588,31 @@ if (asked === null || held === null) {
       say("  nelze - je to rozhodnutí o zdroji dat, ne úloha na noc.");
     }
   } else {
-    // Ustoupí se podle desek nad prahem, ne podle rodin - viz YIELD_MIN_BOARDS.
+    /*
+     * Ustoupí se podle **minut práce**, ne podle desek a ne podle rodin.
+     *
+     * Věta ve zprávě musí říkat totéž, podle čeho se noc rozhodne - tahle dvojice
+     * si už jednou odporovala. Proto se tu nepočítá nic vlastního: práh i pravidlo
+     * jsou z `nightYield`, který literál čte z runneru.
+     */
     const boards = stagedBoardsWithoutCheckpoint();
-    say(boards >= YIELD_MIN_BOARDS
-      ? `  Nastagováno ${boards} desek bez checkpointu (${staged.length} rodin), noc jim ustoupí.`
-      : `  POZOR: priorita je NEW_FAMILIES, ale nastagováno je jen ${boards} desek bez`);
-    if (boards < YIELD_MIN_BOARDS) {
-      say(`  checkpointu proti prahu ${YIELD_MIN_BOARDS} - noc neustoupí a rozhodnutí se nekoná.`);
+    const minutes = stagedMinutesWithoutCheckpoint();
+    const yields = shouldYield({
+      ...(minutes === undefined ? {} : { minutes }),
+      boards,
+      priority,
+      thresholds: YIELD,
+    });
+    const work = minutes === undefined
+      ? `${boards} desek bez checkpointu`
+      : `${Math.round(minutes / 60)} h práce (${boards} desek)`;
+    if (yields) {
+      say(`  Nastagováno ${work} v ${staged.length} rodinách, noc jim ustoupí.`);
+    } else {
+      say(`  POZOR: priorita je NEW_FAMILIES, ale nastagováno je jen ${work}`);
+      say(minutes === undefined
+        ? `  proti prahu ${YIELD.boards} desek (cena desky není) - noc neustoupí.`
+        : `  proti prahu ${YIELD.minutes} min - noc neustoupí a rozhodnutí se nekoná.`);
       say("  Dokud se nenastaguje nová práce, jede se rozklad do rodin na stropu.");
     }
   }
@@ -573,6 +635,7 @@ if (write) {
   // protože všech 348 nastagovaných desek už mělo checkpoint - a poznat to šlo
   // jen čtením dvou logů. S `willYield` je to vidět ráno na jeden pohled.
   const stagedBoards = stagedBoardsWithoutCheckpoint();
+  const stagedMinutes = stagedMinutesWithoutCheckpoint();
   const stagedFamilies = stagedFamiliesWithoutCheckpoint().length;
   writeFileSync(join(REPORT_DIR, "tonight.json"), `${JSON.stringify({
     schemaVersion: "PKRTRAINER_NIGHT_PRIORITY_V2",
@@ -581,8 +644,17 @@ if (write) {
     reason: priorityReason,
     stagedBoards,
     stagedFamilies,
-    yieldMinBoards: YIELD_MIN_BOARDS,
-    willYield: priority === "NEW_FAMILIES" && stagedBoards >= YIELD_MIN_BOARDS,
+    // Minuty i desky: minuty rozhodují, desky zůstávají, aby starší čtenář
+    // souboru (a hlídač po návratu k záloze) pořád našel, co zná.
+    stagedMinutes: stagedMinutes === undefined ? null : Math.round(stagedMinutes),
+    yieldMinMinutes: YIELD.minutes,
+    yieldMinBoards: YIELD.boards,
+    willYield: shouldYield({
+      ...(stagedMinutes === undefined ? {} : { minutes: stagedMinutes }),
+      boards: stagedBoards,
+      priority,
+      thresholds: YIELD,
+    }),
   }, null, 2)}
 `, "utf8");
   const path = join(REPORT_DIR, `${today}.md`);
