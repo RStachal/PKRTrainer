@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  bucketForSource, contextForVocabulary, mapAction, situationFromFileName,
+  bucketForSource, contextForVocabulary, mapAction, situationFromFileName, villainGroupSeats,
 } from "../../scripts/lib/ryeActionMapping.mts";
 
 /**
@@ -200,5 +200,43 @@ describe("slovník importu ranží", () => {
     // Hranice je včetně: osm blindů je přesně pětina od desíti a ještě projde.
     expect(bucketForSource(8)).toBe(10);
     expect(bucketForSource(7.5)).toBeUndefined();
+  });
+});
+
+describe("skupina dorovnávajících na konkrétní sedačky", () => {
+  it("EP při otvírači UTG jsou UTG+1 a UTG+2", () => {
+    // Doslova vlastníkova věta z T4: „EP jako dorovnávající při otvírači UTG je
+    // UTG+1 nebo UTG+2". UTG je sám otvírač a dorovnat po sobě nemůže.
+    expect(villainGroupSeats("EP", "UTG", "BB")).toEqual(["UTG+1", "UTG+2"]);
+    expect(villainGroupSeats("EP", "UTG", "BTN")).toEqual(["UTG+1", "UTG+2"]);
+  });
+
+  it("sedačky za hrdinou se nepočítají", () => {
+    // Filtr „mezi otvíračem a hrdinou" je součást toho zadání: hrdina na UTG+2
+    // má před sebou jen UTG+1.
+    expect(villainGroupSeats("EP", "UTG", "UTG+2")).toEqual(["UTG+1"]);
+    expect(villainGroupSeats("EP", "UTG", "UTG+1")).toEqual([]);
+  });
+
+  it("LP se nerozbaluje, protože se nedá změřit", () => {
+    /*
+     * Devět stránek s `LP` projde jak pro `{CO, BTN}`, tak pro `{HJ, CO}`:
+     * nejtěsnější je `SQU-40BBMais-BU-vs-MP-LP`, kde je hrdina BTN, takže
+     * dorovnávající musí ležet mezi LJ a BTN - a CO tam je v obou variantách.
+     * Rozdíl mezi HJ a BTN je přitom o desítky kombinací, takže zvolit jednu
+     * by bylo rozhodnutí za zdroj. Čeká to na vlastníka.
+     */
+    expect(villainGroupSeats("LP", "LJ", "BB")).toEqual([]);
+  });
+
+  it("MP skupina není - je to jedno místo u stolu", () => {
+    // V devítce sedaček zdroje (`UTG UTG1 UTG2 MP HJ CO BU SB BB`) je MP mezi
+    // UTG+2 a HJ, takže `SEAT_ALIASES` ho mapuje na LJ. Rozbalovat se nemá.
+    expect(villainGroupSeats("MP", "UTG", "BB")).toEqual([]);
+  });
+
+  it("neznámá zkratka nic nevymýšlí", () => {
+    expect(villainGroupSeats("XX", "UTG", "BB")).toEqual([]);
+    expect(villainGroupSeats("EP", "neexistuje", "BB")).toEqual([]);
   });
 });

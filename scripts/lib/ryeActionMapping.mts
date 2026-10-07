@@ -510,6 +510,62 @@ function villainOf(source: string): RyeVillain {
 }
 
 /**
+ * Sedačky, které skupina jmenuje - a jen ty, které jsou **podložené**.
+ *
+ * `EP` je tu podle vlastníkovy odpovědi T4 z 1. 10. 2026: „`EP` jako dorovnávající
+ * při otvírači UTG je UTG+1 nebo UTG+2". Zdroj jmenuje devět sedaček v pořadí
+ * `UTG UTG1 UTG2 MP HJ CO BU SB BB`, takže early position jsou ty tři první.
+ *
+ * ## Proč tu `LP` není
+ *
+ * Protože se ze korpusu **nedá změřit** a hádat se to nemá. Devět stránek s `LP`
+ * (měřeno 7. 10. 2026) projde jak pro `LP = {CO, BTN}`, tak pro `LP = {HJ, CO}`:
+ * nejtěsnější z nich je `SQU-40BBMais-BU-vs-MP-LP`, kde je hrdina BTN, takže
+ * dorovnávající musí ležet mezi LJ a BTN - a to platí pro CO v obou variantách.
+ * Rozdíl mezi HJ a BTN je přitom velký (range se liší o desítky kombinací), takže
+ * zvolit jednu by bylo rozhodnutí za zdroj.
+ *
+ * Záznam se skupinou, která tu není, zůstane klíčovaný na skupinu a drill si ho
+ * nevyžádá; dosažitelný je přes dočasnou obecnou kopii
+ * (`generalCopiesForFlatCallers`). Čeká to na vlastníka.
+ *
+ * `MP` tu taky není, a to **ze správného důvodu**: v devítce sedaček zdroje je
+ * mezi UTG+2 a HJ, tedy jedno místo u stolu, a `SEAT_ALIASES` ho mapuje na `LJ`.
+ * Skupina to není.
+ */
+const VILLAIN_GROUP_SEATS: ReadonlyMap<string, readonly string[]> = new Map([
+  ["EP", ["UTG", "UTG+1", "UTG+2"]],
+]);
+
+/**
+ * Konkrétní sedačky, na které se skupina rozpadá v **téhle** situaci.
+ *
+ * Filtr „mezi otvíračem a hrdinou" je vlastníkovo zadání z T4 a dělá přesně to,
+ * co tam stojí: při otvírači UTG vyjde z `EP` UTG+1 a UTG+2, protože UTG je sám
+ * otvírač a dorovnat po sobě nemůže.
+ *
+ * Prázdný výsledek znamená „tahle skupina v téhle situaci nic nejmenuje" - u
+ * neznámé skupiny i tam, kde mezi otvíračem a hrdinou žádná její sedačka neleží.
+ */
+export function villainGroupSeats(group: string, opener: string, hero: string): string[] {
+  const seats = VILLAIN_GROUP_SEATS.get(group.toUpperCase());
+  if (seats === undefined) return [];
+  const order = (seat: string): number => SEAT_ORDER.indexOf(seat);
+  const from = order(opener);
+  const to = order(hero);
+  if (from === -1 || to === -1) return [];
+  return seats.filter((seat) => {
+    const at = order(seat);
+    return at > from && at < to;
+  });
+}
+
+/** Pořadí sedaček u stolu, podle kterého se počítá „mezi otvíračem a hrdinou". */
+const SEAT_ORDER: readonly string[] = [
+  "UTG", "UTG+1", "UTG+2", "LJ", "HJ", "CO", "BTN", "SB", "BB",
+];
+
+/**
  * Sedačka produktu pro zkratku dorovnávajícího, nebo `undefined` u skupiny.
  *
  * Exportuje se místo celé `SEAT_ALIASES` schválně: ta mapa se používá i na

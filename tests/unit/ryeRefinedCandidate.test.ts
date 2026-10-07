@@ -391,3 +391,53 @@ describe("dočasná obecná kopie u mřížek s dorovnávajícím", () => {
     expect(generalCopiesForFlatCallers([empty, missing])).toEqual([]);
   });
 });
+
+describe("rozbalení skupiny dorovnávajících ve výběru", () => {
+  it("jedna mřížka se skupinou EP vyrobí záznam na každou konkrétní sedačku", () => {
+    /*
+     * Vlastníkovo T4: „skupinu drill rozdá jako konkrétní sedačku mezi otvíračem
+     * a hrdinou a ukáže ji". Rozbaluje se při výběru, ne v drillu, aby drill
+     * losoval jen mezi klíči, které v packu opravdu jsou - stejně jako to dělá
+     * u otvírače a u scénáře.
+     *
+     * Pozor: dnes to **nedodá nic**. Ze šestnácti záznamů korpusu s `EP` jako
+     * dorovnávajícím je čtrnáct bez odpovědi a dva „nesedí" (měřeno 7. 10. 2026),
+     * takže je to příprava na schválení, ne doručení.
+     */
+    const record = grid({
+      context: "SQUEEZE", position: "BB", bucket: 20, vsSeat: "UTG",
+      flatCallers: ["EP"], sourceFile: "MUL-20BB-BB-vs-EP_EP.html",
+      strict: { AA: ["SQUEEZE"] }, lenient: { AA: ["SQUEEZE"] },
+    });
+    const { accepted } = selectRefinedRecords([record], history([approved(record)]));
+    expect(accepted.map((row) => row.flatCallers?.join("+"))).toEqual(["UTG+1", "UTG+2"]);
+    // Provenance musí říct, že sedačka je rozdaná ze skupiny, ne přečtená ze zdroje.
+    expect(accepted[0].provenance).toContain("skupina EP rozdána jako UTG+1");
+  });
+
+  it("skupina vedle jmenované sedačky drží tu jmenovanou", () => {
+    // `MUL-…-vs-EP_EP-MP` má dorovnávající dva: skupinu a jmenovanou sedačku.
+    // Rozbalit se má jen ta skupina; `MP` zůstane, jak ho zdroj napsal.
+    const record = grid({
+      context: "SQUEEZE", position: "BB", bucket: 20, vsSeat: "UTG",
+      flatCallers: ["EP", "MP"], sourceFile: "MUL-20BB-BB-vs-EP_EP-MP.html",
+      strict: { AA: ["SQUEEZE"] }, lenient: { AA: ["SQUEEZE"] },
+    });
+    const { accepted } = selectRefinedRecords([record], history([approved(record)]));
+    expect(accepted.map((row) => row.flatCallers?.join("+")))
+      .toEqual(["UTG+1+MP", "UTG+2+MP"]);
+  });
+
+  it("neznámá skupina se nerozbaluje a záznam zůstane jediný", () => {
+    // `LP` nemá podložené složení, takže se nic nevymýšlí.
+    const record = grid({
+      context: "SQUEEZE", position: "BB", bucket: 20, vsSeat: "LJ",
+      flatCallers: ["LP"], sourceFile: "MUL-20BB-BB-vs-MP_LP.html",
+      strict: { AA: ["SQUEEZE"] }, lenient: { AA: ["SQUEEZE"] },
+    });
+    const { accepted } = selectRefinedRecords([record], history([approved(record)]));
+    expect(accepted).toHaveLength(1);
+    expect(accepted[0].flatCallers).toEqual(["LP"]);
+    expect(accepted[0].provenance).not.toContain("rozdána");
+  });
+});

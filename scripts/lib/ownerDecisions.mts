@@ -630,6 +630,86 @@ export const OWNER_DECISIONS_2026_10_01: readonly OwnerDecision[] = [
   },
 ];
 
+/**
+ * Rozhodnutí ze 7. 10. 2026.
+ *
+ * Všechna tři jsou místa, kde měření došlo na hranici a dál rozhoduje rozpočet
+ * nebo znalost zdroje. První je nové a drží devět mřížek; druhé je předem
+ * (hloubka 50 bb přijde za čtyři noci) a je lepší ho rozhodnout dřív, než se do
+ * něj narazí; třetí je otevřené od 6. 10. a jen se k němu doměřila druhá cena.
+ */
+export const OWNER_DECISIONS_2026_10_07: readonly OwnerDecision[] = [
+  {
+    id: 1,
+    title: "Co znamená ve jménech zdroje skupina LP - které sedačky to jsou?",
+    context: "Osa dorovnávajícího (4a) je hotová a mřížky se podle ní klíčují. U skupiny <code>EP</code> "
+      + "vím, co znamená, protože jsi to v T4 napsal: při otvírači UTG jsou to UTG+1 nebo UTG+2. "
+      + "U <code>LP</code> to <b>nejde změřit</b> a devět mřížek na tom stojí "
+      + "(<code>MUL-100BB-BB-vs-MP_LP</code> a dalších osm). Zkusil jsem to: nejtěsnější z nich je "
+      + "<code>SQU-40BBMais-BU-vs-MP-LP</code>, kde je hrdina BTN, takže dorovnávající musí ležet mezi "
+      + "LJ a BTN - a to platí pro CO v obou možnostech, takže ten test nerozhodne nic. "
+      + "Rozdíl je přitom velký: HJ a BTN se jako dorovnávající liší o desítky kombinací, takže zvolit "
+      + "jednu stranu by bylo rozhodnutí za zdroj. Do rozhodnutí jsou ty mřížky dosažitelné přes "
+      + "dočasnou obecnou kopii, tedy bez zpřesnění.",
+    options: [
+      { code: "a", label: "LP = CO a BTN", detail: "obvyklé dělení EP/MP/LP u devíti sedaček; po filtru „mezi otvíračem a hrdinou“ vyjde u hrdiny BTN jen CO." },
+      { code: "b", label: "LP = HJ a CO", detail: "posune pásma o místo dolů; projde stejně dobře všemi devíti stránkami, proto to měření nerozhodlo." },
+      { code: "c", label: "LP = CO, BTN a SB", detail: "pokud zdroj bere do „late“ i malý blind; u hrdiny BB by pak byly tři možnosti." },
+      { code: "d", label: "Nechat nerozbalené", detail: "dnešní stav; devět mřížek se dodá bez zpřesnění o dorovnávajícího, zbytek osy funguje." },
+    ],
+    recommended: "",
+    freeText: "Pokud to jde přečíst ze zdroje (navigace nabídky, legenda), napiš kde - příště si to změřím sám.",
+    diary: "297",
+  },
+  {
+    id: 2,
+    title: "Strop devadesáti minut na desku u 50 bb nevydrží - zvednout, nebo počítat se ztrátou?",
+    context: "Noc 6.-7. 10. přeměřila cenu desky a 40 bb vyskočilo: medián 19,3 → <b>22,1 min</b>, p90 "
+      + "28,6 → <b>40,3</b>. Strop té hloubky tím došel na <b>90 minut</b>, což je strop stropů. "
+      + "U 50 bb je extrapolované p90 <b>83 minut</b>, takže kolem desetiny desek na strop narazí - a "
+      + "protože žebřík přidává minuty k základnímu stropu, <code>min(90 + 30, 90)</code> je pořád 90. "
+      + "Stupeň 1 tedy nedá nic navíc (runner ho od 7. 10. přeskakuje) a stupeň 2 dá jen volnější "
+      + "přesnost, 1 % místo 0,5 %. Fronta na 50 bb je 96 desek a přijde na ni řada "
+      + "<b>asi za čtyři noci</b>, takže je čas to rozhodnout dřív, než se do toho narazí.",
+    options: [
+      { code: "a", label: "Zvednout strop stropů pro 50 bb a hlubší na 150 min", detail: "p90 83 se vejde i s rezervou; nejhorší deska sebere 2,5 h okna, tedy asi 7 desek jinde. Fronta 96 desek vydrží o noc dýl." },
+      { code: "b", label: "Nechat 90 a smířit se s tím, že se desetina nedosolví", detail: "rodina zůstane rozdělaná a pack se nepřegeneruje - stejná ztráta jako u bodu 280, jen předem známá." },
+      { code: "c", label: "Pustit 50 bb hned s přesností 1 % místo 0,5 %", detail: "levnější o řád, ale celá hloubka bude měřená mělčeji než 25 a 40 bb; pro trenažér to podle tvého T3 pořád stačí." },
+    ],
+    recommended: "a",
+    diary: "296",
+  },
+  {
+    id: 3,
+    title: "Dvě rodiny na 100 bb: vlastní noc, nebo nechat tabulku zastaralou?",
+    context: "Od 7. 10. ráno se fáze turnové EV <b>nepouští vůbec</b>, protože jediná zastaralá rodina "
+      + "vyčerpala tři pokusy - to je ten žebřík, co jsi schválil u desek. Ušetří to 3,5 h denně. "
+      + "Zbývá rozhodnout, co s tou rodinou: <code>MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR</code>. "
+      + "K tomu se dnes doměřila <b>druhá cena</b>, o které jsem dřív nevěděl: táž rodina stojí "
+      + "<b>112,5 minuty každého rána</b> i v generování flopového packu, a to z checkpointů, které se "
+      + "od 27. 7. nezměnily (32 souborů, asi 6 GB). Brána po rodinách to od 8. 10. přeskočí, takže ta "
+      + "část je vyřešená - ale ukazuje to, že ta rodina je nejdražší věc v celém dni.",
+    options: [
+      { code: "a", label: "Vlastní noční běh na 16 jádrech", detail: "tabulka se dopočítá; sebere to jednu noc solvingu, tedy asi 26 desek na 40 bb." },
+      { code: "b", label: "Nechat tabulku zastaralou", detail: "dnešní stav; turnová EV té rodiny zůstane bez posledních vrstev, ostatních 47 rodin je v pořádku." },
+      { code: "c", label: "Vyřadit tu rodinu z dodávky", detail: "pack by ji přestal nabízet; 100 bb HIGHSPR je ale spot, který hráč potká, takže by to byla díra v obsahu." },
+    ],
+    recommended: "b",
+    diary: "292",
+  },
+];
+
+/** Úvod stránky k rozhodnutím ze 7. 10. 2026. */
+export const OWNER_DECISIONS_2026_10_07_INTRO = `<p><b>Tři otázky, a k nim jedna věc, která není otázka.</b>
+První je o tom, co zkratka zdroje znamená - změřit se to nedá a devět mřížek na tom stojí. Druhá je
+předem, ne po škodě: hloubka 50 bb přijde za čtyři noci a dnešní strop na ni nevydrží. Třetí je
+otevřená od včera a jen se k ní doměřila druhá cena.</p>
+<p><b>A to, co není otázka:</b> osa dorovnávajícího je hotová od parseru až po kandidáta packu, ale
+dodává dnes <b>tři záznamy</b>. Hrdlo není kód - je to čtení. Změřeno týmž sítkem, které staví pack:
+<b>52 mřížek bez odpovědi</b>, a kdyby je schválení pustilo, přijatých záznamů by bylo
+<b>122 místo 69</b> a těch s osou dorovnávajícího <b>54 místo tří</b>. Stránka ke kontrole je
+vykreslená (<code>npm run mtt:rye-review -- --only=NOVE</code>, 54 mřížek).</p>`
+
 /** Úvod stránky k rozhodnutím z 1. 10. 2026. */
 export const OWNER_DECISIONS_2026_10_01_INTRO = `<p><b>Čtyři otázky.</b> První dvě jsou o tom, co zdroj
 znamená, a obě jsem se pokusil změřit, abych je nemusel posílat. Nepovedlo se - a u druhé mi měření

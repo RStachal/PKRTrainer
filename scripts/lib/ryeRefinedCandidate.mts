@@ -14,7 +14,7 @@ import { bucketsForContext, positionsForContext } from "../../src/core/drillEngi
 import type { MttPreflopImportRecord } from "../../src/data/ranges/mttPreflopRangePackImport";
 import type { AnswerHistory } from "./ryeAnswerHistory.mts";
 import { isStale } from "./ryeAnswerHistory.mts";
-import { seatOfVillainAbbrev } from "./ryeActionMapping.mts";
+import { seatOfVillainAbbrev, villainGroupSeats } from "./ryeActionMapping.mts";
 import type { DraftRecord } from "./ryeDraftImpact.mts";
 
 /**
@@ -169,6 +169,30 @@ export function refinedCellKey(
 function flatSuffix(flatCallers: readonly string[] | undefined): string {
   if (flatCallers === undefined) return "?";
   return flatCallers.length === 0 ? "—" : flatCallers.join("+");
+}
+
+/**
+ * Seznamy dorovnávajících, které z jednoho záznamu vzniknou.
+ *
+ * Bez skupiny je to jeden seznam - ten původní. Se skupinou, jejíž složení je
+ * podložené, jeden seznam na každou konkrétní sedačku; se skupinou neznámou zase
+ * jen ten původní, takže se nic nevymýšlí.
+ *
+ * Víc skupin v jednom seznamu se **nekombinuje**: žádná taková stránka v korpusu
+ * není (měřeno 7. 10. 2026) a kartézský součin dvou skupin by vyrobil záznamy pro
+ * situace, o kterých zdroj nic neříká.
+ */
+function flatCallerVariants(
+  record: Pick<DraftRecord, "flatCallers" | "vsSeat" | "position">,
+): readonly string[][] {
+  const flat = record.flatCallers ?? [];
+  const groups = flat.filter((villain) => (
+    villainGroupSeats(villain, record.vsSeat, record.position).length > 0
+  ));
+  if (groups.length !== 1) return [[...flat]];
+  const [group] = groups;
+  const seats = villainGroupSeats(group, record.vsSeat, record.position);
+  return seats.map((seat) => flat.map((villain) => (villain === group ? seat : villain)));
 }
 
 /**
@@ -435,20 +459,39 @@ export function selectRefinedRecords(
       + `${answer.contentHash ? ` (otisk ${answer.contentHash})` : ""}`;
     const strict = fillFolds(record.strict);
     const lenient = fillFolds(record.lenient);
-    accepted.push({
-      position: record.position as Position,
-      sourceStackBB: record.sourceStackBB,
-      bucket: record.bucket as StackBucket,
-      context,
-      vsSeat: record.vsSeat as Position,
-      // Prázdný seznam se nepředává: „otevření nikdo nedorovnal" je přesně to,
-      // co znamená `vsSeat` sám, a vlastní klíč by dnešní obsah rozdělil na dvě
-      // poloviny bez důvodu.
-      ...(record.flatCallers.length > 0 ? { flatCallers: record.flatCallers } : {}),
-      provenance,
-      strict,
-      lenient,
-    });
+    /*
+     * Skupina se rozpadne na konkrétní sedačky - vlastníkovo zadání z T4:
+     * „skupinu drill rozdá jako konkrétní sedačku mezi otvíračem a hrdinou".
+     *
+     * Rozbaluje se **tady**, ne v drillu, a je to vědomé: tady je vidět otvírač
+     * i hrdina, takže se filtr „mezi nimi" dá uplatnit, a drill pak jen losuje
+     * mezi klíči, které v packu opravdu jsou - tedy stejně, jako to dělá u
+     * otvírače a u scénáře. Kdyby skupinu překládal drill, mohl by se zeptat na
+     * klíč, který nikdo nenapsal.
+     *
+     * Skupina, jejíž složení není podložené (`LP`), se nerozbalí a záznam
+     * zůstane klíčovaný na ni; dosažitelný je přes dočasnou obecnou kopii.
+     * Viz `villainGroupSeats`.
+     */
+    const variants = flatCallerVariants(record);
+    for (const flatCallers of variants) {
+      accepted.push({
+        position: record.position as Position,
+        sourceStackBB: record.sourceStackBB,
+        bucket: record.bucket as StackBucket,
+        context,
+        vsSeat: record.vsSeat as Position,
+        // Prázdný seznam se nepředává: „otevření nikdo nedorovnal" je přesně to,
+        // co znamená `vsSeat` sám, a vlastní klíč by dnešní obsah rozdělil na dvě
+        // poloviny bez důvodu.
+        ...(flatCallers.length > 0 ? { flatCallers } : {}),
+        provenance: variants.length > 1
+          ? `${provenance} [skupina ${record.flatCallers.join("+")} rozdána jako ${flatCallers.join("+")}]`
+          : provenance,
+        strict,
+        lenient,
+      });
+    }
 
     if ((record.bucketSpan ?? []).length > 1) {
       spanQueue.push({ record, context, provenance, strict, lenient });
