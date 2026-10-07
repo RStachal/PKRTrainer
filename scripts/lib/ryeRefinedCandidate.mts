@@ -1,6 +1,7 @@
 import { ALL_HAND_CLASSES } from "../../src/core/poker";
 import { offeredPreflopActionKeys } from "../../src/core/preflopActionOptions";
 import {
+  POSITION_ORDER,
   PUSH_FOLD_MAX,
   type ActionContext,
   type ActionKey,
@@ -13,6 +14,7 @@ import { bucketsForContext, positionsForContext } from "../../src/core/drillEngi
 import type { MttPreflopImportRecord } from "../../src/data/ranges/mttPreflopRangePackImport";
 import type { AnswerHistory } from "./ryeAnswerHistory.mts";
 import { isStale } from "./ryeAnswerHistory.mts";
+import { seatOfVillainAbbrev } from "./ryeActionMapping.mts";
 import type { DraftRecord } from "./ryeDraftImpact.mts";
 
 /**
@@ -167,6 +169,75 @@ export function refinedCellKey(
 function flatSuffix(flatCallers: readonly string[] | undefined): string {
   if (flatCallers === undefined) return "?";
   return flatCallers.length === 0 ? "—" : flatCallers.join("+");
+}
+
+/**
+ * Mřížka s dorovnávajícím jde do packu **i jako obecná odpověď pro tu sedačku**,
+ * dokud se drill na dorovnávajícího neumí zeptat.
+ *
+ * ## Proč to tu je
+ *
+ * Záznam s osou dorovnávajícího má klíč `…|vsCO|@BTN`. Klíč, který drill dnes
+ * skládá, osu nenese, takže se na `@BTN` **nikdo nezeptá** a pád vede na obecný
+ * záznam základního packu. Změřeno 7. 10. 2026 hned po zavedení osy: tři buňky
+ * (`SQUEEZE|BB|20|vsCO`, `SQUEEZE|BB|20|vsLJ`, `SQUEEZE|SB|20|vsCO`) zůstaly
+ * **bez obecného záznamu**, takže obsah, který byl do té chvíle dosažitelný,
+ * přestal být - a počet přijatých záznamů se přitom nezměnil (69), takže by to
+ * žádná brána nenašla. Je to přesně ta vada, na kterou si vlastník stěžoval
+ * u předchozí verze: obsah schválený, doručení žádné.
+ *
+ * ## Že se to má udělat takhle, řekl vlastník
+ *
+ * T4, poslední odstavec: „Jestli bude a) trvat déle než pár dní, je lepší
+ * dočasně pustit mřížku proti **nejtěsnějšímu dorovnávajícímu (nejranější
+ * sedačka)** než nechat obecný záznam." Dneškem je to šestý den, takže ta
+ * podmínka platí. Zároveň měl vlastník změřeno, proč je dnešní obecný záznam
+ * horší: je stejný pro hloubky 15 az 150 bb a od zdroje se liší skoro ve všech
+ * porovnaných třídách.
+ *
+ * Kopie se dělá jen tam, kde tu buňku **nikdo nedrží bez osy** - jinak by
+ * přebila mřížku, která o sobě ví víc. A když o obecnou buňku soupeří víc
+ * mřížek, bere ji ta s nejranějším dorovnávajícím: je to nejtěsnější range,
+ * takže chyba jde směrem „hráč hraje míň rukou, než zdroj dovoluje", ne naopak.
+ *
+ * **Až drill osu umí, tahle kopie se má smazat**, ne nechat - dvě odpovědi na
+ * tutéž otázku jsou dvě místa, kde se obsah rozejde.
+ */
+function seatRank(seat: string): number {
+  const index = POSITION_ORDER.indexOf(seat as Position);
+  // Zkratka, která sedačku nejmenuje (skupina `EP`, `LP`), je až za jmenovanými:
+  // jmenovaná sedačka před skupinou je vlastníkovo pravidlo z T4, bod 3.
+  return index === -1 ? POSITION_ORDER.length : index;
+}
+
+export function generalCopiesForFlatCallers(
+  accepted: readonly MttPreflopImportRecord[],
+): MttPreflopImportRecord[] {
+  const cellOfRecord = (record: MttPreflopImportRecord): string => (
+    `${record.context}|${record.position}|${record.bucket}|vs${record.vsSeat ?? ""}`
+  );
+  const heldWithoutAxis = new Set(
+    accepted.filter((record) => record.flatCallers === undefined).map(cellOfRecord),
+  );
+  const best = new Map<string, MttPreflopImportRecord>();
+  for (const record of accepted) {
+    if (record.flatCallers === undefined || record.flatCallers.length === 0) continue;
+    const cell = cellOfRecord(record);
+    if (heldWithoutAxis.has(cell)) continue;
+    const rival = best.get(cell);
+    const rank = (row: MttPreflopImportRecord): number => Math.min(
+      ...(row.flatCallers ?? []).map((flat) => seatRank(seatOfVillainAbbrev(flat) ?? flat)),
+    );
+    if (rival === undefined || rank(record) < rank(rival)) best.set(cell, record);
+  }
+  return [...best.values()].map((record) => {
+    const { flatCallers, ...withoutAxis } = record;
+    return {
+      ...withoutAxis,
+      provenance: `${record.provenance ?? ""} [dočasně i jako obecná odpověď pro tu sedačku,`
+        + ` dorovnávající ${flatCallers?.join("+") ?? "?"}; drill se na osu zatím neumí zeptat]`,
+    };
+  });
 }
 
 /**

@@ -16,6 +16,7 @@ import {
   type StackBucket,
 } from "../../core/types";
 import { positionsForFormat } from "../../core/trainingProfile";
+import { reachabilityErrors } from "./refinementReachability";
 import type {
   RangePack,
   RangePackDimensions,
@@ -382,6 +383,17 @@ function normalizeActionMap(
 function validateMttPreflopInput(input: MttPreflopRangePackImportInput): string[] {
   const errors: string[] = [];
   const validPositions = positionsForFormat(input.dimensions.tableFormat);
+
+  /*
+   * Zpřesněný záznam, na který se nikdo nedokáže zeptat, je tiše ztracený obsah.
+   *
+   * Přidáno 7. 10. 2026 poté, co osa dorovnávajícího udělala tři schválené
+   * mřížky nedosažitelnými a **žádná brána to nenašla**: počet přijatých záznamů
+   * zůstal 69, sada procházela a kontrola importu hlásila `valid true`. Záznamy
+   * nezmizely, jen se překlíčovaly. Proč je to chyba a ne varování, je rozepsané
+   * v `refinementReachability`.
+   */
+  errors.push(...reachabilityErrors(input.records));
 
   if (input.dimensions.gameVariant !== "MTT") {
     errors.push("MTT preflop import must use gameVariant MTT.");

@@ -4,7 +4,11 @@ import { ALL_HAND_CLASSES } from "../../src/core/poker";
 import type { AnswerHistory, RecordedAnswer } from "../../scripts/lib/ryeAnswerHistory.mts";
 import { gridContentHash, gridQuestion } from "../../scripts/lib/ryeAnswerHistory.mts";
 import type { DraftRecord } from "../../scripts/lib/ryeDraftImpact.mts";
-import { selectGeneralOverrides, selectRefinedRecords } from "../../scripts/lib/ryeRefinedCandidate.mts";
+import {
+  generalCopiesForFlatCallers,
+  selectGeneralOverrides,
+  selectRefinedRecords,
+} from "../../scripts/lib/ryeRefinedCandidate.mts";
 
 /**
  * Sítko mezi schváleným draftem a produkčním packem (osa otvírače, bod 234).
@@ -315,5 +319,75 @@ describe("osa dorovnávajícího ve výběru (rozhodnutí 4a)", () => {
     expect(accepted).toHaveLength(1);
     expect(accepted[0].provenance).toContain("MUL-20BB-BB-vs-BTN_MP.html");
     expect(refused[0]?.sourceFile).toBe("SQU-20BB-BB-vs-BTN_MP.html");
+  });
+});
+
+describe("dočasná obecná kopie u mřížek s dorovnávajícím", () => {
+  /*
+   * Proč to existuje: záznam s klíčem `…|vsCO|@BTN` dnes **nikdo nevyžádá**,
+   * protože drill osu dorovnávajícího neskládá. Změřeno 7. 10. 2026 hned po
+   * zavedení osy: tři buňky zůstaly bez obecného záznamu, takže obsah, který byl
+   * dosažitelný, přestal být - a počet přijatých se nezměnil (69), takže by to
+   * žádná brána nenašla.
+   *
+   * Vlastník to pro tuhle dobu rozhodl v T4: „lepší dočasně pustit mřížku proti
+   * nejtěsnějšímu dorovnávajícímu (nejranější sedačka) než nechat obecný záznam."
+   */
+  const refined = (vsSeat: string, flatCallers: string[]): Parameters<typeof generalCopiesForFlatCallers>[0][number] => ({
+    position: "BB", bucket: 20, context: "SQUEEZE", sourceStackBB: 20,
+    vsSeat: vsSeat as never, flatCallers,
+    provenance: `RYE, ${flatCallers.join("+")}.html`,
+    strict: {}, lenient: {},
+  });
+
+  it("buňka bez obecného záznamu kopii dostane", () => {
+    const copies = generalCopiesForFlatCallers([refined("CO", ["BTN"])]);
+    expect(copies).toHaveLength(1);
+    expect(copies[0].flatCallers).toBeUndefined();
+    expect(copies[0].vsSeat).toBe("CO");
+    // Provenance musí říct, že je to dočasné - jinak se v packu nepozná, proč
+    // tam táž mřížka je dvakrát, a kopie přežije i to, až bude drill umět osu.
+    expect(copies[0].provenance).toContain("dočasně");
+  });
+
+  it("buňku, kterou někdo drží bez osy, kopie nepřebije", () => {
+    // Mřížka, která o sobě ví víc, má vyhrát. Kopie je výplň, ne náhrada.
+    const held = { ...refined("CO", ["BTN"]), provenance: "obecny" };
+    delete (held as { flatCallers?: readonly string[] }).flatCallers;
+    expect(generalCopiesForFlatCallers([refined("CO", ["BTN"]), held])).toEqual([]);
+  });
+
+  it("o obecnou buňku soupeří víc mřížek a bere ji nejranější dorovnávající", () => {
+    /*
+     * Vlastníkovo „nejtěsnější dorovnávající (nejranější sedačka)". Je to
+     * nejtěsnější range, takže chyba jde směrem „hráč hraje míň rukou, než zdroj
+     * dovoluje", ne naopak. Měřeno na mřížkách z 1. 10.: BTN na 100 bb squeezuje
+     * 67 kombinací proti flatu z EP, 84 proti MP a 102 proti CO.
+     *
+     * Vstup je schválně v obráceném pořadí, aby test měřil pravidlo, ne pořadí.
+     */
+    const copies = generalCopiesForFlatCallers([
+      refined("UTG", ["BTN"]),
+      refined("UTG", ["HJ"]),
+      refined("UTG", ["CO"]),
+    ]);
+    expect(copies).toHaveLength(1);
+    expect(copies[0].provenance).toContain("HJ.html");
+  });
+
+  it("skupina ustoupí jmenované sedačce", () => {
+    // „Jmenovaná sedačka před skupinou" je druhá část vlastníkova pravidla z T4.
+    // `LP` neříká, která sedačka to je, takže je až za každou jmenovanou.
+    const copies = generalCopiesForFlatCallers([refined("LJ", ["LP"]), refined("LJ", ["BTN"])]);
+    expect(copies).toHaveLength(1);
+    expect(copies[0].provenance).toContain("BTN.html");
+  });
+
+  it("prázdný ani chybějící seznam kopii nevyrábí", () => {
+    // Takový záznam je obecná odpověď sám; kopie by byla jen duplicita.
+    const empty = refined("CO", []);
+    const missing = refined("CO", ["BTN"]);
+    delete (missing as { flatCallers?: readonly string[] }).flatCallers;
+    expect(generalCopiesForFlatCallers([empty, missing])).toEqual([]);
   });
 });

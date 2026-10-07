@@ -93,6 +93,41 @@ rozdává trenažér:
 popisuje, jak se ta vada našla; čísla, která platí teď, jsou v „Pořadí prací"
 níž - všechny tři řádky jsou od 26. 8. 2026 dodané nebo rozhodnuté.
 
+#### Doručení se neměří počtem záznamů, ale dosažitelností (7. 10. 2026)
+
+Vrstva 0 se od začátku ptá „dojde odpověď k hráči". Dnes se našla její slepá
+místa, a je užší, než jsem si myslel: **záznam může zůstat v packu a přestat být
+dosažitelný.**
+
+Stalo se to při zavádění osy dorovnávajícího (rozhodnutí 4a). Záznam dostal
+přesnější klíč `… vsCO @BTN`, jenže klíč, který drill skládá, osu nenese, takže
+se na něj nikdo nezeptá. Tři buňky tím zůstaly bez obecného záznamu a obsah,
+který byl dosažitelný, přestal být.
+
+**Co to neodhalilo:** počet přijatých záznamů (69 před i po), sada testů, ani
+`valid true, productionReady true` z kontroly importu. Záznamy nezmizely, jen
+se překlíčovaly. Je to tatáž třída vady jako u packů, kde se dodávka musí měřit
+otiskem pravidel a ne jejich počtem - jen o vrstvu výš.
+
+**Co to odhalilo:** srovnání proti stavu před změnou (`git stash`) a pak otázka
+„existuje pro tutéž buňku pořád záznam bez té osy?". Třikrát ne.
+
+**Pravidlo pro příště:** u každé změny klíče se musí měřit, jestli přesnější klíč
+nezůstal sám. Platí to pro každou osu, kterou pack má - otvírač, scénář,
+dorovnávající - a pro každou, která přijde.
+
+**Od 7. 10. to hlídá brána** (`refinementReachability`): zpřesněný záznam musí mít
+v packu sourozence o jednu osu obecnějšího, jinak je v řetězu pádu díra. Je to
+**chyba, ne varování**, a smí to tak být, protože se to nejdřív změřilo - všechny
+čtyři produkční packy (507, 566, 507, 566 záznamů) i kandidát s vrstvou RYE (576)
+mají nula porušení. Dnešní obsah tedy nic neblokuje a brána padá zavřená, což je
+u doručení ta správná strana: opačná chyba je neviditelná.
+
+Dočasná kopie, kterou vlastník pro tuhle dobu schválil (T4: „lepší dočasně pustit
+mřížku proti nejtěsnějšímu dorovnávajícímu než nechat obecný záznam"), zůstává do
+doby, než se drill na osu umí zeptat. Až se smaže, tahle brána je přesně to, co
+tu ztrátu zachytí.
+
 | co má hráč po odpovědi vidět | obsah to ví | dojde k hráči (25. 8.) |
 |---|---|---|
 | co dělat s každou kombinací matice | ano, každé vyřešené pravidlo nese `buckets[]` s akcí, třídami a frekvenční směsí | **0 %** |

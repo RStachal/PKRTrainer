@@ -509,6 +509,18 @@ function villainOf(source: string): RyeVillain {
   return seat === undefined ? { source: upper } : { source: upper, seat };
 }
 
+/**
+ * Sedačka produktu pro zkratku dorovnávajícího, nebo `undefined` u skupiny.
+ *
+ * Exportuje se místo celé `SEAT_ALIASES` schválně: ta mapa se používá i na
+ * sedačku hrdiny a vystavit ji by zvalo k tomu, aby si někdo přeložil skupinu
+ * tam, kde není vidět otvírač - a `EP` jako dorovnávající při otvírači UTG je
+ * podle vlastníkova T4 UTG+1 nebo UTG+2, ne UTG.
+ */
+export function seatOfVillainAbbrev(source: string): string | undefined {
+  return villainOf(source).seat;
+}
+
 function namesSeat(token: string): boolean {
   return SEAT_ALIASES.has(token.toUpperCase()) || VILLAIN_GROUPS.has(token.toUpperCase());
 }

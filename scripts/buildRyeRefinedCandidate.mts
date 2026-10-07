@@ -9,7 +9,8 @@ import {
 import { loadAnswerHistory } from "./lib/ryeAnswerHistory.mts";
 import type { DraftFile } from "./lib/ryeDraftImpact.mts";
 import {
-  RYE_PROVENANCE, selectGeneralOverrides, selectRefinedRecords, type RefusalReason,
+  RYE_PROVENANCE, generalCopiesForFlatCallers, selectGeneralOverrides, selectRefinedRecords,
+  type RefusalReason,
 } from "./lib/ryeRefinedCandidate.mts";
 
 /**
@@ -201,7 +202,21 @@ const candidate: MttPreflopRangePackImportInput = {
       licenseNote: "Koupený produkt vlastníka; přenášejí se seznamy akcí po třídách rukou, ne obrázky ani soubory zdroje.",
     },
   ],
-  records: [...base.records, ...overrides.accepted, ...selection.accepted, ...convertedBvb],
+  /*
+   * Kopie bez osy dorovnávajícího je **dočasná**, viz `generalCopiesForFlatCallers`.
+   *
+   * Drill se na osu zatím neumí zeptat, takže záznam s klíčem `…|vsCO|@BTN` nikdo
+   * nevyžádá a buňka by zůstala bez odpovědi. Vlastník pro tuhle dobu rozhodl
+   * (T4, poslední odstavec), že je lepší pustit mřížku proti nejtěsnějšímu
+   * dorovnávajícímu než nechat obecný záznam. Až drill osu umí, tenhle řádek zmizí.
+   */
+  records: [
+    ...base.records,
+    ...overrides.accepted,
+    ...selection.accepted,
+    ...generalCopiesForFlatCallers(selection.accepted),
+    ...convertedBvb,
+  ],
 };
 
 const report = buildMttPreflopImportReadinessReport(candidate);
