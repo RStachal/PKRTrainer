@@ -242,6 +242,70 @@ const LAZY_RANGE_INDEX: ReadonlyMap<string, RangeRecord> = {
 export const RANGE_INDEX: ReadonlyMap<string, RangeRecord> = LAZY_RANGE_INDEX;
 
 /**
+ * Pořadí, ve kterém se zpřesnění zahazují - od nejpřesnějšího klíče k obecnému.
+ *
+ * **Exportuje se proto, že tenhle řetěz existoval dvakrát.** `getRangeRecord`
+ * (agregovaný index, produkční cesta) a `createRangeStoreFromRangePack` (store
+ * nad jedním packem, používají ho měřicí skripty) si ho každý skládal sám, a už
+ * se rozešly: packová cesta zkoušela `{scénář}` bez sedačky, indexová ne, a od
+ * 7. 10. 2026 znala osu dorovnávajícího jen indexová. Dvě kopie téhož výpočtu se
+ * rozejdou tiše a každá strana pak o téže buňce tvrdí něco jiného - projekt to
+ * zná z ceny desky i z dodávky packů.
+ *
+ * Změřeno 7. 10. 2026, že ten rozchod dnes nemá dopad: záznam se scénářem **a bez
+ * sedačky** není ani v jednom ze čtyř produkčních packů, ani v kandidátu. Krok,
+ * o který se cesty lišily, byl mrtvý.
+ *
+ * Pořadí zahazování je úsudek o obsahu:
+ *
+ * 1. **rozložení stacků** padá první - bez něj je odpověď o téže situaci, jen
+ *    o něco méně přesná (tak to platí od 16. 9. 2026);
+ * 2. **dorovnávající** padá druhý - je to pořád táž otázka („čelím otevření
+ *    z UTG"), jen bez toho, kdo ho dorovnal;
+ * 3. **sedačka** padá poslední: bez ní je odpověď o **jiné situaci**.
+ *
+ * Když se nenajde nic přesnějšího, vrátí se obecný záznam - nezpřesněná odpověď
+ * je pořád odpověď. Je to tentýž postup, jakým vybírá vyřešený postflop.
+ */
+export function refinementFallbackChain(input?: RangeRefinement): RangeRefinement[] {
+  const attempts: RangeRefinement[] = [];
+  const hasFlat = (input?.flatCallers?.length ?? 0) > 0;
+  /*
+   * Prázdný seznam dorovnávajících se z pokusu **vypustí**, ne jen ignoruje.
+   *
+   * Na klíč vliv nemá (prázdný seznam nepřipojuje suffix), ale nechat ho v řetězu
+   * by znamenalo dva různé tvary téhož pokusu - a tvar řetězu se porovnává
+   * v testech i mezi dvěma cestami, které ho teď sdílejí.
+   */
+  const refinement: RangeRefinement | undefined = input === undefined ? undefined : {
+    ...(input.vsSeat === undefined ? {} : { vsSeat: input.vsSeat }),
+    ...(input.stackSetupId === undefined ? {} : { stackSetupId: input.stackSetupId }),
+    ...(hasFlat ? { flatCallers: input.flatCallers } : {}),
+  };
+  if (refinement !== undefined
+    && (refinement.vsSeat !== undefined || refinement.stackSetupId !== undefined || hasFlat)) {
+    attempts.push(refinement);
+    if (hasFlat && refinement.stackSetupId !== undefined) {
+      attempts.push({
+        ...(refinement.vsSeat === undefined ? {} : { vsSeat: refinement.vsSeat }),
+        flatCallers: refinement.flatCallers,
+      });
+    }
+    if (hasFlat && refinement.vsSeat !== undefined) {
+      attempts.push({
+        vsSeat: refinement.vsSeat,
+        ...(refinement.stackSetupId === undefined ? {} : { stackSetupId: refinement.stackSetupId }),
+      });
+    }
+    if (refinement.stackSetupId !== undefined && refinement.vsSeat !== undefined) {
+      attempts.push({ vsSeat: refinement.vsSeat });
+    }
+  }
+  attempts.push({});
+  return attempts;
+}
+
+/**
  * Vrátí `RangeRecord` pro kombinaci
  * `Ante × Pozice × Hloubkový_koš × akční kontext`, nebo `undefined`, pokud pro
  * danou kombinaci žádný záznam neexistuje (Req 4.8 — chybějící kombinace).
@@ -253,41 +317,7 @@ export function getRangeRecord(
   context: ActionContext,
   refinement?: RangeRefinement,
 ): RangeRecord | undefined {
-  // Od nejpřesnějšího k nejobecnějšímu.
-  //
-  // Pořadí je podstatné: range proti otevření z UTG a z BTN se liší, takže
-  // přesnější odpověď musí vyhrát, když existuje. Když neexistuje, vrátí se
-  // dnešní záznam - **nezpřesněná odpověď je pořád odpověď** a je lepší než
-  // žádná. Je to tentýž postup, jakým vybírá vyřešený postflop.
-  const attempts: RangeRefinement[] = [];
-  const hasFlat = (refinement?.flatCallers?.length ?? 0) > 0;
-  if (refinement !== undefined
-    && (refinement.vsSeat !== undefined || refinement.stackSetupId !== undefined || hasFlat)) {
-    attempts.push(refinement);
-    /*
-     * Osy se zahazují od nejméně důležité, a to pořadí je úsudek o obsahu:
-     *
-     * 1. **rozložení stacků** padá první - bez něj je odpověď o téže situaci,
-     *    jen o něco méně přesná (tak to tu stálo od 16. 9. 2026);
-     * 2. **dorovnávající** padá druhý - je to pořád táž otázka („čelím otevření
-     *    z UTG"), jen bez toho, kdo ho dorovnal. Změřeno, že ten rozdíl je velký
-     *    (67 proti 102 kombinacím), takže se nezahazuje dřív než rozložení;
-     * 3. **sedačka** padá poslední: bez ní je odpověď o **jiné situaci**.
-     *
-     * Když se žádná z přesnějších variant nenajde, vrátí se obecný záznam -
-     * nezpřesněná odpověď je pořád odpověď.
-     */
-    if (hasFlat && refinement.stackSetupId !== undefined) {
-      attempts.push({ ...(refinement.vsSeat === undefined ? {} : { vsSeat: refinement.vsSeat }), flatCallers: refinement.flatCallers });
-    }
-    if (hasFlat && refinement.vsSeat !== undefined) {
-      attempts.push({ vsSeat: refinement.vsSeat, ...(refinement.stackSetupId === undefined ? {} : { stackSetupId: refinement.stackSetupId }) });
-    }
-    if (refinement.stackSetupId !== undefined && refinement.vsSeat !== undefined) {
-      attempts.push({ vsSeat: refinement.vsSeat });
-    }
-  }
-  attempts.push({});
+  const attempts = refinementFallbackChain(refinement);
   for (const attempt of attempts) {
     const found = RANGE_INDEX.get(
       rangeIndexKey(ante, position, bucket, context, attempt),

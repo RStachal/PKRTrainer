@@ -19,7 +19,7 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { getRangeRecord, rangeIndexKey } from "../../src/data/ranges/index";
+import { getRangeRecord, rangeIndexKey, refinementFallbackChain } from "../../src/data/ranges/index";
 import { questionId } from "../../src/core/questionId";
 import { parseAnteFromQuestionId } from "../../src/persistence/statsRecordV2";
 
@@ -128,6 +128,56 @@ describe("Question_ID s osou dorovnávajícího", () => {
       const id = questionId({ ...base, ante, vsSeat: "UTG", stackSetupId: "ICM3", flatCallers: ["MP", "SB"] });
       expect(id.endsWith(`|${ante}`)).toBe(true);
       expect(parseAnteFromQuestionId(id)).toBe(ante);
+    }
+  });
+});
+
+describe("řetěz pádu je jeden, ne dva", () => {
+  /*
+   * `getRangeRecord` a `createRangeStoreFromRangePack` si ten řetěz do 7. 10. 2026
+   * skládaly každý sám a už se rozešly: packová cesta zkoušela `{scénář}` bez
+   * sedačky, indexová ne, a osu dorovnávajícího znala jen indexová. Dvě kopie
+   * téhož výpočtu se rozejdou tiše - projekt to zná z ceny desky i z dodávky packů.
+   *
+   * Změřeno, že ten rozchod dopad neměl: záznam se scénářem a bez sedačky není
+   * v žádném ze čtyř produkčních packů ani v kandidátu. Krok, o který se cesty
+   * lišily, byl mrtvý. Teď je řetěz jeden a tyhle testy drží jeho pořadí.
+   */
+  it("zahazuje osy od nejméně důležité", () => {
+    const chain = refinementFallbackChain({
+      vsSeat: "UTG", stackSetupId: "ICM3", flatCallers: ["MP"],
+    });
+    expect(chain).toEqual([
+      { vsSeat: "UTG", stackSetupId: "ICM3", flatCallers: ["MP"] },
+      { vsSeat: "UTG", flatCallers: ["MP"] },
+      { vsSeat: "UTG", stackSetupId: "ICM3" },
+      { vsSeat: "UTG" },
+      {},
+    ]);
+  });
+
+  it("bez osy dorovnávajícího je řetěz týž jako dřív", () => {
+    // Tohle je ta vlastnost, na které stojí, že se dnešní obsah nehnul.
+    expect(refinementFallbackChain({ vsSeat: "UTG", stackSetupId: "ICM3" }))
+      .toEqual([{ vsSeat: "UTG", stackSetupId: "ICM3" }, { vsSeat: "UTG" }, {}]);
+    expect(refinementFallbackChain({ vsSeat: "UTG" })).toEqual([{ vsSeat: "UTG" }, {}]);
+    expect(refinementFallbackChain(undefined)).toEqual([{}]);
+    expect(refinementFallbackChain({})).toEqual([{}]);
+  });
+
+  it("prázdný seznam dorovnávajících řetěz neprodlouží", () => {
+    expect(refinementFallbackChain({ vsSeat: "UTG", flatCallers: [] }))
+      .toEqual([{ vsSeat: "UTG" }, {}]);
+  });
+
+  it("obecný záznam je vždycky posledním pokusem", () => {
+    // Nezpřesněná odpověď je pořád odpověď a je lepší než žádná.
+    for (const refinement of [
+      undefined, {}, { vsSeat: "UTG" as const }, { flatCallers: ["MP"] },
+      { vsSeat: "UTG" as const, stackSetupId: "ICM3", flatCallers: ["MP", "SB"] },
+    ]) {
+      const chain = refinementFallbackChain(refinement);
+      expect(chain[chain.length - 1]).toEqual({});
     }
   });
 });

@@ -36,6 +36,7 @@ import type { ActionEvSet } from "../core/actionEv";
 import {
   getRangeRecord,
   isRangeDataLoaded,
+  refinementFallbackChain,
   type RangeRefinement,
 } from "./ranges";
 import type { RangeRecord } from "./ranges/schema";
@@ -229,7 +230,10 @@ export function createRangeStoreFromRangePack(pack: RangePack): RangeStore {
   const errors = validateRangePack(pack);
 
   for (const record of pack.records) {
-    const key = packRecordKey(record.position, record.bucket, record.context, record.vsSeat, record.stackSetupId);
+    const key = packRecordKey(
+      record.position, record.bucket, record.context,
+      record.vsSeat, record.stackSetupId, record.flatCallers,
+    );
     if (records.has(key)) {
       errors.push(`Duplicate RangePack runtime key: ${key}.`);
       continue;
@@ -254,14 +258,23 @@ export function createRangeStoreFromRangePack(pack: RangePack): RangeStore {
       // sedačka, pak scénář sám, pak sedačka, pak obecný záznam. Scénář stojí
       // výš než sedačka: pod jiným rozložením stacků platí jiná range i proti
       // témuž otvírači, a pack se scénáři obecné záznamy nemá.
-      const { position, bucket, context, vsSeat, stackSetupId } = key;
-      const candidates: string[] = [];
-      if (vsSeat !== undefined && stackSetupId !== undefined) candidates.push(packRecordKey(position, bucket, context, vsSeat, stackSetupId));
-      if (stackSetupId !== undefined) candidates.push(packRecordKey(position, bucket, context, undefined, stackSetupId));
-      if (vsSeat !== undefined) candidates.push(packRecordKey(position, bucket, context, vsSeat));
-      candidates.push(packRecordKey(position, bucket, context));
-      for (const candidate of candidates) {
-        const record = records.get(candidate);
+      const { position, bucket, context } = key;
+      /*
+       * Řetěz pádu je **týž jako v `getRangeRecord`** a schválně odtud, ne vlastní.
+       *
+       * Do 7. 10. 2026 si ho tahle cesta skládala sama a už se rozešly: zkoušela
+       * `{scénář}` bez sedačky (krok, na který v žádném packu není záznam) a
+       * naopak **neznala osu dorovnávajícího**, takže by u záznamu s `@…` našla
+       * obecný a měřicí skripty by hlásily jinou odpověď, než jakou pack doručí.
+       */
+      for (const attempt of refinementFallbackChain({
+        ...(key.vsSeat === undefined ? {} : { vsSeat: key.vsSeat }),
+        ...(key.stackSetupId === undefined ? {} : { stackSetupId: key.stackSetupId }),
+        ...(key.flatCallers?.length ? { flatCallers: key.flatCallers } : {}),
+      })) {
+        const record = records.get(packRecordKey(
+          position, bucket, context, attempt.vsSeat, attempt.stackSetupId, attempt.flatCallers,
+        ));
         if (record !== undefined) return toRangeEntry(record);
       }
       return undefined;
@@ -279,9 +292,15 @@ function packRecordKey(
   context: ActionContext,
   vsSeat?: Position,
   stackSetupId?: string,
+  flatCallers?: readonly string[],
 ): string {
   // Zpřesnění se připojuje jen když je - klíč obecného záznamu zůstává týž.
-  return `${position}|${bucket}|${context}${vsSeat === undefined ? "" : `|vs${vsSeat}`}${stackSetupId === undefined ? "" : `|#${stackSetupId}`}`;
+  // Pořadí částí musí sedět na `rangeIndexKey`, jinak by se týž záznam v každé
+  // cestě hledal pod jiným jménem.
+  return `${position}|${bucket}|${context}`
+    + `${vsSeat === undefined ? "" : `|vs${vsSeat}`}`
+    + `${stackSetupId === undefined ? "" : `|#${stackSetupId}`}`
+    + `${flatCallers?.length ? `|@${flatCallers.join("+")}` : ""}`;
 }
 
 // ---------------------------------------------------------------------------
