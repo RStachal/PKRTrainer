@@ -5,6 +5,13 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 
 import { escalationSteps, failureLevel } from "./lib/nightEscalation.mts";
+import {
+  PACK_INPUTS_PATH,
+  familiesToGenerate,
+  newestCheckpointMs,
+  sharedInputsHash,
+  type PackInputsRecord,
+} from "./lib/packInputs.mts";
 
 /**
  * Celý cyklus po noční práci jedním příkazem.
@@ -566,8 +573,21 @@ function verdictSnapshot(): Map<string, string> {
   return out;
 }
 
+function readPackInputs(): Record<string, PackInputsRecord> {
+  try {
+    return JSON.parse(readFileSync(PACK_INPUTS_PATH, "utf8")) as Record<string, PackInputsRecord>;
+  } catch {
+    // Nečitelný nebo chybějící záznam znamená „nevím", a tedy generovat všechno.
+    // Je to ta bezpečná strana: přeskočená rodina, která se změnit měla, je
+    // tiše zastaralý obsah u hráče; zbytečně vyrobená stojí minuty.
+    return {};
+  }
+}
+
 async function generateAll(list: readonly string[], label: string): Promise<void> {
   const { lanes, heapMb, freeGb } = laneBudget();
+  const sharedHash = sharedInputsHash();
+  const packInputs = readPackInputs();
   const heapFor = (street: string): number => heapMb.get(street) ?? LANE_HEAP_CEILING_MB;
   // Prázdný řádek zvlášť, ne `\n` v šabloně: přes vrstvy escapování se v tomhle
   // projektu zpětné lomítko ztratilo dnes už podruhé a stane se z něj skutečný
@@ -601,16 +621,70 @@ async function generateAll(list: readonly string[], label: string): Promise<void
   const queue: string[] = BY_NEED.filter((street) => streetsWanted.has(street));
   /** Čas na ulici - jediné číslo, kterým se dá paralelizace obhájit nebo vyvrátit. */
   const spent = new Map<string, number>();
+  /*
+   * Čas po rodinách, ne jen součet za ulici.
+   *
+   * Součet lhal o rozložení: fáze hlásila „flop 8972 s" a vypadalo to na
+   * sedmdesát rodin po dvou minutách. Pravda z 7. 10. 2026 byla, že **jedna
+   * rodina** stála 112,5 min a ostatních čtrnáct dohromady 26. Kdyby fáze
+   * tiskla nejdražší rodinu, bylo by to vidět týdny předtím, než jsem to našel
+   * z časů zápisu souborů.
+   */
+  const slowest: { street: string; family: string; seconds: number }[] = [];
 
   async function lane(): Promise<void> {
     for (;;) {
       const street = queue.shift();
       if (street === undefined) return;
       const started = Date.now();
-      for (const family of list) {
+      /*
+       * Generuje se jen to, co se mohlo změnit.
+       *
+       * Stará brána („ulice jen když noc něco dosolvila") porovnávala nejnovější
+       * checkpoint **kdekoli** s nejnovějším packem té ulice, takže jedna nová
+       * deska přegenerovala všech 54 rodin. Změřeno 7. 10. 2026: z 138 minut
+       * fáze padlo **112,5 na jednu rodinu**, `..._100BB_SB_BB_SRP_OOP_CBET_HIGHSPR`,
+       * jejíchž 32 checkpointů (6 GB) je z 27. 7. a nikdo se jich nedotkl.
+       * Vyráběl se bajt za bajt tentýž pack, každé ráno.
+       *
+       * Rozhoduje otisk sdílených vstupů a čas checkpointů té jedné rodiny, ne
+       * čas zápisu: tabulku velikostí sázek cyklus přepisuje každé ráno, takže
+       * podle času by se nepřeskočilo nikdy nic.
+       */
+      const decision = familiesToGenerate({
+        street,
+        families: list,
+        checkpointRoot: CHECKPOINT_ROOT,
+        packDir: STREET_PACK_DIR[street] ?? "",
+        shared: sharedHash,
+        record: packInputs,
+      });
+      if (decision.skipped.length > 0) {
+        console.log(`[${label}] ${street}: generuji ${decision.generate.length} z ${list.length} rodin,`
+          + ` ${decision.skipped.length} má pack z týchž vstupů`);
+      } else {
+        console.log(`[${label}] ${street}: generuji všech ${list.length} rodin - ${decision.reason}`);
+      }
+      for (const family of decision.generate) {
         const args = [`--family=${family}`, "--write", ...(withEv && street === "river" ? ["--ev"] : [])];
+        const familyStarted = Date.now();
         try {
           const out = await runAsync(`mtt:${street}-pack`, args, heapFor(street));
+          slowest.push({ street, family, seconds: Math.round((Date.now() - familyStarted) / 1000) });
+          // Záznam až **po** úspěchu, a jen po něm: rodina, která spadla nebo
+          // byla odmítnuta, se příště musí zkusit znovu. Zapisovat před během
+          // by z každého pádu udělalo trvale přeskočenou rodinu.
+          //
+          // Zápis celého souboru z pruhu je tu v pořádku, i když u manifestu by
+          // nebyl (viz `generateAll` o dvou procesech nad touž ulicí): pruhy
+          // jsou **async úlohy jednoho procesu** a sdílejí tenhle jeden objekt,
+          // takže si nemají co přepsat. Kdyby se z pruhů kdy staly procesy,
+          // tohle je druhé místo, které se musí předělat.
+          packInputs[`${street}:${family}`] = {
+            shared: sharedHash,
+            checkpointMs: newestCheckpointMs(CHECKPOINT_ROOT, family),
+          };
+          writeFileSync(PACK_INPUTS_PATH, `${JSON.stringify(packInputs, null, 2)}\n`, "utf8");
         // **Jen rozpočet chunku.** V generátorech je „vynecháno" ve čtyřech
         // různých hláškách a první verze tohohle počitadla je sečetla všechny -
         // vyšlo 1 969 746 riverů, což je nesmysl: jedna rodina jich hlásí 75.
@@ -651,6 +725,12 @@ async function generateAll(list: readonly string[], label: string): Promise<void
     + (crashed > 0 ? `, ${crashed} SPADLO NA HALDĚ` : "")
     + `; ${STREETS.map((street) => `${street} ${spent.get(street) ?? 0} s`).join(", ")}`,
   );
+  // Tři nejdražší rodiny, ať je koncentrace vidět v logu a ne až z časů souborů.
+  const worst = [...slowest].sort((left, right) => right.seconds - left.seconds).slice(0, 3);
+  if (worst.length > 0 && worst[0].seconds >= 60) {
+    console.log(`[${label}] nejdražší rodiny: `
+      + worst.map((row) => `${row.family}/${row.street} ${(row.seconds / 60).toFixed(1)} min`).join(", "));
+  }
   const lost = [...dropped].filter(([, count]) => count > 0);
   if (lost.length > 0) {
     console.log(
@@ -731,8 +811,14 @@ if (!write) {
    */
   try {
     const cost = await runAsync("mtt:board-cost", ["--write"], 1024);
-    const line = cost.split("\n").find((row) => /^\s*\d+bb/.test(row))?.trim();
-    console.log(`cena desky přeměřena${line === undefined ? "" : ` (${line})`}`);
+    // Všechny hloubky, ne první řádek. Ráno 7. 10. 2026 se vypsalo jen 25 bb -
+    // tedy jediná hloubka, která se neměnila - a to, že 40 bb po noci vyskočilo
+    // z 19,3 na 22,1 a strop z 60 na 90, v logu nebylo vidět vůbec.
+    const rows = cost.split("\n")
+      .map((row) => /^\s*(\d+bb)\s+(\d+)\s+([\d.]+)/.exec(row))
+      .filter((match): match is RegExpExecArray => match !== null)
+      .map((match) => `${match[1]} ${match[3]} min z ${match[2]} desek`);
+    console.log(`cena desky přeměřena: ${rows.length === 0 ? "bez řádků" : rows.join(", ")}`);
   } catch (error) {
     console.log(`POZOR: cenu desky se přeměřit nepodařilo (${String(error).slice(0, 120)})`);
     console.log("  Runner i hlídač pojedou podle dosavadní tabulky; hlídač to pozná.");

@@ -453,14 +453,31 @@ add("žádná rodina není zaseknutá na spadlé desce", stuck.length === 0,
 const CYCLE_LOG = "artifacts/after-night-turn-ev.log";
 const CYCLE_START = "Cyklus po noční práci";
 const CYCLE_END = "Necommitováno schválně";
+/*
+ * ...a **běžící cyklus není mrtvý cyklus.**
+ *
+ * Tohle je přesně ta záměna, kterou jsem 6. 10. 2026 udělal čtyřikrát za jedno
+ * dopoledne: log končil uprostřed fáze, tak jsem tvrdil, že cyklus umřel, visí
+ * nebo stojí - a každé z těch tvrzení vyvrátilo měření, protože cyklus celou
+ * dobu pracoval (83 minut CPU, +27 s za 30 s). Rozdíl mezi „log končí uprostřed,
+ * protože proces umřel" a „log končí uprostřed, protože proces zrovna píše", se
+ * z logu přečíst **nedá**; ví to jen Plánovač.
+ *
+ * Bez tohohle se hlídač ptal v devět ráno, jestli cyklus dobral, a červenal
+ * pokaždé, když ještě běžel - tedy na věc, která je v pořádku. Hlídač, který
+ * křičí na normální stav, přestane být čtený.
+ */
+const CYCLE_TASK = "PKRTrainer-After-Night-TurnEv";
 if (!existsSync(CYCLE_LOG)) {
   add("poslední ranní cyklus dobral", false, "log chybí", `blok končí „${CYCLE_END}“`);
 } else {
   const log = readFileSync(CYCLE_LOG, "utf8");
   const lastRun = log.slice(log.lastIndexOf(CYCLE_START));
-  add("poslední ranní cyklus dobral", lastRun.includes(CYCLE_END),
-    lastRun.includes(CYCLE_END) ? "ano" : "skončil uprostřed, bez ověření",
-    `blok končí „${CYCLE_END}“`);
+  const finished = lastRun.includes(CYCLE_END);
+  const running = powershell(`(Get-ScheduledTask -TaskName '${CYCLE_TASK}').State`) === "Running";
+  add("poslední ranní cyklus dobral", finished || running,
+    finished ? "ano" : running ? "ještě běží, log zatím bez konce" : "skončil uprostřed, bez ověření",
+    `blok končí „${CYCLE_END}“, nebo úloha ještě běží`);
 }
 
 console.log("Připravenost noci 21:00-07:00");

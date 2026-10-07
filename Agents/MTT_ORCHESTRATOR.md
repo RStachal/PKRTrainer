@@ -441,6 +441,65 @@ níž, se hlásí jako ztrátová, i když všechny ostatní brány svítí zele
      tolik, kolik je rodin.
    - **Rozhodnutí o těch dvou rodinách je rozpočtové**, ne technické: vlastní
      dlouhý běh v noci (16 jader proti denním 3), nebo tabulku nechat zastaralou.
+     Od 7. 10. je k tomu ale druhé číslo, viz níž: ta jedna rodina stojí
+     **112 minut každého rána** i bez fáze EV.
+
+   ### 7. 10.: největší nalezené plýtvání bylo v ranním cyklu, ne v noci
+
+   Vrstva 8 se dívala na fázi EV a na noc. Měření ranního cyklu, které z toho
+   vypadlo, je ale dražší než obojí:
+
+   | rodina | čas generování flopového packu |
+   |---|---|
+   | `mtt9-100bb-sb-bb-srp-oop-cbet-highspr` | **112,5 min** |
+   | `mtt9-100bb-co-bb-srp-cbet-highspr` | 8,3 min |
+   | `mtt9-25bb-hj-sb-srp` | 5,5 min |
+   | ostatních jedenáct dohromady | asi 12 min |
+
+   Checkpointy té první rodiny jsou z **27. 7. 2026**, je jich 32 a mají kolem
+   6 GB. Cyklus je přečetl celé, aby vyrobil bajt za bajt tentýž pack - a dělal
+   to **každé ráno**. Za posledních deset ranních cyklů je to kolem osmnácti
+   hodin za nic; samotná fáze EV spálila 27,5 hodiny za delší dobu.
+
+   Dvě příčiny, obě opravené:
+
+   - **Brána byla na správné místo a ve špatné granularitě.** Ptala se „je
+     nejnovější checkpoint **kdekoli** novější než nejnovější pack **té ulice**",
+     takže jedna nová deska v jedné rodině přegenerovala všech 54. Teď se to
+     ptá po rodinách, a rozhoduje **otisk obsahu** sdílených vstupů plus čas
+     checkpointů té rodiny - ne čas zápisu, protože tabulku velikostí sázek
+     cyklus přepisuje každé ráno, takže podle času by se nepřeskočilo nikdy nic.
+   - **Součet za ulici skrýval rozložení.** Fáze hlásila „flop 8972 s" a vypadalo
+     to na sedmdesát rodin po dvou minutách. Kdyby tiskla nejdražší rodinu, bylo
+     by to vidět týdny předtím, než jsem to našel z časů zápisu souborů.
+
+   Na kterou stranu se tahle brána smí mýlit: přeskočená rodina, která se změnit
+   měla, je **tiše zastaralý obsah u hráče** - nejdražší vada, jakou projekt zná.
+   Zbytečně vyrobená rodina stojí minuty. Proto se při každé nejistotě generuje,
+   a je na to jedenáct testů.
+
+   ### Co tabulka ceny udělala sama, bez zásahu
+
+   Noc 6.-7. 10. přidala 18 desek na 40 bb a ranní cyklus cenu přeměřil:
+
+   | | před nocí | po noci |
+   |---|---|---|
+   | 40 bb medián | 19,3 min (17 desek) | **22,1 min** (35 desek) |
+   | 40 bb p90 | 28,6 | **40,3** |
+   | 40 bb strop | 60 | **90** |
+   | 50 bb plán (extrapolace) | 39,8 | **45,6** |
+
+   To je ta vrstva při práci. Má to ale důsledek, který jsem nepředvídal:
+   **jakmile strop hloubky dojde na strop stropů (90), přestane být žebřík
+   žebříkem.** `min(90 + 30, 90)` je pořád 90, takže stupně 0 a 1 jsou od 7. 10.
+   u 40 bb i 50 bb shodné - `(90, 0.5)` a `(90, 0.5)` - a deska spadlá na stupni 0
+   by se zkoušela znovu s úplně stejným povolením. Devadesát minut okna za nic.
+   Runner proto **přeskakuje stupeň, který nedá nic navíc** (strop ani přesnost).
+
+   Co z toho zůstává vlastníkovi: **strop stropů 90 minut u 50 bb nevydrží.**
+   Extrapolované p90 je 83, takže kolem desetiny desek na strop narazí a stupeň 2
+   už dá jen volnější přesnost, ne víc času. Buď se strop pro hlubší zvedne, nebo
+   se počítá s tím, že se část desek na 50 bb nedosolví.
 
 ## Co zůstává mimo dosah stroje
 

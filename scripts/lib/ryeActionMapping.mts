@@ -430,6 +430,22 @@ export function bucketForSource(stackBB: number): number | undefined {
   return Math.abs(bucket - stackBB) <= BUCKET_TOLERANCE * bucket ? bucket : undefined;
 }
 
+/**
+ * Jeden soupeř před hrdinou, se zkratkou zdroje **i** jejím přeložením.
+ *
+ * Obojí, ne jen přeložené jméno, a je to podstatné: `SEAT_ALIASES` mapuje `EP`
+ * na `UTG`, což je správně u **otvírače** a špatně u **dorovnávajícího**. Vlastník
+ * to 1. 10. 2026 v odpovědi T4 řekl přesně: „`EP` jako dorovnávající při otvírači
+ * UTG je UTG+1 nebo UTG+2". Skupina se tedy nesmí přeložit tady, kde není vidět,
+ * kdo otevřel - rozhoduje se až tam, kde se zná celá situace.
+ */
+export interface RyeVillain {
+  /** Zkratka zdroje, jak stojí ve jméně souboru (`EP`, `MP`, `CO`, `BU`). */
+  source: string;
+  /** Sedačka produktu, když zkratka jmenuje jedno místo; u skupiny `undefined`. */
+  seat?: string;
+}
+
 export interface RyeSituation {
   /** Sedačka hrdiny, slovníkem produktu. */
   seat: string;
@@ -437,6 +453,86 @@ export interface RyeSituation {
   stackBB: number;
   /** Kolik soupeřů je ve hře před hrdinou; víc než jeden znamená multiway. */
   villains: number;
+  /**
+   * Kdo otevřel - první jmenovaný soupeř za `vs`.
+   *
+   * Chybí tam, kde jméno soupeře nejmenuje (push/fold, otevření), a tam, kde se
+   * počet soupeřů odvodil jinak než ze jmen.
+   */
+  opener?: RyeVillain;
+  /**
+   * Kdo otevření dorovnal, v pořadí ze jména souboru.
+   *
+   * **Seznam, ne jedno pole**, a vlastník na to v T4 výslovně upozornil: dvě SQU
+   * stránky mají dorovnávající dva (`SQU-40BBMais-BB-vs-CO-BU-SB`). Prázdný
+   * seznam znamená „otevření bez dorovnání", tedy ne squeeze spot.
+   *
+   * Proč se to do 7. 10. 2026 nečetlo: parser počítal soupeře a jejich **jména
+   * zahodil**. Změřeno na mřížkách z 1. 10.: BTN na 100 bb squeezuje 67 kombinací
+   * proti flatu z EP, 84 proti MP a 102 proti CO; BB na 40 bb callne 506 proti
+   * EP/MP, 644 proti CO/BU a 751 proti SB. Jedna mřížka pro všechny tři by učila
+   * squeezovat do nejtěsnějšího flatu o polovinu víc, než zdroj říká.
+   */
+  flatCallers?: readonly RyeVillain[];
+}
+
+/**
+ * Zkratky, které jmenují **skupinu sedaček** a ne místo u stolu.
+ *
+ * `EP` je v `SEAT_ALIASES` kvůli hrdinovi (tam je to „ta nejranější"), ale `LP`
+ * tam schválně nepřidávám: `SEAT_ALIASES` čte i sedačku hrdiny a dát mu zkratku,
+ * kterou zdroj pro hrdinu nepoužívá, by rozšířilo něco jiného, než je potřeba.
+ * Tahle sada platí **jen pro soupeře**.
+ *
+ * Že `LP` chybělo, se našlo 7. 10. 2026 při čtení jmen pro 4a: je v **devíti**
+ * jménech korpusu (`MUL-40BB-BB-vs-MP_LP`, `SQU-40BBMais-BU-vs-MP-LP`…) a jako
+ * nerozpoznaný token se zahazovalo. Vlastník ho v T4 jmenuje mezi skupinami,
+ * které má drill rozdat jako konkrétní sedačku: „(EP/MP, CO/BU, LP)".
+ */
+const VILLAIN_GROUPS = new Set(["EP", "LP"]);
+
+/**
+ * Slovo, kterým zdroj nabízí **dvě různá rozestavení** v jednom jménu.
+ *
+ * `SQU-40BBMais-MP-vs-EP-EP-or-EP-MP` znamená „EP+EP **nebo** EP+MP", tedy dvě
+ * situace na jedné stránce, ne čtyři soupeře. Takové jméno seznam dorovnávajících
+ * nedostane: vybrat jedno z těch dvou by bylo rozhodnutí za zdroj, a vlastník
+ * přesně takovou volbu v rozhodnutí 4 odmítl (možnost b).
+ */
+const ALTERNATIVE_SETUP = /^or$/i;
+
+/** Zkratka zdroje na soupeře: skupina si přeložení nenechá udělat tady. */
+function villainOf(source: string): RyeVillain {
+  const upper = source.toUpperCase();
+  if (VILLAIN_GROUPS.has(upper) || SEAT_GROUP_ALIASES.has(upper)) return { source: upper };
+  const seat = SEAT_ALIASES.get(upper);
+  return seat === undefined ? { source: upper } : { source: upper, seat };
+}
+
+function namesSeat(token: string): boolean {
+  return SEAT_ALIASES.has(token.toUpperCase()) || VILLAIN_GROUPS.has(token.toUpperCase());
+}
+
+/**
+ * Soupeři ze jmen za `vs`, v pořadí: první je otvírač, zbytek dorovnali.
+ *
+ * Pořadí ze jména se bere jako pořadí akce, a je to tak u zdroje důsledné:
+ * `BB-vs-EP_MP` je otevření z EP a dorovnání z MP, nikdy naopak. Slova, která
+ * sedačku nejmenují (`OPEN`, `Fish`, `Flat`, `Mais`, `Call`), se vynechávají.
+ *
+ * Seznam vyjde `undefined` tam, kde jméno nabízí dvě rozestavení - viz
+ * `ALTERNATIVE_SETUP`. Je to rozdíl proti prázdnému seznamu: prázdný znamená
+ * „otevření nikdo nedorovnal", `undefined` znamená „ze jména se to nepozná".
+ */
+function villainsFromTokens(tokens: readonly string[]): {
+  opener?: RyeVillain;
+  flatCallers?: RyeVillain[];
+} {
+  if (tokens.some((token) => ALTERNATIVE_SETUP.test(token))) return {};
+  const named = tokens.filter(namesSeat).map(villainOf);
+  return named.length === 0
+    ? { flatCallers: [] }
+    : { opener: named[0], flatCallers: named.slice(1) };
 }
 
 /**
@@ -520,7 +616,14 @@ export function situationFromFileName(name: string): RyeSituation | undefined {
     // produkt v tomhle kontextu ptá.
     const after = stem.slice(stem.toLowerCase().indexOf('-vs-') + 4).split('-');
     const villains = after.filter((part) => SEAT_ALIASES.has(part.toUpperCase())).length;
-    return { seat, stackBB: Number(squeeze[2] ?? squeeze[1]), villains: Math.max(2, villains) };
+    const named = villainsFromTokens(after);
+    return {
+      seat,
+      stackBB: Number(squeeze[2] ?? squeeze[1]),
+      villains: Math.max(2, villains),
+      ...(named.opener === undefined ? {} : { opener: named.opener }),
+      ...(named.flatCallers === undefined ? {} : { flatCallers: named.flatCallers }),
+    };
   }
   // Tvar 1: sedačka se svou hloubkou, případně dvě takové.
   const paired = [...stem.matchAll(/(utg1|utg2|utg|ep|mp|lj|hj|co|bu|btn|sb|bb)(\d+)bb/gi)];
@@ -542,17 +645,46 @@ export function situationFromFileName(name: string): RyeSituation | undefined {
     }
     const seat = SEAT_ALIASES.get(label);
     if (seat === undefined) return undefined;
-    return { seat, stackBB, villains: Math.max(1, paired.length - 1) };
+    // Tenhle tvar jmenuje hrdinu první a ostatní za ním, každého s vlastní
+    // hloubkou (`ICM-btn35bb-co60bb`): hrdina BTN, soupeř CO. Otvírač je tedy
+    // druhá sedačka v pořadí, ne první.
+    const named = villainsFromTokens(paired.slice(1).map((match) => match[1]));
+    return {
+      seat,
+      stackBB,
+      villains: Math.max(1, paired.length - 1),
+      ...(named.opener === undefined ? {} : { opener: named.opener }),
+      ...(named.flatCallers === undefined ? {} : { flatCallers: named.flatCallers }),
+    };
   }
   // Tvar 2: společná hloubka vpředu, pak `HRDINA-vs-SOUPEŘI`.
   const depth = /(?:^|[-_])(\d+)BB(?:[-_]|$)/i.exec(stem);
-  const versus = /(?:^|[-_])(UTG1|UTG2|UTG|EP|MP|LJ|HJ|CO|BU|BTN|SB|BB)[-_]vs[-_]([A-Za-z0-9_+]+)/i.exec(stem);
+  /*
+   * Za `vs` se čte **i pomlčka**, ne jen podtržítko.
+   *
+   * `MUL-40BB-BB-vs-EP_CO-BTN` míchá oba oddělovače: EP otevřel, CO a BTN
+   * dorovnali, tedy tři soupeři. Do 7. 10. 2026 tu stálo `[A-Za-z0-9_+]+`, tedy
+   * bez pomlčky, takže se čtení zastavilo na `EP_CO` a `BTN` zmizel. V korpusu
+   * má oba oddělovače **dvanáct** jmen a vycházeli z nich dva soupeři místo tří -
+   * tedy chyba v tom, jestli je spot multiway, i v tom, kdo dorovnal.
+   */
+  const versus = /(?:^|[-_])(UTG1|UTG2|UTG|EP|MP|LJ|HJ|CO|BU|BTN|SB|BB)[-_]vs[-_]([A-Za-z0-9_+-]+)/i.exec(stem);
   if (depth !== null && versus !== null) {
     const seat = SEAT_ALIASES.get(versus[1].toUpperCase());
     if (seat === undefined) return undefined;
-    // `EP_MP` znamená dva soupeře, tedy multiway.
-    const villains = versus[2].split(/[_]/).filter(Boolean).length;
-    return { seat, stackBB: Number(depth[1]), villains: Math.max(1, villains) };
+    const tokens = versus[2].split(/[-_]/).filter(Boolean);
+    const named = villainsFromTokens(tokens);
+    // `EP_MP` znamená dva soupeře, tedy multiway. Počítají se **jmenovaní**:
+    // slova jako `Mais` nebo `Call` sedačku nejmenují a za soupeře se brát nemají.
+    // Proto musí `VILLAIN_GROUPS` znát `LP` - jinak by devět jmen přišlo o soupeře.
+    const villains = tokens.filter(namesSeat).length;
+    return {
+      seat,
+      stackBB: Number(depth[1]),
+      villains: Math.max(1, villains),
+      ...(named.opener === undefined ? {} : { opener: named.opener }),
+      ...(named.flatCallers === undefined ? {} : { flatCallers: named.flatCallers }),
+    };
   }
   // Tvar 3: push/fold, `PU-10bb-BU` - hloubka a hrdina, žádný soupeř.
   //

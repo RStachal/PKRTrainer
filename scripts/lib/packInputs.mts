@@ -1,0 +1,142 @@
+/**
+ * Potřebuje ta rodina vůbec přegenerovat pack?
+ *
+ * ## Proč to má vlastní soubor
+ *
+ * Ranní cyklus měl bránu „ulice jen tehdy, když noc něco dosolvila", a byla
+ * správná v záměru i špatná v granularitě: porovnávala **nejnovější checkpoint
+ * kdekoli** s **nejnovějším packem té ulice**. Jedna nová deska v jedné rodině
+ * tedy přegenerovala všech 54 rodin.
+ *
+ * Co to stálo, měřeno 7. 10. 2026 z času zápisu souborů:
+ *
+ * | rodina | čas |
+ * |---|---|
+ * | `mtt9-100bb-sb-bb-srp-oop-cbet-highspr` | **112,5 min** |
+ * | `mtt9-100bb-co-bb-srp-cbet-highspr` | 8,3 min |
+ * | `mtt9-25bb-hj-sb-srp` | 5,5 min |
+ * | ostatních jedenáct | 0,5 az 3,2 min |
+ *
+ * Checkpointy té první rodiny jsou z **27. 7. 2026**, tedy 72 dní nezměněné, a
+ * je jich 32 po 300 az 400 MB. Cyklus přečetl kolem šesti gigabajtů JSONu, aby
+ * vyrobil bajt za bajt tentýž pack - a dělal to každé ráno. Komentář u staré
+ * brány odhadoval celou fázi na 11 minut; dnes stojí 138 a z toho 112 je jedna
+ * rodina, kterou se nikdo nedotkl.
+ *
+ * ## Čím se to řídí, a proč ne časem
+ *
+ * Čas zápisu nestačí: tabulku velikostí sázek cyklus **přepisuje každé ráno**,
+ * takže by byla vždycky novější než každý pack a brána by nikdy nic nepřeskočila.
+ * Rozhoduje proto obsah - `sha1` sdílených vstupů - plus čas checkpointů té
+ * jedné rodiny. Je to táž zásada, jakou projekt zjistil u dodávky packů: počítat
+ * se musí **otisk pravidel**, ne jejich počet, protože třináct packů změnilo
+ * strategii při nezměněném počtu.
+ *
+ * ## Na kterou stranu se mýlit
+ *
+ * Přeskočená rodina, která se změnit měla, znamená **tiše zastaralý obsah u
+ * hráče** - nejdražší vada, jakou tenhle projekt zná. Zbytečně přegenerovaná
+ * rodina stojí minuty. Proto se při každé nejistotě generuje: chybějící pack,
+ * nečitelný soubor, neznámá rodina, cokoli.
+ */
+
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
+
+/** Kde leží záznam o tom, z čeho byl pack naposled postavený. Gitignorováno schválně:
+ * po čerstvém checkoutu se má vygenerovat všechno, ne věřit cizímu záznamu. */
+export const PACK_INPUTS_PATH = "artifacts/pack-inputs.json";
+
+/**
+ * Sdílené vstupy, které mění **každý** pack. Hashuje se obsah, ne čas.
+ *
+ * Tabulka velikostí sázek je data; generátory jsou kód. Obojí se do packu
+ * promítá, takže obojí musí být v otisku - jinak by změna generátoru nechala
+ * všechny packy ležet.
+ */
+export const SHARED_INPUTS: readonly string[] = [
+  "src/data/ranges/postflopBetSizing.generated.ts",
+  "scripts/buildFlopStrategyPacks.mts",
+  "scripts/buildTurnStrategyPacks.mts",
+  "scripts/buildRiverStrategyPacks.mts",
+  "scripts/lib/solvedPackBuilding.mts",
+  "scripts/lib/postflopBetActionMapping.mts",
+];
+
+export function sharedInputsHash(files: readonly string[] = SHARED_INPUTS): string {
+  const hash = createHash("sha1");
+  for (const file of files) {
+    // Chybějící soubor se do otisku zapíše jako chybějící, ne přeskočí: kdyby
+    // se přeskočil, vypadalo by jeho smazání jako „nic se nezměnilo".
+    hash.update(file);
+    hash.update(existsSync(file) ? readFileSync(file) : Buffer.from("CHYBI"));
+  }
+  return hash.digest("hex");
+}
+
+/** Čas nejnovějšího checkpointu té rodiny; 0, když žádný není. */
+export function newestCheckpointMs(checkpointRoot: string, family: string): number {
+  const raw = join(checkpointRoot, family, "raw");
+  if (!existsSync(raw)) return 0;
+  let newest = 0;
+  for (const name of readdirSync(raw)) {
+    if (!name.endsWith(".json")) continue;
+    newest = Math.max(newest, statSync(join(raw, name)).mtimeMs);
+  }
+  return newest;
+}
+
+/** `MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR` → `mtt9-100bb-sb-bb-srp-oop-cbet-highspr`. */
+export function packSlug(family: string): string {
+  return family.toLowerCase().replace(/_/g, "-");
+}
+
+export interface PackInputsRecord {
+  /** Otisk sdílených vstupů, se kterým byl pack naposled postavený. */
+  shared: string;
+  /** Čas nejnovějšího checkpointu rodiny v té chvíli. */
+  checkpointMs: number;
+}
+
+export interface SkipDecision {
+  generate: readonly string[];
+  skipped: readonly string[];
+  /** Proč se negenerovalo nic nebo naopak všechno - do logu, ať se to nemusí hádat. */
+  reason: string;
+}
+
+/**
+ * Které rodiny té ulice se mají generovat.
+ *
+ * `record` je obsah `PACK_INPUTS_PATH` (klíč `<ulice>:<rodina>`); prázdný záznam
+ * znamená „nevím", a tedy generovat všechno.
+ */
+export function familiesToGenerate(options: {
+  street: string;
+  families: readonly string[];
+  checkpointRoot: string;
+  packDir: string;
+  shared: string;
+  record: Readonly<Record<string, PackInputsRecord>>;
+}): SkipDecision {
+  const { street, families, checkpointRoot, packDir, shared, record } = options;
+  const generate: string[] = [];
+  const skipped: string[] = [];
+  for (const family of families) {
+    const previous = record[`${street}:${family}`];
+    const pack = join(packDir, `${packSlug(family)}.generated.json`);
+    const checkpointMs = newestCheckpointMs(checkpointRoot, family);
+    const unchanged = previous !== undefined
+      && previous.shared === shared
+      && previous.checkpointMs === checkpointMs
+      && checkpointMs > 0
+      && existsSync(pack);
+    if (unchanged) skipped.push(family);
+    else generate.push(family);
+  }
+  const reason = skipped.length === 0
+    ? "nic nejde přeskočit (chybí záznam, změnily se sdílené vstupy, nebo přišly desky)"
+    : `${skipped.length} rodin má pack ze týchž vstupů`;
+  return { generate, skipped, reason };
+}

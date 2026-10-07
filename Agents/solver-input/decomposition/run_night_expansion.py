@@ -215,6 +215,31 @@ def reserve_for(family: str) -> int:
     return int(reserve)
 
 
+def next_useful_level(family: str, level: int) -> int:
+    """První další stupeň, který desce dá **něco navíc**. Jinak za posledním.
+
+    ## Proč to tu je
+
+    Žebřík přidává minuty k základnímu stropu a strop stropů je 90. Jakmile
+    základní strop té hloubky na devadesát dojde, `min(90 + 30, 90)` je pořád 90
+    a stupeň přestane být stupněm: tentýž strop, tatáž přesnost, tentýž výsledek.
+
+    Změřeno 7. 10. 2026, a nebyla to budoucí starost: po noci 6.-7. 10. vyšel
+    strop pro 40 bb na 90 (p90 vzrostlo z 28,6 na 40,3), takže stupně 0 a 1 jsou
+    od té chvíle **shodné** - `(90, 0.5)` a `(90, 0.5)`. Deska spadlá na stupni 0
+    by se znovu zkoušela s úplně stejným povolením, tedy devadesát minut okna za
+    nic. U 50 bb to platí taky a tam je to dražší, protože p90 je kolem 83.
+
+    Přesnost se počítá jako rozdíl: stupeň 2 drží strop, ale povoluje 1,0 %
+    místo 0,5, a to **je** nový pokus - mělká odpověď je pořád odpověď.
+    """
+    base = caps_for(family, level)
+    for candidate in range(level + 1, len(ESCALATION)):
+        if caps_for(family, candidate) != base:
+            return candidate
+    return len(ESCALATION)
+
+
 def failure_level(checkpoint: str) -> int:
     """Kolikrát už deska spadla. 0 = čerstvá, `len(ESCALATION)` = došly stupně.
 
@@ -501,10 +526,12 @@ def main():
                     "stupeň se nespotřebovává, deska zůstává ve frontě")
                 break
             failed += 1
-            next_level = level + 1
+            next_level = next_useful_level(family, level)
             with open(checkpoint + ".failed", "w", encoding="utf-8") as handle:
                 handle.write(f"{datetime.now():%Y-%m-%d %H:%M} rc={rc} "
                              f"po {attempt} pokusech stupen={next_level}\n")
+            if next_level > level + 1:
+                log(f"  (stupeň {level + 1} by dal týž strop i přesnost, přeskakuje se)")
             if next_level < len(ESCALATION):
                 next_cap, next_accuracy = caps_for(family, next_level)
                 log(f"  SELHALO po {minutes:.1f} min (rc={rc}); příští noc "

@@ -105,6 +105,68 @@ describe("slovník importu ranží", () => {
     expect(situationFromFileName("PU-10bb-BB.html")).toBeUndefined();
   });
 
+  it("jméno nese i toho, kdo otevření dorovnal - ne jen kolik jich bylo", () => {
+    /*
+     * Rozhodnutí 4a z 1. 10. 2026. Do 7. 10. parser soupeře **počítal a jejich
+     * jména zahodil**, takže se mřížky lišící se jen dorovnávajícím srazily
+     * v jedné buňce (7 z 8 srážek) a která přistane, neurčovalo žádné pravidlo.
+     *
+     * Že na dorovnávajícím záleží, je změřené na mřížkách z 1. 10.: BTN na
+     * 100 bb squeezuje 67 kombinací proti flatu z EP, 84 proti MP a 102 proti CO.
+     */
+    const mul = situationFromFileName("MUL-40BB-BTN-vs-EP_MP.html");
+    expect(mul?.opener).toEqual({ source: "EP" });
+    expect(mul?.flatCallers).toEqual([{ source: "MP", seat: "LJ" }]);
+
+    // `EP` zůstává **nepřeložené**: je to skupina, a vlastník v T4 upozornil, že
+    // „EP jako dorovnávající při otvírači UTG je UTG+1 nebo UTG+2". Přeložit ji
+    // tady, kde není vidět, kdo otevřel, by dalo dorovnávajícímu sedačku
+    // otvírače. `MP` skupina není, takže se přeloží (zdroj jmenuje devět sedaček).
+    const squeeze = situationFromFileName("SQU-40BBMais-HJ-vs-EP-MP.html");
+    expect(squeeze?.opener).toEqual({ source: "EP" });
+    expect(squeeze?.flatCallers).toEqual([{ source: "MP", seat: "LJ" }]);
+
+    // Dva dorovnávající, proto je klíč seznam a ne jedno pole (T4, bod 1).
+    const two = situationFromFileName("SQU-40BBMais-BB-vs-CO-BU-SB.html");
+    expect(two?.opener).toEqual({ source: "CO", seat: "CO" });
+    expect(two?.flatCallers).toEqual([
+      { source: "BU", seat: "BTN" },
+      { source: "SB", seat: "SB" },
+    ]);
+
+    // Otevření bez dorovnání není squeeze spot: prázdný seznam to říká.
+    const heads = situationFromFileName("F3B-100BB-BTN-vs-UTG.html");
+    expect(heads?.opener).toEqual({ source: "UTG", seat: "UTG" });
+    expect(heads?.flatCallers).toEqual([]);
+
+    // Tvar s hloubkou u sedačky jmenuje hrdinu první, takže otvírač je druhý.
+    const paired = situationFromFileName("ICM-btn35bb-co60bb.html");
+    expect(paired?.seat).toBe("BTN");
+    expect(paired?.opener).toEqual({ source: "CO", seat: "CO" });
+    expect(paired?.flatCallers).toEqual([]);
+  });
+
+  it("jméno s oběma oddělovači nesmí o dorovnávajícího přijít", () => {
+    /*
+     * `MUL-40BB-BB-vs-EP_CO-BTN` míchá `_` a `-`: EP otevřel, CO a BTN dorovnali,
+     * tedy **tři** soupeři. Nalezeno 7. 10. 2026 při čtení jmen pro 4a - výraz
+     * tvaru 2 bral za `vs` jen `[A-Za-z0-9_+]+`, tedy bez pomlčky, takže se
+     * zastavil na `EP_CO` a `BTN` zmizel. Vycházeli z toho dva soupeři místo tří.
+     *
+     * Na počtu soupeřů stojí, jestli je spot multiway, a na seznamu
+     * dorovnávajících stojí, kterou mřížku hráč dostane - takže to byla tichá
+     * chyba ve dvou osách zároveň.
+     */
+    const mixed = situationFromFileName("MUL-40BB-BB-vs-EP_CO-BTN.html");
+    expect(mixed?.seat).toBe("BB");
+    expect(mixed?.villains).toBe(3);
+    expect(mixed?.opener).toEqual({ source: "EP" });
+    expect(mixed?.flatCallers).toEqual([
+      { source: "CO", seat: "CO" },
+      { source: "BTN", seat: "BTN" },
+    ]);
+  });
+
   it("otevírací stránka: každá barva je otevření s plánem proti 3betu v poznámce, OpenJam je shove, limp/raise SB se nevydá", () => {
     // Nabídka „Openraising" (rozhodnutí 6a, 22. 9. 2026): barva říká, co
     // s rukou po 3betu, ne jestli se otevírá - otevírá se každá barvená.
