@@ -18,10 +18,25 @@
  * | ostatních jedenáct | 0,5 az 3,2 min |
  *
  * Checkpointy té první rodiny jsou z **27. 7. 2026**, tedy 72 dní nezměněné, a
- * je jich 32 po 300 az 400 MB. Cyklus přečetl kolem šesti gigabajtů JSONu, aby
- * vyrobil bajt za bajt tentýž pack - a dělal to každé ráno. Komentář u staré
- * brány odhadoval celou fázi na 11 minut; dnes stojí 138 a z toho 112 je jedna
- * rodina, kterou se nikdo nedotkl.
+ * je jich 32 po 300 az 400 MB. Vyráběl se z nich bajt za bajt tentýž pack, a to
+ * každé ráno - tolik platí a je to důvod, proč tahle brána existuje.
+ *
+ * ## Těch 112 minut ale **nebyla cena té rodiny**, a mýlil jsem se
+ *
+ * Ráno 8. 10. 2026 vyrobil cyklus tutéž rodinu z týchž checkpointů za **5,3 min**
+ * a celá fáze trvala 45 minut místo 3 h 23. Brána přitom nepřeskočila nic (noc
+ * změnila tabulku velikostí sázek, takže se otisk sdílených vstupů změnil a
+ * přegenerovalo se všech 58 rodin).
+ *
+ * Rozdíl byl v **paměti**: 7. 10. měl cyklus volných 8,5 GB a haldu na flop
+ * 4 096 MB, 8. 10. volných 16,4 GB a haldu 6 587 MB. Těch 112 minut bylo
+ * hladovění po haldě, ne velikost checkpointů - `laneBudget()` haldu škáluje
+ * podle volné paměti, takže cizí proces na stroji zdraží ranní cyklus
+ * dvacetinásobně.
+ *
+ * Brána tím neztrácí smysl (viz fáze 3 téhož rána: „generuji 0 z 4 rodin, 4 má
+ * pack z týchž vstupů"), jen **nebyla to ona, co ušetřilo ty dvě a půl hodiny**.
+ * Skutečná páka je volná paměť v době běhu a to je zatím neměřené.
  *
  * ## Čím se to řídí, a proč ne časem
  *

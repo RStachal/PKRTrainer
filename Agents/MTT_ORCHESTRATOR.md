@@ -492,9 +492,34 @@ níž, se hlásí jako ztrátová, i když všechny ostatní brány svítí zele
    | ostatních jedenáct dohromady | asi 12 min |
 
    Checkpointy té první rodiny jsou z **27. 7. 2026**, je jich 32 a mají kolem
-   6 GB. Cyklus je přečetl celé, aby vyrobil bajt za bajt tentýž pack - a dělal
-   to **každé ráno**. Za posledních deset ranních cyklů je to kolem osmnácti
-   hodin za nic; samotná fáze EV spálila 27,5 hodiny za delší dobu.
+   6 GB. Vyráběl se z nich bajt za bajt tentýž pack, a to každé ráno.
+
+   #### Příčinu jsem ale určil špatně (opraveno 8. 10. 2026)
+
+   Napsal jsem, že těch 112 minut stojí velikost checkpointů. Ráno 8. 10. vyrobil
+   cyklus **tutéž rodinu z týchž checkpointů za 5,3 minuty** a celá fáze trvala
+   45 minut místo 3 h 23. Brána po rodinách přitom nepřeskočila nic: noc změnila
+   tabulku velikostí sázek, takže se otisk sdílených vstupů změnil a
+   přegenerovalo se všech 58 rodin.
+
+   Rozdíl byl v **paměti**:
+
+   | | 7. 10. | 8. 10. |
+   |---|---|---|
+   | volná paměť při běhu | 8,5 GB | 16,4 GB |
+   | halda na flop (`laneBudget`) | 4 096 MB | 6 587 MB |
+   | nejdražší rodina | 112,5 min | **5,3 min** |
+   | celá fáze 1 | 3 h 23 min | **45 min** |
+
+   Těch 112 minut bylo **hladovění po haldě**, ne velikost dat. `laneBudget()`
+   haldu škáluje podle volné paměti, takže cizí proces na stroji (virtuál a
+   Obsidian drží 13 GB, bod 244) zdraží ranní cyklus dvacetinásobně.
+
+   Brána po rodinách tím smysl neztrácí - fáze 3 téhož rána hlásí „generuji 0 ze
+   4 rodin, 4 má pack z týchž vstupů" - ale **nebyla to ona, co ušetřilo ty dvě
+   a půl hodiny**. Skutečná páka je volná paměť v době běhu, a ta je zatím
+   neměřená: cyklus ji jen přečte a podle ní škáluje, nikde se nehlásí, že právě
+   kvůli ní bude dnešní ráno dvacetkrát dražší.
 
    Dvě příčiny, obě opravené:
 

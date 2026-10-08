@@ -370,6 +370,14 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     bigIsAllIn: true,
     rule: "LEGACY_CHIP_THRESHOLD",
   },
+  MTT9_40BB_UTG_2_CO_SRP: {
+    potChips: 550,
+    effectiveStackChips: 3750,
+    smallPct: [],
+    bigPct: [33, 50],
+    bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
+  },
   MTT9_40BB_UTG_2_HJ_SRP: {
     potChips: 550,
     effectiveStackChips: 3750,
@@ -395,6 +403,22 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     rule: "LEGACY_CHIP_THRESHOLD",
   },
   MTT9_40BB_UTG_BTN_SRP: {
+    potChips: 550,
+    effectiveStackChips: 3750,
+    smallPct: [],
+    bigPct: [33, 50],
+    bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
+  },
+  MTT9_40BB_UTG_HJ_SRP: {
+    potChips: 550,
+    effectiveStackChips: 3750,
+    smallPct: [],
+    bigPct: [33, 50],
+    bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
+  },
+  MTT9_40BB_UTG_LJ_SRP: {
     potChips: 550,
     effectiveStackChips: 3750,
     smallPct: [],
