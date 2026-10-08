@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 
 import { escalationSteps, failureLevel } from "./lib/nightEscalation.mts";
+import { judgeCycleCost, readCycleCost, recordCycleCost } from "./lib/cycleCost.mts";
 import {
   PACK_INPUTS_PATH,
   familiesToGenerate,
@@ -585,6 +586,7 @@ function readPackInputs(): Record<string, PackInputsRecord> {
 }
 
 async function generateAll(list: readonly string[], label: string): Promise<void> {
+  const startedAll = Date.now();
   const { lanes, heapMb, freeGb } = laneBudget();
   const sharedHash = sharedInputsHash();
   const packInputs = readPackInputs();
@@ -725,6 +727,46 @@ async function generateAll(list: readonly string[], label: string): Promise<void
     + (crashed > 0 ? `, ${crashed} SPADLO NA HALDĚ` : "")
     + `; ${STREETS.map((street) => `${street} ${spent.get(street) ?? 0} s`).join(", ")}`,
   );
+  /*
+   * Kolik ta fáze stála na rodinu, proti tomu, co už je naměřené.
+   *
+   * ## Proč to tu je
+   *
+   * Dvakrát za dva dny jsem u téhle fáze určil příčinu drahoty špatně, a oba
+   * závěry pak vyvrátilo měření. Nejdřív jsem napsal, že jedna rodina stojí
+   * 112,5 min kvůli velikosti checkpointů; pak že kvůli malé haldě. Změřeno
+   * 8. 10. 2026 přímo: táž rodina z týchž dat stojí **121 s při haldě 4 096 MB
+   * a 125 s při 6 587 MB** - halda to nevysvětluje a velikost dat taky ne.
+   *
+   * Co zbývá, je vliv zvenčí: fáze 1 trvala 1 589, 1 692 a 1 672 s v ránech,
+   * kdy jsem na stroji nepracoval, a 8 972 a 12 194 s v ránech, kdy jsem vedle
+   * ní od devíti pouštěl měření a brány. Je to korelace, ne důkaz - a právě
+   * proto tu tenhle řádek je. Příště nebude třeba hádat: fáze sama řekne, že je
+   * dnes řádově dražší než obvykle, a to je signál „něco mi bere stroj", ne
+   * „ta rodina je drahá".
+   *
+   * Historie je v `artifacts/cycle-cost.json`, tedy mimo git: je to měření tohohle
+   * stroje, ne obsah projektu.
+   */
+  const verdict = judgeCycleCost({
+    label,
+    families: list.length,
+    seconds: (Date.now() - startedAll) / 1000,
+    history: readCycleCost(),
+  });
+  console.log(`[${label}] ${verdict.line}`);
+  if (verdict.alarming) {
+    console.log(`[${label}] POZOR: ${verdict.ratio?.toFixed(1)}x dražší než obvykle.`
+      + " Změřeno, že to nebývá vada obsahu ani haldy - nejspíš stroj dělá něco vedle.");
+  }
+  recordCycleCost({
+    at: new Date().toISOString().slice(0, 16),
+    label,
+    families: list.length,
+    perFamily: verdict.perFamily,
+    freeGb,
+  });
+
   // Tři nejdražší rodiny, ať je koncentrace vidět v logu a ne až z časů souborů.
   const worst = [...slowest].sort((left, right) => right.seconds - left.seconds).slice(0, 3);
   if (worst.length > 0 && worst[0].seconds >= 60) {
