@@ -240,15 +240,30 @@ function deriveSeats(
   if (vsIdx >= 0 && vsIdx !== heroIdx) {
     const facing = spot.tableState.facing;
     if ((facing === "OPEN") && vsIdx < heroIdx) {
-      // Před otvíračem všichni složili; mezi ním a hrdinou dorovnali ti, které
-      // spot počítá (`callsBefore`), zbytek složil; za hrdinou se ještě hraje.
+      /*
+       * Před otvíračem všichni složili; mezi ním a hrdinou dorovnali ti, které
+       * spot počítá, zbytek složil; za hrdinou se ještě hraje.
+       *
+       * Když spot **jmenuje** dorovnávající (osa 4a), kreslí se call na ně, ne
+       * na sedačky těsně za otvíračem. Bez toho by stůl u záznamu `vsUTG @CO`
+       * nakreslil call na UTG+1 - tedy na jinou sedačku, než pro kterou ta range
+       * platí, a hráč by odpovídal na jinou otázku než obrázek. Je to tatáž vada
+       * jako bod 234 u otvírače, jen o osu dál; vlastník si v T4 vyžádal, aby
+       * drill rozdanou sedačku **ukázal**.
+       */
+      const named = spot.tableState.flatCallers;
+      const namedIdx = named === undefined
+        ? undefined
+        : new Set(named.map((seat) => positionOrder.indexOf(seat as Position)));
       for (let i = 0; i < heroIdx; i++) {
         const seat = seats[i];
         if (i < vsIdx) {
           seat.active = false;
         } else if (i === vsIdx) {
           seat.badge = EVENT_KEY.OPEN;
-        } else if (i - vsIdx <= spot.tableState.callsBefore) {
+        } else if (namedIdx === undefined
+          ? i - vsIdx <= spot.tableState.callsBefore
+          : namedIdx.has(i)) {
           seat.badge = EVENT_KEY.CALL;
         } else {
           seat.active = false;

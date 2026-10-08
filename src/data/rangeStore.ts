@@ -138,6 +138,22 @@ export interface RangeStore {
    * scénářů. Drill z něj losuje scénář buňky a stůl z něj kreslí stacky.
    */
   stackSetups?: Readonly<Record<string, RangeStackSetup>>;
+  /**
+   * Kombinace dorovnávajících, pro které má pack v té buňce záznam.
+   *
+   * Drill z toho losuje, kdo otevření dorovnal - a **jen z toho**, přesně jako
+   * u otvírače a scénáře: losovat libovolnou sedačku před hrdinou by znamenalo,
+   * že otázka řekne „CO dorovnal" a odpověď se vezme z range proti MP, takže by
+   * hráč odpovídal na jinou otázku než range (tatáž vada jako bod 234).
+   *
+   * Proč katalog a ne zkoušení jednotlivých sedaček: **dvanáct ze čtyřiceti
+   * čtyř** záznamů korpusu má dorovnávající **dva** (`@BU+SB`, změřeno
+   * 7. 10. 2026), takže by je zkoušení po jedné minulo, a procházet všechny
+   * podmnožiny sedaček znamená 128 dotazů na jeden spot.
+   *
+   * Chybí u úložišť, která tu osu neumí; drill se pak chová jako dřív.
+   */
+  flatCallerSets?(key: Omit<RangeKey, "flatCallers">): readonly (readonly string[])[];
 }
 
 // ---------------------------------------------------------------------------
@@ -246,6 +262,11 @@ export function createRangeStoreFromRangePack(pack: RangePack): RangeStore {
       strict: record.strict,
       ...(record.vsSeat ? { vsSeat: record.vsSeat } : {}),
       ...(record.stackSetupId ? { stackSetupId: record.stackSetupId } : {}),
+      // Osa musí projít **i do uloženého záznamu**, ne jen do klíče. Bez toho
+      // `lookup` záznam našel, ale `entry.flatCallers` zůstalo `undefined`, takže
+      // volající nepoznal, že dostal zpřesněnou odpověď - a drill tu osu zahodil
+      // jako nedostupnou. Tatáž past jako u `vsSeat` o řádek výš.
+      ...(record.flatCallers?.length ? { flatCallers: record.flatCallers } : {}),
       ...(record.actionEvs ? { actionEvs: record.actionEvs } : {}),
     });
   }
@@ -283,6 +304,22 @@ export function createRangeStoreFromRangePack(pack: RangePack): RangeStore {
       return loaded;
     },
     stackSetups: pack.stackSetups ?? {},
+    flatCallerSets(key): readonly (readonly string[])[] {
+      // Odvozuje se z **dat packu**, ne z vlastního katalogu v souboru: seznam
+      // kombinací je informace, kterou záznamy už nesou, a druhý seznam vedle
+      // nich by se s nimi rozešel.
+      const seen = new Map<string, readonly string[]>();
+      for (const record of pack.records) {
+        if (!record.flatCallers?.length) continue;
+        if (record.position !== key.position || record.bucket !== key.bucket) continue;
+        if (record.context !== key.context) continue;
+        if (key.vsSeat !== undefined && record.vsSeat !== key.vsSeat) continue;
+        seen.set(record.flatCallers.join("+"), record.flatCallers);
+      }
+      return [...seen.values()].sort((left, right) => (
+        left.join("+").localeCompare(right.join("+"))
+      ));
+    },
   };
 }
 

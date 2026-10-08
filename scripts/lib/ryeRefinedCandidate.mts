@@ -473,7 +473,22 @@ export function selectRefinedRecords(
      * zůstane klíčovaný na ni; dosažitelný je přes dočasnou obecnou kopii.
      * Viz `villainGroupSeats`.
      */
-    const variants = flatCallerVariants(record);
+    const variants = flatCallerVariants(record).map((flat) => flat.map(
+      /*
+       * Do packu jde **sedačka produktu**, ne zkratka zdroje.
+       *
+       * Schéma packu u téhle osy říká „hráči se zkratka neukáže", a je to
+       * doslova tak: stůl kreslí dorovnání podle `POSITION_ORDER`, kde `MP` ani
+       * `BU` nejsou - našel by -1 a nenakreslil **nic**. Osa by tím byla
+       * nefunkční, aniž by cokoli spadlo.
+       *
+       * Zkratka, která se přeložit nedá, zůstane: to jsou skupiny bez
+       * podloženého složení (`LP`), a ty drill nerozdá, protože je v packu
+       * nenajde jako sedačku. Čekají na vlastníka a dosažitelné jsou přes
+       * dočasnou obecnou kopii.
+       */
+      (villain) => seatOfVillainAbbrev(villain) ?? villain,
+    ));
     for (const flatCallers of variants) {
       accepted.push({
         position: record.position as Position,

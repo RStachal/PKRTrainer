@@ -223,6 +223,18 @@ export interface TableState {
    * (rozhodnutí 3a, 4a).
    */
   stackSetupId?: string;
+  /**
+   * Kdo otevření dorovnal, zkratkami zdroje a v pořadí akce - osa
+   * dorovnávajícího (rozhodnutí vlastníka 4a, 1. 10. 2026).
+   *
+   * Losuje se jen mezi kombinacemi, pro které má knihovna v té buňce záznam
+   * (`flatCallerCandidates`), stejně jako `vsSeat` a `stackSetupId`. Chybí
+   * u packů, které tu osu nenesou, a spot se pak chová jako dřív.
+   *
+   * `callsBefore` z toho **vychází**: počet dorovnávajících musí sedět na jejich
+   * jména, jinak by stůl nakreslil tři callery k range, která platí pro dva.
+   */
+  flatCallers?: readonly string[];
 }
 
 // ---------------------------------------------------------------------------

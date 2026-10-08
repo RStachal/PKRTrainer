@@ -260,7 +260,11 @@ describe("osa dorovnávajícího ve výběru (rozhodnutí 4a)", () => {
     );
     expect(refused).toEqual([]);
     expect(accepted).toHaveLength(2);
-    expect(accepted.map((row) => row.flatCallers?.join("+")).sort()).toEqual(["CO", "MP"]);
+    // `MP` vyjde jako `LJ`: do packu jde **sedačka produktu**, ne zkratka zdroje.
+    // Změřeno 8. 10. 2026, že na tom osa stojí - stůl kreslí dorovnání podle
+    // `POSITION_ORDER`, kde `MP` není, takže by nenakreslil nic a osa by byla
+    // tichá. V devítce sedaček zdroje je `MP` mezi UTG+2 a HJ, tedy LJ.
+    expect(accepted.map((row) => row.flatCallers?.join("+")).sort()).toEqual(["CO", "LJ"]);
   });
 
   it("prázdný seznam se do záznamu nepíše - je to obecná odpověď pro tu sedačku", () => {
@@ -424,8 +428,10 @@ describe("rozbalení skupiny dorovnávajících ve výběru", () => {
       strict: { AA: ["SQUEEZE"] }, lenient: { AA: ["SQUEEZE"] },
     });
     const { accepted } = selectRefinedRecords([record], history([approved(record)]));
+    // Skupina se rozbalí na konkrétní sedačky a jmenovaný `MP` se přeloží na `LJ`:
+    // pack mluví slovníkem produktu, viz test výš.
     expect(accepted.map((row) => row.flatCallers?.join("+")))
-      .toEqual(["UTG+1+MP", "UTG+2+MP"]);
+      .toEqual(["UTG+1+LJ", "UTG+2+LJ"]);
   });
 
   it("neznámá skupina se nerozbaluje a záznam zůstane jediný", () => {

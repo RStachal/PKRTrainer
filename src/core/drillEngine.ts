@@ -493,6 +493,43 @@ export function scenarioCandidates(
   ));
 }
 
+/**
+ * Kombinace dorovnávajících, které spot v téhle buňce smí rozdat.
+ *
+ * Táž zásada jako u otvírače a scénáře: **losuje se jen mezi tím, o čem
+ * knihovna něco tvrdí.** Losovat libovolnou sedačku před hrdinou by znamenalo,
+ * že otázka řekne „CO dorovnal" a odpověď se vezme z range proti MP - hráč by
+ * odpovídal na jinou otázku než range (tatáž vada jako bod 234, jen o osu dál).
+ *
+ * Kontroluje se to dotazem, ne jen katalogem: záznam musí po `lookup` doopravdy
+ * vyjít s tou osou. Katalog říká, co v packu leží; dotaz říká, co se vrátí -
+ * a mezi tím je řetěz pádu, který může vrátit něco obecnějšího.
+ *
+ * Pack, který tu osu neumí (`flatCallerSets` chybí), nedá kandidáta a `rng()`
+ * se nevolá, takže seedované sekvence zůstávají bajt po bajtu jako dřív.
+ */
+export function flatCallerCandidates(
+  context: ActionContext,
+  heroPos: Position,
+  bucket: StackBucket,
+  ante: AnteMode,
+  store: RangeStore,
+  vsSeat?: Position,
+): readonly string[][] {
+  const sets = store.flatCallerSets?.({
+    ante, position: heroPos, bucket, context, ...(vsSeat === undefined ? {} : { vsSeat }),
+  }) ?? [];
+  return sets
+    .filter((flatCallers) => {
+      const entry = store.lookup({
+        ante, position: heroPos, bucket, context, flatCallers,
+        ...(vsSeat === undefined ? {} : { vsSeat }),
+      });
+      return entry?.flatCallers?.join("+") === flatCallers.join("+");
+    })
+    .map((flatCallers) => [...flatCallers]);
+}
+
 // ---------------------------------------------------------------------------
 // Startovní pot (Req 5.3, Property 13)
 // ---------------------------------------------------------------------------
@@ -1088,6 +1125,16 @@ export function generateSpot(
   // (3c) scénář (rozložení stacků), jen mezi těmi, pro které je záznam.
   const scenarios = scenarioCandidates(context, heroPos, effStack, ante, store, vsSeat);
   const stackSetupId = scenarios.length === 0 ? undefined : pickFrom(rng, scenarios);
+  /*
+   * (3d) kdo otevření dorovnal, jen mezi kombinacemi, pro které je záznam
+   * (rozhodnutí vlastníka 4a, 1. 10. 2026).
+   *
+   * Pořadí je podstatné: losuje se **po** scénáři, takže pack bez téhle osy
+   * `rng()` nezavolá a seedované sekvence zůstanou jako dřív - tatáž vlastnost,
+   * jakou má osa scénáře od 22. 9. 2026.
+   */
+  const flatSets = flatCallerCandidates(context, heroPos, effStack, ante, store, vsSeat);
+  const flatCallers = flatSets.length === 0 ? undefined : pickFrom(rng, flatSets);
 
   // (4) ruka + (5) karty.
   const hand = pickFrom(rng, ALL_HAND_CLASSES);
@@ -1099,6 +1146,7 @@ export function generateSpot(
     position: heroPos, bucket: effStack, context, ante,
     ...(vsSeat === undefined ? {} : { vsSeat }),
     ...(stackSetupId === undefined ? {} : { stackSetupId }),
+    ...(flatCallers === undefined ? {} : { flatCallers }),
   };
   const entry = store.lookup(key);
   if (entry === undefined) return null;
@@ -1110,11 +1158,21 @@ export function generateSpot(
     pushFold,
     effectiveStackBB: effStack,
     limpsBefore,
-    callsBefore,
+    /*
+     * Počet dorovnávajících musí sedět na **jmenované** dorovnávající.
+     *
+     * `pickCallsBefore` losuje 1 az 7 callerů a o jejich jménech neví nic. Když
+     * spot dostane záznam s osou (`@BU+SB`), stůl by jinak nakreslil tři callery
+     * k range, která platí pro dva - a hráč by odpovídal na jinou situaci, než
+     * jakou vidí. Bere se `entry`, ne `flatCallers`: po pádu v `lookup` může
+     * přijít obecnější záznam a stav stolu má přiznat, co se doopravdy vrátilo.
+     */
+    callsBefore: entry.flatCallers?.length ?? callsBefore,
     facing: facingFor(context, heroPos),
     isBvB: context === "BVB",
     ...(vsSeat === undefined ? {} : { vsSeat }),
     ...(entry.stackSetupId === undefined ? {} : { stackSetupId: entry.stackSetupId }),
+    ...(entry.flatCallers === undefined ? {} : { flatCallers: entry.flatCallers }),
     jamTaught: rangeTeachesJam(entry),
   };
   const seatStacks = entry.stackSetupId === undefined
@@ -1155,6 +1213,7 @@ export function generateSpot(
     context, heroPos, effStack, hand, ante,
     ...(entry.vsSeat === undefined ? {} : { vsSeat: entry.vsSeat }),
     ...(entry.stackSetupId === undefined ? {} : { stackSetupId: entry.stackSetupId }),
+    ...(entry.flatCallers === undefined ? {} : { flatCallers: entry.flatCallers }),
   });
   const startingPot = startingPotFor(ante);
 
