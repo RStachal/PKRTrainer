@@ -642,23 +642,31 @@ export const OWNER_DECISIONS_2026_10_07: readonly OwnerDecision[] = [
   {
     id: 1,
     title: "Co znamená ve jménech zdroje skupina LP - které sedačky to jsou?",
-    context: "Osa dorovnávajícího (4a) je hotová a mřížky se podle ní klíčují. U skupiny <code>EP</code> "
-      + "vím, co znamená, protože jsi to v T4 napsal: při otvírači UTG jsou to UTG+1 nebo UTG+2. "
-      + "U <code>LP</code> to <b>nejde změřit</b> a devět mřížek na tom stojí "
-      + "(<code>MUL-100BB-BB-vs-MP_LP</code> a dalších osm). Zkusil jsem to: nejtěsnější z nich je "
-      + "<code>SQU-40BBMais-BU-vs-MP-LP</code>, kde je hrdina BTN, takže dorovnávající musí ležet mezi "
-      + "LJ a BTN - a to platí pro CO v obou možnostech, takže ten test nerozhodne nic. "
-      + "Rozdíl je přitom velký: HJ a BTN se jako dorovnávající liší o desítky kombinací, takže zvolit "
-      + "jednu stranu by bylo rozhodnutí za zdroj. Do rozhodnutí jsou ty mřížky dosažitelné přes "
-      + "dočasnou obecnou kopii, tedy bez zpřesnění.",
+    context: "Osa dorovnávajícího (4a) je hotová celé a drill ji rozdává. U skupiny <code>EP</code> "
+      + "vím, co znamená, protože jsi to v T4 napsal, a navigace zdroje to potvrzuje: má položku "
+      + "<code>EP+2 VS EP OPEN &amp; EP+1 FLATCALL</code>, takže EP je UTG a jsou k němu EP+1 a EP+2. "
+      + "U <code>LP</code> jsem 8. 10. dohledal víc, než jsem měl včera, a <b>měření teď naklání k jedné "
+      + "straně</b>, i když důkaz to není. Devět mřížek na tom stojí.<br><br>"
+      + "<b>Co jsem našel v navigaci:</b> zdroj umí napsat <code>CO/BU</code> výslovně "
+      + "(<code>BB VS EP OPEN &amp; CO/BU FLATCALL</code>), a HJ i CO mají při otvírači MP <b>vlastní</b> "
+      + "stránky (<code>CO VS MP OPEN &amp; HJ FLATCALL</code>, <code>BU VS MP OPEN &amp; CO FLATCALL</code>). "
+      + "Zkratku <code>LP</code> používá jen u hrdinů v blindech a na BU.<br><br>"
+      + "<b>Co jsem naměřil na šířce range</b> (kolik tříd ze 169 nehraje fold, hrdina BB na 40 bb): "
+      + "<code>@MP</code> 53, <code>@EP+MP</code> 106, <code>@CO+BU</code> 119, <code>@LP</code> <b>123</b>, "
+      + "<code>@SB</code> 129, <code>@BU</code> 130. U hrdiny SB: <code>@EP+MP</code> 42, "
+      + "<code>@LP</code> <b>45</b>, <code>@BU</code> 50. LP tedy sedí <b>vedle CO/BU</b>, ne vedle raných "
+      + "pozic.<br><br>"
+      + "<b>Co drží opačnou možnost:</b> stránka <code>SQU-40BBMais-BU-vs-MP-LP</code> má hrdinu BU, takže "
+      + "tam dorovnávající musí ležet mezi MP a BU - tedy HJ nebo CO. Při <code>LP = CO + BU</code> z toho "
+      + "zbyde CO, což je konzistentní; při <code>LP = HJ + CO</code> taky. Rozhodnout to tedy nemůže.",
     options: [
-      { code: "a", label: "LP = CO a BTN", detail: "obvyklé dělení EP/MP/LP u devíti sedaček; po filtru „mezi otvíračem a hrdinou“ vyjde u hrdiny BTN jen CO." },
-      { code: "b", label: "LP = HJ a CO", detail: "posune pásma o místo dolů; projde stejně dobře všemi devíti stránkami, proto to měření nerozhodlo." },
-      { code: "c", label: "LP = CO, BTN a SB", detail: "pokud zdroj bere do „late“ i malý blind; u hrdiny BB by pak byly tři možnosti." },
+      { code: "a", label: "LP = CO a BU (BTN)", detail: "obvyklé dělení EP/MP/LP; podporuje to šířka range (123 proti 119 u CO/BU) i to, že HJ má při otvírači MP vlastní stránku. U hrdiny BU se zúží na CO." },
+      { code: "b", label: "LP = HJ a CO", detail: "posune pásma o místo dolů. Proti: HJ má vlastní stránku, takže by LP a HJ popisovaly totéž, a šířka range by měla být blíž raným pozicím." },
+      { code: "c", label: "LP = CO, BU a SB", detail: "pokud zdroj bere do „late“ i malý blind. Proti: SB má vlastní stránky (<code>BB VS MP OPEN &amp; SB FLATCALL</code>)." },
       { code: "d", label: "Nechat nerozbalené", detail: "dnešní stav; devět mřížek se dodá bez zpřesnění o dorovnávajícího, zbytek osy funguje." },
     ],
-    recommended: "",
-    freeText: "Pokud to jde přečíst ze zdroje (navigace nabídky, legenda), napiš kde - příště si to změřím sám.",
+    recommended: "a",
+    freeText: "Jestli to v nabídce zdroje stojí jinde (legenda, popis pásem), napiš kde - příště si to změřím sám.",
     diary: "297",
   },
   {
