@@ -1,5 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { solvedFamilyCountsByProfile } from "./lib/solvedFamilyCounts.mts";
 import {
   MTT_POSTFLOP_PRODUCTION_POSITION_PATTERNS,
   type PostflopPositionPattern,
@@ -151,7 +152,10 @@ function parseLimit(value: string): number {
 }
 
 function buildPostflopProductionCoverageReport(): PostflopProductionCoverageReport {
-  const profileRows = buildMttCompletionReadinessReport().rows
+  // Počet vyřešených rodin **musí** jít dovnitř - viz `solvedFamilyCounts`.
+  const profileRows = buildMttCompletionReadinessReport({
+    solvedFamilyCounts: solvedFamilyCountsByProfile(),
+  }).rows
     .filter((row): row is MttCompletionReadinessRow & { street: PostflopStreet } => row.street !== "PREFLOP");
   const rows = profileRows.flatMap(targetsForProfile);
   return {

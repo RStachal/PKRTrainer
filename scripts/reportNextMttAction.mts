@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import { solvedFamilyCountsByProfile } from "./lib/solvedFamilyCounts.mts";
 import {
   buildMttCompletionReadinessReport,
   filterMttCompletionReadinessReport,
@@ -182,7 +183,12 @@ function parseArgs(argv: readonly string[]): CliArgs {
 }
 
 function buildNextMttActionRows(args: CliArgs): NextMttActionRow[] {
-  const filtered = filterMttCompletionReadinessReport(buildMttCompletionReadinessReport(), args.filters);
+  // Počet vyřešených rodin **musí** jít dovnitř: bez něj doporučuje tenhle
+  // nástroj práci podle stavu, který neplatí (viz `solvedFamilyCounts`).
+  const filtered = filterMttCompletionReadinessReport(
+    buildMttCompletionReadinessReport({ solvedFamilyCounts: solvedFamilyCountsByProfile() }),
+    args.filters,
+  );
   return filtered.rows
     .filter((row) => !row.productionReady && row.importSlot !== null)
     .map((row) => nextMttActionRow(row, row.importSlot as MttCompletionImportSlotHint))

@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { solvedFamilyCountsByProfile } from "./lib/solvedFamilyCounts.mts";
 import {
   buildMttCompletionReadinessReport,
   filterMttCompletionReadinessReport,
@@ -122,7 +123,9 @@ function parseArgs(argv: readonly string[]): CliArgs {
 
 function buildMttBlockerReport(args: CliArgs): MttBlockerReport {
   const filtered = filterMttCompletionReadinessReport(
-    buildMttCompletionReadinessReport(),
+    // Počet vyřešených rodin **musí** jít dovnitř, jinak report tvrdí, že
+    // postflop jede na heuristice - viz `solvedFamilyCounts`.
+    buildMttCompletionReadinessReport({ solvedFamilyCounts: solvedFamilyCountsByProfile() }),
     args.filters,
   );
   const rows = filtered.rows
