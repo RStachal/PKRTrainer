@@ -1,0 +1,393 @@
+{
+  "schemaVersion": "PKRTRAINER_RYE_ANSWERS_V1",
+  "draftCreatedAt": "2026-10-07",
+  "draftRecordCount": 220,
+  "answers": [
+    {
+      "sourceFile": "F3B-100BB-BTN-vs-CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "344e9b71-425",
+      "question": "VS_OPEN|BTN|100|CO"
+    },
+    {
+      "sourceFile": "F3B-100BB-CO-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "f4cec2af-303",
+      "question": "VS_OPEN|CO|100|UTG"
+    },
+    {
+      "sourceFile": "ICM-btn35bb-ep20bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "f40df4ed-10c",
+      "question": "VS_OPEN|BTN|30|UTG"
+    },
+    {
+      "sourceFile": "ICM-hj45bb-ep20bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "da3ead6b-ed",
+      "question": "VS_OPEN|HJ|40|UTG"
+    },
+    {
+      "sourceFile": "ICM-sb18bb-ep20bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "403e8e21-9b",
+      "question": "VS_OPEN|SB|20|UTG"
+    },
+    {
+      "sourceFile": "ICM3-co60bb-ep30bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "fc8b2f65-243",
+      "question": "VS_OPEN|CO|60|UTG"
+    },
+    {
+      "sourceFile": "ICM3-hj45bb-ep30bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "e90ab941-1a6",
+      "question": "VS_OPEN|HJ|40|UTG"
+    },
+    {
+      "sourceFile": "ICM3-sb18bb-ep30bb.html",
+      "verdict": "nesedí",
+      "flags": [
+        "špatné ruce"
+      ],
+      "contentHash": "f7b45657-121",
+      "question": "VS_OPEN|SB|20|UTG"
+    },
+    {
+      "sourceFile": "MUL-100BB-BB-vs-EP_CO-BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "75ae8542-3d4",
+      "question": "SQUEEZE|BB|100|UTG"
+    },
+    {
+      "sourceFile": "MUL-100BB-BB-vs-EP_EP-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "3cf30fb6-2f2",
+      "question": "SQUEEZE|BB|100|UTG"
+    },
+    {
+      "sourceFile": "MUL-100BB-BB-vs-EP_SB.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "1520256a-3df",
+      "question": "SQUEEZE|BB|100|UTG"
+    },
+    {
+      "sourceFile": "MUL-100BB-BB-vs-MP_LP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "9b137c4a-405",
+      "question": "SQUEEZE|BB|100|LJ"
+    },
+    {
+      "sourceFile": "MUL-100BB-BTN-vs-EP_CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "7f6418f7-262",
+      "question": "SQUEEZE|BTN|100|UTG"
+    },
+    {
+      "sourceFile": "MUL-100BB-BTN-vs-EP_EP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "1e861c5c-1cf",
+      "question": "SQUEEZE|BTN|100|UTG"
+    },
+    {
+      "sourceFile": "MUL-100BB-BTN-vs-EP_MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "a43628a3-268",
+      "question": "SQUEEZE|BTN|100|UTG"
+    },
+    {
+      "sourceFile": "MUL-100BB-BTN-vs-HJ_CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "c2befa6f-2c4",
+      "question": "SQUEEZE|BTN|100|HJ"
+    },
+    {
+      "sourceFile": "MUL-100BB-BTN-vs-MP_CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "5a40468f-259",
+      "question": "SQUEEZE|BTN|100|LJ"
+    },
+    {
+      "sourceFile": "MUL-100BB-HJ-vs-EP_EP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "a48fafdd-d3",
+      "question": "SQUEEZE|HJ|100|UTG"
+    },
+    {
+      "sourceFile": "MUL-100BB-SB-vs-CO_BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "85dda79b-205",
+      "question": "SQUEEZE|SB|100|CO"
+    },
+    {
+      "sourceFile": "MUL-100BB-SB-vs-EP_EP-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "b51a5507-194",
+      "question": "SQUEEZE|SB|100|UTG"
+    },
+    {
+      "sourceFile": "MUL-100BB-SB-vs-EP_LP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "580e28e3-224",
+      "question": "SQUEEZE|SB|100|UTG"
+    },
+    {
+      "sourceFile": "MUL-20BB-BB-vs-EP_EP-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "a6fbd5ff-3e3",
+      "question": "SQUEEZE|BB|20|UTG"
+    },
+    {
+      "sourceFile": "MUL-20BB-BB-vs-EP_MP.html",
+      "verdict": "nesedí",
+      "flags": [
+        "moc těsné",
+        "špatné ruce"
+      ],
+      "contentHash": "b2999a77-25e",
+      "question": "SQUEEZE|BB|20|UTG"
+    },
+    {
+      "sourceFile": "MUL-20BB-BTN-vs-EP_CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "40fcc5c0-112",
+      "question": "SQUEEZE|BTN|20|UTG"
+    },
+    {
+      "sourceFile": "MUL-20BB-BTN-vs-EP_EP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "7a7e885e-f5",
+      "question": "SQUEEZE|BTN|20|UTG"
+    },
+    {
+      "sourceFile": "MUL-20BB-BTN-vs-EP_MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "3e3aa4fe-f3",
+      "question": "SQUEEZE|BTN|20|UTG"
+    },
+    {
+      "sourceFile": "MUL-20BB-CO-vs-EP_EP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "c3b62e70-95",
+      "question": "SQUEEZE|CO|20|UTG"
+    },
+    {
+      "sourceFile": "MUL-20BB-CO-vs-EP_MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "c3b62e70-95",
+      "question": "SQUEEZE|CO|20|UTG"
+    },
+    {
+      "sourceFile": "MUL-20BB-HJ-vs-EP_EP-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "f70358fc-69",
+      "question": "SQUEEZE|HJ|20|UTG"
+    },
+    {
+      "sourceFile": "MUL-20BB-MP-vs-EP_EP-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "1e7cf228-59",
+      "question": "SQUEEZE|LJ|20|UTG"
+    },
+    {
+      "sourceFile": "MUL-20BB-SB-vs-EP_EP-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "37d8fb37-148",
+      "question": "SQUEEZE|SB|20|UTG"
+    },
+    {
+      "sourceFile": "MUL-20BB-SB-vs-EP_LP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "2ffdf291-170",
+      "question": "SQUEEZE|SB|20|UTG"
+    },
+    {
+      "sourceFile": "MUL-40BB-BB-vs-CO_BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "7cc55d25-516",
+      "question": "SQUEEZE|BB|40|CO"
+    },
+    {
+      "sourceFile": "MUL-40BB-BB-vs-EP_CO-BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "1f682234-4ba",
+      "question": "SQUEEZE|BB|40|UTG"
+    },
+    {
+      "sourceFile": "MUL-40BB-BB-vs-EP_EP-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "c0966b05-3f1",
+      "question": "SQUEEZE|BB|40|UTG"
+    },
+    {
+      "sourceFile": "MUL-40BB-BB-vs-EP_MP.html",
+      "verdict": "nesedí",
+      "flags": [
+        "moc těsné",
+        "špatné ruce"
+      ],
+      "contentHash": "b2999a77-25e",
+      "question": "SQUEEZE|BB|40|UTG"
+    },
+    {
+      "sourceFile": "MUL-40BB-BB-vs-EP_SB.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "cd761912-53b",
+      "question": "SQUEEZE|BB|40|UTG"
+    },
+    {
+      "sourceFile": "MUL-40BB-BB-vs-MP_LP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "3af15406-471",
+      "question": "SQUEEZE|BB|40|LJ"
+    },
+    {
+      "sourceFile": "MUL-40BB-BTN-vs-EP_CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "5ee2f1ca-27f",
+      "question": "SQUEEZE|BTN|40|UTG"
+    },
+    {
+      "sourceFile": "MUL-40BB-BTN-vs-EP_EP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "77d59141-247",
+      "question": "SQUEEZE|BTN|40|UTG"
+    },
+    {
+      "sourceFile": "MUL-40BB-BTN-vs-EP_MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "b2999a77-25e",
+      "question": "SQUEEZE|BTN|40|UTG"
+    },
+    {
+      "sourceFile": "MUL-40BB-CO-vs-EP_EP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "e1801ac8-24d",
+      "question": "SQUEEZE|CO|40|UTG"
+    },
+    {
+      "sourceFile": "MUL-40BB-CO-vs-EP_MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "f0e7d265-247",
+      "question": "SQUEEZE|CO|40|UTG"
+    },
+    {
+      "sourceFile": "MUL-40BB-CO-vs-MP_HJ.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "bfb19702-225",
+      "question": "SQUEEZE|CO|40|LJ"
+    },
+    {
+      "sourceFile": "MUL-40BB-HJ-vs-EP_EP-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "bd6095b6-13b",
+      "question": "SQUEEZE|HJ|40|UTG"
+    },
+    {
+      "sourceFile": "MUL-40BB-MP-vs-EP_EP-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "5f09cd69-bb",
+      "question": "SQUEEZE|LJ|40|UTG"
+    },
+    {
+      "sourceFile": "MUL-40BB-SB-vs-CO_BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "1895d8ec-1f1",
+      "question": "SQUEEZE|SB|40|CO"
+    },
+    {
+      "sourceFile": "MUL-40BB-SB-vs-EP_EP-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "3b715dbd-1b4",
+      "question": "SQUEEZE|SB|40|UTG"
+    },
+    {
+      "sourceFile": "MUL-40BB-SB-vs-EP_LP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "d475e4cd-1b4",
+      "question": "SQUEEZE|SB|40|UTG"
+    },
+    {
+      "sourceFile": "SQU-40BBMais-BB-vs-EP-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "b94ae5d6-12f",
+      "question": "SQUEEZE|BB|40|UTG"
+    },
+    {
+      "sourceFile": "SQU-40BBMais-BU-vs-EP-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "824fda46-cb",
+      "question": "SQUEEZE|BTN|40|UTG"
+    },
+    {
+      "sourceFile": "SQU-40BBMais-HJ-vs-EP-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "1aa7d92c-123",
+      "question": "SQUEEZE|HJ|40|UTG"
+    },
+    {
+      "sourceFile": "SQU-40BBMais-MP-vs-EP-EP-or-EP-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "474f07aa-b4",
+      "question": "SQUEEZE|LJ|40|UTG"
+    },
+    {
+      "sourceFile": "SQU-40BBMais-SB-vs-EP-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "87185a01-157",
+      "question": "SQUEEZE|SB|40|UTG"
+    }
+  ]
+}
