@@ -59,6 +59,65 @@ function layersNewerThanTable(family: string): boolean {
   return false;
 }
 
+/**
+ * Rodiny, které na přestavbu tabulky **čekat nemají** - rozhodnutí vlastníka 3b.
+ *
+ * ## Proč tenhle seznam vznikl
+ *
+ * Od 7. 10. 2026 se fáze turnové EV nepouštěla vůbec, protože jediná zastaralá
+ * rodina vyčerpala tři pokusy žebříku. Otázka byla, co s ní: dát jí vlastní noc,
+ * nebo nechat tabulku zastaralou. Vlastník rozhodl **nechat** (3b) a dodal důvod,
+ * který v otázce chyběl:
+ *
+ * „Ta rodina stojí na starém základu. Všech 32 checkpointů
+ * MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR je z 8.-27. 7., tedy z doby, kdy se ranže
+ * do solvu psaly rukou podle šablon dávek, a dávno před RYE ranžemi z 22.-24. 9.
+ * Dopočítat turnovou EV z takových checkpointů je noc za doladění dat, která se
+ * zahodí, až přijde na řadu přesolvení 100 bb na dnešních ranžích."
+ *
+ * A vyžádal si, ať nesvítí jako zastaralé: „označit tu rodinu v detektoru jako
+ * ‚čeká na přesolvení 100 bb', ať nesvítí jako zastaralá, a totéž u dalších dvou
+ * stobblindových rodin z července."
+ *
+ * ## Proč se **nevyřazují**, jen neřadí jako práce
+ *
+ * Mizet nemají: tabulka doopravdy zastaralá je a hráč z té rodiny dostává EV
+ * z července. Kdyby se tahle věta ztratila, nikdo by po přesolvení nevěděl, že se
+ * má tabulka postavit znovu. Vrací se proto zvlášť - `deferred` - a hlásí se
+ * jmenovitě i s důvodem.
+ *
+ * Kolik se jejich ranže liší od dnešních, změří `npm run mtt:solver-range-drift`.
+ * Samotné přesolvení 100 bb (přes 2,5 h na desku) je podle vlastníka samostatné
+ * rozpočtové rozhodnutí, až dojede 50 bb.
+ */
+export const DEFERRED_UNTIL_RESOLVE_100BB: readonly string[] = [
+  "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
+  "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
+  "MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR",
+];
+
+export interface TurnEvStaleness {
+  /** Rodiny, kde přestavba tabulky je práce, která se má udělat. */
+  stale: readonly string[];
+  /** Rodiny odložené na přesolvení 100 bb - zastaralé jsou, ale čekat nemají. */
+  deferred: readonly string[];
+}
+
+/**
+ * Zastaralé tabulky rozdělené na „udělat" a „odloženo" (rozhodnutí 3b).
+ *
+ * Odložená rodina se do `stale` nedostane, i když zastaralá je: `stale` je
+ * seznam práce a noc podle něj rozhoduje, co spustit.
+ */
+export async function turnEvStaleness(): Promise<TurnEvStaleness> {
+  const all = await staleTurnEvFamilies();
+  const deferredSet = new Set(DEFERRED_UNTIL_RESOLVE_100BB);
+  return {
+    stale: all.filter((family) => !deferredSet.has(family)),
+    deferred: all.filter((family) => deferredSet.has(family)),
+  };
+}
+
 export async function staleTurnEvFamilies(): Promise<string[]> {
   await loadAllSolvedTurnPacks("FULL_RING_9|REGULAR|CHIP_EV|TURN|OFF");
   const familyOfPack = new Map(turnEvManifest.map((entry) => [entry.packId, entry.familyId]));

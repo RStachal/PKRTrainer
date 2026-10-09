@@ -31,6 +31,13 @@ const FAILED = [
   "[01:52:42]   SELHALO po 30.0 min (rc=timeout); příští noc stupeň 1 - strop 60 min, přesnost 0.5 %",
 ];
 
+// Třetí tvar řádku: čerstvá deska hloubky, která se od rozhodnutí 2c solví na
+// 1 %, hlásí přesnost **místo** stupně.
+const COARSE = [
+  "[22:10:02] solving MTT9_50BB_BTN_BB_SRP A72r (přesnost 1.0 %, strop 90 min)",
+  "[23:01:20]   hotovo za 51.3 min, checkpoint 44 MB",
+];
+
 const RIVER = [
   "[03:09:42]   solving river MTT9_40BB_UTG_BB_SRP__AQ6r / CHECK_BET25_CALL__Qh: 39 z 39",
   "[03:11:02]   hotovo za 1.3 min, checkpoint 2 MB",
@@ -54,6 +61,21 @@ describe("parseBoardSolves", () => {
     const solves = parseBoardSolves(RETRY);
     expect(solves).toHaveLength(1);
     expect(solves[0]).toMatchObject({ board: "J73r", minutes: 46.7, level: 1 });
+  });
+
+  it("čte i čerstvou desku, která za jménem hlásí přesnost místo stupně", () => {
+    /*
+     * Rozhodnutí 2c přidalo třetí tvar řádku a výraz tu do 9. 10. 2026
+     * vyjmenovával tvary závorky (`\(stupeň (\d+):`). Tenhle řádek by propadl,
+     * takže by se **celá hloubka 50 bb** do ceny nezapočítala a plán by na ni dál
+     * používal extrapolaci - tedy tatáž vada jako u ukotvení na konec řádku, jen
+     * o patro výš.
+     */
+    const solves = parseBoardSolves(COARSE);
+    expect(solves).toHaveLength(1);
+    expect(solves[0]).toMatchObject({
+      family: "MTT9_50BB_BTN_BB_SRP", board: "A72r", depthBB: 50, minutes: 51.3, level: 0,
+    });
   });
 
   it("neúspěšnou desku nepočítá", () => {

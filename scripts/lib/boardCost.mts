@@ -66,20 +66,31 @@ export const EXPANSION_LOG_PATH = "artifacts/decomposition/expansion.log";
 const CLOCK_MOVED_MINUTES = 92;
 
 /**
- * Řádek začátku desky, v obou tvarech, které runner píše:
+ * Řádek začátku desky, ve **všech třech** tvarech, které runner píše:
  *
  *   [00:31:27] solving MTT9_40BB_UTG_2_HJ_SRP 883r
  *   [21:04:11] solving MTT9_25BB_CO_BTN_SRP J73r (stupeň 1: strop 60 min, přesnost 0.5 %)
+ *   [22:10:02] solving MTT9_50BB_BTN_BB_SRP A72r (přesnost 1.0 %, strop 90 min)
  *
  * Jméno rodiny musí začínat `MTT9_`, a to je ten rozlišovač: riverová fáze píše
  * `solving river MTT9_... / CHECK_BET25_CALL__Qh: 39 z 39`, kde je `river`
- * první token, takže se sem nedostane. Dřív to tu bylo ukotvené na konec řádku
- * (`\s*$`) a **tiše to zahazovalo opakované pokusy** - tedy přesně ty nejdražší
- * desky, které má strop pokrývat: z hloubky 25 bb zmizely desky za 45,7 a
- * 46,7 min a maximum vyšlo 23,2. Strop odvozený z takové tabulky by byl těsný
- * ze stejného důvodu, kvůli kterému tahle vrstva vznikla.
+ * první token, takže se sem nedostane.
+ *
+ * ## Proč je závorka nespecifická
+ *
+ * Dřív to tu bylo ukotvené na konec řádku (`\s*$`) a **tiše to zahazovalo
+ * opakované pokusy** - tedy přesně ty nejdražší desky, které má strop pokrývat:
+ * z hloubky 25 bb zmizely desky za 45,7 a 46,7 min a maximum vyšlo 23,2.
+ *
+ * Pak tu stálo `(?: \(stupeň (\d+):.*)?` a byl to tentýž omyl o patro výš:
+ * **vyjmenovávat tvary závorky**. Rozhodnutí 2c přidalo třetí tvar (čerstvá
+ * deska na 50 bb hlásí přesnost, ne stupeň) a ten by propadl, takže by se celá
+ * hloubka 50 bb do ceny nezapočítala - a plán by na ni dál používal
+ * extrapolaci. Proto se teď bere **jakákoli** závorka za jménem desky a stupeň
+ * se z ní vytahuje zvlášť, když tam je.
  */
-const SOLVING = /^\[\d{2}:\d{2}:\d{2}\] solving (MTT9_\S+) (\S+?)(?: \(stupeň (\d+):.*)?\s*$/;
+const SOLVING = /^\[\d{2}:\d{2}:\d{2}\] solving (MTT9_\S+) (\S+?)(?: \(.*)?\s*$/;
+const SOLVING_LEVEL = /\(stupeň (\d+):/;
 const DONE = /^\[\d{2}:\d{2}:\d{2}\]\s+hotovo za ([\d.]+) min/;
 const DEPTH = /_(\d+)BB_/;
 
@@ -110,7 +121,11 @@ export function parseBoardSolves(lines: readonly string[]): BoardSolve[] {
   for (const line of lines) {
     const start = SOLVING.exec(line);
     if (start !== null) {
-      open = { family: start[1].trim(), board: start[2].trim(), level: Number(start[3] ?? 0) };
+      open = {
+        family: start[1].trim(),
+        board: start[2].trim(),
+        level: Number(SOLVING_LEVEL.exec(line)?.[1] ?? 0),
+      };
       continue;
     }
     const done = DONE.exec(line);

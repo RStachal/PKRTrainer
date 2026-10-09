@@ -123,6 +123,10 @@ BOARD_ATTEMPTS = 2
 # 60 / 90 / 90.
 ESCALATION = ((0, 0.5), (30, 0.5), (30, 1.0))
 
+# Přesnost, kterou nesou **vygenerované** parametry. Když pokus chce tuhle,
+# nemá se co přepisovat a `param_for_level` vrátí původní soubor.
+DEFAULT_ACCURACY = ESCALATION[0][1]
+
 # Strop a rezerva se **čtou z měření**, ne odsud: `board-cost.generated.json`
 # drží na každou hloubku jeden změřený řádek a tři odvozená čísla. Jak se
 # odvozují a proč nejde udělat jedna konstanta pro všechny tři, je rozepsané
@@ -145,6 +149,34 @@ FALLBACK_RESERVE_MINUTES = ((25, 14), (40, 29), (50, 59))
 # je tohle tentýž úsudek o rozpočtu, jen na jiné základně.
 CAP_CEILING_MINUTES = 90
 DEEPEST_KNOWN_CAP = 90
+
+# ## Hlubší hloubky se solví volněji - rozhodnutí vlastníka 2c z 8. 10. 2026
+#
+# Otázka byla, co s 50 bb: strop stropů 90 na ně nevydrží (extrapolované p90 je
+# 78,5, takže kolem desetiny desek na strop narazí) a žebřík už tam nic nepřidá,
+# protože `min(90 + 30, 90)` je 90. Doporučil jsem zvednout strop na 150 při
+# původní přesnosti; vlastník rozhodl **jinak** a doložil to:
+#
+# „Přesnost 0,5 % kupuje rozdíl, který trenažér sám nerozliší: turnStrategyResolver
+# i riverStrategyResolver berou rozdíl EV do 1 % potu jako rovnocennou odpověď
+# (EV_EQUIVALENT_POT_SHARE = 0,01)."
+#
+# To je pravda a je to v kódu: solvit 50 bb na 0,5 % znamená platit noci za
+# přesnost, kterou hodnocení zahodí. Cena té volby je podle jeho propočtu asi
+# **čtyři noci** z osmi (96 desek, medián 47,3 min).
+#
+# Žebřík se tím u těch hloubek mění: když je volnější přesnost vybraná **od
+# začátku**, nemá stupeň 2 co nabídnout a přidávat minuty po třiceti nikam nevede.
+# Zůstává jediný stupeň navíc, a ten jde přímo na strop - vlastníkova slova:
+# „na 1 % zůstane jediný smysluplný stupeň, strop - pro 50 bb a hlubší tedy
+# stupeň 1 = 150 min při 1 %, jen pro vzácnou desku, která se nevejde do 90."
+#
+# Vlastník si k tomu vyžádal kontrolu měřením: až bude fronta prázdná, přesolvit
+# dvě tři typické desky 50 bb na 0,5 % a porovnat doporučení na flopu; kdyby se
+# nejlepší akce změnila u víc než zhruba 2 % tříd, vrátit 0,5 % se stropem 150.
+COARSE_FROM_DEPTH_BB = 50
+COARSE_ACCURACY = 1.0
+COARSE_CEILING_MINUTES = 150
 # Hlubší než 50 bb nemá smysl rezervovat **méně** než 50 bb: 100 bb je podle
 # generátoru dávky přes 2,5 h na desku.
 DEEPEST_KNOWN_RESERVE = 60
@@ -198,11 +230,21 @@ def _measured(family: str, key: str):
     return None if row is None else row.get(key)
 
 
+def solves_coarse(family: str) -> bool:
+    """Solví se tahle hloubka na 1 % od začátku? Rozhodnutí vlastníka 2c."""
+    return depth_of(family) >= COARSE_FROM_DEPTH_BB
+
+
 def caps_for(family: str, level: int):
     """`(strop v minutách, přesnost)` pro danou rodinu a stupeň žebříku."""
     base = _measured(family, "capMinutes")
     if base is None:
         base = _by_depth(FALLBACK_CAP_MINUTES, depth_of(family), DEEPEST_KNOWN_CAP)
+    if solves_coarse(family):
+        # Volnější přesnost je vybraná od začátku, takže ji žebřík nemá čím
+        # vylepšit a třicetiminutové přírůstky by jen vyráběly shodné stupně
+        # (viz `next_useful_level`). Zbývá jediný pokus navíc - na strop.
+        return (base if level == 0 else COARSE_CEILING_MINUTES, COARSE_ACCURACY)
     extra, accuracy = ESCALATION[level]
     return (min(base + extra, CAP_CEILING_MINUTES), accuracy)
 
@@ -257,7 +299,7 @@ def failure_level(checkpoint: str) -> int:
         return 1
 
 
-def param_for_level(param: str, level: int, checkpoint: str) -> str:
+def param_for_level(param: str, family: str, level: int, checkpoint: str) -> str:
     """Parametry pro daný stupeň; jiná přesnost znamená kopii vedle checkpointu.
 
     Původní soubor se nepřepisuje: přesnost je vlastnost **pokusu**, ne desky,
@@ -271,9 +313,17 @@ def param_for_level(param: str, level: int, checkpoint: str) -> str:
     deska `J73r.stupen2`, její checkpoint nikdy neexistuje - a fronta ji nabízí
     každou noc navždy. To je přesně ta škoda, proti které `.failed` vznikla.
     Kopie proto jde do adresáře checkpointu, který generátor parametrů nečte.
+
+    ## Přesnost se čte z `caps_for`, ne z `ESCALATION`
+
+    Do 9. 10. 2026 tu stálo `ESCALATION[level][1]`, tedy přesnost **jen podle
+    stupně**. Rozhodnutí 2c ji udělalo funkcí hloubky i stupně, a kdyby to tohle
+    místo nevědělo, 50 bb by se solvilo na 0,5 % dál a změna by se nikde
+    neprojevila - noc by jen běžela dráž a log by tvrdil 1 %. Proto je zdroj
+    jeden: `caps_for`.
     """
-    accuracy = ESCALATION[level][1]
-    if accuracy == ESCALATION[0][1]:
+    _, accuracy = caps_for(family, level)
+    if accuracy == DEFAULT_ACCURACY:
         return param
     with open(param, encoding="utf-8") as handle:
         text = handle.read()
@@ -446,10 +496,16 @@ def main():
             break
 
         os.makedirs(os.path.dirname(checkpoint), exist_ok=True)
+        # Parametry se přepisují i na **stupni nula**: od rozhodnutí 2c nese jinou
+        # přesnost celá hloubka, ne jen opakovaný pokus. Do 9. 10. 2026 se tenhle
+        # řádek volal jen pro `level > 0`, takže by čerstvá deska na 50 bb běžela
+        # na 0,5 % a log by u ní tvrdil 1 % - změna by se nikde neprojevila.
+        param = param_for_level(param, family, level, checkpoint)
         if level > 0:
             log(f"solving {family} {board} (stupeň {level}: strop {cap_minutes} min, "
                 f"přesnost {accuracy} %)")
-            param = param_for_level(param, level, checkpoint)
+        elif accuracy != DEFAULT_ACCURACY:
+            log(f"solving {family} {board} (přesnost {accuracy} %, strop {cap_minutes} min)")
         else:
             log(f"solving {family} {board}")
         for attempt in range(1, BOARD_ATTEMPTS + 1):
