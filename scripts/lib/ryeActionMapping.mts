@@ -489,7 +489,7 @@ export interface RyeSituation {
  * nerozpoznaný token se zahazovalo. Vlastník ho v T4 jmenuje mezi skupinami,
  * které má drill rozdat jako konkrétní sedačku: „(EP/MP, CO/BU, LP)".
  */
-const VILLAIN_GROUPS = new Set(["EP", "LP"]);
+const VILLAIN_GROUPS = new Set(["EP", "LP", "EP-MP", "CO-BTN"]);
 
 /**
  * Slovo, kterým zdroj nabízí **dvě různá rozestavení** v jednom jménu.
@@ -516,25 +516,32 @@ function villainOf(source: string): RyeVillain {
  * při otvírači UTG je UTG+1 nebo UTG+2". Zdroj jmenuje devět sedaček v pořadí
  * `UTG UTG1 UTG2 MP HJ CO BU SB BB`, takže early position jsou ty tři první.
  *
- * ## Proč tu `LP` není
+ * `LP` je tu od **rozhodnutí vlastníka 1a z 8. 10. 2026**: `LP = {CO, BTN}`. Do
+ * té chvíle tu nebylo, protože se ze samotného korpusu nedalo změřit - devět
+ * stránek procházelo pro `{CO, BTN}` i pro `{HJ, CO}`. Vlastník to doložil
+ * poznámkami z koučinku („Late Position: CO - BTN") a tím, že zdroj staví `LP`
+ * do téže řady jako vypsané `CO/BU`: u hrdiny BB má položku „EP OPEN & CO/BU
+ * FLATCALL", u SB na tomtéž místě „EP OPEN & LP FLATCALL".
  *
- * Protože se ze korpusu **nedá změřit** a hádat se to nemá. Devět stránek s `LP`
- * (měřeno 7. 10. 2026) projde jak pro `LP = {CO, BTN}`, tak pro `LP = {HJ, CO}`:
- * nejtěsnější z nich je `SQU-40BBMais-BU-vs-MP-LP`, kde je hrdina BTN, takže
- * dorovnávající musí ležet mezi LJ a BTN - a to platí pro CO v obou variantách.
- * Rozdíl mezi HJ a BTN je přitom velký (range se liší o desítky kombinací), takže
- * zvolit jednu by bylo rozhodnutí za zdroj.
+ * ## Složené skupiny ze jména
  *
- * Záznam se skupinou, která tu není, zůstane klíčovaný na skupinu a drill si ho
- * nevyžádá; dosažitelný je přes dočasnou obecnou kopii
- * (`generalCopiesForFlatCallers`). Čeká to na vlastníka.
+ * `EP-MP` a `CO-BTN` nejsou dva dorovnávající, ale **jeden ze skupiny**, kterou
+ * nabídka píše lomítkem („EP/MP FLATCALL", „CO/BU FLATCALL"). Změřeno 9. 10. 2026
+ * z velikostí squeeze: BB na 40 bb squeezuje na 11 bb proti jednomu jmenovanému
+ * dorovnávajícímu i proti skupině, a druhý dorovnávající by pot zvětšil a squeeze
+ * zvedl. Týká se to **třinácti** jmen MUL (`EP-MP` desetkrát, `CO-BTN` třikrát).
  *
- * `MP` tu taky není, a to **ze správného důvodu**: v devítce sedaček zdroje je
- * mezi UTG+2 a HJ, tedy jedno místo u stolu, a `SEAT_ALIASES` ho mapuje na `LJ`.
+ * `CO-BTN` je přitom totéž co `LP` - zdroj jednu věc píše dvakrát jinak.
+ *
+ * `MP` tu není, a to **ze správného důvodu**: v devítce sedaček zdroje je mezi
+ * UTG+2 a HJ, tedy jedno místo u stolu, a `SEAT_ALIASES` ho mapuje na `LJ`.
  * Skupina to není.
  */
 const VILLAIN_GROUP_SEATS: ReadonlyMap<string, readonly string[]> = new Map([
   ["EP", ["UTG", "UTG+1", "UTG+2"]],
+  ["LP", ["CO", "BTN"]],
+  ["CO-BTN", ["CO", "BTN"]],
+  ["EP-MP", ["UTG", "UTG+1", "UTG+2", "LJ"]],
 ]);
 
 /**
@@ -734,19 +741,29 @@ export function situationFromFileName(name: string): RyeSituation | undefined {
   // Tvar 2: společná hloubka vpředu, pak `HRDINA-vs-SOUPEŘI`.
   const depth = /(?:^|[-_])(\d+)BB(?:[-_]|$)/i.exec(stem);
   /*
-   * Za `vs` se čte **i pomlčka**, ne jen podtržítko.
+   * Za `vs` dělí soupeře **podtržítko**; pomlčka uvnitř je lomítko skupiny.
    *
-   * `MUL-40BB-BB-vs-EP_CO-BTN` míchá oba oddělovače: EP otevřel, CO a BTN
-   * dorovnali, tedy tři soupeři. Do 7. 10. 2026 tu stálo `[A-Za-z0-9_+]+`, tedy
-   * bez pomlčky, takže se čtení zastavilo na `EP_CO` a `BTN` zmizel. V korpusu
-   * má oba oddělovače **dvanáct** jmen a vycházeli z nich dva soupeři místo tří -
-   * tedy chyba v tom, jestli je spot multiway, i v tom, kdo dorovnal.
+   * Jméno má tvar `OTVÍRAČ_DOROVNÁVAJÍCÍ` a oba členy mohou být skupina zapsaná
+   * pomlčkou: `MUL-40BB-BB-vs-EP_CO-BTN` je „EP OPEN & **CO/BU** FLATCALL", tedy
+   * **dva** soupeři, ne tři. Pomlčka se do výrazu čte proto, aby skupina nepřišla
+   * o půlku jména - do 7. 10. 2026 tu stálo `[A-Za-z0-9_+]+` a čtení se zastavilo
+   * na `EP_CO`, takže `BTN` zmizel.
+   *
+   * **Opraveno 9. 10. 2026 a vyvrací to, co tu stálo od 7. 10.** Tehdy jsem
+   * pomlčku dočetl, ale udělal z ní oddělovač seznamu, takže z třinácti jmen MUL
+   * vycházeli tři soupeři místo dvou a drill by u nich rozdal dva cally - pot ve
+   * čtyřech, pro který ty range nejsou. Důkaz je v `VILLAIN_GROUP_SEATS`:
+   * velikost squeeze se skupinou nemění, a druhý dorovnávající by ji zvedl.
+   *
+   * Korpus nemá jméno se dvěma podtržítky (měřeno 9. 10. 2026 na všech 253
+   * jménech s `vs`), takže členů je nejvýš dva. Squeeze stránky podtržítko
+   * nepoužívají vůbec a čtou se tvarem 4, kde pomlčka seznamem **je**.
    */
   const versus = /(?:^|[-_])(UTG1|UTG2|UTG|EP|MP|LJ|HJ|CO|BU|BTN|SB|BB)[-_]vs[-_]([A-Za-z0-9_+-]+)/i.exec(stem);
   if (depth !== null && versus !== null) {
     const seat = SEAT_ALIASES.get(versus[1].toUpperCase());
     if (seat === undefined) return undefined;
-    const tokens = versus[2].split(/[-_]/).filter(Boolean);
+    const tokens = versus[2].split("_").filter(Boolean);
     const named = villainsFromTokens(tokens);
     // `EP_MP` znamená dva soupeře, tedy multiway. Počítají se **jmenovaní**:
     // slova jako `Mais` nebo `Call` sedačku nejmenují a za soupeře se brát nemají.

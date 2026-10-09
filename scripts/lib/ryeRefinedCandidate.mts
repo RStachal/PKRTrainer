@@ -196,36 +196,41 @@ function flatCallerVariants(
 }
 
 /**
- * Mřížka s dorovnávajícím jde do packu **i jako obecná odpověď pro tu sedačku**,
- * dokud se drill na dorovnávajícího neumí zeptat.
+ * Mřížka s dorovnávajícím jde do packu **i jako obecná odpověď pro tu sedačku** -
+ * ne dočasně, ale protože zpřesnění musí stát **vedle** obecné odpovědi.
  *
  * ## Proč to tu je
  *
- * Záznam s osou dorovnávajícího má klíč `…|vsCO|@BTN`. Klíč, který drill dnes
- * skládá, osu nenese, takže se na `@BTN` **nikdo nezeptá** a pád vede na obecný
- * záznam základního packu. Změřeno 7. 10. 2026 hned po zavedení osy: tři buňky
- * (`SQUEEZE|BB|20|vsCO`, `SQUEEZE|BB|20|vsLJ`, `SQUEEZE|SB|20|vsCO`) zůstaly
- * **bez obecného záznamu**, takže obsah, který byl do té chvíle dosažitelný,
- * přestal být - a počet přijatých záznamů se přitom nezměnil (69), takže by to
- * žádná brána nenašla. Je to přesně ta vada, na kterou si vlastník stěžoval
- * u předchozí verze: obsah schválený, doručení žádné.
+ * Záznam s osou dorovnávajícího má klíč `…|vsCO|@BTN` a je to **zpřesnění**, ne
+ * jediná odpověď. Řetěz pádu (`refinementFallbackChain`) jde „zahoď
+ * dorovnávající → zahoď sedačku → obecná", takže když obecná odpověď pro tu
+ * buňku nikde neleží, pád nemá kam padnout a zpřesnění je nedosažitelné.
  *
- * ## Že se to má udělat takhle, řekl vlastník
+ * Změřeno 7. 10. 2026 hned po zavedení osy: tři buňky (`SQUEEZE|BB|20|vsCO`,
+ * `SQUEEZE|BB|20|vsLJ`, `SQUEEZE|SB|20|vsCO`) zůstaly bez obecného záznamu, takže
+ * obsah, který byl dosažitelný, přestal být - a počet přijatých se přitom
+ * nezměnil (69). Základní pack ty buňky nedrží: kontext `SQUEEZE` přináší teprve
+ * RYE, takže není na co padnout.
  *
- * T4, poslední odstavec: „Jestli bude a) trvat déle než pár dní, je lepší
- * dočasně pustit mřížku proti **nejtěsnějšímu dorovnávajícímu (nejranější
- * sedačka)** než nechat obecný záznam." Dneškem je to šestý den, takže ta
- * podmínka platí. Zároveň měl vlastník změřeno, proč je dnešní obecný záznam
- * horší: je stejný pro hloubky 15 az 150 bb a od zdroje se liší skoro ve všech
- * porovnaných třídách.
+ * ## Vyvrácený důvod, proč měla zmizet
  *
- * Kopie se dělá jen tam, kde tu buňku **nikdo nedrží bez osy** - jinak by
- * přebila mřížku, která o sobě ví víc. A když o obecnou buňku soupeří víc
- * mřížek, bere ji ta s nejranějším dorovnávajícím: je to nejtěsnější range,
- * takže chyba jde směrem „hráč hraje míň rukou, než zdroj dovoluje", ne naopak.
+ * Do 9. 10. 2026 tu stálo „**až drill osu umí, tahle kopie se má smazat**" a
+ * v commitu 4a i v T1 jsem napsal, že tím dnem ztratila důvod. **Je to vyvrácené.**
+ * Zkusil jsem ji 9. 10. smazat a `validate:range-import` zčervenal 25 chybami
+ * „refined record is unreachable: … has no sibling without flatCallers". Umět se
+ * na osu zeptat a mít na co spadnout jsou dvě různé věci; kopie je ta druhá.
  *
- * **Až drill osu umí, tahle kopie se má smazat**, ne nechat - dvě odpovědi na
- * tutéž otázku jsou dvě místa, kde se obsah rozejde.
+ * Co z toho platí dál: **dvě odpovědi na tutéž otázku se nesmí rozejít.** Proto
+ * jsou obě z téže mřížky a provenance to říká - ne proto, že je to provizorium.
+ *
+ * ## Která mřížka obecnou buňku bere
+ *
+ * Kopie se dělá jen tam, kde tu buňku **nikdo nedrží bez osy** - jinak by přebila
+ * mřížku, která o sobě ví víc. A když o obecnou buňku soupeří víc mřížek, bere ji
+ * ta s nejranějším dorovnávajícím: je to nejtěsnější range, takže chyba jde směrem
+ * „hráč hraje míň rukou, než zdroj dovoluje", ne naopak. To je vlastníkovo
+ * pravidlo z T4 („nejtěsnější dorovnávající, nejranější sedačka") a platí dál,
+ * i když původní důvod („dočasně, než drill osu umí") padl.
  */
 function seatRank(seat: string): number {
   const index = POSITION_ORDER.indexOf(seat as Position);
@@ -258,8 +263,8 @@ export function generalCopiesForFlatCallers(
     const { flatCallers, ...withoutAxis } = record;
     return {
       ...withoutAxis,
-      provenance: `${record.provenance ?? ""} [dočasně i jako obecná odpověď pro tu sedačku,`
-        + ` dorovnávající ${flatCallers?.join("+") ?? "?"}; drill se na osu zatím neumí zeptat]`,
+      provenance: `${record.provenance ?? ""} [i jako obecná odpověď pro tu sedačku,`
+        + ` dorovnávající ${flatCallers?.join("+") ?? "?"}; zpřesnění stojí vedle ní, ne místo ní]`,
     };
   });
 }

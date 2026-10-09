@@ -203,12 +203,15 @@ const candidate: MttPreflopRangePackImportInput = {
     },
   ],
   /*
-   * Kopie bez osy dorovnávajícího je **dočasná**, viz `generalCopiesForFlatCallers`.
+   * Kopie bez osy dorovnávajícího je **nosná**, ne dočasná - viz
+   * `generalCopiesForFlatCallers`.
    *
-   * Drill se na osu zatím neumí zeptat, takže záznam s klíčem `…|vsCO|@BTN` nikdo
-   * nevyžádá a buňka by zůstala bez odpovědi. Vlastník pro tuhle dobu rozhodl
-   * (T4, poslední odstavec), že je lepší pustit mřížku proti nejtěsnějšímu
-   * dorovnávajícímu než nechat obecný záznam. Až drill osu umí, tenhle řádek zmizí.
+   * Záznam s klíčem `…|vsCO|@BTN` je zpřesnění a řetěz pádu potřebuje obecnou
+   * odpověď, na kterou spadne; základní pack kontext `SQUEEZE` nedrží, takže ji
+   * dodává tahle kopie. Do 9. 10. 2026 tu stálo „až drill osu umí, tenhle řádek
+   * zmizí" - zkusil jsem to a `validate:range-import` zčervenal 25 chybami
+   * „refined record is unreachable". Umět se na osu zeptat a mít na co spadnout
+   * jsou dvě různé věci.
    */
   records: [
     ...base.records,

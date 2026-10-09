@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { ALL_HAND_CLASSES } from "../../src/core/poker";
+import type { MttPreflopImportRecord } from "../../src/data/ranges/mttPreflopRangePackImport";
 import type { AnswerHistory, RecordedAnswer } from "../../scripts/lib/ryeAnswerHistory.mts";
 import { gridContentHash, gridQuestion } from "../../scripts/lib/ryeAnswerHistory.mts";
 import type { DraftRecord } from "../../scripts/lib/ryeDraftImpact.mts";
@@ -326,32 +327,35 @@ describe("osa dorovnávajícího ve výběru (rozhodnutí 4a)", () => {
   });
 });
 
-describe("dočasná obecná kopie u mřížek s dorovnávajícím", () => {
+describe("obecná kopie u mřížek s dorovnávajícím", () => {
   /*
-   * Proč to existuje: záznam s klíčem `…|vsCO|@BTN` dnes **nikdo nevyžádá**,
-   * protože drill osu dorovnávajícího neskládá. Změřeno 7. 10. 2026 hned po
-   * zavedení osy: tři buňky zůstaly bez obecného záznamu, takže obsah, který byl
-   * dosažitelný, přestal být - a počet přijatých se nezměnil (69), takže by to
-   * žádná brána nenašla.
+   * Záznam s klíčem `…|vsCO|@BTN` je **zpřesnění**, ne jediná odpověď: řetěz pádu
+   * jde „zahoď dorovnávající → zahoď sedačku → obecná", takže bez obecné odpovědi
+   * pro tu buňku není na co spadnout. Změřeno 7. 10. 2026: tři buňky zůstaly bez
+   * obecného záznamu a počet přijatých se přitom nezměnil (69).
    *
-   * Vlastník to pro tuhle dobu rozhodl v T4: „lepší dočasně pustit mřížku proti
-   * nejtěsnějšímu dorovnávajícímu (nejranější sedačka) než nechat obecný záznam."
+   * **9. 10. 2026 jsem tuhle kopii zkusil smazat**, protože jsem v commitu 4a
+   * napsal, že s uměním drillu ztratila důvod. `validate:range-import` zčervenal
+   * 25 chybami „refined record is unreachable: … has no sibling without
+   * flatCallers". Proto je tu test, který to drží: jinak si to někdo (nebo já
+   * znovu) přečte v komentáři jako premisu.
    */
-  const refined = (vsSeat: string, flatCallers: string[]): Parameters<typeof generalCopiesForFlatCallers>[0][number] => ({
+  const refined = (vsSeat: string, flatCallers: string[]): MttPreflopImportRecord => ({
     position: "BB", bucket: 20, context: "SQUEEZE", sourceStackBB: 20,
     vsSeat: vsSeat as never, flatCallers,
     provenance: `RYE, ${flatCallers.join("+")}.html`,
     strict: {}, lenient: {},
   });
 
-  it("buňka bez obecného záznamu kopii dostane", () => {
+  it("buňka bez obecného záznamu kopii dostane, jinak je zpřesnění nedosažitelné", () => {
     const copies = generalCopiesForFlatCallers([refined("CO", ["BTN"])]);
     expect(copies).toHaveLength(1);
     expect(copies[0].flatCallers).toBeUndefined();
     expect(copies[0].vsSeat).toBe("CO");
-    // Provenance musí říct, že je to dočasné - jinak se v packu nepozná, proč
-    // tam táž mřížka je dvakrát, a kopie přežije i to, až bude drill umět osu.
-    expect(copies[0].provenance).toContain("dočasně");
+    // Provenance musí říct, **proč** je táž mřížka v packu dvakrát. Do 9. 10. tam
+    // stálo „dočasně … drill se na osu zatím neumí zeptat" a obojí přestalo platit.
+    expect(copies[0].provenance).toContain("zpřesnění stojí vedle ní");
+    expect(copies[0].provenance).not.toContain("dočasně");
   });
 
   it("buňku, kterou někdo drží bez osy, kopie nepřebije", () => {
@@ -363,7 +367,7 @@ describe("dočasná obecná kopie u mřížek s dorovnávajícím", () => {
 
   it("o obecnou buňku soupeří víc mřížek a bere ji nejranější dorovnávající", () => {
     /*
-     * Vlastníkovo „nejtěsnější dorovnávající (nejranější sedačka)". Je to
+     * Vlastníkovo „nejtěsnější dorovnávající (nejranější sedačka)" z T4. Je to
      * nejtěsnější range, takže chyba jde směrem „hráč hraje míň rukou, než zdroj
      * dovoluje", ne naopak. Měřeno na mřížkách z 1. 10.: BTN na 100 bb squeezuje
      * 67 kombinací proti flatu z EP, 84 proti MP a 102 proti CO.
@@ -379,20 +383,51 @@ describe("dočasná obecná kopie u mřížek s dorovnávajícím", () => {
     expect(copies[0].provenance).toContain("HJ.html");
   });
 
-  it("skupina ustoupí jmenované sedačce", () => {
-    // „Jmenovaná sedačka před skupinou" je druhá část vlastníkova pravidla z T4.
-    // `LP` neříká, která sedačka to je, takže je až za každou jmenovanou.
-    const copies = generalCopiesForFlatCallers([refined("LJ", ["LP"]), refined("LJ", ["BTN"])]);
-    expect(copies).toHaveLength(1);
-    expect(copies[0].provenance).toContain("BTN.html");
-  });
-
   it("prázdný ani chybějící seznam kopii nevyrábí", () => {
     // Takový záznam je obecná odpověď sám; kopie by byla jen duplicita.
     const empty = refined("CO", []);
     const missing = refined("CO", ["BTN"]);
     delete (missing as { flatCallers?: readonly string[] }).flatCallers;
     expect(generalCopiesForFlatCallers([empty, missing])).toEqual([]);
+  });
+});
+
+describe("skupina dorovnávajících je jeden hráč, ne dva", () => {
+  /*
+   * Zdroj píše skupinu lomítkem („EP/MP FLATCALL", „CO/BU FLATCALL") a do
+   * 9. 10. 2026 z ní vycházeli **dva** dorovnávající, takže by drill rozdal pot
+   * ve čtyřech k range postavené pro tři. Změřeno z velikostí squeeze.
+   */
+  it("složená skupina se rozbalí na jednu sedačku, ne na dvě", () => {
+    /*
+     * Změřeno z velikostí squeeze: BB na 40 bb squeezuje na 11 bb proti jednomu
+     * jmenovanému dorovnávajícímu i proti skupině `CO/BU`. Druhý dorovnávající by
+     * pot zvětšil a squeeze zvedl, takže skupina je jeden hráč.
+     */
+    const record = grid({
+      context: "SQUEEZE", position: "BB", bucket: 40, vsSeat: "UTG",
+      flatCallers: ["CO-BTN"], sourceFile: "MUL-40BB-BB-vs-EP_CO-BTN.html",
+      strict: { AA: ["SQUEEZE"] }, lenient: { AA: ["SQUEEZE"] },
+    });
+    const { accepted } = selectRefinedRecords([record], history([approved(record)]));
+    // Dvě varianty, protože skupina jmenuje dvě možné sedačky - ale každá nese
+    // **jednoho** dorovnávajícího, ne oba.
+    expect(accepted).toHaveLength(2);
+    for (const row of accepted) expect(row.flatCallers).toHaveLength(1);
+    expect(accepted.map((row) => row.flatCallers?.[0]).sort()).toEqual(["BTN", "CO"]);
+  });
+
+  it("skupina EP/MP ze jména jmenuje tři sedačky a každá je sama", () => {
+    const record = grid({
+      context: "SQUEEZE", position: "BB", bucket: 40, vsSeat: "UTG",
+      flatCallers: ["EP-MP"], sourceFile: "MUL-40BB-BB-vs-EP_EP-MP.html",
+      strict: { AA: ["SQUEEZE"] }, lenient: { AA: ["SQUEEZE"] },
+    });
+    const { accepted } = selectRefinedRecords([record], history([approved(record)]));
+    expect(accepted).toHaveLength(3);
+    for (const row of accepted) expect(row.flatCallers).toHaveLength(1);
+    expect(accepted.map((row) => row.flatCallers?.[0]).sort())
+      .toEqual(["LJ", "UTG+1", "UTG+2"]);
   });
 });
 
@@ -434,16 +469,35 @@ describe("rozbalení skupiny dorovnávajících ve výběru", () => {
       .toEqual(["UTG+1+LJ", "UTG+2+LJ"]);
   });
 
-  it("neznámá skupina se nerozbaluje a záznam zůstane jediný", () => {
-    // `LP` nemá podložené složení, takže se nic nevymýšlí.
+  it("LP se po rozhodnutí 1a rozbaluje na CO a BTN", () => {
+    /*
+     * **Změněno 9. 10. 2026.** Do té chvíle tenhle test čekal, že `LP` zůstane
+     * nerozbalená, a byl to správný test správného stavu: složení `LP` se z korpusu
+     * nedalo změřit. Rozhodl to vlastník (odpověď 1a) poznámkami z koučinku („Late
+     * Position: CO - BTN") a tím, že zdroj staví `LP` do téže řady jako vypsané
+     * `CO/BU`.
+     */
     const record = grid({
       context: "SQUEEZE", position: "BB", bucket: 20, vsSeat: "LJ",
       flatCallers: ["LP"], sourceFile: "MUL-20BB-BB-vs-MP_LP.html",
       strict: { AA: ["SQUEEZE"] }, lenient: { AA: ["SQUEEZE"] },
     });
     const { accepted } = selectRefinedRecords([record], history([approved(record)]));
+    expect(accepted).toHaveLength(2);
+    expect(accepted.map((row) => row.flatCallers?.[0]).sort()).toEqual(["BTN", "CO"]);
+  });
+
+  it("zkratka, kterou zdroj nevysvětluje, se nerozbaluje", () => {
+    // Pojistka proti vymýšlení: neznámá skupina zůstane, jak je, a záznam je jeden.
+    // Drill si ho nevyžádá, protože to není sedačka produktu - a to je správně.
+    const record = grid({
+      context: "SQUEEZE", position: "BB", bucket: 20, vsSeat: "LJ",
+      flatCallers: ["XX"], sourceFile: "MUL-20BB-BB-vs-MP_XX.html",
+      strict: { AA: ["SQUEEZE"] }, lenient: { AA: ["SQUEEZE"] },
+    });
+    const { accepted } = selectRefinedRecords([record], history([approved(record)]));
     expect(accepted).toHaveLength(1);
-    expect(accepted[0].flatCallers).toEqual(["LP"]);
+    expect(accepted[0].flatCallers).toEqual(["XX"]);
     expect(accepted[0].provenance).not.toContain("rozdána");
   });
 });

@@ -150,24 +150,68 @@ describe("slovník importu ranží", () => {
     expect(paired?.flatCallers).toEqual([]);
   });
 
-  it("jméno s oběma oddělovači nesmí o dorovnávajícího přijít", () => {
+  it("spojovník za podtržítkem je lomítko skupiny, ne druhý dorovnávající", () => {
     /*
-     * `MUL-40BB-BB-vs-EP_CO-BTN` míchá `_` a `-`: EP otevřel, CO a BTN dorovnali,
-     * tedy **tři** soupeři. Nalezeno 7. 10. 2026 při čtení jmen pro 4a - výraz
-     * tvaru 2 bral za `vs` jen `[A-Za-z0-9_+]+`, tedy bez pomlčky, takže se
-     * zastavil na `EP_CO` a `BTN` zmizel. Vycházeli z toho dva soupeři místo tří.
+     * **Opraveno 9. 10. 2026 a vyvrací to, co tu stálo od 7. 10.** Tehdy tu bylo
+     * napsáno „EP otevřel, CO a BTN dorovnali, tedy tři soupeři". Změřeno z
+     * nabídky zdroje i z velikostí squeeze: jsou **dva**.
      *
-     * Na počtu soupeřů stojí, jestli je spot multiway, a na seznamu
-     * dorovnávajících stojí, kterou mřížku hráč dostane - takže to byla tichá
-     * chyba ve dvou osách zároveň.
+     * Nabídka ta jména popisuje sama a píše v nich lomítko:
+     *
+     *   MUL-40BB-BB-vs-EP_CO-BTN   „BB VS EP OPEN & CO/BU FLATCALL"
+     *   MUL-40BB-BB-vs-EP_EP-MP    „BB VS EP OPEN & EP/MP FLATCALL"
+     *   MUL-40BB-BB-vs-EP_SB       „BB VS EP OPEN & SB FLATCALL"
+     *
+     * Rozhodující je ale velikost squeeze, protože ta je mechanická funkce potu.
+     * BB na 40 bb squeezuje na **11 bb** proti jednomu jmenovanému dorovnávajícímu
+     * (`EP_SB`, `MP_SB`, `CO_BTN`, `BTN_SB`) **i** proti skupině (`EP_EP-MP`,
+     * `EP_CO-BTN`, `MP_LP`). Druhý dorovnávající by pot zvětšil a squeeze zvedl;
+     * nezvedl, takže skupina je jeden hráč. U SB na 40 bb je to ještě ostřejší:
+     * proti `EP_EP-MP` se squeezuje na 9 bb, kdežto proti `EP_LP` a `CO_BTN` na 10
+     * - dva dorovnávající by velikost nikdy nesnížili.
+     *
+     * Pořád platí, proč se pomlčka za `vs` čte: bez ní se čtení zastavilo na
+     * `EP_CO` a skupina přišla o půlku jména. Dělící znak je ale **podtržítko**,
+     * ne pomlčka: `OTVÍRAČ_DOROVNÁVAJÍCÍ`, a pomlčka uvnitř segmentu je lomítko.
      */
     const mixed = situationFromFileName("MUL-40BB-BB-vs-EP_CO-BTN.html");
     expect(mixed?.seat).toBe("BB");
-    expect(mixed?.villains).toBe(3);
+    expect(mixed?.villains).toBe(2);
     expect(mixed?.opener).toEqual({ source: "EP" });
-    expect(mixed?.flatCallers).toEqual([
+    expect(mixed?.flatCallers).toEqual([{ source: "CO-BTN" }]);
+
+    const early = situationFromFileName("MUL-40BB-SB-vs-EP_EP-MP.html");
+    expect(early?.villains).toBe(2);
+    expect(early?.flatCallers).toEqual([{ source: "EP-MP" }]);
+
+    // Jeden jmenovaný dorovnávající se nesmí splést se skupinou: `CO_BTN` je
+    // „CO OPEN & BU FLATCALL", tedy dvě sedačky oddělené podtržítkem.
+    const named = situationFromFileName("MUL-40BB-BB-vs-CO_BTN.html");
+    expect(named?.villains).toBe(2);
+    expect(named?.opener).toEqual({ source: "CO", seat: "CO" });
+    expect(named?.flatCallers).toEqual([{ source: "BTN", seat: "BTN" }]);
+  });
+
+  it("u squeeze stránek zůstává pomlčka seznamem hráčů", () => {
+    /*
+     * SQU podtržítko nepoužívá a jeho pomlčka **je** oddělovač hráčů - dokazuje to
+     * sám zdroj dvěma jmény, která jako skupina nemají smysl:
+     *
+     *   SQU-40BBMais-HJ-vs-MP-MP             „HJ vs MP/MP"
+     *   SQU-40BBMais-MP-vs-EP-EP-or-EP-MP    „MP vs EP/EP or EP/MP"
+     *
+     * „Jeden ze skupiny {MP, MP}" nic neznamená; „otvírač MP a dorovnávající MP"
+     * ano. Proto se oprava skupin nesmí přelít do tvaru 4.
+     */
+    const twice = situationFromFileName("SQU-40BBMais-HJ-vs-MP-MP.html");
+    expect(twice?.opener).toEqual({ source: "MP", seat: "LJ" });
+    expect(twice?.flatCallers).toEqual([{ source: "MP", seat: "LJ" }]);
+
+    const three = situationFromFileName("SQU-40BBMais-SB-vs-HJ-CO-BU.html");
+    expect(three?.villains).toBe(3);
+    expect(three?.flatCallers).toEqual([
       { source: "CO", seat: "CO" },
-      { source: "BTN", seat: "BTN" },
+      { source: "BU", seat: "BTN" },
     ]);
   });
 
@@ -218,15 +262,38 @@ describe("skupina dorovnávajících na konkrétní sedačky", () => {
     expect(villainGroupSeats("EP", "UTG", "UTG+1")).toEqual([]);
   });
 
-  it("LP se nerozbaluje, protože se nedá změřit", () => {
+  it("LP je CO a BTN - rozhodnutí vlastníka 1a z 8. 10. 2026", () => {
     /*
-     * Devět stránek s `LP` projde jak pro `{CO, BTN}`, tak pro `{HJ, CO}`:
-     * nejtěsnější je `SQU-40BBMais-BU-vs-MP-LP`, kde je hrdina BTN, takže
-     * dorovnávající musí ležet mezi LJ a BTN - a CO tam je v obou variantách.
-     * Rozdíl mezi HJ a BTN je přitom o desítky kombinací, takže zvolit jednu
-     * by bylo rozhodnutí za zdroj. Čeká to na vlastníka.
+     * Do 8. 10. tu stálo „nerozbaluje se, protože se nedá změřit", a byla to
+     * pravda: devět stránek s `LP` procházelo pro `{CO, BTN}` i pro `{HJ, CO}`.
+     * Rozhodl to vlastník (odpověď 1a) a doložil dvěma věcmi, které jsem předtím
+     * nepřečetl: jeho poznámky z koučinku píšou „Late Position: CO - BTN", a zdroj
+     * sám staví `LP` do téže řady jako vypsané `CO/BU` - u hrdiny BB je položka
+     * „EP OPEN & CO/BU FLATCALL", u SB na tomtéž místě „EP OPEN & LP FLATCALL".
+     *
+     * Proti tomu stojí, že `HJ` má při otvírači MP vlastní stránku, takže `LP`
+     * není HJ; a šířka range to podpírá (BB na 40 bb: `@CO+BU` 119 tříd, `@LP`
+     * 123, `@SB` 129 - LP sedí vedle CO/BU, ne vedle raných pozic).
      */
-    expect(villainGroupSeats("LP", "LJ", "BB")).toEqual([]);
+    expect(villainGroupSeats("LP", "LJ", "BB")).toEqual(["CO", "BTN"]);
+    // Hrdina BTN: z LP zbyde CO, protože BTN je sám hrdina.
+    expect(villainGroupSeats("LP", "LJ", "BTN")).toEqual(["CO"]);
+  });
+
+  it("složená skupina ze jména MUL se rozbalí na jednu sedačku", () => {
+    /*
+     * `EP_EP-MP` a `EP_CO-BTN` nesou skupinu v samotném jméně (nabídka: „EP/MP
+     * FLATCALL", „CO/BU FLATCALL"). Rozbalují se tedy stejně jako `EP` a `LP` -
+     * na **jednu** sedačku, ne na dvě.
+     *
+     * `CO-BTN` je přitom totéž co `LP`: zdroj píše jednu věc dvakrát jinak.
+     */
+    expect(villainGroupSeats("CO-BTN", "UTG", "BB")).toEqual(["CO", "BTN"]);
+    expect(villainGroupSeats("EP-MP", "UTG", "BB")).toEqual(["UTG+1", "UTG+2", "LJ"]);
+    // Hrdina HJ: z `EP/MP` zbydou ty tři, co leží mezi UTG a HJ.
+    expect(villainGroupSeats("EP-MP", "UTG", "HJ")).toEqual(["UTG+1", "UTG+2", "LJ"]);
+    // Hrdina LJ: LJ je sám hrdina, takže zbydou dvě rané.
+    expect(villainGroupSeats("EP-MP", "UTG", "LJ")).toEqual(["UTG+1", "UTG+2"]);
   });
 
   it("MP skupina není - je to jedno místo u stolu", () => {
