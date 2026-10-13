@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
 
 import { ALL_HAND_CLASSES } from "../../src/core/poker";
+import { REFINEMENT_AXES } from "../../src/data/ranges/rangePack";
 import {
   STACK_BUCKETS,
   type ActionContext,
@@ -546,6 +547,72 @@ describe("rangeModuleBuilder", () => {
     expect(acknowledged.moduleText).toContain('"vsSeat":"BTN"');
     expect(acknowledged.moduleText).toContain('"provenance":"RYE Rangeviewer 2021');
     expect(acknowledged.moduleText).toContain("...(refinement ?? {})");
+  });
+
+  it("kompaktní zápis nesmí zahodit žádnou osu zpřesnění", () => {
+    /*
+     * Tenhle test existuje, protože se to stalo **dvakrát**.
+     *
+     * 16. 9. 2026 tahle cesta tiše zahodila osu otvírače (bod 234) a doplnila se
+     * vyjmenováním. 9. 10. 2026 pak zahodila osu dorovnávajícího: kandidát packu
+     * nesl 70 záznamů s `flatCallers`, dodávané packy **nula**, a nespadlo nic -
+     * záznam v packu zůstal, jen bez osy, takže se z něj stala druhá obecná
+     * odpověď. Drill si ji nevyžádá, protože klíč, který skládá, osu nese.
+     *
+     * Test proto nekontroluje jmenovitě jednu osu, ale **projde `REFINEMENT_AXES`**
+     * a u každé čeká, že se v modulu objeví. Příští osa se tím chytí sama, dokud
+     * ji někdo nepřidá do kódování - a to je to, co minule chybělo.
+     */
+    const base = validMttImport();
+    const general = base.records.find((record) => record.context === "SQUEEZE")
+      ?? base.records.find((record) => record.context === "VS_OPEN")!;
+    /*
+     * Osy se do fixtury dávají **po jedné nad `vsBTN`**, ne všechny do jednoho
+     * záznamu. Důvod je v řetězu pádu: každé zpřesnění musí mít sourozence bez
+     * té své osy, jinak je nedosažitelné a `refinementReachability` to řekne
+     * (ověřeno - fixtura s nimi namíchanými zčervenala dvěma chybami).
+     *
+     * Pyramida je tedy: `general` (v base) ← `vsBTN` ← `vsBTN|#F3B` i `vsBTN|@CO`.
+     */
+    const input = {
+      ...base,
+      stackSetups: {
+        ...(base.stackSetups ?? {}),
+        F3B: { label: "UTG 40 / BTN 40 / BB 40 bb", stacksBB: { UTG: 40, BTN: 40, BB: 40 } },
+      },
+      records: [
+        ...base.records,
+        { ...general, vsSeat: "BTN" as const },
+        { ...general, vsSeat: "BTN" as const, stackSetupId: "F3B" },
+        { ...general, vsSeat: "BTN" as const, flatCallers: ["CO"] },
+      ],
+    };
+    const built = buildRangeModule({
+      kind: "mtt-preflop", input, permissionManifest: permissionManifest(input.id), exportName: "fixture",
+    });
+
+    expect(built.blockers, "fixtura musí projít, jinak test neměří kódování").toEqual([]);
+    for (const axis of REFINEMENT_AXES) {
+      expect(
+        built.moduleText ?? "",
+        `osa ${axis} se v kompaktním zápisu modulu neobjevila - zahodila by se cestou k hráči`,
+      ).toContain(`"${axis}":`);
+    }
+    // A hodnota, ne jen jméno: osa s prázdným obsahem je totéž jako chybějící.
+    expect(built.moduleText).toContain('"flatCallers":["CO"]');
+  });
+
+  it("prázdný seznam dorovnávajících se nezapisuje", () => {
+    // `flatCallers: []` znamená „nikdo nedorovnal", a to je týž klíč jako bez osy.
+    // Zapsat ho by znamenalo dva zápisy pro jednu odpověď.
+    const base = validMttImport();
+    const general = base.records.find((record) => record.context === "VS_OPEN")!;
+    const input = { ...base, records: [...base.records, { ...general, vsSeat: "CO" as const, flatCallers: [] }] };
+    const built = buildRangeModule({
+      kind: "mtt-preflop", input, permissionManifest: permissionManifest(input.id), exportName: "fixture",
+    });
+    expect(built.moduleText).toContain('"vsSeat":"CO"');
+    expect(built.moduleText).not.toContain('"flatCallers":[]');
   });
 
   it("blokuje promotion bez ceskeho contentLanguage deklarovaneho pro hracske texty", () => {

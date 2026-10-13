@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import type { RangePack } from "./rangePack";
+import { PACK_REFINEMENT_KEYS, refinementValueOf } from "./rangePack";
 import {
   buildMttPreflopImportReadinessReport,
   normalizeMttPreflopRangePackImport,
@@ -407,7 +408,11 @@ function renderMttPreflopRangePackModule(
     'import type { RangePack } from "./rangePack";',
     "",
     "type EncodedHandMap = Array<[actionSet: number, hands: string]>;",
-    "type Refinement = Pick<RangePack[\"records\"][number], \"vsSeat\" | \"stackSetupId\" | \"provenance\">;",
+    // Typ zpřesnění se **skládá** z `PACK_REFINEMENT_KEYS`, ne vypisuje: vypsaný
+    // seznam se tu už jednou rozešel s obsahem packu a zahodil osu dorovnávajícího.
+    `type Refinement = Pick<RangePack["records"][number], ${
+      PACK_REFINEMENT_KEYS.map((key) => `"${key}"`).join(" | ")
+    }>;`,
     "type EncodedRecord = [position: string, bucket: number, context: string, lenient: number, strict: number, actionEvs?: RangePack[\"records\"][number][\"actionEvs\"] | null, refinement?: Refinement];",
     "",
     `const encodedActions: string[][] = ${jsonForModule(encoded.actionSets)};`,
@@ -449,7 +454,7 @@ type EncodedMttPreflopRecord = [
   strict: number,
   /** `null` drží místo, když záznam EV nemá, ale nese zpřesnění za ním. */
   actionEvs?: MttPreflopRecord["actionEvs"] | null,
-  refinement?: Pick<MttPreflopRecord, "vsSeat" | "stackSetupId" | "provenance">,
+  refinement?: Pick<MttPreflopRecord, typeof PACK_REFINEMENT_KEYS[number]>,
 ];
 
 function encodeMttPreflopRuntime(records: readonly MttPreflopRecord[]): {
@@ -493,14 +498,15 @@ function encodeMttPreflopRuntime(records: readonly MttPreflopRecord[]): {
         indexHandMap(record.lenient),
         indexHandMap(record.strict),
       ];
-      // Zpřesnění (osa otvírače) a původ záznamu musí přežít i kompaktní
-      // zápis: do 16. 9. 2026 je tahle cesta tiše zahodila, takže by pack
-      // s uznaným zdrojem vyšel z modulu jako pack bez něj (bod 234).
-      const refinement = {
-        ...(record.vsSeat ? { vsSeat: record.vsSeat } : {}),
-        ...(record.stackSetupId ? { stackSetupId: record.stackSetupId } : {}),
-        ...(record.provenance ? { provenance: record.provenance } : {}),
-      };
+      // Zpřesnění a původ záznamu musí přežít i kompaktní zápis: do 16. 9. 2026
+      // tahle cesta tiše zahodila osu otvírače (bod 234) a do 9. 10. osu
+      // dorovnávajícího - obojí proto, že seznam vlastností byl **vypsaný tady**
+      // a rozešel se s obsahem packu. Teď se čte z `PACK_REFINEMENT_KEYS`.
+      const refinement: Record<string, unknown> = {};
+      for (const key of PACK_REFINEMENT_KEYS) {
+        const value = refinementValueOf(record, key);
+        if (value !== undefined) refinement[key] = value;
+      }
       const refined = Object.keys(refinement).length > 0;
       if (record.actionEvs) encoded.push(record.actionEvs);
       else if (refined) encoded.push(null);

@@ -160,18 +160,63 @@ function validateStackSetups(pack: RangePack): string[] {
   return errors;
 }
 
+/**
+ * Osy, podle kterých se zpřesněný záznam **klíčuje** - a jeden jejich seznam.
+ *
+ * ## Proč je to konstanta, a ne vyjmenování na každém místě
+ *
+ * Protože vyjmenování se rozešlo, a stálo to osu. Měřeno 9. 10. 2026: osa
+ * dorovnávajícího (`flatCallers`) prošla parserem, draftem, kandidátem i
+ * `raw/normalized.json`, ale `rangeModuleBuilder` ji do dodávaného packu
+ * **nezakódoval** - vyjmenovával `vsSeat | stackSetupId | provenance`. Kandidát
+ * nesl 70 záznamů s osou, dodávané packy **nula**, a nic nespadlo: záznam
+ * v packu zůstal, jen bez osy, takže se z něj stala druhá obecná odpověď.
+ *
+ * Tatáž vada tam byla už 16. 9. u osy otvírače (bod 234) a doplnila se tehdy
+ * vyjmenováním - čímž byl návrh připravený to zopakovat u každé další osy.
+ * Stalo se to u první, která přišla.
+ *
+ * Příští osa se proto přidá **sem** a projde všude, nebo neprojde nikde. To
+ * druhé je pořád lepší než projít jen někam, protože se to pozná.
+ */
+export const REFINEMENT_AXES = ["vsSeat", "stackSetupId", "flatCallers"] as const;
+
+/**
+ * Co ze záznamu tvoří zpřesnění **v packu**: osy a k nim původ.
+ *
+ * `provenance` není osa - neklíčuje se podle ní - ale do modulu patří ze
+ * stejného důvodu: pack s uznaným zdrojem by z modulu vyšel jako pack bez něj.
+ * `RangeRecord` ji nemá, proto má `rangePackRecordToRangeRecord` jen `REFINEMENT_AXES`.
+ */
+export const PACK_REFINEMENT_KEYS = [...REFINEMENT_AXES, "provenance"] as const;
+
+/** Hodnota osy, která se má zapsat - prázdné pole znamená totéž co chybějící. */
+export function refinementValueOf(
+  record: RangePackRecord,
+  key: typeof PACK_REFINEMENT_KEYS[number],
+): unknown {
+  const value = record[key];
+  // Prázdný seznam dorovnávajících je „nikdo nedorovnal", a to je týž klíč jako
+  // bez osy - zapsat ho by znamenalo dva zápisy pro jednu odpověď.
+  if (Array.isArray(value)) return value.length > 0 ? value : undefined;
+  return value === "" ? undefined : value;
+}
+
 export function rangePackRecordToRangeRecord(record: RangePackRecord): RangeRecord {
+  const axes: Record<string, unknown> = {};
+  // Zpřesnění musí projít i sem, jinak by se dva legitimní záznamy slily do
+  // jednoho klíče a validace by je hlásila jako duplicitu.
+  for (const key of REFINEMENT_AXES) {
+    const value = refinementValueOf(record, key);
+    if (value !== undefined) axes[key] = value;
+  }
   return {
     position: record.position,
     bucket: record.bucket,
     context: record.context,
     lenient: record.lenient,
     strict: record.strict,
-    // Zpřesnění musí projít i sem, jinak by se dva legitimní záznamy slily do
-    // jednoho klíče a validace by je hlásila jako duplicitu.
-    ...(record.vsSeat ? { vsSeat: record.vsSeat } : {}),
-    ...(record.stackSetupId ? { stackSetupId: record.stackSetupId } : {}),
-    ...(record.flatCallers?.length ? { flatCallers: record.flatCallers } : {}),
+    ...axes,
     ...(record.actionEvs ? { actionEvs: record.actionEvs } : {}),
   };
 }
