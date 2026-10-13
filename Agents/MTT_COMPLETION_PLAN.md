@@ -347,10 +347,41 @@ Dvě věci, které z toho plynou a nejsou samozřejmé:
    kterou návrh drží - EV se nedopočítává modelem, aby se nevyrobilo číslo,
    které vypadá stejně autoritativně jako to přesné.
 
-**Co zůstává nezměřené:** jestli cena dojde k hráči i na postflopu. Preflopová
-část `mtt:post-answer` to hlásí zvlášť a postflopová sekce tenhle sloupec nemá,
-takže se to z dnešního výpisu nedá tvrdit ani vyvrátit. Než se to změří, nepatří
-sem číslo - a měřit se to má tam, kde se to ptá na hráče, ne na obsah.
+**~~Co zůstává nezměřené:~~ změřeno 6. 9. 2026, tenhle odstavec byl zastaralý.**
+Stálo tu, že „postflopová sekce `mtt:post-answer` tenhle sloupec nemá, takže se
+to z dnešního výpisu nedá tvrdit ani vyvrátit". Sloupec má: `measurePostAnswerFeedback.mts`
+počítá `priced` i `priceGaps` z `postflopPriceGap()` a hlídá to podlahou
+**flop 20 %, turn 30 %, river 45 %** plus přísnou nulu na `CHYBÍ_SÁZKA`
+a `CHYBÍ_POT`. Změřené hodnoty: **flop 25,0 %, turn 36,3 %, river 51,7 %**.
+
+Nalezeno 13. 10. 2026 při otázce vlastníka na flopovou EV. Měření leželo
+**v komentáři** `src/core/postflopDecisionPrice.ts` od 6. 9., tedy pět týdnů,
+a tenhle odstavec vedle něj dál tvrdil opak - a protože plán se čte jako zadání,
+z vyvráceného tvrzení se stávala premisa. Je to tentýž vzorec jako u bodu 139:
+**když měření vyvrátí dřívější tvrzení, musí se grepnout každá jeho kopie**, ne
+jen to místo, kde se právě měřilo.
+
+**Co na postflopu zůstává prázdné a proč:** cena **vlastní sázky hrdiny**.
+Rozpad říká, že 75 % flopových spotů je `NEČELÍ_SÁZCE` - hrdina jedná první.
+Důvod zapsaný 28. 8. byl „velikost je model (třetina a tři čtvrtiny), ne
+solverovo číslo". **U vyřešených rodin ten předpoklad neplatí** - velikost je ve
+stromě (`ip bet 25,50`, `oop bet 50`) a pohled ji odtud bere, přes
+`solvedSizing()` a `postflopBetSizing.generated.ts`, kde model slouží už jen
+jako záloha.
+
+**Opravený ale nezůstal simulátor linky.** `betSizeBB()`
+(`postflopLineSimulator.ts:958`) tentýž řetězec nemá a 0,33 / 0,75 používá
+bezpodmínečně - a jeho výsledek se hráči ukazuje jako „Bank po akci" na
+`postflopView.ts:699`. Změřeno 13. 10. 2026 na všech 76 rodinách tabulky:
+`BET_SMALL` má velikost ve stromě u 20 rodin a **s modelem se rozchází u 17
+(85,0 %)**, `BET_BIG` u 63 rodin a **u všech 63 (100 %)**, protože ve stromě je
+vždy 0,50 a nikdy 0,75. Hráč tedy u 63 rodin vidí na tlačítku půlpotovou sázku
+a pod ní banku ze tří čtvrtin. Není to chybějící číslo, jsou to **dvě čísla,
+která si odporují** - tedy právě to, čemu se princip „jedno prázdné místo je
+lepší než dvě čísla, ze kterých jedno tiše lže" měl vyhnout. Obsah to nekazí:
+simulátor SPR nepočítá, takže si tím nevybírá jiné pravidlo.
+
+Zadáno vlastníkovi v `Agents/decisions/flopova-cena-2026-10-13.md`.
 
 ## Fáze 2 — EV pro turn a flop — **uzavřeno 26. 8. 2026: nedodávat**
 
