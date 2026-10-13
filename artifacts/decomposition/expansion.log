@@ -1,0 +1,2935 @@
+[21:01:01] nastagováno 173 desek bez checkpointu; deadline 08:00
+[21:01:01] na disku volno 377.1 GB (hranice 8 GB)
+[21:01:01] solving MTT9_25BB_LJ_HJ_SRP 883r
+[21:05:56]   hotovo za 4.9 min, checkpoint 33 MB
+[21:05:56] solving MTT9_25BB_LJ_HJ_SRP 986tt
+[21:09:22]   hotovo za 3.4 min, checkpoint 33 MB
+[21:09:22] solving MTT9_25BB_LJ_HJ_SRP AT4mono
+[21:11:19]   hotovo za 1.9 min, checkpoint 22 MB
+[21:11:19] solving MTT9_25BB_LJ_HJ_SRP 742r
+[21:18:36]   hotovo za 7.3 min, checkpoint 33 MB
+[21:18:36] solving MTT9_25BB_LJ_HJ_SRP K98tt
+[21:21:47]   hotovo za 3.2 min, checkpoint 32 MB
+[21:21:47] solving MTT9_25BB_HJ_BB_SRP A72r
+[21:28:03]   hotovo za 6.3 min, checkpoint 47 MB
+[21:28:03] solving MTT9_25BB_HJ_BB_SRP 883r
+[21:34:59]   hotovo za 6.9 min, checkpoint 50 MB
+[21:34:59] solving MTT9_25BB_HJ_BB_SRP 986tt
+[21:41:44]   hotovo za 6.7 min, checkpoint 50 MB
+[21:41:44] solving MTT9_25BB_HJ_BB_SRP AT4mono
+[21:44:19]   hotovo za 2.6 min, checkpoint 34 MB
+[21:44:19] solving MTT9_25BB_HJ_BB_SRP 742r
+[21:50:15]   hotovo za 5.9 min, checkpoint 50 MB
+[21:50:15] solving MTT9_25BB_HJ_BB_SRP K98tt
+[21:54:12]   hotovo za 3.9 min, checkpoint 47 MB
+[21:54:12] solving MTT9_25BB_HJ_BTN_SRP A72r
+[21:59:23]   hotovo za 5.2 min, checkpoint 42 MB
+[21:59:23] solving MTT9_25BB_HJ_BTN_SRP 883r
+[22:03:15]   hotovo za 3.9 min, checkpoint 44 MB
+[22:03:15] solving MTT9_25BB_HJ_BTN_SRP 986tt
+[22:06:57]   hotovo za 3.7 min, checkpoint 43 MB
+[22:06:57] solving MTT9_25BB_HJ_BTN_SRP AT4mono
+[22:08:02]   hotovo za 1.1 min, checkpoint 33 MB
+[22:08:02] solving MTT9_25BB_HJ_BTN_SRP 742r
+[22:16:16]   hotovo za 8.2 min, checkpoint 45 MB
+[22:16:16] solving MTT9_25BB_HJ_BTN_SRP K98tt
+[22:21:39]   hotovo za 5.4 min, checkpoint 43 MB
+[22:21:39] solving MTT9_25BB_LJ_BB_SRP A72r
+[22:29:27]   hotovo za 7.8 min, checkpoint 43 MB
+[22:29:27] solving MTT9_25BB_LJ_BB_SRP 883r
+[22:37:17]   hotovo za 7.8 min, checkpoint 47 MB
+[22:37:17] solving MTT9_25BB_LJ_BB_SRP 986tt
+[22:41:00]   hotovo za 3.7 min, checkpoint 45 MB
+[22:41:00] solving MTT9_25BB_LJ_BB_SRP AT4mono
+[22:43:07]   hotovo za 2.1 min, checkpoint 31 MB
+[22:43:07] solving MTT9_25BB_LJ_BB_SRP 742r
+[22:48:39]   hotovo za 5.5 min, checkpoint 47 MB
+[22:48:39] solving MTT9_25BB_LJ_BB_SRP K98tt
+[22:52:22]   hotovo za 3.7 min, checkpoint 43 MB
+[22:52:22] solving MTT9_25BB_UTG_BTN_SRP A72r
+[22:58:52]   hotovo za 6.5 min, checkpoint 32 MB
+[22:58:52] solving MTT9_25BB_UTG_BTN_SRP 883r
+[23:03:33]   hotovo za 4.7 min, checkpoint 35 MB
+[23:03:33] solving MTT9_25BB_UTG_BTN_SRP 986tt
+[23:06:34]   hotovo za 3.0 min, checkpoint 34 MB
+[23:06:34] solving MTT9_25BB_UTG_BTN_SRP AT4mono
+[23:08:15]   hotovo za 1.7 min, checkpoint 23 MB
+[23:08:15] solving MTT9_25BB_UTG_BTN_SRP 742r
+[23:12:52]   hotovo za 4.6 min, checkpoint 35 MB
+[23:12:52] solving MTT9_25BB_UTG_BTN_SRP K98tt
+[23:15:52]   hotovo za 3.0 min, checkpoint 33 MB
+[23:15:52] solving MTT9_25BB_CO_BTN_SRP A72r
+[23:21:26]   hotovo za 5.6 min, checkpoint 47 MB
+[23:21:26] solving MTT9_25BB_CO_BTN_SRP 883r
+[23:27:30]   hotovo za 6.1 min, checkpoint 50 MB
+[23:27:30] solving MTT9_25BB_CO_BTN_SRP 986tt
+[23:31:33]   hotovo za 4.1 min, checkpoint 49 MB
+[23:31:33] solving MTT9_25BB_CO_BTN_SRP AT4mono
+[23:32:45]   hotovo za 1.2 min, checkpoint 36 MB
+[23:32:45] solving MTT9_25BB_CO_BTN_SRP 742r
+[23:38:42]   hotovo za 6.0 min, checkpoint 51 MB
+[23:38:42] solving MTT9_25BB_CO_BTN_SRP K98tt
+[23:42:32]   hotovo za 3.8 min, checkpoint 45 MB
+[23:42:32] solving MTT9_25BB_UTG_LJ_SRP A72r
+[23:46:13]   hotovo za 3.7 min, checkpoint 22 MB
+[23:46:13] solving MTT9_25BB_UTG_LJ_SRP 883r
+[23:51:08]   hotovo za 4.9 min, checkpoint 25 MB
+[23:51:08] solving MTT9_25BB_UTG_LJ_SRP 986tt
+[23:54:42]   hotovo za 3.6 min, checkpoint 24 MB
+[23:54:42] solving MTT9_25BB_UTG_LJ_SRP AT4mono
+[23:56:01]   hotovo za 1.3 min, checkpoint 16 MB
+[23:56:01] solving MTT9_25BB_UTG_LJ_SRP 742r
+[00:01:39]   hotovo za 5.6 min, checkpoint 25 MB
+[00:01:39] solving MTT9_25BB_UTG_LJ_SRP K98tt
+[00:04:05]   hotovo za 2.4 min, checkpoint 23 MB
+[00:04:05] solving MTT9_25BB_HJ_CO_SRP A72r
+[00:08:55]   hotovo za 4.8 min, checkpoint 39 MB
+[00:08:55] solving MTT9_25BB_HJ_CO_SRP 883r
+[00:12:27]   hotovo za 3.5 min, checkpoint 40 MB
+[00:12:27] solving MTT9_25BB_HJ_CO_SRP 986tt
+[00:17:23]   hotovo za 4.9 min, checkpoint 38 MB
+[00:17:23] solving MTT9_25BB_HJ_CO_SRP AT4mono
+[00:19:13]   hotovo za 1.8 min, checkpoint 26 MB
+[00:19:13] solving MTT9_25BB_HJ_CO_SRP 742r
+[00:24:16]   hotovo za 5.1 min, checkpoint 42 MB
+[00:24:16] solving MTT9_25BB_HJ_CO_SRP K98tt
+[00:30:29]   hotovo za 6.2 min, checkpoint 36 MB
+[00:30:29] solving MTT9_25BB_UTG_HJ_SRP A72r
+[00:34:20]   hotovo za 3.8 min, checkpoint 24 MB
+[00:34:20] solving MTT9_25BB_UTG_HJ_SRP 883r
+[00:38:16]   hotovo za 3.9 min, checkpoint 26 MB
+[00:38:16] solving MTT9_25BB_UTG_HJ_SRP 986tt
+[00:41:59]   hotovo za 3.7 min, checkpoint 26 MB
+[00:41:59] solving MTT9_25BB_UTG_HJ_SRP AT4mono
+[00:43:22]   hotovo za 1.4 min, checkpoint 18 MB
+[00:43:22] solving MTT9_25BB_UTG_HJ_SRP 742r
+[00:47:18]   hotovo za 3.9 min, checkpoint 27 MB
+[00:47:18] solving MTT9_25BB_UTG_HJ_SRP K98tt
+[00:49:47]   hotovo za 2.5 min, checkpoint 25 MB
+[00:49:47] solving MTT9_25BB_UTG_CO_SRP A72r
+[00:53:48]   hotovo za 4.0 min, checkpoint 28 MB
+[00:53:48] solving MTT9_25BB_UTG_CO_SRP 883r
+[00:56:41]   hotovo za 2.9 min, checkpoint 30 MB
+[00:56:41] solving MTT9_25BB_UTG_CO_SRP 986tt
+[01:00:41]   hotovo za 4.0 min, checkpoint 29 MB
+[01:00:41] solving MTT9_25BB_UTG_CO_SRP AT4mono
+[01:02:16]   hotovo za 1.6 min, checkpoint 20 MB
+[01:02:16] solving MTT9_25BB_UTG_CO_SRP 742r
+[01:06:26]   hotovo za 4.2 min, checkpoint 30 MB
+[01:06:26] solving MTT9_25BB_UTG_CO_SRP K98tt
+[01:09:00]   hotovo za 2.6 min, checkpoint 28 MB
+[01:09:00] solving MTT9_25BB_LJ_BTN_SRP A72r
+[01:13:51]   hotovo za 4.8 min, checkpoint 39 MB
+[01:13:51] solving MTT9_25BB_LJ_BTN_SRP 883r
+[01:17:27]   hotovo za 3.6 min, checkpoint 41 MB
+[01:17:27] solving MTT9_25BB_LJ_BTN_SRP 986tt
+[01:20:49]   hotovo za 3.4 min, checkpoint 40 MB
+[01:20:49] solving MTT9_25BB_LJ_BTN_SRP AT4mono
+[01:21:50]   hotovo za 1.0 min, checkpoint 30 MB
+[01:21:50] solving MTT9_25BB_LJ_BTN_SRP 742r
+[01:29:18]   hotovo za 7.5 min, checkpoint 42 MB
+[01:29:18] solving MTT9_25BB_LJ_BTN_SRP K98tt
+[01:32:36]   hotovo za 3.3 min, checkpoint 40 MB
+[01:32:36] solving MTT9_25BB_LJ_CO_SRP A72r
+[01:37:02]   hotovo za 4.4 min, checkpoint 34 MB
+[01:37:02] solving MTT9_25BB_LJ_CO_SRP 883r
+[01:40:28]   hotovo za 3.4 min, checkpoint 37 MB
+[01:40:28] solving MTT9_25BB_LJ_CO_SRP 986tt
+[01:43:31]   hotovo za 3.1 min, checkpoint 36 MB
+[01:43:31] solving MTT9_25BB_LJ_CO_SRP AT4mono
+[01:44:27]   hotovo za 0.9 min, checkpoint 26 MB
+[01:44:27] solving MTT9_25BB_LJ_CO_SRP 742r
+[01:49:05]   hotovo za 4.6 min, checkpoint 37 MB
+[01:49:05] solving MTT9_25BB_LJ_CO_SRP K98tt
+[01:52:03]   hotovo za 3.0 min, checkpoint 35 MB
+[01:52:03] solving MTT9_25BB_BTN_SB_SRP A72r
+[02:01:08]   hotovo za 9.1 min, checkpoint 54 MB
+[02:01:08] solving MTT9_25BB_BTN_SB_SRP 883r
+[02:08:03]   hotovo za 6.9 min, checkpoint 57 MB
+[02:08:03] solving MTT9_25BB_BTN_SB_SRP 986tt
+[02:12:28]   hotovo za 4.4 min, checkpoint 54 MB
+[02:12:28] solving MTT9_25BB_BTN_SB_SRP AT4mono
+[02:15:00]   hotovo za 2.5 min, checkpoint 37 MB
+[02:15:00] solving MTT9_25BB_BTN_SB_SRP 742r
+[02:21:26]   hotovo za 6.4 min, checkpoint 60 MB
+[02:21:26] solving MTT9_25BB_BTN_SB_SRP K98tt
+[02:21:37]   SELHALO po 0.2 min (rc=3221225477), checkpoint nevznikl
+[02:21:37] solving MTT9_25BB_CO_SB_SRP A72r
+[02:26:30]   hotovo za 4.9 min, checkpoint 40 MB
+[02:26:30] solving MTT9_25BB_CO_SB_SRP 883r
+[02:30:05]   hotovo za 3.6 min, checkpoint 41 MB
+[02:30:05] solving MTT9_25BB_CO_SB_SRP 986tt
+[02:33:45]   hotovo za 3.7 min, checkpoint 41 MB
+[02:33:45] solving MTT9_25BB_CO_SB_SRP AT4mono
+[02:35:44]   hotovo za 2.0 min, checkpoint 28 MB
+[02:35:44] solving MTT9_25BB_CO_SB_SRP 742r
+[02:43:38]   hotovo za 7.9 min, checkpoint 42 MB
+[02:43:38] solving MTT9_25BB_CO_SB_SRP K98tt
+[02:48:35]   hotovo za 5.0 min, checkpoint 39 MB
+[02:48:35] solving MTT9_25BB_HJ_SB_SRP A72r
+[02:55:18]   hotovo za 6.7 min, checkpoint 34 MB
+[02:55:18] solving MTT9_25BB_HJ_SB_SRP 883r
+[02:58:38]   hotovo za 3.3 min, checkpoint 37 MB
+[02:58:38] solving MTT9_25BB_HJ_SB_SRP 986tt
+[03:01:46]   hotovo za 3.1 min, checkpoint 36 MB
+[03:01:46] solving MTT9_25BB_HJ_SB_SRP AT4mono
+[03:03:33]   hotovo za 1.8 min, checkpoint 25 MB
+[03:03:33] solving MTT9_25BB_HJ_SB_SRP 742r
+[03:10:40]   hotovo za 7.1 min, checkpoint 37 MB
+[03:10:40] solving MTT9_25BB_HJ_SB_SRP K98tt
+[03:16:35]   hotovo za 5.9 min, checkpoint 35 MB
+[03:16:35] solving MTT9_25BB_LJ_SB_SRP A72r
+[03:22:51]   hotovo za 6.3 min, checkpoint 30 MB
+[03:22:51] solving MTT9_25BB_LJ_SB_SRP 883r
+[03:26:00]   hotovo za 3.1 min, checkpoint 33 MB
+[03:26:00] solving MTT9_25BB_LJ_SB_SRP 986tt
+[03:27:31]   hotovo za 1.5 min, checkpoint 34 MB
+[03:27:31] solving MTT9_25BB_LJ_SB_SRP AT4mono
+[03:29:54]   hotovo za 2.4 min, checkpoint 22 MB
+[03:29:54] solving MTT9_25BB_LJ_SB_SRP 742r
+[03:34:28]   hotovo za 4.6 min, checkpoint 33 MB
+[03:34:28] solving MTT9_25BB_LJ_SB_SRP K98tt
+[03:38:36]   hotovo za 4.1 min, checkpoint 32 MB
+[03:38:36] solving MTT9_25BB_UTG_1_BB_SRP A72r
+[03:43:18]   hotovo za 4.7 min, checkpoint 37 MB
+[03:43:18] solving MTT9_25BB_UTG_1_BB_SRP 883r
+[03:48:24]   hotovo za 5.1 min, checkpoint 39 MB
+[03:48:24] solving MTT9_25BB_UTG_1_BB_SRP 986tt
+[03:51:42]   hotovo za 3.3 min, checkpoint 40 MB
+[03:51:42] solving MTT9_25BB_UTG_1_BB_SRP AT4mono
+[03:53:31]   hotovo za 1.8 min, checkpoint 27 MB
+[03:53:31] solving MTT9_25BB_UTG_1_BB_SRP 742r
+[04:00:41]   hotovo za 7.2 min, checkpoint 41 MB
+[04:00:41] solving MTT9_25BB_UTG_1_BB_SRP K98tt
+[04:03:50]   hotovo za 3.2 min, checkpoint 38 MB
+[04:03:50] solving MTT9_25BB_UTG_1_BTN_SRP A72r
+[04:08:11]   hotovo za 4.4 min, checkpoint 32 MB
+[04:08:11] solving MTT9_25BB_UTG_1_BTN_SRP 883r
+[04:12:49]   hotovo za 4.6 min, checkpoint 35 MB
+[04:12:49] solving MTT9_25BB_UTG_1_BTN_SRP 986tt
+[04:15:51]   hotovo za 3.0 min, checkpoint 33 MB
+[04:15:51] solving MTT9_25BB_UTG_1_BTN_SRP AT4mono
+[04:17:30]   hotovo za 1.7 min, checkpoint 24 MB
+[04:17:30] solving MTT9_25BB_UTG_1_BTN_SRP 742r
+[04:21:59]   hotovo za 4.5 min, checkpoint 35 MB
+[04:21:59] solving MTT9_25BB_UTG_1_BTN_SRP K98tt
+[04:24:54]   hotovo za 2.9 min, checkpoint 34 MB
+[04:24:54] solving MTT9_25BB_UTG_1_CO_SRP A72r
+[04:28:52]   hotovo za 4.0 min, checkpoint 28 MB
+[04:28:52] solving MTT9_25BB_UTG_1_CO_SRP 883r
+[04:31:42]   hotovo za 2.8 min, checkpoint 30 MB
+[04:31:42] solving MTT9_25BB_UTG_1_CO_SRP 986tt
+[04:35:40]   hotovo za 4.0 min, checkpoint 29 MB
+[04:35:40] solving MTT9_25BB_UTG_1_CO_SRP AT4mono
+[04:36:28]   hotovo za 0.8 min, checkpoint 22 MB
+[04:36:28] solving MTT9_25BB_UTG_1_CO_SRP 742r
+[04:40:37]   hotovo za 4.2 min, checkpoint 30 MB
+[04:40:37] solving MTT9_25BB_UTG_1_CO_SRP K98tt
+[04:43:12]   hotovo za 2.6 min, checkpoint 28 MB
+[04:43:12] solving MTT9_25BB_UTG_1_HJ_SRP A72r
+[04:43:23]   SELHALO po 0.2 min (rc=3221225477), checkpoint nevznikl
+[04:43:23] solving MTT9_25BB_UTG_1_HJ_SRP 883r
+[04:46:06]   hotovo za 2.7 min, checkpoint 27 MB
+[04:46:06] solving MTT9_25BB_UTG_1_HJ_SRP 986tt
+[04:48:38]   hotovo za 2.5 min, checkpoint 26 MB
+[04:48:38] solving MTT9_25BB_UTG_1_HJ_SRP AT4mono
+[04:50:04]   hotovo za 1.4 min, checkpoint 18 MB
+[04:50:04] solving MTT9_25BB_UTG_1_HJ_SRP 742r
+[04:54:01]   hotovo za 3.9 min, checkpoint 27 MB
+[04:54:01] solving MTT9_25BB_UTG_1_HJ_SRP K98tt
+[04:56:31]   hotovo za 2.5 min, checkpoint 26 MB
+[04:56:31] solving MTT9_25BB_UTG_1_LJ_SRP A72r
+[05:00:11]   hotovo za 3.7 min, checkpoint 22 MB
+[05:00:11] solving MTT9_25BB_UTG_1_LJ_SRP 883r
+[05:02:44]   hotovo za 2.6 min, checkpoint 25 MB
+[05:02:44] solving MTT9_25BB_UTG_1_LJ_SRP 986tt
+[05:06:22]   hotovo za 3.6 min, checkpoint 24 MB
+[05:06:22] solving MTT9_25BB_UTG_1_LJ_SRP AT4mono
+[05:07:46]   hotovo za 1.4 min, checkpoint 16 MB
+[05:07:46] solving MTT9_25BB_UTG_1_LJ_SRP 742r
+[05:13:43]   hotovo za 6.0 min, checkpoint 25 MB
+[05:13:43] solving MTT9_25BB_UTG_1_LJ_SRP K98tt
+[05:16:13]   hotovo za 2.5 min, checkpoint 23 MB
+[05:16:13] solving MTT9_25BB_UTG_1_SB_SRP A72r
+[05:21:55]   hotovo za 5.7 min, checkpoint 26 MB
+[05:21:55] solving MTT9_25BB_UTG_1_SB_SRP 883r
+[05:25:51]   hotovo za 3.9 min, checkpoint 27 MB
+[05:25:51] solving MTT9_25BB_UTG_1_SB_SRP 986tt
+[05:28:21]   hotovo za 2.5 min, checkpoint 27 MB
+[05:28:21] solving MTT9_25BB_UTG_1_SB_SRP AT4mono
+[05:29:47]   hotovo za 1.4 min, checkpoint 18 MB
+[05:29:47] solving MTT9_25BB_UTG_1_SB_SRP 742r
+[05:35:39]   hotovo za 5.9 min, checkpoint 27 MB
+[05:35:39] solving MTT9_25BB_UTG_1_SB_SRP K98tt
+[05:39:19]   hotovo za 3.7 min, checkpoint 26 MB
+[05:39:19] solving MTT9_25BB_UTG_2_BB_SRP A72r
+[05:44:23]   hotovo za 5.1 min, checkpoint 41 MB
+[05:44:23] solving MTT9_25BB_UTG_2_BB_SRP 883r
+[05:44:34]   SELHALO po 0.2 min (rc=3221225477), checkpoint nevznikl
+[05:44:34] solving MTT9_25BB_UTG_2_BB_SRP 986tt
+[05:48:09]   hotovo za 3.6 min, checkpoint 42 MB
+[05:48:09] solving MTT9_25BB_UTG_2_BB_SRP AT4mono
+[05:50:07]   hotovo za 2.0 min, checkpoint 29 MB
+[05:50:07] solving MTT9_25BB_UTG_2_BB_SRP 742r
+[05:58:02]   hotovo za 7.9 min, checkpoint 45 MB
+[05:58:02] solving MTT9_25BB_UTG_2_BB_SRP K98tt
+[06:03:04]   hotovo za 5.0 min, checkpoint 42 MB
+[06:03:04] solving MTT9_25BB_UTG_2_BTN_SRP A72r
+[06:03:15]   SELHALO po 0.2 min (rc=3221225477), checkpoint nevznikl
+[06:03:15] solving MTT9_25BB_UTG_2_BTN_SRP 883r
+[06:06:37]   hotovo za 3.4 min, checkpoint 38 MB
+[06:06:37] solving MTT9_25BB_UTG_2_BTN_SRP 986tt
+[06:09:54]   hotovo za 3.3 min, checkpoint 37 MB
+[06:09:54] solving MTT9_25BB_UTG_2_BTN_SRP AT4mono
+[06:10:51]   hotovo za 1.0 min, checkpoint 28 MB
+[06:10:51] solving MTT9_25BB_UTG_2_BTN_SRP 742r
+[06:15:38]   hotovo za 4.8 min, checkpoint 38 MB
+[06:15:38] solving MTT9_25BB_UTG_2_BTN_SRP K98tt
+[06:18:50]   hotovo za 3.2 min, checkpoint 37 MB
+[06:18:50] solving MTT9_25BB_UTG_2_CO_SRP A72r
+[06:23:07]   hotovo za 4.3 min, checkpoint 31 MB
+[06:23:07] solving MTT9_25BB_UTG_2_CO_SRP 883r
+[06:26:12]   hotovo za 3.1 min, checkpoint 34 MB
+[06:26:12] solving MTT9_25BB_UTG_2_CO_SRP 986tt
+[06:29:10]   hotovo za 3.0 min, checkpoint 34 MB
+[06:29:10] solving MTT9_25BB_UTG_2_CO_SRP AT4mono
+[06:30:03]   hotovo za 0.9 min, checkpoint 24 MB
+[06:30:03] solving MTT9_25BB_UTG_2_CO_SRP 742r
+[06:35:06]   hotovo za 5.0 min, checkpoint 34 MB
+[06:35:06] solving MTT9_25BB_UTG_2_CO_SRP K98tt
+[06:37:51]   hotovo za 2.8 min, checkpoint 32 MB
+[06:37:51] solving MTT9_25BB_UTG_2_HJ_SRP A72r
+[06:42:00]   hotovo za 4.1 min, checkpoint 28 MB
+[06:42:00] solving MTT9_25BB_UTG_2_HJ_SRP 883r
+[06:47:44]   hotovo za 5.7 min, checkpoint 30 MB
+[06:47:44] solving MTT9_25BB_UTG_2_HJ_SRP 986tt
+[06:50:32]   hotovo za 2.8 min, checkpoint 31 MB
+[06:50:32] solving MTT9_25BB_UTG_2_HJ_SRP AT4mono
+[06:52:06]   hotovo za 1.6 min, checkpoint 21 MB
+[06:52:06] solving MTT9_25BB_UTG_2_HJ_SRP 742r
+[06:58:23]   hotovo za 6.3 min, checkpoint 30 MB
+[06:58:23] solving MTT9_25BB_UTG_2_HJ_SRP K98tt
+[07:01:11]   hotovo za 2.8 min, checkpoint 30 MB
+[07:01:11] solving MTT9_25BB_UTG_2_LJ_SRP A72r
+[07:05:06]   hotovo za 3.9 min, checkpoint 25 MB
+[07:05:06] solving MTT9_25BB_UTG_2_LJ_SRP 883r
+[07:09:09]   hotovo za 4.0 min, checkpoint 28 MB
+[07:09:09] solving MTT9_25BB_UTG_2_LJ_SRP 986tt
+[07:13:04]   hotovo za 3.9 min, checkpoint 27 MB
+[07:13:04] solving MTT9_25BB_UTG_2_LJ_SRP AT4mono
+[07:14:32]   hotovo za 1.5 min, checkpoint 19 MB
+[07:14:32] solving MTT9_25BB_UTG_2_LJ_SRP 742r
+[07:20:42]   hotovo za 6.2 min, checkpoint 29 MB
+[07:20:42] solving MTT9_25BB_UTG_2_LJ_SRP K98tt
+[07:23:15]   hotovo za 2.5 min, checkpoint 26 MB
+[07:23:15] solving MTT9_25BB_UTG_2_SB_SRP A72r
+[07:29:19]   hotovo za 6.1 min, checkpoint 29 MB
+[07:29:19] solving MTT9_25BB_UTG_2_SB_SRP 883r
+[07:32:16]   hotovo za 3.0 min, checkpoint 31 MB
+[07:32:16] solving MTT9_25BB_UTG_2_SB_SRP 986tt
+[07:35:02]   hotovo za 2.8 min, checkpoint 30 MB
+[07:35:02] solving MTT9_25BB_UTG_2_SB_SRP AT4mono
+[07:36:33]   hotovo za 1.5 min, checkpoint 20 MB
+[07:36:33] solving MTT9_25BB_UTG_2_SB_SRP 742r
+[07:42:50]   hotovo za 6.3 min, checkpoint 31 MB
+[07:42:50] solving MTT9_25BB_UTG_2_SB_SRP K98tt
+[07:46:53]   hotovo za 4.1 min, checkpoint 30 MB
+[07:46:53] končím 13 min před deadline: deska potřebuje asi 15
+[07:46:53] expansion: hotovo 163, selhalo 4, zbývá 10
+[21:01:02] nastagováno 10 desek bez checkpointu; deadline 08:00
+[21:01:02] na disku volno 371.4 GB (hranice 8 GB)
+[21:01:02] solving MTT9_25BB_BTN_SB_SRP K98tt
+[21:11:36]   hotovo za 10.6 min, checkpoint 54 MB
+[21:11:36] solving MTT9_25BB_UTG_1_HJ_SRP A72r
+[21:21:05]   hotovo za 9.5 min, checkpoint 24 MB
+[21:21:05] solving MTT9_25BB_UTG_2_BB_SRP 883r
+[21:36:49]   hotovo za 15.7 min, checkpoint 44 MB
+[21:36:49] solving MTT9_25BB_UTG_2_BTN_SRP A72r
+[21:51:00]   hotovo za 14.2 min, checkpoint 36 MB
+[21:51:00] solving MTT9_25BB_UTG_SB_SRP A72r
+[22:11:32]   hotovo za 20.5 min, checkpoint 25 MB
+[22:11:32] solving MTT9_25BB_UTG_SB_SRP 883r
+[22:23:51]   hotovo za 12.3 min, checkpoint 26 MB
+[22:23:51] solving MTT9_25BB_UTG_SB_SRP 986tt
+[22:30:56]   hotovo za 7.1 min, checkpoint 26 MB
+[22:30:56] solving MTT9_25BB_UTG_SB_SRP AT4mono
+[22:34:27]   hotovo za 3.5 min, checkpoint 18 MB
+[22:34:27] solving MTT9_25BB_UTG_SB_SRP 742r
+[22:42:51]   hotovo za 8.4 min, checkpoint 27 MB
+[22:42:51] solving MTT9_25BB_UTG_SB_SRP K98tt
+[22:51:00]   hotovo za 8.2 min, checkpoint 26 MB
+[22:51:00] expansion: hotovo 10, selhalo 0, zbývá 0
+[22:51:00] fronta prázdná, 9.1 h okna předávám rozkladu
+[22:51:01] na disku volno 367.2 GB (hranice pro další desku je 8 GB)
+[22:51:26] 751 boards have a monolithic checkpoint; deadline 08:00
+[22:51:26] solving MTT9_25BB_CO_SB_SRP AT4mono: 94 of 161 subgames left
+[22:55:13]   161/161 after 3.8 min
+[22:55:33] planning MTT9_25BB_BTN_SB_SRP K98tt (Ks,9s,8d, pot 550, stack 2250)
+[22:55:35] solving MTT9_25BB_BTN_SB_SRP K98tt: 252 of 252 subgames left
+[23:08:20]   252/252 after 12.8 min
+[23:08:22] solving MTT9_25BB_HJ_BB_SRP 742r: 137 of 234 subgames left
+[23:14:12]   234/234 after 5.8 min
+[23:14:12] solving MTT9_25BB_HJ_BB_SRP 883r: 208 of 208 subgames left
+[23:24:24]   208/208 after 10.2 min
+[23:24:24] solving MTT9_25BB_HJ_BB_SRP 986tt: 144 of 144 subgames left
+[23:32:05]   144/144 after 7.7 min
+[23:32:05] solving MTT9_25BB_HJ_BB_SRP A72r: 182 of 182 subgames left
+[23:41:00]   182/182 after 8.9 min
+[23:41:00] solving MTT9_25BB_HJ_BB_SRP AT4mono: 69 of 69 subgames left
+[23:44:47]   69/69 after 3.8 min
+[23:44:47] solving MTT9_25BB_HJ_BB_SRP K98tt: 252 of 252 subgames left
+[23:56:52]   252/252 after 12.1 min
+[23:56:52] solving MTT9_25BB_HJ_BTN_SRP 742r: 182 of 182 subgames left
+[00:05:59]   182/182 after 9.1 min
+[00:05:59] solving MTT9_25BB_HJ_BTN_SRP 883r: 260 of 260 subgames left
+[00:18:03]   260/260 after 12.1 min
+[00:18:03] solving MTT9_25BB_HJ_BTN_SRP 986tt: 216 of 216 subgames left
+[00:29:06]   216/216 after 11.0 min
+[00:29:06] solving MTT9_25BB_HJ_BTN_SRP A72r: 182 of 182 subgames left
+[00:38:24]   182/182 after 9.3 min
+[00:38:24] solving MTT9_25BB_HJ_BTN_SRP AT4mono: 161 of 161 subgames left
+[00:46:04]   161/161 after 7.7 min
+[00:46:04] solving MTT9_25BB_HJ_BTN_SRP K98tt: 324 of 324 subgames left
+[01:01:25]   324/324 after 15.3 min
+[01:01:25] solving MTT9_25BB_HJ_CO_SRP 742r: 234 of 234 subgames left
+[01:12:37]   234/234 after 11.2 min
+[01:12:37] solving MTT9_25BB_HJ_CO_SRP 883r: 286 of 286 subgames left
+[01:25:31]   286/286 after 12.9 min
+[01:25:31] solving MTT9_25BB_HJ_CO_SRP 986tt: 216 of 216 subgames left
+[01:36:01]   216/216 after 10.5 min
+[01:36:01] solving MTT9_25BB_HJ_CO_SRP A72r: 182 of 182 subgames left
+[01:45:13]   182/182 after 9.2 min
+[01:45:13] solving MTT9_25BB_HJ_CO_SRP AT4mono: 138 of 138 subgames left
+[01:51:52]   138/138 after 6.6 min
+[01:51:52] solving MTT9_25BB_HJ_CO_SRP K98tt: 252 of 252 subgames left
+[02:03:58]   252/252 after 12.1 min
+[02:03:58] solving MTT9_25BB_HJ_SB_SRP 742r: 130 of 130 subgames left
+[02:09:42]   130/130 after 5.7 min
+[02:09:42] solving MTT9_25BB_HJ_SB_SRP 883r: 130 of 130 subgames left
+[02:15:30]   130/130 after 5.8 min
+[02:15:30] solving MTT9_25BB_HJ_SB_SRP 986tt: 108 of 108 subgames left
+[02:20:26]   108/108 after 4.9 min
+[02:20:26] solving MTT9_25BB_HJ_SB_SRP A72r: 182 of 182 subgames left
+[02:29:04]   182/182 after 8.6 min
+[02:29:04] solving MTT9_25BB_HJ_SB_SRP AT4mono: 184 of 184 subgames left
+[02:37:39]   184/184 after 8.6 min
+[02:37:39] solving MTT9_25BB_HJ_SB_SRP K98tt: 144 of 144 subgames left
+[02:44:43]   144/144 after 7.1 min
+[02:44:43] solving MTT9_25BB_LJ_BB_SRP 742r: 208 of 208 subgames left
+[02:54:52]   208/208 after 10.1 min
+[02:54:52] solving MTT9_25BB_LJ_BB_SRP 883r: 182 of 182 subgames left
+[03:03:30]   182/182 after 8.6 min
+[03:03:30] solving MTT9_25BB_LJ_BB_SRP 986tt: 216 of 216 subgames left
+[03:14:25]   216/216 after 10.9 min
+[03:14:25] solving MTT9_25BB_LJ_BB_SRP A72r: 130 of 130 subgames left
+[03:21:07]   130/130 after 6.7 min
+[03:21:07] solving MTT9_25BB_LJ_BB_SRP AT4mono: 69 of 69 subgames left
+[03:24:53]   69/69 after 3.8 min
+[03:24:53] solving MTT9_25BB_LJ_BB_SRP K98tt: 288 of 288 subgames left
+[03:38:37]   288/288 after 13.7 min
+[03:38:37] solving MTT9_25BB_LJ_BTN_SRP 742r: 234 of 234 subgames left
+[03:49:47]   234/234 after 11.2 min
+[03:49:47] solving MTT9_25BB_LJ_BTN_SRP 883r: 260 of 260 subgames left
+[04:01:35]   260/260 after 11.8 min
+[04:01:35] solving MTT9_25BB_LJ_BTN_SRP 986tt: 216 of 216 subgames left
+[04:12:25]   216/216 after 10.8 min
+[04:12:25] solving MTT9_25BB_LJ_BTN_SRP A72r: 104 of 104 subgames left
+[04:17:05]   104/104 after 4.7 min
+[04:17:05] solving MTT9_25BB_LJ_BTN_SRP AT4mono: 161 of 161 subgames left
+[04:24:40]   161/161 after 7.6 min
+[04:24:40] solving MTT9_25BB_LJ_BTN_SRP K98tt: 324 of 324 subgames left
+[04:39:46]   324/324 after 15.1 min
+[04:39:46] solving MTT9_25BB_LJ_CO_SRP 742r: 234 of 234 subgames left
+[04:50:46]   234/234 after 11.0 min
+[04:50:46] solving MTT9_25BB_LJ_CO_SRP 883r: 260 of 260 subgames left
+[05:02:31]   260/260 after 11.8 min
+[05:02:31] solving MTT9_25BB_LJ_CO_SRP 986tt: 252 of 252 subgames left
+[05:14:42]   252/252 after 12.2 min
+[05:14:42] solving MTT9_25BB_LJ_CO_SRP A72r: 130 of 130 subgames left
+[05:21:34]   130/130 after 6.9 min
+[05:21:34] solving MTT9_25BB_LJ_CO_SRP AT4mono: 161 of 161 subgames left
+[05:28:58]   161/161 after 7.4 min
+[05:28:58] solving MTT9_25BB_LJ_CO_SRP K98tt: 324 of 324 subgames left
+[05:43:45]   324/324 after 14.8 min
+[05:43:45] solving MTT9_25BB_LJ_HJ_SRP 742r: 156 of 156 subgames left
+[05:51:01]   156/156 after 7.3 min
+[05:51:01] solving MTT9_25BB_LJ_HJ_SRP 883r: 156 of 156 subgames left
+[05:58:07]   156/156 after 7.1 min
+[05:58:07] solving MTT9_25BB_LJ_HJ_SRP 986tt: 108 of 108 subgames left
+[06:04:24]   108/108 after 6.3 min
+[06:04:24] solving MTT9_25BB_LJ_HJ_SRP A72r: 182 of 182 subgames left
+[06:13:01]   182/182 after 8.6 min
+[06:13:01] solving MTT9_25BB_LJ_HJ_SRP AT4mono: 161 of 161 subgames left
+[06:20:21]   161/161 after 7.3 min
+[06:20:21] solving MTT9_25BB_LJ_HJ_SRP K98tt: 252 of 252 subgames left
+[06:32:15]   252/252 after 11.9 min
+[06:32:15] solving MTT9_25BB_LJ_SB_SRP 742r: 234 of 234 subgames left
+[06:43:17]   234/234 after 11.0 min
+[06:43:17] solving MTT9_25BB_LJ_SB_SRP 883r: 104 of 104 subgames left
+[06:47:51]   104/104 after 4.6 min
+[06:47:51] solving MTT9_25BB_LJ_SB_SRP 986tt: 144 of 144 subgames left
+[06:54:05]   144/144 after 6.2 min
+[06:54:05] solving MTT9_25BB_LJ_SB_SRP A72r: 182 of 182 subgames left
+[07:02:39]   182/182 after 8.6 min
+[07:02:39] solving MTT9_25BB_LJ_SB_SRP AT4mono: 161 of 161 subgames left
+[07:09:48]   161/161 after 7.1 min
+[07:09:48] solving MTT9_25BB_LJ_SB_SRP K98tt: 252 of 252 subgames left
+[07:21:27]   252/252 after 11.7 min
+[07:21:27] planning MTT9_25BB_UTG_1_BB_SRP 742r (7s,4d,2c, pot 550, stack 2250)
+[07:21:29] solving MTT9_25BB_UTG_1_BB_SRP 742r: 130 of 130 subgames left
+[07:27:01]   130/130 after 5.5 min
+[07:27:01] solving MTT9_25BB_UTG_1_BB_SRP 883r: 156 of 156 subgames left
+[07:33:50]   156/156 after 6.8 min
+[07:33:50] solving MTT9_25BB_UTG_1_BB_SRP 986tt: 324 of 324 subgames left
+[07:48:32]   324/324 after 14.7 min
+[07:48:32] stopping 11 min before the deadline: the next board needs about 15 min and would overrun it
+[07:48:32] boards worked 59, already complete 562, failed 0
+[07:48:32] river phase se nespouští: turn není hotový (87 % desek) a má přednost
+[09:00:22] okno by trvalo 23.0 h, což je víc než 12 - běh se pravděpodobně spouští mimo noc. Spusť po 21:00, nebo přidej --force.
+[21:01:01] nastagováno 0 desek bez checkpointu; deadline 08:00
+[21:01:01] na disku volno 365.0 GB (hranice 8 GB)
+[21:01:01] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:02] nastagováno 0 desek bez checkpointu; deadline 08:00
+[21:01:02] na disku volno 359.2 GB (hranice 8 GB)
+[21:01:02] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:01] nastagováno 0 desek bez checkpointu; deadline 08:00
+[21:01:01] na disku volno 352.8 GB (hranice 8 GB)
+[21:01:01] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:01] nastagováno 0 desek bez checkpointu; deadline 08:00
+[21:01:01] na disku volno 243.3 GB (hranice 8 GB)
+[21:01:01] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:02] nastagováno 0 desek bez checkpointu; deadline 08:00
+[21:01:02] na disku volno 234.9 GB (hranice 8 GB)
+[21:01:02] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:01] nastagováno 0 desek bez checkpointu; deadline 08:00
+[21:01:01] na disku volno 222.7 GB (hranice 8 GB)
+[21:01:01] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[14:43:14] okno by trvalo 17.3 h, což je víc než 12 - běh se pravděpodobně spouští mimo noc. Spusť po 21:00, nebo přidej --force.
+[21:01:01] nastagováno 0 desek bez checkpointu; deadline 08:00
+[21:01:01] na disku volno 219.7 GB (hranice 8 GB)
+[21:01:01] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:02] nastagováno 0 desek bez checkpointu; deadline 08:00
+[21:01:02] na disku volno 200.5 GB (hranice 8 GB)
+[21:01:02] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:02] nastagováno 0 desek bez checkpointu; deadline 08:00
+[21:01:02] na disku volno 180.5 GB (hranice 8 GB)
+[21:01:02] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:02] nastagováno 0 desek bez checkpointu; deadline 08:00
+[21:01:02] na disku volno 187.1 GB (hranice 8 GB)
+[21:01:02] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:02] nastagováno 0 desek bez checkpointu; deadline 08:00
+[21:01:02] na disku volno 179.6 GB (hranice 8 GB)
+[21:01:02] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:02] nastagováno 0 desek bez checkpointu; deadline 08:00
+[21:01:02] na disku volno 161.6 GB (hranice 8 GB)
+[21:01:02] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:01] nastagováno 0 desek bez checkpointu; deadline 08:00
+[21:01:01] na disku volno 146.1 GB (hranice 8 GB)
+[21:01:01] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:01] nastagováno 0 desek bez checkpointu; deadline 08:00
+[21:01:01] na disku volno 141.1 GB (hranice 8 GB)
+[21:01:01] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:01] nastagováno 0 desek bez checkpointu; deadline 08:00
+[21:01:01] na disku volno 97.4 GB (hranice 8 GB)
+[21:01:01] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:02] nastagováno 0 desek bez checkpointu; deadline 08:00
+[21:01:02] na disku volno 68.9 GB (hranice 8 GB)
+[21:01:02] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:01] nastagováno 0 desek bez checkpointu; deadline 08:00
+[21:01:01] na disku volno 49.2 GB (hranice 8 GB)
+[21:01:01] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:02] nastagováno 0 desek bez checkpointu; deadline 07:00
+[21:01:02] na disku volno 177.1 GB (hranice 8 GB)
+[21:01:02] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:02] nastagováno 0 desek bez checkpointu; deadline 07:00
+[21:01:02] na disku volno 187.6 GB (hranice 8 GB)
+[21:01:02] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:01] nastagováno 0 desek bez checkpointu; deadline 07:00
+[21:01:01] na disku volno 182.3 GB (hranice 8 GB)
+[21:01:01] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:02] nastagováno 0 desek bez checkpointu; deadline 07:00
+[21:01:02] na disku volno 180.3 GB (hranice 8 GB)
+[21:01:02] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:02] nastagováno 174 desek bez checkpointu; deadline 07:00
+[21:01:02] na disku volno 170.8 GB (hranice 8 GB)
+[21:01:02] stroj se drží vzhůru po dobu běhu
+[21:01:02] solving MTT9_25BB_BTN_SB_SRP A76tt
+[21:10:07]   hotovo za 9.1 min, checkpoint 52 MB
+[21:10:07] solving MTT9_25BB_CO_BTN_SRP A76tt
+[21:20:20]   hotovo za 10.2 min, checkpoint 49 MB
+[21:20:20] solving MTT9_25BB_CO_SB_SRP A76tt
+[21:33:42]   hotovo za 13.4 min, checkpoint 38 MB
+[21:33:42] solving MTT9_25BB_HJ_BB_SRP A76tt
+[21:44:06]   hotovo za 10.4 min, checkpoint 47 MB
+[21:44:06] solving MTT9_25BB_HJ_BTN_SRP A76tt
+[21:57:50]   hotovo za 13.7 min, checkpoint 41 MB
+[21:57:50] solving MTT9_25BB_HJ_CO_SRP A76tt
+[22:06:26]   hotovo za 8.6 min, checkpoint 38 MB
+[22:06:26] solving MTT9_25BB_HJ_SB_SRP A76tt
+[22:14:26]   hotovo za 8.0 min, checkpoint 33 MB
+[22:14:26] solving MTT9_25BB_LJ_BB_SRP A76tt
+[22:24:00]   hotovo za 9.6 min, checkpoint 43 MB
+[22:24:00] solving MTT9_25BB_LJ_BTN_SRP A76tt
+[22:32:36]   hotovo za 8.6 min, checkpoint 38 MB
+[22:32:36] solving MTT9_25BB_LJ_CO_SRP A76tt
+[22:40:57]   hotovo za 8.3 min, checkpoint 35 MB
+[22:40:57] solving MTT9_25BB_LJ_HJ_SRP A76tt
+[22:48:48]   hotovo za 7.9 min, checkpoint 31 MB
+[22:48:48] solving MTT9_25BB_LJ_SB_SRP A76tt
+[22:56:46]   hotovo za 8.0 min, checkpoint 30 MB
+[22:56:46] solving MTT9_25BB_UTG_1_BB_SRP A76tt
+[23:09:52]   hotovo za 13.1 min, checkpoint 37 MB
+[23:09:52] solving MTT9_25BB_UTG_1_BTN_SRP A76tt
+[23:18:42]   hotovo za 8.8 min, checkpoint 33 MB
+[23:18:42] solving MTT9_25BB_UTG_1_CO_SRP A76tt
+[23:26:08]   hotovo za 7.4 min, checkpoint 29 MB
+[23:26:08] solving MTT9_25BB_UTG_1_HJ_SRP A76tt
+[23:35:54]   hotovo za 9.8 min, checkpoint 25 MB
+[23:35:54] solving MTT9_25BB_UTG_1_LJ_SRP A76tt
+[23:42:24]   hotovo za 6.5 min, checkpoint 22 MB
+[23:42:24] solving MTT9_25BB_UTG_1_SB_SRP A76tt
+[23:48:57]   hotovo za 6.6 min, checkpoint 25 MB
+[23:48:57] solving MTT9_25BB_UTG_2_BB_SRP A76tt
+[00:02:33]   hotovo za 13.6 min, checkpoint 40 MB
+[00:02:33] solving MTT9_25BB_UTG_2_BTN_SRP A76tt
+[00:11:06]   hotovo za 8.6 min, checkpoint 36 MB
+[00:11:06] solving MTT9_25BB_UTG_2_CO_SRP A76tt
+[00:22:14]   hotovo za 11.1 min, checkpoint 31 MB
+[00:22:14] solving MTT9_25BB_UTG_2_HJ_SRP A76tt
+[00:29:24]   hotovo za 7.2 min, checkpoint 28 MB
+[00:29:24] solving MTT9_25BB_UTG_2_LJ_SRP A76tt
+[00:36:09]   hotovo za 6.7 min, checkpoint 25 MB
+[00:36:09] solving MTT9_25BB_UTG_2_SB_SRP A76tt
+[00:43:26]   hotovo za 7.3 min, checkpoint 28 MB
+[00:43:26] solving MTT9_25BB_UTG_BTN_SRP A76tt
+[00:51:16]   hotovo za 7.8 min, checkpoint 32 MB
+[00:51:16] solving MTT9_25BB_UTG_CO_SRP A76tt
+[00:58:27]   hotovo za 7.2 min, checkpoint 28 MB
+[00:58:27] solving MTT9_25BB_UTG_HJ_SRP A76tt
+[01:05:19]   hotovo za 6.9 min, checkpoint 24 MB
+[01:05:19] solving MTT9_25BB_UTG_LJ_SRP A76tt
+[01:11:38]   hotovo za 6.3 min, checkpoint 21 MB
+[01:11:38] solving MTT9_25BB_UTG_SB_SRP A76tt
+[01:18:26]   hotovo za 6.8 min, checkpoint 25 MB
+[01:18:26] solving MTT9_25BB_BTN_SB_SRP J73r
+Traceback (most recent call last):
+  File "C:\Users\stachal\PKRTrainer\PKRTrainer\Agents\solver-input\decomposition\run_night_expansion.py", line 241, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\stachal\PKRTrainer\PKRTrainer\Agents\solver-input\decomposition\run_night_expansion.py", line 186, in main
+    result = subprocess.run(
+        [os.path.join(SOLVER_ROOT, "console_solver.exe"), "-i", param],
+        cwd=SOLVER_ROOT, capture_output=True, text=True,
+        timeout=max(BOARD_MINUTES, 30) * 60,
+    )
+  File "C:\Users\stachal\AppData\Local\Python\pythoncore-3.14-64\Lib\subprocess.py", line 556, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\stachal\AppData\Local\Python\pythoncore-3.14-64\Lib\subprocess.py", line 1220, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\stachal\AppData\Local\Python\pythoncore-3.14-64\Lib\subprocess.py", line 1663, in _communicate
+    raise TimeoutExpired(self.args, orig_timeout)
+subprocess.TimeoutExpired: Command '['C:\\Users\\stachal\\PKRTrainer\\tools\\TexasSolver-v0.2.0-Windows\\TexasSolver-v0.2.0-Windows\\console_solver.exe', '-i', 'C:\\Users\\stachal\\PKRTrainer\\PKRTrainer\\Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters\\pkrtrainer_mtt_seat_pair_expansion_v1\\0204_MTT9_25BB_BTN_SB_SRP_J73r.txt']' timed out after 1800 seconds
+[21:01:02] nastagováno 145 desek bez checkpointu; deadline 07:00
+[21:01:02] na disku volno 173.1 GB (hranice 8 GB)
+[21:01:02] stroj se drží vzhůru po dobu běhu
+[21:01:02] solving MTT9_25BB_BTN_SB_SRP J73r
+[21:13:29]   hotovo za 12.4 min, checkpoint 58 MB
+[21:13:29] solving MTT9_25BB_CO_BTN_SRP J73r
+[21:19:14]   hotovo za 5.8 min, checkpoint 47 MB
+[21:19:14] solving MTT9_25BB_CO_SB_SRP J73r
+[21:26:46]   hotovo za 7.5 min, checkpoint 42 MB
+[21:26:46] solving MTT9_25BB_HJ_BB_SRP J73r
+[21:32:23]   hotovo za 5.6 min, checkpoint 47 MB
+[21:32:23] solving MTT9_25BB_HJ_BTN_SRP J73r
+[21:37:52]   hotovo za 5.5 min, checkpoint 43 MB
+[21:37:52] solving MTT9_25BB_HJ_CO_SRP J73r
+[21:42:55]   hotovo za 5.1 min, checkpoint 39 MB
+[21:42:55] solving MTT9_25BB_HJ_SB_SRP J73r
+[21:50:08]   hotovo za 7.2 min, checkpoint 37 MB
+[21:50:08] solving MTT9_25BB_LJ_BB_SRP J73r
+[21:55:24]   hotovo za 5.3 min, checkpoint 45 MB
+[21:55:24] solving MTT9_25BB_LJ_BTN_SRP J73r
+[22:02:43]   hotovo za 7.3 min, checkpoint 38 MB
+[22:02:43] solving MTT9_25BB_LJ_CO_SRP J73r
+[22:09:40]   hotovo za 6.9 min, checkpoint 35 MB
+[22:09:40] solving MTT9_25BB_LJ_HJ_SRP J73r
+[22:16:05]   hotovo za 6.4 min, checkpoint 32 MB
+[22:16:05] solving MTT9_25BB_LJ_SB_SRP J73r
+[22:24:42]   hotovo za 8.6 min, checkpoint 33 MB
+[22:24:42] solving MTT9_25BB_UTG_1_BB_SRP J73r
+[22:34:11]   hotovo za 9.5 min, checkpoint 38 MB
+[22:34:11] solving MTT9_25BB_UTG_1_BTN_SRP J73r
+[22:40:54]   hotovo za 6.7 min, checkpoint 32 MB
+[22:40:54] solving MTT9_25BB_UTG_1_CO_SRP J73r
+[22:45:01]   hotovo za 4.1 min, checkpoint 29 MB
+[22:45:01] solving MTT9_25BB_UTG_1_HJ_SRP J73r
+[22:48:59]   hotovo za 4.0 min, checkpoint 26 MB
+[22:48:59] solving MTT9_25BB_UTG_1_LJ_SRP J73r
+[22:52:47]   hotovo za 3.8 min, checkpoint 24 MB
+[22:52:47] solving MTT9_25BB_UTG_1_SB_SRP J73r
+[23:00:32]   hotovo za 7.7 min, checkpoint 27 MB
+[23:00:32] solving MTT9_25BB_UTG_2_BB_SRP J73r
+[23:05:43]   hotovo za 5.2 min, checkpoint 41 MB
+[23:05:43] solving MTT9_25BB_UTG_2_BTN_SRP J73r
+[23:12:45]   hotovo za 7.0 min, checkpoint 36 MB
+[23:12:45] solving MTT9_25BB_UTG_2_CO_SRP J73r
+[23:19:22]   hotovo za 6.6 min, checkpoint 33 MB
+[23:19:22] solving MTT9_25BB_UTG_2_HJ_SRP J73r
+[23:25:41]   hotovo za 6.3 min, checkpoint 30 MB
+[23:25:41] solving MTT9_25BB_UTG_2_LJ_SRP J73r
+[23:31:43]   hotovo za 6.0 min, checkpoint 27 MB
+[23:31:43] solving MTT9_25BB_UTG_2_SB_SRP J73r
+[23:40:08]   hotovo za 8.4 min, checkpoint 31 MB
+[23:40:08] solving MTT9_25BB_UTG_BTN_SRP J73r
+[23:46:51]   hotovo za 6.7 min, checkpoint 35 MB
+[23:46:51] solving MTT9_25BB_UTG_CO_SRP J73r
+[23:52:57]   hotovo za 6.1 min, checkpoint 28 MB
+[23:52:57] solving MTT9_25BB_UTG_HJ_SRP J73r
+[23:58:43]   hotovo za 5.8 min, checkpoint 26 MB
+[23:58:43] solving MTT9_25BB_UTG_LJ_SRP J73r
+[00:02:30]   hotovo za 3.8 min, checkpoint 24 MB
+[00:02:30] solving MTT9_25BB_UTG_SB_SRP J73r
+[00:08:22]   hotovo za 5.9 min, checkpoint 27 MB
+[00:08:22] solving MTT9_25BB_BTN_SB_SRP T84r
+[00:14:43]   hotovo za 6.3 min, checkpoint 54 MB
+[00:14:43] solving MTT9_25BB_CO_BTN_SRP T84r
+[00:20:26]   hotovo za 5.7 min, checkpoint 47 MB
+[00:20:26] solving MTT9_25BB_CO_SB_SRP T84r
+[00:28:00]   hotovo za 7.6 min, checkpoint 39 MB
+[00:28:00] solving MTT9_25BB_HJ_BB_SRP T84r
+[00:36:30]   hotovo za 8.5 min, checkpoint 48 MB
+[00:36:30] solving MTT9_25BB_HJ_BTN_SRP T84r
+[00:41:45]   hotovo za 5.2 min, checkpoint 43 MB
+[00:41:45] solving MTT9_25BB_HJ_CO_SRP T84r
+[00:49:07]   hotovo za 7.4 min, checkpoint 38 MB
+[00:49:07] solving MTT9_25BB_HJ_SB_SRP T84r
+[00:53:43]   hotovo za 4.6 min, checkpoint 35 MB
+[00:53:43] solving MTT9_25BB_LJ_BB_SRP T84r
+[01:01:49]   hotovo za 8.1 min, checkpoint 45 MB
+[01:01:49] solving MTT9_25BB_LJ_BTN_SRP T84r
+[01:07:00]   hotovo za 5.2 min, checkpoint 40 MB
+[01:07:00] solving MTT9_25BB_LJ_CO_SRP T84r
+[01:11:44]   hotovo za 4.7 min, checkpoint 36 MB
+[01:11:44] solving MTT9_25BB_LJ_HJ_SRP T84r
+[01:16:07]   hotovo za 4.4 min, checkpoint 33 MB
+[01:16:07] solving MTT9_25BB_LJ_SB_SRP T84r
+[01:22:55]   hotovo za 6.8 min, checkpoint 32 MB
+[01:22:55] solving MTT9_25BB_UTG_1_BB_SRP T84r
+[01:30:12]   hotovo za 7.3 min, checkpoint 37 MB
+[01:30:12] solving MTT9_25BB_UTG_1_BTN_SRP T84r
+[01:34:46]   hotovo za 4.6 min, checkpoint 34 MB
+[01:34:46] solving MTT9_25BB_UTG_1_CO_SRP T84r
+[01:39:03]   hotovo za 4.3 min, checkpoint 29 MB
+[01:39:03] solving MTT9_25BB_UTG_1_HJ_SRP T84r
+[01:43:00]   hotovo za 4.0 min, checkpoint 27 MB
+[01:43:00] solving MTT9_25BB_UTG_1_LJ_SRP T84r
+[01:48:40]   hotovo za 5.7 min, checkpoint 24 MB
+[01:48:40] solving MTT9_25BB_UTG_1_SB_SRP T84r
+[01:54:36]   hotovo za 5.9 min, checkpoint 27 MB
+[01:54:36] solving MTT9_25BB_UTG_2_BB_SRP T84r
+[01:59:49]   hotovo za 5.2 min, checkpoint 43 MB
+[01:59:49] solving MTT9_25BB_UTG_2_BTN_SRP T84r
+[02:04:42]   hotovo za 4.9 min, checkpoint 37 MB
+[02:04:42] solving MTT9_25BB_UTG_2_CO_SRP T84r
+[02:09:34]   hotovo za 4.9 min, checkpoint 33 MB
+[02:09:34] solving MTT9_25BB_UTG_2_HJ_SRP T84r
+[02:15:49]   hotovo za 6.2 min, checkpoint 31 MB
+[02:15:49] solving MTT9_25BB_UTG_2_LJ_SRP T84r
+[02:21:55]   hotovo za 6.1 min, checkpoint 28 MB
+[02:21:55] solving MTT9_25BB_UTG_2_SB_SRP T84r
+[02:28:18]   hotovo za 6.4 min, checkpoint 30 MB
+[02:28:18] solving MTT9_25BB_UTG_BTN_SRP T84r
+[02:32:49]   hotovo za 4.5 min, checkpoint 33 MB
+[02:32:49] solving MTT9_25BB_UTG_CO_SRP T84r
+[02:38:53]   hotovo za 6.1 min, checkpoint 29 MB
+[02:38:53] solving MTT9_25BB_UTG_HJ_SRP T84r
+[02:42:55]   hotovo za 4.0 min, checkpoint 26 MB
+[02:42:55] solving MTT9_25BB_UTG_LJ_SRP T84r
+[02:50:30]   hotovo za 7.6 min, checkpoint 24 MB
+[02:50:30] solving MTT9_25BB_UTG_SB_SRP T84r
+[02:56:22]   hotovo za 5.9 min, checkpoint 27 MB
+[02:56:22] solving MTT9_25BB_BTN_SB_SRP 654r
+[02:56:33]   spadlo po 0.2 min (rc=3221225477); zkouším znovu
+[03:02:59]   hotovo za 6.4 min, checkpoint 61 MB (napodruhé)
+[03:02:59] solving MTT9_25BB_CO_BTN_SRP 654r
+[03:09:02]   hotovo za 6.0 min, checkpoint 50 MB
+[03:09:02] solving MTT9_25BB_CO_SB_SRP 654r
+[03:11:42]   hotovo za 2.7 min, checkpoint 45 MB
+[03:11:42] solving MTT9_25BB_HJ_BB_SRP 654r
+[03:20:20]   hotovo za 8.6 min, checkpoint 49 MB
+[03:20:20] solving MTT9_25BB_HJ_BTN_SRP 654r
+[03:28:24]   hotovo za 8.1 min, checkpoint 45 MB
+[03:28:24] solving MTT9_25BB_HJ_CO_SRP 654r
+[03:35:56]   hotovo za 7.5 min, checkpoint 41 MB
+[03:35:56] solving MTT9_25BB_HJ_SB_SRP 654r
+[03:40:51]   hotovo za 4.9 min, checkpoint 37 MB
+[03:40:51] solving MTT9_25BB_LJ_BB_SRP 654r
+[03:46:21]   hotovo za 5.5 min, checkpoint 45 MB
+[03:46:21] solving MTT9_25BB_LJ_BTN_SRP 654r
+[03:53:57]   hotovo za 7.6 min, checkpoint 40 MB
+[03:53:57] solving MTT9_25BB_LJ_CO_SRP 654r
+[04:01:04]   hotovo za 7.1 min, checkpoint 36 MB
+[04:01:04] solving MTT9_25BB_LJ_HJ_SRP 654r
+[04:01:16]   spadlo po 0.2 min (rc=3221225477); zkouším znovu
+[04:05:47]   hotovo za 4.5 min, checkpoint 34 MB (napodruhé)
+[04:05:47] solving MTT9_25BB_LJ_SB_SRP 654r
+[04:05:58]   spadlo po 0.2 min (rc=3221225477); zkouším znovu
+[04:10:28]   hotovo za 4.5 min, checkpoint 33 MB (napodruhé)
+[04:10:28] solving MTT9_25BB_UTG_1_BB_SRP 654r
+[04:17:47]   hotovo za 7.3 min, checkpoint 41 MB
+[04:17:47] solving MTT9_25BB_UTG_1_BTN_SRP 654r
+[04:22:24]   hotovo za 4.6 min, checkpoint 34 MB
+[04:22:24] solving MTT9_25BB_UTG_1_CO_SRP 654r
+[04:26:40]   hotovo za 4.3 min, checkpoint 31 MB
+[04:26:40] solving MTT9_25BB_UTG_1_HJ_SRP 654r
+[04:30:46]   hotovo za 4.1 min, checkpoint 28 MB
+[04:30:46] solving MTT9_25BB_UTG_1_LJ_SRP 654r
+[04:34:38]   hotovo za 3.9 min, checkpoint 25 MB
+[04:34:38] solving MTT9_25BB_UTG_1_SB_SRP 654r
+[04:42:41]   hotovo za 8.1 min, checkpoint 27 MB
+[04:42:41] solving MTT9_25BB_UTG_2_BB_SRP 654r
+[04:50:33]   hotovo za 7.9 min, checkpoint 43 MB
+[04:50:33] solving MTT9_25BB_UTG_2_BTN_SRP 654r
+[04:55:28]   hotovo za 4.9 min, checkpoint 40 MB
+[04:55:28] solving MTT9_25BB_UTG_2_CO_SRP 654r
+[05:00:00]   hotovo za 4.5 min, checkpoint 34 MB
+[05:00:00] solving MTT9_25BB_UTG_2_HJ_SRP 654r
+[05:06:26]   hotovo za 6.4 min, checkpoint 32 MB
+[05:06:26] solving MTT9_25BB_UTG_2_LJ_SRP 654r
+[05:12:30]   hotovo za 6.1 min, checkpoint 29 MB
+[05:12:30] solving MTT9_25BB_UTG_2_SB_SRP 654r
+[05:18:54]   hotovo za 6.4 min, checkpoint 30 MB
+[05:18:54] solving MTT9_25BB_UTG_BTN_SRP 654r
+[05:23:29]   hotovo za 4.6 min, checkpoint 35 MB
+[05:23:29] solving MTT9_25BB_UTG_CO_SRP 654r
+[05:27:40]   hotovo za 4.2 min, checkpoint 30 MB
+[05:27:40] solving MTT9_25BB_UTG_HJ_SRP 654r
+[05:31:38]   hotovo za 4.0 min, checkpoint 27 MB
+[05:31:38] solving MTT9_25BB_UTG_LJ_SRP 654r
+[05:35:31]   hotovo za 3.9 min, checkpoint 25 MB
+[05:35:31] solving MTT9_25BB_UTG_SB_SRP 654r
+[05:41:24]   hotovo za 5.9 min, checkpoint 26 MB
+[05:41:24] solving MTT9_25BB_BTN_SB_SRP QQ7r
+[05:48:02]   hotovo za 6.6 min, checkpoint 55 MB
+[05:48:02] solving MTT9_25BB_CO_BTN_SRP QQ7r
+[05:52:00]   hotovo za 4.0 min, checkpoint 47 MB
+[05:52:00] solving MTT9_25BB_CO_SB_SRP QQ7r
+[05:59:11]   hotovo za 7.2 min, checkpoint 40 MB
+[05:59:11] solving MTT9_25BB_HJ_BB_SRP QQ7r
+[06:05:20]   hotovo za 6.1 min, checkpoint 47 MB
+[06:05:20] solving MTT9_25BB_HJ_BTN_SRP QQ7r
+[06:10:51]   hotovo za 5.5 min, checkpoint 43 MB
+[06:10:51] solving MTT9_25BB_HJ_CO_SRP QQ7r
+[06:15:43]   hotovo za 4.9 min, checkpoint 37 MB
+[06:15:43] solving MTT9_25BB_HJ_SB_SRP QQ7r
+[06:20:31]   hotovo za 4.8 min, checkpoint 35 MB
+[06:20:31] solving MTT9_25BB_LJ_BB_SRP QQ7r
+[06:27:35]   hotovo za 7.1 min, checkpoint 44 MB
+[06:27:35] solving MTT9_25BB_LJ_BTN_SRP QQ7r
+[06:32:38]   hotovo za 5.0 min, checkpoint 39 MB
+[06:32:38] solving MTT9_25BB_LJ_CO_SRP QQ7r
+[06:37:09]   hotovo za 4.5 min, checkpoint 33 MB
+[06:37:09] solving MTT9_25BB_LJ_HJ_SRP QQ7r
+[06:40:04]   hotovo za 2.9 min, checkpoint 30 MB
+[06:40:04] solving MTT9_25BB_LJ_SB_SRP QQ7r
+[06:44:23]   hotovo za 4.3 min, checkpoint 31 MB
+[06:44:23] solving MTT9_25BB_UTG_1_BB_SRP QQ7r
+[06:49:12]   hotovo za 4.8 min, checkpoint 36 MB
+[06:49:12] končím 11 min před deadline: deska potřebuje asi 12
+[06:49:12] expansion: hotovo 100, selhalo 0, zbývá 45
+[06:49:12] fronta není prázdná, rozkladu okno nepředávám
+[21:01:01] nastagováno 45 desek bez checkpointu; deadline 07:00
+[21:01:01] na disku volno 160.4 GB (hranice 8 GB)
+[21:01:01] stroj se drží vzhůru po dobu běhu
+[21:01:01] solving MTT9_25BB_UTG_1_BTN_SRP QQ7r
+[21:08:13]   hotovo za 7.2 min, checkpoint 33 MB
+[21:08:13] solving MTT9_25BB_UTG_1_CO_SRP QQ7r
+[21:16:53]   hotovo za 8.7 min, checkpoint 29 MB
+[21:16:53] solving MTT9_25BB_UTG_1_HJ_SRP QQ7r
+[21:22:20]   hotovo za 5.4 min, checkpoint 25 MB
+[21:22:20] solving MTT9_25BB_UTG_1_LJ_SRP QQ7r
+[21:29:30]   hotovo za 7.2 min, checkpoint 21 MB
+[21:29:30] solving MTT9_25BB_UTG_1_SB_SRP QQ7r
+[21:37:46]   hotovo za 8.3 min, checkpoint 25 MB
+[21:37:46] solving MTT9_25BB_UTG_2_BB_SRP QQ7r
+[21:53:34]   hotovo za 15.8 min, checkpoint 42 MB
+[21:53:34] solving MTT9_25BB_UTG_2_BTN_SRP QQ7r
+[22:04:54]   hotovo za 11.3 min, checkpoint 37 MB
+[22:04:54] solving MTT9_25BB_UTG_2_CO_SRP QQ7r
+[22:14:39]   hotovo za 9.8 min, checkpoint 31 MB
+[22:14:39] solving MTT9_25BB_UTG_2_HJ_SRP QQ7r
+[22:23:56]   hotovo za 9.3 min, checkpoint 29 MB
+[22:23:56] solving MTT9_25BB_UTG_2_LJ_SRP QQ7r
+[22:32:25]   hotovo za 8.5 min, checkpoint 25 MB
+[22:32:25] solving MTT9_25BB_UTG_2_SB_SRP QQ7r
+[22:41:49]   hotovo za 9.4 min, checkpoint 29 MB
+[22:41:49] solving MTT9_25BB_UTG_BTN_SRP QQ7r
+[22:48:34]   hotovo za 6.8 min, checkpoint 32 MB
+[22:48:34] solving MTT9_25BB_UTG_CO_SRP QQ7r
+[22:57:17]   hotovo za 8.7 min, checkpoint 28 MB
+[22:57:17] solving MTT9_25BB_UTG_HJ_SRP QQ7r
+[23:06:04]   hotovo za 8.8 min, checkpoint 23 MB
+[23:06:04] solving MTT9_25BB_UTG_LJ_SRP QQ7r
+[23:13:26]   hotovo za 7.4 min, checkpoint 21 MB
+[23:13:26] solving MTT9_25BB_UTG_SB_SRP QQ7r
+[23:21:32]   hotovo za 8.1 min, checkpoint 24 MB
+[23:21:32] solving MTT9_25BB_BTN_SB_SRP 955tt
+[23:30:22]   hotovo za 8.8 min, checkpoint 57 MB
+[23:30:22] solving MTT9_25BB_CO_BTN_SRP 955tt
+[23:38:19]   hotovo za 8.0 min, checkpoint 50 MB
+[23:38:19] solving MTT9_25BB_CO_SB_SRP 955tt
+[23:45:16]   hotovo za 7.0 min, checkpoint 41 MB
+[23:45:16] solving MTT9_25BB_HJ_BB_SRP 955tt
+[23:53:10]   hotovo za 7.9 min, checkpoint 50 MB
+[23:53:10] solving MTT9_25BB_HJ_BTN_SRP 955tt
+[00:00:22]   hotovo za 7.2 min, checkpoint 44 MB
+[00:00:22] solving MTT9_25BB_HJ_CO_SRP 955tt
+[00:10:08]   hotovo za 9.8 min, checkpoint 40 MB
+[00:10:08] solving MTT9_25BB_HJ_SB_SRP 955tt
+[00:16:24]   hotovo za 6.3 min, checkpoint 36 MB
+[00:16:24] solving MTT9_25BB_LJ_BB_SRP 955tt
+[00:29:15]   hotovo za 12.9 min, checkpoint 47 MB
+[00:29:15] solving MTT9_25BB_LJ_BTN_SRP 955tt
+[00:36:00]   hotovo za 6.7 min, checkpoint 40 MB
+[00:36:00] solving MTT9_25BB_LJ_CO_SRP 955tt
+[00:42:10]   hotovo za 6.2 min, checkpoint 36 MB
+[00:42:10] solving MTT9_25BB_LJ_HJ_SRP 955tt
+[00:47:50]   hotovo za 5.7 min, checkpoint 33 MB
+[00:47:50] solving MTT9_25BB_LJ_SB_SRP 955tt
+[00:53:31]   hotovo za 5.7 min, checkpoint 33 MB
+[00:53:31] solving MTT9_25BB_UTG_1_BB_SRP 955tt
+[01:00:04]   hotovo za 6.5 min, checkpoint 40 MB
+[01:00:04] solving MTT9_25BB_UTG_1_BTN_SRP 955tt
+[01:05:58]   hotovo za 5.9 min, checkpoint 35 MB
+[01:05:58] solving MTT9_25BB_UTG_1_CO_SRP 955tt
+[01:11:16]   hotovo za 5.3 min, checkpoint 29 MB
+[01:11:16] solving MTT9_25BB_UTG_1_HJ_SRP 955tt
+[01:16:08]   hotovo za 4.9 min, checkpoint 27 MB
+[01:16:08] solving MTT9_25BB_UTG_1_LJ_SRP 955tt
+[01:22:59]   hotovo za 6.8 min, checkpoint 24 MB
+[01:22:59] solving MTT9_25BB_UTG_1_SB_SRP 955tt
+[01:27:51]   hotovo za 4.9 min, checkpoint 27 MB
+[01:27:51] solving MTT9_25BB_UTG_2_BB_SRP 955tt
+[01:38:13]   hotovo za 10.4 min, checkpoint 43 MB
+[01:38:13] solving MTT9_25BB_UTG_2_BTN_SRP 955tt
+[01:44:47]   hotovo za 6.6 min, checkpoint 39 MB
+[01:44:47] solving MTT9_25BB_UTG_2_CO_SRP 955tt
+[01:53:25]   hotovo za 8.6 min, checkpoint 35 MB
+[01:53:25] solving MTT9_25BB_UTG_2_HJ_SRP 955tt
+[02:01:20]   hotovo za 7.9 min, checkpoint 32 MB
+[02:01:20] solving MTT9_25BB_UTG_2_LJ_SRP 955tt
+[02:06:25]   hotovo za 5.1 min, checkpoint 28 MB
+[02:06:25] solving MTT9_25BB_UTG_2_SB_SRP 955tt
+[02:14:26]   hotovo za 8.0 min, checkpoint 31 MB
+[02:14:26] solving MTT9_25BB_UTG_BTN_SRP 955tt
+[02:23:11]   hotovo za 8.8 min, checkpoint 35 MB
+[02:23:11] solving MTT9_25BB_UTG_CO_SRP 955tt
+[02:28:23]   hotovo za 5.2 min, checkpoint 29 MB
+[02:28:23] solving MTT9_25BB_UTG_HJ_SRP 955tt
+[02:33:11]   hotovo za 4.8 min, checkpoint 27 MB
+[02:33:11] solving MTT9_25BB_UTG_LJ_SRP 955tt
+[02:39:54]   hotovo za 6.7 min, checkpoint 24 MB
+[02:39:54] solving MTT9_25BB_UTG_SB_SRP 955tt
+[02:40:05]   spadlo po 0.2 min (rc=3); zkouším znovu
+[02:44:59]   hotovo za 4.9 min, checkpoint 27 MB (napodruhé)
+[02:44:59] expansion: hotovo 45, selhalo 0, zbývá 0
+[02:44:59] fronta prázdná, 4.3 h okna předávám rozkladu
+[02:45:46]   priorita pro noc: NEW_FAMILIES (river je nasycenĂ˝: 48/48 packĹŻ na stropu (39 na pravidlech, 10 bajtovÄ›))
+[02:45:46] denní vyhodnocení hotové za 47 s
+[02:46:10]   bez vrstvy:             6352  (7339 pravidel) <- tady noc pomĹŻĹľe
+[02:46:10]   podhry proti vĂ˝bÄ›ru podle toho, kde sedĂ­ dodĂˇvanĂ© pravidlo bez vrstvy.
+[02:46:58] na disku volno 157.6 GB (hranice pro další desku je 8 GB)
+[02:46:58] stroj se drží vzhůru po dobu běhu
+[02:46:59]   174 desek vynecháno z rozkladu: jen flop (flop-only-boards.txt)
+[02:47:10] 751 boards have a monolithic checkpoint; deadline 07:00
+[02:47:29] boards worked 0, already complete 751, failed 0
+[02:47:29] river phase: turnová fronta vyčerpaná, zbývá 253 min okna
+[02:47:29] river phase: rozpočet kolik stihne turnových podher
+[02:47:29]   16 procesů x 1 vláken na podhru
+[02:47:40]   prioritní seznam: 6352 podher, oceněno 6352, pořadí dosah/cena
+[02:47:40]   6352 podher napřed podle dodávaných turnových pravidel bez vrstvy
+[02:47:40]   130512 podher vybráno podle reach
+[02:47:40]   solving river MTT9_35BB_CO_BTN_3BP_REPAIR__AK5r / CHECK_CHECK__6h: 39 z 39
+[02:48:53]     39/39 za 1.2 min
+[02:48:53]   solving river MTT9_25BB_UTG_2_CO_SRP__883r / BET275_CALL__4h: 39 z 39
+[02:50:05]     39/39 za 1.2 min
+[02:50:05]   solving river MTT9_25BB_UTG_2_CO_SRP__883r / BET275_CALL__8h: 39 z 39
+[02:51:17]     39/39 za 1.2 min
+[02:51:17]   solving river MTT9_25BB_LJ_SB_SRP__742r / BET413_CALL__Ah: 26 z 26
+[02:52:05]     26/26 za 0.8 min
+[02:52:05]   solving river MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR__862r / CHECK_CHECK__5c: 39 z 39
+[02:53:18]     39/39 za 1.2 min
+[02:53:18]   solving river MTT9_35BB_CO_BTN_3BP_REPAIR__J73r / CHECK_CHECK__7h: 39 z 39
+[02:54:31]     39/39 za 1.2 min
+[02:54:31]   solving river MTT9_25BB_CO_SB_SRP__A72r / BET182_CALL__Th: 52 z 52
+[02:56:08]     52/52 za 1.6 min
+[02:56:08]   solving river MTT9_25BB_UTG_2_SB_SRP__883r / BET182_CALL__Qc: 72 z 72
+[02:58:15]     72/72 za 2.1 min
+[02:58:15]   solving river MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__K83r / BET17_CALL__Kh: 39 z 39
+[02:59:29]     39/39 za 1.2 min
+[02:59:29]   solving river MTT9_35BB_CO_BTN_3BP_REPAIR__Q72r / BET79_CALL__Jc: 37 z 37
+[03:00:40]     37/37 za 1.2 min
+[03:00:40]   solving river MTT9_25BB_HJ_CO_SRP__K98tt / CHECK_BET182_CALL__6d: 78 z 78
+[03:02:46]     78/78 za 2.1 min
+[03:02:46]   solving river MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR__T52r / CHECK_CHECK__Jc: 65 z 65
+[03:04:32]     65/65 za 1.8 min
+[03:04:32]   solving river MTT9_25BB_UTG_1_CO_SRP__742r / BET275_CALL__Kh: 39 z 39
+[03:05:44]     39/39 za 1.2 min
+[03:05:44]   solving river MTT9_25BB_LJ_BB_SRP__A72r / CHECK_CHECK__6h: 65 z 65
+[03:07:36]     65/65 za 1.9 min
+[03:07:36]   solving river MTT9_35BB_CO_BTN_3BP_REPAIR__T82tt / CHECK_CHECK__Ks: 70 z 70
+[03:09:42]     70/70 za 2.1 min
+[03:09:42]   solving river MTT9_40BB_UTG_BB_SRP__AQ6r / CHECK_BET25_CALL__Qh: 39 z 39
+[03:10:54]     39/39 za 1.2 min
+[03:10:54]   solving river MTT9_25BB_HJ_SB_SRP__A72r / BET182_CALL__Kh: 52 z 52
+[03:12:31]     52/52 za 1.6 min
+[03:12:31]   solving river MTT9_25BB_BTN_SB_SRP__742r / BET413_CALL__Th: 39 z 39
+[03:13:42]     39/39 za 1.2 min
+[03:13:43]   solving river MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__K83r / BET17_CALL__8h: 39 z 39
+[03:14:54]     39/39 za 1.2 min
+[03:14:54]   solving river MTT9_50BB_CO_BB_SRP_CBET_MIDSPR__T84r / CHECK_CHECK__Ah: 65 z 65
+[03:16:48]     65/65 za 1.9 min
+[03:16:48]   solving river MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR__K72r / CHECK_BET39_CALL__Jc: 37 z 37
+[03:18:00]     37/37 za 1.2 min
+[03:18:00]   solving river MTT9_25BB_CO_BB_SRP_CBET_LOWSPR__J73r / BET17_CALL__7h: 39 z 39
+[03:19:12]     39/39 za 1.2 min
+[03:19:13]   solving river MTT9_25BB_UTG_1_SB_SRP__A72r / CHECK_CHECK__7h: 65 z 65
+[03:20:59]     65/65 za 1.8 min
+[03:20:59]   solving river MTT9_35BB_CO_BTN_3BP_REPAIR__AK5r / CHECK_CHECK__7h: 39 z 39
+[03:22:11]     39/39 za 1.2 min
+[03:22:11]   solving river MTT9_25BB_CO_SB_SRP__742r / BET413_CALL__Th: 39 z 39
+[03:23:21]     39/39 za 1.2 min
+[03:23:21]   solving river MTT9_25BB_CO_BTN_SRP__AT4mono / BET182_CALL__7s: 66 z 66
+[03:25:13]     66/66 za 1.9 min
+[03:25:13]   solving river MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR__432mono / CHECK_CHECK__Qs: 66 z 66
+[03:27:05]     66/66 za 1.9 min
+[03:27:05]   solving river MTT9_25BB_HJ_SB_SRP__883r / BET275_CALL__Th: 39 z 39
+[03:28:16]     39/39 za 1.2 min
+[03:28:16]   solving river MTT9_25BB_UTG_2_BB_SRP__K98tt / CHECK_BET182_CALL__Ad: 78 z 78
+[03:30:24]     78/78 za 2.1 min
+[03:30:24]   solving river MTT9_25BB_HJ_SB_SRP__742r / BET413_CALL__Th: 39 z 39
+[03:31:34]     39/39 za 1.2 min
+[03:31:34]   solving river MTT9_35BB_CO_BTN_3BP_REPAIR__622r / CHECK_CHECK__9c: 39 z 39
+[03:32:47]     39/39 za 1.2 min
+[03:32:47]   solving river MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR__843r / CHECK_CHECK__Qc: 39 z 39
+[03:34:01]     39/39 za 1.2 min
+[03:34:01]   solving river MTT9_25BB_UTG_2_BTN_SRP__742r / BET182_CALL__6h: 65 z 65
+[03:35:51]     65/65 za 1.8 min
+[03:35:51]   solving river MTT9_25BB_CO_BTN_SRP__AT4mono / BET182_CALL__6s: 66 z 66
+[03:37:46]     66/66 za 1.9 min
+[03:37:46]   solving river MTT9_25BB_UTG_SB_SRP__A72r / CHECK_CHECK__7h: 65 z 65
+[03:39:35]     65/65 za 1.8 min
+[03:39:35]   solving river MTT9_25BB_HJ_SB_SRP__986tt / BET413_CALL__7d: 52 z 52
+[03:41:09]     52/52 za 1.6 min
+[03:41:09]   solving river MTT9_25BB_HJ_CO_SRP__742r / BET275_CALL__Jh: 26 z 26
+[03:41:57]     26/26 za 0.8 min
+[03:41:57]   solving river MTT9_25BB_UTG_2_CO_SRP__742r / BET275_CALL__Jh: 39 z 39
+[03:43:09]     39/39 za 1.2 min
+[03:43:10]   solving river MTT9_35BB_CO_BTN_3BP_REPAIR__742r / CHECK_CHECK__Jh: 39 z 39
+[03:44:21]     39/39 za 1.2 min
+[03:44:21]   solving river MTT9_25BB_UTG_2_BB_SRP__A72r / CHECK_BET182_CALL__6h: 52 z 52
+[03:45:56]     52/52 za 1.6 min
+[03:45:56]   solving river MTT9_50BB_BTN_BB_SRP__AT4mono / CHECK_CHECK__Ks: 88 z 88
+[03:48:18]     88/88 za 2.4 min
+[03:48:18]   solving river MTT9_25BB_HJ_SB_SRP__986tt / BET413_CALL__8d: 75 z 75
+[03:50:20]     75/75 za 2.0 min
+[03:50:20]   solving river MTT9_35BB_CO_BTN_3BP_REPAIR__Q72r / CHECK_CHECK__Kc: 74 z 74
+[03:52:29]     74/74 za 2.1 min
+[03:52:29]   solving river MTT9_50BB_BTN_BB_SRP__Q72r / CHECK_CHECK__5h: 78 z 78
+[03:54:38]     78/78 za 2.1 min
+[03:54:38]   solving river MTT9_25BB_LJ_BB_SRP__A72r / CHECK_BET182_CALL__4h: 39 z 39
+[03:55:48]     39/39 za 1.2 min
+[03:55:48]   solving river MTT9_35BB_CO_BTN_3BP_REPAIR__T84r / CHECK_CHECK__Th: 39 z 39
+[03:56:59]     39/39 za 1.2 min
+[03:56:59]   solving river MTT9_25BB_UTG_SB_SRP__742r / CHECK_BET275_CALL__9h: 26 z 26
+[03:57:47]     26/26 za 0.8 min
+[03:57:48]   solving river MTT9_25BB_CO_BTN_SRP__AT4mono / BET182_CALL__8s: 66 z 66
+[03:59:39]     66/66 za 1.9 min
+[03:59:39]   solving river MTT9_50BB_BTN_BB_SRP__AT9r / CHECK_BET25_CALL__Tc: 39 z 39
+[04:00:50]     39/39 za 1.2 min
+[04:00:50]   solving river MTT9_25BB_UTG_2_LJ_SRP__742r / CHECK_BET275_CALL__Qh: 39 z 39
+[04:02:02]     39/39 za 1.2 min
+[04:02:02]   solving river MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR__955tt / BET79_CALL__Ac: 74 z 74
+[04:04:10]     74/74 za 2.1 min
+[04:04:10]   solving river MTT9_25BB_CO_BTN_SRP__742r / CHECK_CHECK__4h: 65 z 65
+[04:06:00]     65/65 za 1.8 min
+[04:06:01]   solving river MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR__862r / CHECK_CHECK__Jc: 39 z 39
+[04:07:12]     39/39 za 1.2 min
+[04:07:12]   solving river MTT9_80BB_CO_BTN_3BP_MIDSPR__997r / BET79_CALL__Kc: 72 z 72
+[04:09:14]     72/72 za 2.0 min
+[04:09:14]   solving river MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR__J87r / CHECK_BET52_CALL__Kc: 74 z 74
+[04:11:19]     74/74 za 2.1 min
+[04:11:19]   solving river MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR__955tt / BET79_CALL__Kc: 74 z 74
+[04:13:29]     74/74 za 2.2 min
+[04:13:29]   solving river MTT9_20BB_BTN_BB_SRP_LOWSPR__AT4mono / CHECK_CHECK__Js: 88 z 88
+[04:15:52]     88/88 za 2.4 min
+[04:15:52]   solving river MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR__KT2r / CHECK_BET52_CALL__3c: 26 z 26
+[04:16:40]     26/26 za 0.8 min
+[04:16:41]   solving river MTT9_25BB_UTG_2_BTN_SRP__883r / BET275_CALL__8h: 39 z 39
+[04:17:53]     39/39 za 1.2 min
+[04:17:53]   solving river MTT9_25BB_LJ_BTN_SRP__883r / BET275_CALL__6h: 39 z 39
+[04:19:06]     39/39 za 1.2 min
+[04:19:06]   solving river MTT9_35BB_CO_BTN_3BP_REPAIR__T84r / CHECK_CHECK__8h: 39 z 39
+[04:20:19]     39/39 za 1.2 min
+[04:20:19]   solving river MTT9_25BB_LJ_BTN_SRP__883r / BET275_CALL__7h: 39 z 39
+[04:21:32]     39/39 za 1.2 min
+[04:21:32]   solving river MTT9_25BB_HJ_BTN_SRP__AT4mono / BET182_CALL__8s: 66 z 66
+[04:23:29]     66/66 za 2.0 min
+[04:23:29]   solving river MTT9_25BB_HJ_BB_SRP__A72r / CHECK_CHECK__6h: 65 z 65
+[04:25:24]     65/65 za 1.9 min
+[04:25:24]   solving river MTT9_25BB_UTG_CO_SRP__742r / BET275_CALL__Kh: 39 z 39
+[04:26:35]     39/39 za 1.2 min
+[04:26:35]   solving river MTT9_20BB_BTN_BB_SRP_LOWSPR__KQ5r / CHECK_CHECK__5h: 52 z 52
+[04:28:07]     52/52 za 1.5 min
+[04:28:07]   solving river MTT9_25BB_CO_BB_SRP_CBET_LOWSPR__T72r / CHECK_CHECK__Ac: 65 z 65
+[04:30:02]     65/65 za 1.9 min
+[04:30:03]   solving river MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR__876tt / BET79_CALL__Ad: 52 z 52
+[04:31:40]     52/52 za 1.6 min
+[04:31:40]   solving river MTT9_25BB_CO_BB_SRP_CBET_LOWSPR__742r / BET25_CALL__8c: 37 z 37
+[04:32:52]     37/37 za 1.2 min
+[04:32:52]   solving river MTT9_80BB_CO_BTN_3BP_MIDSPR__JT9tt / BET79_CALL__Qs: 52 z 52
+[04:34:29]     52/52 za 1.6 min
+[04:34:29]   solving river MTT9_25BB_UTG_BTN_SRP__A72r / BET182_CALL__Th: 65 z 65
+[04:36:24]     65/65 za 1.9 min
+[04:36:24]   solving river MTT9_35BB_CO_BTN_3BP_REPAIR__Q72r / CHECK_CHECK__8h: 39 z 39
+[04:37:35]     39/39 za 1.2 min
+[04:37:35]   solving river MTT9_25BB_UTG_2_SB_SRP__A72r / CHECK_BET182_CALL__3h: 39 z 39
+[04:38:49]     39/39 za 1.2 min
+[04:38:49]   solving river MTT9_20BB_BTN_BB_SRP_LOWSPR__742r / CHECK_CHECK__Qh: 52 z 52
+[04:40:23]     52/52 za 1.6 min
+[04:40:23]   solving river MTT9_80BB_BTN_BB_SRP_HIGHSPR__883r / CHECK_BET25_CALL__Jh: 52 z 52
+[04:41:55]     52/52 za 1.5 min
+[04:41:55]   solving river MTT9_25BB_CO_BB_SRP_CBET_LOWSPR__Q72r / BET17_CALL__7h: 39 z 39
+[04:43:05]     39/39 za 1.2 min
+[04:43:05]   solving river MTT9_25BB_UTG_2_LJ_SRP__883r / CHECK_BET275_CALL__9h: 39 z 39
+[04:44:18]     39/39 za 1.2 min
+[04:44:18]   solving river MTT9_25BB_CO_SB_SRP__742r / BET275_CALL__2h: 39 z 39
+[04:45:30]     39/39 za 1.2 min
+[04:45:30]   solving river MTT9_25BB_LJ_BTN_SRP__883r / BET275_CALL__4h: 39 z 39
+[04:46:43]     39/39 za 1.2 min
+[04:46:43]   solving river MTT9_25BB_HJ_SB_SRP__742r / BET413_CALL__7h: 39 z 39
+[04:47:55]     39/39 za 1.2 min
+[04:47:56]   solving river MTT9_25BB_CO_BB_SRP_CBET_LOWSPR__Q72r / BET17_CALL__Kh: 39 z 39
+[04:49:06]     39/39 za 1.2 min
+[04:49:06]   solving river MTT9_25BB_BTN_SB_SRP__742r / BET413_CALL__Jh: 39 z 39
+[04:50:19]     39/39 za 1.2 min
+[04:50:19]   solving river MTT9_25BB_CO_BB_SRP_CBET_LOWSPR__K44r / BET17_CALL__Tc: 39 z 39
+[04:51:30]     39/39 za 1.2 min
+[04:51:30]   solving river MTT9_25BB_UTG_2_HJ_SRP__986tt / CHECK_BET182_CALL__Jc: 74 z 74
+[04:53:33]     74/74 za 2.0 min
+[04:53:33]   solving river MTT9_80BB_BTN_BB_SRP_HIGHSPR__J85r / CHECK_BET25_CALL__Jc: 78 z 78
+[04:55:45]     78/78 za 2.2 min
+[04:55:45]   solving river MTT9_25BB_UTG_1_SB_SRP__742r / CHECK_CHECK__Ac: 74 z 74
+[04:57:57]     74/74 za 2.2 min
+[04:57:57]   solving river MTT9_25BB_UTG_2_BB_SRP__986tt / CHECK_BET182_CALL__9d: 100 z 100
+[05:01:13]     100/100 za 3.3 min
+[05:01:14]   solving river MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR__T76tt / BET79_CALL__Kc: 74 z 74
+[05:03:33]     74/74 za 2.3 min
+[05:03:33]   solving river MTT9_80BB_CO_BTN_3BP_MIDSPR__K83r / CHECK_BET79_CALL__Kh: 39 z 39
+[05:04:46]     39/39 za 1.2 min
+[05:04:46]   solving river MTT9_25BB_LJ_BB_SRP__986tt / CHECK_BET182_CALL__9d: 100 z 100
+[05:07:27]     100/100 za 2.7 min
+[05:07:27]   solving river MTT9_25BB_LJ_CO_SRP__742r / BET275_CALL__Qh: 39 z 39
+[05:08:38]     39/39 za 1.2 min
+[05:08:38]   solving river MTT9_25BB_UTG_CO_SRP__986tt / CHECK_BET182_CALL__7d: 52 z 52
+[05:10:15]     52/52 za 1.6 min
+[05:10:15]   solving river MTT9_25BB_UTG_SB_SRP__986tt / BET182_CALL__7s: 70 z 70
+[05:12:16]     70/70 za 2.0 min
+[05:12:17]   solving river MTT9_25BB_UTG_1_HJ_SRP__A72r / BET182_CALL__8h: 65 z 65
+[05:14:11]     65/65 za 1.9 min
+[05:14:12]   solving river MTT9_25BB_UTG_1_BB_SRP__742r / CHECK_BET182_CALL__Qh: 65 z 65
+[05:16:14]     65/65 za 2.0 min
+[05:16:14]   solving river MTT9_80BB_BTN_BB_SRP_HIGHSPR__K83r / CHECK_BET25_CALL__Kh: 52 z 52
+[05:17:52]     52/52 za 1.6 min
+[05:17:52]   solving river MTT9_50BB_BTN_BB_SRP__T84r / CHECK_BET25_CALL__Qh: 39 z 39
+[05:19:04]     39/39 za 1.2 min
+[05:19:04]   solving river MTT9_25BB_CO_BB_SRP_CBET_LOWSPR__A95r / CHECK_BET17_CALL__6h: 39 z 39
+[05:20:17]     39/39 za 1.2 min
+[05:20:17]   solving river MTT9_25BB_CO_BB_SRP_CBET_LOWSPR__A95r / CHECK_BET17_CALL__7h: 39 z 39
+[05:21:30]     39/39 za 1.2 min
+[05:21:30]   solving river MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR__842r / BET79_CALL__8c: 39 z 39
+[05:22:41]     39/39 za 1.2 min
+[05:22:41]   solving river MTT9_25BB_LJ_CO_SRP__A72r / BET182_CALL__6h: 65 z 65
+[05:24:31]     65/65 za 1.8 min
+[05:24:31]   solving river MTT9_25BB_LJ_CO_SRP__A72r / BET182_CALL__8h: 65 z 65
+[05:26:23]     65/65 za 1.9 min
+[05:26:23]   solving river MTT9_25BB_UTG_1_SB_SRP__742r / CHECK_BET275_CALL__Kh: 26 z 26
+[05:27:10]     26/26 za 0.8 min
+[05:27:11]   solving river MTT9_80BB_BTN_BB_SRP_HIGHSPR__742r / CHECK_BET25_CALL__Jc: 74 z 74
+[05:29:14]     74/74 za 2.0 min
+[05:29:14]   solving river MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR__922r / BET25_CALL__8d: 37 z 37
+[05:30:25]     37/37 za 1.2 min
+[05:30:25]   solving river MTT9_25BB_UTG_SB_SRP__986tt / BET182_CALL__7c: 74 z 74
+[05:32:30]     74/74 za 2.1 min
+[05:32:30]   solving river MTT9_25BB_HJ_CO_SRP__K98tt / CHECK_BET182_CALL__4d: 78 z 78
+[05:34:41]     78/78 za 2.2 min
+[05:34:41]   solving river MTT9_25BB_LJ_BB_SRP__K98tt / CHECK_BET182_CALL__Ad: 78 z 78
+[05:36:50]     78/78 za 2.1 min
+[05:36:50]   solving river MTT9_20BB_BTN_BB_SRP_LOWSPR__AJ2r / CHECK_CHECK__6c: 52 z 52
+[05:38:28]     52/52 za 1.6 min
+[05:38:29]   solving river MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR__QJ9tt / CHECK_CHECK__Td: 104 z 104
+[05:41:20]     104/104 za 2.9 min
+[05:41:21]   solving river MTT9_20BB_BTN_BB_SRP_LOWSPR__973tt / CHECK_CHECK__Ah: 104 z 104
+[05:44:09]     104/104 za 2.8 min
+[05:44:09]   solving river MTT9_25BB_UTG_1_SB_SRP__986tt / BET182_CALL__7c: 74 z 74
+[05:46:20]     74/74 za 2.2 min
+[05:46:21]   solving river MTT9_25BB_LJ_HJ_SRP__986tt / CHECK_BET182_CALL__5d: 104 z 104
+[05:49:10]     104/104 za 2.8 min
+[05:49:10]   solving river MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR__K72r / CHECK_BET79_CALL__Qc: 74 z 74
+[05:51:13]     74/74 za 2.1 min
+[05:51:13]   solving river MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR__K32tt / CHECK_BET52_CALL__Th: 52 z 52
+[05:52:48]     52/52 za 1.6 min
+[05:52:48]   solving river MTT9_25BB_UTG_2_LJ_SRP__883r / CHECK_BET275_CALL__Jh: 39 z 39
+[05:54:02]     39/39 za 1.2 min
+[05:54:02]   solving river MTT9_25BB_UTG_2_HJ_SRP__883r / CHECK_BET275_CALL__Kc: 36 z 36
+[05:55:13]     36/36 za 1.2 min
+[05:55:13]   solving river MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR__654r / CHECK_CHECK__7h: 52 z 52
+[05:56:45]     52/52 za 1.5 min
+[05:56:45]   solving river MTT9_25BB_LJ_SB_SRP__742r / BET275_CALL__5h: 39 z 39
+[05:57:57]     39/39 za 1.2 min
+[05:57:57]   solving river MTT9_25BB_CO_BTN_SRP__742r / CHECK_CHECK__8h: 78 z 78
+[06:00:04]     78/78 za 2.1 min
+[06:00:04]   solving river MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR__843r / CHECK_CHECK__Tc: 39 z 39
+[06:01:16]     39/39 za 1.2 min
+[06:01:16]   solving river MTT9_80BB_CO_BTN_3BP_MIDSPR__AK5r / CHECK_BET79_CALL__5d: 74 z 74
+[06:03:24]     74/74 za 2.1 min
+[06:03:25]   solving river MTT9_50BB_BTN_BB_SRP__A95r / CHECK_BET25_CALL__3h: 39 z 39
+[06:04:38]     39/39 za 1.2 min
+[06:04:38]   solving river MTT9_50BB_BTN_BB_SRP__888r / CHECK_BET25_CALL__6d: 72 z 72
+[06:06:41]     72/72 za 2.1 min
+[06:06:41]   solving river MTT9_25BB_UTG_1_SB_SRP__883r / BET182_CALL__Qh: 52 z 52
+[06:08:20]     52/52 za 1.6 min
+[06:08:20]   solving river MTT9_50BB_BTN_BB_SRP__Q84r / CHECK_BET25_CALL__Ah: 39 z 39
+[06:09:32]     39/39 za 1.2 min
+[06:09:32]   solving river MTT9_50BB_BTN_BB_SRP__976tt / CHECK_BET25_CALL__Jc: 74 z 74
+[06:11:35]     74/74 za 2.0 min
+[06:11:35]   solving river MTT9_25BB_CO_SB_SRP__986tt / BET413_CALL__7d: 78 z 78
+[06:13:45]     78/78 za 2.2 min
+[06:13:45]   solving river MTT9_20BB_BTN_BB_SRP_LOWSPR__J52r / CHECK_CHECK__Jc: 52 z 52
+[06:15:21]     52/52 za 1.6 min
+[06:15:21]   solving river MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR__T97r / CHECK_CHECK__8h: 52 z 52
+[06:16:56]     52/52 za 1.6 min
+[06:16:57]   solving river MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR__652r / BET25_CALL__Ad: 37 z 37
+[06:18:08]     37/37 za 1.2 min
+[06:18:08]   solving river MTT9_80BB_CO_BTN_3BP_MIDSPR__954tt / CHECK_CHECK__Ah: 52 z 52
+[06:19:41]     52/52 za 1.5 min
+[06:19:41]   solving river MTT9_25BB_UTG_1_HJ_SRP__A72r / BET182_CALL__7h: 65 z 65
+[06:21:41]     65/65 za 2.0 min
+[06:21:41]   solving river MTT9_150BB_CO_BTN_3BP_HIGHSPR__322r / CHECK_BET79_CALL__5d: 74 z 74
+[06:23:47]     74/74 za 2.1 min
+[06:23:48]   solving river MTT9_25BB_UTG_2_HJ_SRP__986tt / CHECK_BET182_CALL__4d: 78 z 78
+[06:25:54]     78/78 za 2.1 min
+[06:25:54]   solving river MTT9_25BB_UTG_2_HJ_SRP__883r / CHECK_BET275_CALL__8c: 72 z 72
+[06:27:55]     72/72 za 2.0 min
+[06:27:56]   solving river MTT9_35BB_CO_BTN_3BP_REPAIR__T82tt / CHECK_CHECK__Kh: 52 z 52
+[06:29:29]     52/52 za 1.6 min
+[06:29:29]   solving river MTT9_50BB_BTN_BB_SRP__T84r / CHECK_BET25_CALL__8h: 39 z 39
+[06:30:40]     39/39 za 1.2 min
+[06:30:40]   solving river MTT9_25BB_CO_BB_SRP_CBET_LOWSPR__765tt / BET17_CALL__Ad: 78 z 78
+[06:32:47]     78/78 za 2.1 min
+[06:32:47]   solving river MTT9_25BB_LJ_SB_SRP__986tt / BET182_CALL__4d: 104 z 104
+[06:35:38]     104/104 za 2.8 min
+[06:35:38]   solving river MTT9_25BB_UTG_1_BTN_SRP__A72r / BET182_CALL__Th: 65 z 65
+[06:37:35]     65/65 za 1.9 min
+[06:37:35]   solving river MTT9_25BB_LJ_CO_SRP__883r / BET182_CALL__4h: 65 z 65
+[06:39:28]     65/65 za 1.9 min
+[06:39:28]   solving river MTT9_20BB_BTN_BB_SRP_LOWSPR__222r / CHECK_CHECK__Kd: 108 z 108
+[06:42:22]     108/108 za 2.9 min
+[06:42:22]   solving river MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR__A55tt / CHECK_CHECK__5c: 108 z 108
+[06:45:17]     108/108 za 2.9 min
+[06:45:17]   solving river MTT9_80BB_CO_BTN_3BP_MIDSPR__J73r / BET79_CALL__8h: 39 z 39
+[06:46:31]     39/39 za 1.2 min
+[06:46:31]   solving river MTT9_150BB_CO_BTN_3BP_HIGHSPR__KQ5r / CHECK_BET79_CALL__4h: 26 z 26
+[06:47:18]     26/26 za 0.8 min
+[06:47:18]   solving river MTT9_50BB_BTN_BB_SRP__742r / CHECK_BET25_CALL__Jh: 26 z 26
+[06:48:06]     26/26 za 0.8 min
+[06:48:06]   solving river MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR__A72r / CHECK_BET17_CALL__9h: 39 z 39
+[06:49:17]     39/39 za 1.2 min
+[06:49:17]   solving river MTT9_25BB_CO_BB_SRP_CBET_LOWSPR__Q84r / BET17_CALL__4h: 39 z 39
+[06:50:29]     39/39 za 1.2 min
+[06:50:29]   solving river MTT9_25BB_LJ_CO_SRP__986tt / CHECK_BET182_CALL__5d: 104 z 104
+[06:53:18]     104/104 za 2.8 min
+[06:53:18]   solving river MTT9_25BB_UTG_HJ_SRP__A72r / BET182_CALL__8h: 65 z 65
+[06:55:09]     65/65 za 1.9 min
+[06:55:09]   končím 4.8 min před deadline: na novou vrstvu je pozdě
+[06:55:09] river phase: 151 turnových podher dostalo riverovou vrstvu; vrstva 1.6 min medián, 3.3 max
+[06:55:09]     12 vrstev,    545 podher do MTT9_35BB_CO_BTN_3BP_REPAIR
+[06:55:09]     12 vrstev,    761 podher do MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR
+[06:55:09]     10 vrstev,    453 podher do MTT9_25BB_CO_BB_SRP_CBET_LOWSPR
+[06:55:09]     10 vrstev,    533 podher do MTT9_50BB_BTN_BB_SRP
+[06:55:09]      7 vrstev,    508 podher do MTT9_20BB_BTN_BB_SRP_LOWSPR
+[06:55:09]      6 vrstev,    338 podher do MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR
+[06:55:09]      6 vrstev,    296 podher do MTT9_25BB_HJ_SB_SRP
+[06:55:09]      6 vrstev,    328 podher do MTT9_80BB_CO_BTN_3BP_MIDSPR
+[06:55:09]      5 vrstev,    193 podher do MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR
+[06:55:09]      5 vrstev,    291 podher do MTT9_25BB_UTG_1_SB_SRP
+[06:55:09]      5 vrstev,    341 podher do MTT9_25BB_CO_BTN_SRP
+[06:55:09]      5 vrstev,    338 podher do MTT9_25BB_LJ_CO_SRP
+[06:55:09]      4 vrstev,    208 podher do MTT9_25BB_CO_SB_SRP
+[06:55:09]      4 vrstev,    282 podher do MTT9_25BB_LJ_BB_SRP
+[06:55:09]      4 vrstev,    235 podher do MTT9_25BB_UTG_SB_SRP
+[06:55:09]      4 vrstev,    256 podher do MTT9_80BB_BTN_BB_SRP_HIGHSPR
+[06:55:09]      4 vrstev,    260 podher do MTT9_25BB_UTG_2_HJ_SRP
+[06:55:09]      3 vrstev,    117 podher do MTT9_25BB_UTG_2_CO_SRP
+[06:55:09]      3 vrstev,    169 podher do MTT9_25BB_LJ_SB_SRP
+[06:55:09]      3 vrstev,    182 podher do MTT9_25BB_HJ_CO_SRP
+[06:55:09]      3 vrstev,    230 podher do MTT9_25BB_UTG_2_BB_SRP
+[06:55:09]      3 vrstev,    117 podher do MTT9_25BB_UTG_2_LJ_SRP
+[06:55:09]      3 vrstev,    117 podher do MTT9_25BB_LJ_BTN_SRP
+[06:55:09]      2 vrstev,    111 podher do MTT9_25BB_UTG_2_SB_SRP
+[06:55:09]      2 vrstev,     78 podher do MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR
+[06:55:09]      2 vrstev,     78 podher do MTT9_25BB_BTN_SB_SRP
+[06:55:09]      2 vrstev,    104 podher do MTT9_25BB_UTG_2_BTN_SRP
+[06:55:09]      2 vrstev,     91 podher do MTT9_25BB_UTG_CO_SRP
+[06:55:09]      2 vrstev,    130 podher do MTT9_25BB_UTG_1_HJ_SRP
+[06:55:09]      2 vrstev,    100 podher do MTT9_150BB_CO_BTN_3BP_HIGHSPR
+[06:55:09]      1 vrstev,     39 podher do MTT9_25BB_UTG_1_CO_SRP
+[06:55:09]      1 vrstev,     39 podher do MTT9_40BB_UTG_BB_SRP
+[06:55:09]      1 vrstev,     65 podher do MTT9_50BB_CO_BB_SRP_CBET_MIDSPR
+[06:55:09]      1 vrstev,     66 podher do MTT9_25BB_HJ_BTN_SRP
+[06:55:09]      1 vrstev,     65 podher do MTT9_25BB_HJ_BB_SRP
+[06:55:09]      1 vrstev,     65 podher do MTT9_25BB_UTG_BTN_SRP
+[06:55:09]      1 vrstev,     65 podher do MTT9_25BB_UTG_1_BB_SRP
+[06:55:09]      1 vrstev,    104 podher do MTT9_25BB_LJ_HJ_SRP
+[06:55:09]      1 vrstev,     65 podher do MTT9_25BB_UTG_1_BTN_SRP
+[06:55:09]      1 vrstev,     65 podher do MTT9_25BB_UTG_HJ_SRP
+[21:01:02] nastagováno 0 desek bez checkpointu; deadline 07:00
+[21:01:02] na disku volno 254.4 GB (hranice 8 GB)
+[21:01:02] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:02] nastagováno 0 desek bez checkpointu; deadline 07:00
+[21:01:02] na disku volno 269.5 GB (hranice 8 GB)
+[21:01:02] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:01] nastagováno 0 desek bez checkpointu; deadline 07:00
+[21:01:01] na disku volno 269.7 GB (hranice 8 GB)
+[21:01:01] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:01] nastagováno 0 desek bez checkpointu; deadline 07:00
+[21:01:01] na disku volno 268.1 GB (hranice 8 GB)
+[21:01:01] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:02] nastagováno 0 desek bez checkpointu; deadline 07:00
+[21:01:02] na disku volno 266.3 GB (hranice 8 GB)
+[21:01:02] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:03] nastagováno 48 desek bez checkpointu; deadline 07:00
+[21:01:03] na disku volno 263.0 GB (hranice 8 GB)
+[21:01:03] stroj se drží vzhůru po dobu běhu
+[21:01:03] solving MTT9_25BB_HJ_BB_SRP A72r
+[21:08:33]   hotovo za 7.5 min, checkpoint 73 MB
+[21:08:33] solving MTT9_25BB_HJ_BB_SRP 883r
+[21:17:17]   hotovo za 8.7 min, checkpoint 80 MB
+[21:17:17] solving MTT9_25BB_HJ_BB_SRP 986tt
+[21:22:55]   hotovo za 5.6 min, checkpoint 74 MB
+[21:22:55] solving MTT9_25BB_HJ_BB_SRP AT4mono
+[21:26:12]   hotovo za 3.3 min, checkpoint 53 MB
+[21:26:12] solving MTT9_25BB_HJ_BB_SRP 742r
+[21:34:32]   hotovo za 8.3 min, checkpoint 80 MB
+[21:34:32] solving MTT9_25BB_HJ_BB_SRP K98tt
+[21:40:00]   hotovo za 5.5 min, checkpoint 72 MB
+[21:40:00] solving MTT9_25BB_LJ_BB_SRP A72r
+[21:43:40]   hotovo za 3.7 min, checkpoint 72 MB
+[21:43:40] solving MTT9_25BB_LJ_BB_SRP 883r
+[21:49:03]   hotovo za 5.4 min, checkpoint 69 MB
+[21:49:03] solving MTT9_25BB_LJ_BB_SRP 986tt
+[21:54:08]   hotovo za 5.1 min, checkpoint 67 MB
+[21:54:08] solving MTT9_25BB_LJ_BB_SRP AT4mono
+[21:57:03]   hotovo za 2.9 min, checkpoint 48 MB
+[21:57:03] solving MTT9_25BB_LJ_BB_SRP 742r
+[22:04:41]   hotovo za 7.6 min, checkpoint 69 MB
+[22:04:41] solving MTT9_25BB_LJ_BB_SRP K98tt
+[22:09:31]   hotovo za 4.8 min, checkpoint 64 MB
+[22:09:31] solving MTT9_25BB_UTG_1_BB_SRP A72r
+[22:12:56]   hotovo za 3.4 min, checkpoint 66 MB
+[22:12:56] solving MTT9_25BB_UTG_1_BB_SRP 883r
+[22:17:46]   hotovo za 4.8 min, checkpoint 63 MB
+[22:17:46] solving MTT9_25BB_UTG_1_BB_SRP 986tt
+[22:22:27]   hotovo za 4.7 min, checkpoint 60 MB
+[22:22:27] solving MTT9_25BB_UTG_1_BB_SRP AT4mono
+[22:23:51]   hotovo za 1.4 min, checkpoint 48 MB
+[22:23:51] solving MTT9_25BB_UTG_1_BB_SRP 742r
+[22:30:39]   hotovo za 6.8 min, checkpoint 63 MB
+[22:30:39] solving MTT9_25BB_UTG_1_BB_SRP K98tt
+[22:35:16]   hotovo za 4.6 min, checkpoint 59 MB
+[22:35:16] solving MTT9_25BB_UTG_2_BB_SRP A72r
+[22:42:08]   hotovo za 6.9 min, checkpoint 60 MB
+[22:42:08] solving MTT9_25BB_UTG_2_BB_SRP 883r
+[22:47:18]   hotovo za 5.2 min, checkpoint 65 MB
+[22:47:18] solving MTT9_25BB_UTG_2_BB_SRP 986tt
+[22:52:13]   hotovo za 4.9 min, checkpoint 64 MB
+[22:52:13] solving MTT9_25BB_UTG_2_BB_SRP AT4mono
+[22:53:41]   hotovo za 1.5 min, checkpoint 49 MB
+[22:53:41] solving MTT9_25BB_UTG_2_BB_SRP 742r
+[23:01:01]   hotovo za 7.3 min, checkpoint 66 MB
+[23:01:01] solving MTT9_25BB_UTG_2_BB_SRP K98tt
+[23:03:30]   hotovo za 2.5 min, checkpoint 68 MB
+[23:03:30] solving MTT9_25BB_HJ_BB_SRP A76tt
+[23:09:03]   hotovo za 5.6 min, checkpoint 72 MB
+[23:09:03] solving MTT9_25BB_LJ_BB_SRP A76tt
+[23:11:35]   hotovo za 2.5 min, checkpoint 71 MB
+[23:11:35] solving MTT9_25BB_UTG_1_BB_SRP A76tt
+[23:13:57]   hotovo za 2.4 min, checkpoint 65 MB
+[23:13:57] solving MTT9_25BB_UTG_2_BB_SRP A76tt
+[23:16:25]   hotovo za 2.5 min, checkpoint 68 MB
+[23:16:25] solving MTT9_25BB_HJ_BB_SRP J73r
+[23:24:32]   hotovo za 8.1 min, checkpoint 74 MB
+[23:24:32] solving MTT9_25BB_LJ_BB_SRP J73r
+[23:31:58]   hotovo za 7.4 min, checkpoint 67 MB
+[23:31:58] solving MTT9_25BB_UTG_1_BB_SRP J73r
+[23:38:42]   hotovo za 6.7 min, checkpoint 61 MB
+[23:38:42] solving MTT9_25BB_UTG_2_BB_SRP J73r
+[23:45:53]   hotovo za 7.2 min, checkpoint 64 MB
+[23:45:53] solving MTT9_25BB_HJ_BB_SRP T84r
+[23:50:02]   hotovo za 4.1 min, checkpoint 81 MB
+[23:50:02] solving MTT9_25BB_LJ_BB_SRP T84r
+[23:57:30]   hotovo za 7.5 min, checkpoint 66 MB
+[23:57:30] solving MTT9_25BB_UTG_1_BB_SRP T84r
+[00:07:29]   hotovo za 10.0 min, checkpoint 62 MB
+[00:07:29] solving MTT9_25BB_UTG_2_BB_SRP T84r
+[00:14:28]   hotovo za 7.0 min, checkpoint 64 MB
+[00:14:28] solving MTT9_25BB_HJ_BB_SRP 654r
+[00:22:54]   hotovo za 8.4 min, checkpoint 78 MB
+[00:22:54] solving MTT9_25BB_LJ_BB_SRP 654r
+[00:34:14]   hotovo za 11.3 min, checkpoint 70 MB
+[00:34:14] solving MTT9_25BB_UTG_1_BB_SRP 654r
+[00:34:23]   spadlo po 0.1 min (rc=3221225477); zkouším znovu
+[00:41:24]   hotovo za 7.0 min, checkpoint 63 MB (napodruhé)
+[00:41:24] solving MTT9_25BB_UTG_2_BB_SRP 654r
+[00:48:52]   hotovo za 7.5 min, checkpoint 68 MB
+[00:48:52] solving MTT9_25BB_HJ_BB_SRP QQ7r
+[00:54:43]   hotovo za 5.9 min, checkpoint 73 MB
+[00:54:43] solving MTT9_25BB_LJ_BB_SRP QQ7r
+[00:59:52]   hotovo za 5.2 min, checkpoint 66 MB
+[00:59:52] solving MTT9_25BB_UTG_1_BB_SRP QQ7r
+[01:04:30]   hotovo za 4.6 min, checkpoint 59 MB
+[01:04:30] solving MTT9_25BB_UTG_2_BB_SRP QQ7r
+[01:09:22]   hotovo za 4.9 min, checkpoint 63 MB
+[01:09:22] solving MTT9_25BB_HJ_BB_SRP 955tt
+[01:15:08]   hotovo za 5.8 min, checkpoint 76 MB
+[01:15:08] solving MTT9_25BB_LJ_BB_SRP 955tt
+[01:20:17]   hotovo za 5.1 min, checkpoint 68 MB
+[01:20:17] solving MTT9_25BB_UTG_1_BB_SRP 955tt
+[01:25:04]   hotovo za 4.8 min, checkpoint 62 MB
+[01:25:04] solving MTT9_25BB_UTG_2_BB_SRP 955tt
+[01:30:00]   hotovo za 4.9 min, checkpoint 65 MB
+[01:30:00] expansion: hotovo 48, selhalo 0, zbývá 0
+[01:30:00] fronta prázdná, 5.5 h okna předávám rozkladu
+Exception in thread Thread-1 (_readerthread):
+Traceback (most recent call last):
+  File "C:\Users\stachal\AppData\Local\Python\pythoncore-3.14-64\Lib\threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\stachal\AppData\Local\Python\pythoncore-3.14-64\Lib\threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\stachal\AppData\Local\Python\pythoncore-3.14-64\Lib\subprocess.py", line 1613, in _readerthread
+    buffer.append(fh.read())
+                  ~~~~~~~^^
+  File "C:\Users\stachal\AppData\Local\Python\pythoncore-3.14-64\Lib\encodings\cp1250.py", line 23, in decode
+    return codecs.charmap_decode(input,self.errors,decoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeDecodeError: 'charmap' codec can't decode byte 0x88 in position 1122: character maps to <undefined>
+[01:30:35] denní vyhodnocení hotové za 35 s
+[01:30:49]   bez vrstvy:             4141  (4434 pravidel) <- tady noc pomĹŻĹľe
+[01:30:49]   podhry proti vĂ˝bÄ›ru podle toho, kde sedĂ­ dodĂˇvanĂ© pravidlo bez vrstvy.
+[01:31:18] na disku volno 259.6 GB (hranice pro další desku je 8 GB)
+[01:31:18] stroj se drží vzhůru po dobu běhu
+[01:31:18]   174 desek vynecháno z rozkladu: jen flop (flop-only-boards.txt)
+[01:31:26] 751 boards have a monolithic checkpoint; deadline 07:00
+[01:31:41] planning MTT9_25BB_HJ_BB_SRP 742r (7s,4d,2c, pot 550, stack 2250)
+[01:31:43] solving MTT9_25BB_HJ_BB_SRP 742r: 182 of 182 subgames left
+[01:36:52]   182/182 after 5.2 min
+[01:36:52] planning MTT9_25BB_HJ_BB_SRP 883r (8s,8d,3c, pot 550, stack 2250)
+[01:36:53] solving MTT9_25BB_HJ_BB_SRP 883r: 182 of 182 subgames left
+[01:41:34]   182/182 after 4.7 min
+[01:41:34] planning MTT9_25BB_HJ_BB_SRP 986tt (9s,8s,6d, pot 550, stack 2250)
+[01:41:35] solving MTT9_25BB_HJ_BB_SRP 986tt: 144 of 144 subgames left
+[01:46:21]   144/144 after 4.8 min
+[01:46:21] planning MTT9_25BB_HJ_BB_SRP A72r (As,7d,2c, pot 550, stack 2250)
+[01:46:22] solving MTT9_25BB_HJ_BB_SRP A72r: 104 of 104 subgames left
+[01:49:05]   104/104 after 2.7 min
+[01:49:05] planning MTT9_25BB_HJ_BB_SRP AT4mono (As,Ts,4s, pot 550, stack 2250)
+[01:49:06] solving MTT9_25BB_HJ_BB_SRP AT4mono: 138 of 138 subgames left
+[01:53:05]   138/138 after 4.0 min
+[01:53:05] planning MTT9_25BB_HJ_BB_SRP K98tt (Ks,9s,8d, pot 550, stack 2250)
+[01:53:07] solving MTT9_25BB_HJ_BB_SRP K98tt: 144 of 144 subgames left
+[01:57:41]   144/144 after 4.6 min
+[01:57:42] planning MTT9_25BB_LJ_BB_SRP 742r (7s,4d,2c, pot 550, stack 2250)
+[01:57:43] solving MTT9_25BB_LJ_BB_SRP 742r: 156 of 156 subgames left
+[02:02:19]   156/156 after 4.6 min
+[02:02:19] planning MTT9_25BB_LJ_BB_SRP 883r (8s,8d,3c, pot 550, stack 2250)
+[02:02:20] solving MTT9_25BB_LJ_BB_SRP 883r: 156 of 156 subgames left
+[02:06:14]   156/156 after 3.9 min
+[02:06:14] planning MTT9_25BB_LJ_BB_SRP 986tt (9s,8s,6d, pot 550, stack 2250)
+[02:06:15] solving MTT9_25BB_LJ_BB_SRP 986tt: 180 of 180 subgames left
+[02:11:56]   180/180 after 5.7 min
+[02:11:56] planning MTT9_25BB_LJ_BB_SRP A72r (As,7d,2c, pot 550, stack 2250)
+[02:11:57] solving MTT9_25BB_LJ_BB_SRP A72r: 104 of 104 subgames left
+[02:15:11]   104/104 after 3.2 min
+[02:15:11] planning MTT9_25BB_LJ_BB_SRP AT4mono (As,Ts,4s, pot 550, stack 2250)
+[02:15:12] solving MTT9_25BB_LJ_BB_SRP AT4mono: 138 of 138 subgames left
+[02:19:26]   138/138 after 4.2 min
+[02:19:26] planning MTT9_25BB_LJ_BB_SRP K98tt (Ks,9s,8d, pot 550, stack 2250)
+[02:19:27] solving MTT9_25BB_LJ_BB_SRP K98tt: 180 of 180 subgames left
+[02:25:13]   180/180 after 5.8 min
+[02:25:17] planning MTT9_25BB_UTG_1_BB_SRP 742r (7s,4d,2c, pot 550, stack 2250)
+[02:25:18] solving MTT9_25BB_UTG_1_BB_SRP 742r: 104 of 104 subgames left
+[02:28:27]   104/104 after 3.2 min
+[02:28:27] planning MTT9_25BB_UTG_1_BB_SRP 883r (8s,8d,3c, pot 550, stack 2250)
+[02:28:29] solving MTT9_25BB_UTG_1_BB_SRP 883r: 156 of 156 subgames left
+[02:33:08]   156/156 after 4.7 min
+[02:33:08] planning MTT9_25BB_UTG_1_BB_SRP 986tt (9s,8s,6d, pot 550, stack 2250)
+[02:33:09] solving MTT9_25BB_UTG_1_BB_SRP 986tt: 144 of 144 subgames left
+[02:38:17]   144/144 after 5.1 min
+[02:38:18] planning MTT9_25BB_UTG_1_BB_SRP A72r (As,7d,2c, pot 550, stack 2250)
+[02:38:19] solving MTT9_25BB_UTG_1_BB_SRP A72r: 78 of 78 subgames left
+[02:40:31]   78/78 after 2.2 min
+[02:40:32] planning MTT9_25BB_UTG_1_BB_SRP AT4mono (As,Ts,4s, pot 550, stack 2250)
+[02:40:32] solving MTT9_25BB_UTG_1_BB_SRP AT4mono: 161 of 161 subgames left
+[02:44:58]   161/161 after 4.4 min
+[02:44:58] planning MTT9_25BB_UTG_1_BB_SRP K98tt (Ks,9s,8d, pot 550, stack 2250)
+[02:44:59] solving MTT9_25BB_UTG_1_BB_SRP K98tt: 108 of 108 subgames left
+[02:47:57]   108/108 after 3.0 min
+[02:47:57] planning MTT9_25BB_UTG_2_BB_SRP 742r (7s,4d,2c, pot 550, stack 2250)
+[02:47:58] solving MTT9_25BB_UTG_2_BB_SRP 742r: 104 of 104 subgames left
+[02:51:14]   104/104 after 3.3 min
+[02:51:14] planning MTT9_25BB_UTG_2_BB_SRP 883r (8s,8d,3c, pot 550, stack 2250)
+[02:51:15] solving MTT9_25BB_UTG_2_BB_SRP 883r: 130 of 130 subgames left
+[02:54:33]   130/130 after 3.3 min
+[02:54:33] planning MTT9_25BB_UTG_2_BB_SRP 986tt (9s,8s,6d, pot 550, stack 2250)
+[02:54:35] solving MTT9_25BB_UTG_2_BB_SRP 986tt: 180 of 180 subgames left
+[03:00:13]   180/180 after 5.6 min
+[03:00:13] planning MTT9_25BB_UTG_2_BB_SRP A72r (As,7d,2c, pot 550, stack 2250)
+[03:00:14] solving MTT9_25BB_UTG_2_BB_SRP A72r: 52 of 52 subgames left
+[03:01:43]   52/52 after 1.5 min
+[03:01:43] planning MTT9_25BB_UTG_2_BB_SRP AT4mono (As,Ts,4s, pot 550, stack 2250)
+[03:01:44] solving MTT9_25BB_UTG_2_BB_SRP AT4mono: 138 of 138 subgames left
+[03:05:30]   138/138 after 3.8 min
+[03:05:30] planning MTT9_25BB_UTG_2_BB_SRP K98tt (Ks,9s,8d, pot 550, stack 2250)
+[03:05:31] solving MTT9_25BB_UTG_2_BB_SRP K98tt: 216 of 216 subgames left
+[03:11:40]   216/216 after 6.2 min
+[03:11:42] boards worked 24, already complete 727, failed 0
+[03:11:42] river phase: turnová fronta vyčerpaná, zbývá 228 min okna
+[03:11:42] river phase: rozpočet kolik stihne turnových podher
+[03:11:42]   16 procesů x 1 vláken na podhru
+[03:11:58]   prioritní seznam: 4141 podher, oceněno 4141, pořadí dosah/cena
+[03:11:58]   4141 podher napřed podle dodávaných turnových pravidel bez vrstvy
+[03:11:58]   129777 podher vybráno podle reach
+[03:11:59]   solving river MTT9_25BB_CO_SB_SRP__K98tt / CHECK_CHECK__Js: 140 z 140
+[03:14:36]     140/140 za 2.6 min
+[03:14:37]   solving river MTT9_25BB_LJ_HJ_SRP__A72r / CHECK_CHECK__8h: 91 z 91
+[03:16:20]     91/91 za 1.7 min
+[03:16:20]   solving river MTT9_25BB_UTG_SB_SRP__A72r / CHECK_CHECK__5c: 185 z 185
+[03:19:56]     185/185 za 3.6 min
+[03:19:56]   solving river MTT9_25BB_UTG_2_SB_SRP__K98tt / CHECK_BET182_CALL__7c: 111 z 111
+[03:22:06]     111/111 za 2.2 min
+[03:22:06]   solving river MTT9_25BB_UTG_2_SB_SRP__K98tt / CHECK_BET182_CALL__7d: 104 z 104
+[03:24:07]     104/104 za 2.0 min
+[03:24:07]   solving river MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR__KJTmono / CHECK_CHECK__9s: 198 z 198
+[03:27:54]     198/198 za 3.8 min
+[03:27:54]   solving river MTT9_80BB_CO_BTN_3BP_MIDSPR__JT9tt / BET79_CALL__7s: 78 z 78
+[03:29:23]     78/78 za 1.5 min
+[03:29:23]   solving river MTT9_25BB_UTG_2_SB_SRP__K98tt / CHECK_BET182_CALL__Kc: 148 z 148
+[03:32:14]     148/148 za 2.8 min
+[03:32:14]   solving river MTT9_25BB_UTG_1_HJ_SRP__K98tt / BET275_CALL__Ts: 70 z 70
+[03:33:36]     70/70 za 1.4 min
+[03:33:37]   solving river MTT9_25BB_UTG_1_LJ_SRP__AT4mono / CHECK_CHECK__Js: 110 z 110
+[03:35:43]     110/110 za 2.1 min
+[03:35:44]   solving river MTT9_150BB_CO_BTN_3BP_HIGHSPR__932tt / CHECK_BET79_CALL__Ac: 185 z 185
+[03:39:14]     185/185 za 3.5 min
+[03:39:15]   solving river MTT9_50BB_BTN_BB_SRP__A72r / CHECK_CHECK__7h: 65 z 65
+[03:40:33]     65/65 za 1.3 min
+[03:40:33]   solving river MTT9_25BB_CO_SB_SRP__986tt / BET413_CALL__Kc: 74 z 74
+[03:41:59]     74/74 za 1.4 min
+[03:41:59]   solving river MTT9_25BB_UTG_BTN_SRP__AT4mono / BET182_CALL__9s: 88 z 88
+[03:43:38]     88/88 za 1.7 min
+[03:43:38]   solving river MTT9_25BB_UTG_2_SB_SRP__742r / BET413_CALL__Th: 39 z 39
+[03:44:24]     39/39 za 0.8 min
+[03:44:25]   solving river MTT9_80BB_BTN_BB_SRP_HIGHSPR__753mono / CHECK_CHECK__9s: 154 z 154
+[03:47:22]     154/154 za 3.0 min
+[03:47:22]   solving river MTT9_25BB_LJ_BTN_SRP__883r / BET275_CALL__8c: 108 z 108
+[03:49:27]     108/108 za 2.1 min
+[03:49:27]   solving river MTT9_25BB_UTG_2_CO_SRP__K98tt / CHECK_CHECK__5c: 148 z 148
+[03:52:21]     148/148 za 2.9 min
+[03:52:21]   solving river MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR__Q84r / CHECK_BET25_CALL__Th: 39 z 39
+[03:53:09]     39/39 za 0.8 min
+[03:53:09]   solving river MTT9_25BB_LJ_HJ_SRP__AT4mono / CHECK_CHECK__7s: 132 z 132
+[03:55:41]     132/132 za 2.5 min
+[03:55:41]   solving river MTT9_25BB_LJ_HJ_SRP__AT4mono / CHECK_CHECK__8s: 132 z 132
+[03:58:14]     132/132 za 2.5 min
+[03:58:14]   solving river MTT9_25BB_LJ_SB_SRP__AT4mono / CHECK_CHECK__6c: 210 z 210
+[04:02:14]     210/210 za 4.0 min
+[04:02:14]   solving river MTT9_25BB_LJ_SB_SRP__K98tt / CHECK_BET182_CALL__Kd: 100 z 100
+[04:04:11]     100/100 za 2.0 min
+[04:04:11]   solving river MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR__A95r / BET17_CALL__Th: 65 z 65
+[04:05:29]     65/65 za 1.3 min
+[04:05:29]   solving river MTT9_25BB_UTG_2_SB_SRP__A72r / CHECK_CHECK__6c: 185 z 185
+[04:09:01]     185/185 za 3.5 min
+[04:09:01]   solving river MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR__954mono / CHECK_CHECK__Ks: 176 z 176
+[04:12:25]     176/176 za 3.4 min
+[04:12:25]   solving river MTT9_25BB_LJ_SB_SRP__K98tt / CHECK_BET182_CALL__5c: 148 z 148
+[04:15:21]     148/148 za 2.9 min
+[04:15:21]   solving river MTT9_25BB_LJ_BTN_SRP__883r / BET275_CALL__4c: 108 z 108
+[04:17:30]     108/108 za 2.2 min
+[04:17:31]   solving river MTT9_25BB_UTG_2_SB_SRP__986tt / BET182_CALL__Js: 140 z 140
+[04:20:18]     140/140 za 2.8 min
+[04:20:18]   solving river MTT9_25BB_UTG_1_HJ_SRP__A72r / BET182_CALL__Ah: 52 z 52
+[04:21:26]     52/52 za 1.1 min
+[04:21:26]   solving river MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR__664r / CHECK_CHECK__8h: 65 z 65
+[04:22:48]     65/65 za 1.4 min
+[04:22:48]   solving river MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR__KJTmono / CHECK_CHECK__5s: 88 z 88
+[04:24:37]     88/88 za 1.8 min
+[04:24:37]   solving river MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR__T52tt / CHECK_CHECK__Jc: 185 z 185
+[04:28:15]     185/185 za 3.6 min
+[04:28:15]   solving river MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR__AKQtt / CHECK_BET39_CALL__8c: 111 z 111
+[04:30:21]     111/111 za 2.1 min
+[04:30:21]   solving river MTT9_25BB_HJ_SB_SRP__883r / BET275_CALL__Tc: 108 z 108
+[04:32:27]     108/108 za 2.1 min
+[04:32:28]   solving river MTT9_25BB_CO_SB_SRP__K98tt / CHECK_BET182_CALL__Jd: 78 z 78
+[04:33:58]     78/78 za 1.5 min
+[04:33:58]   solving river MTT9_25BB_UTG_2_CO_SRP__986tt / CHECK_BET182_CALL__Jc: 111 z 111
+[04:36:06]     111/111 za 2.1 min
+[04:36:06]   solving river MTT9_25BB_CO_SB_SRP__K98tt / CHECK_BET182_CALL__4d: 78 z 78
+[04:37:37]     78/78 za 1.5 min
+[04:37:37]   solving river MTT9_25BB_UTG_2_HJ_SRP__986tt / CHECK_BET182_RAISE868_RAISE2068_CALL__2s: 35 z 35
+[04:38:20]     35/35 za 0.7 min
+[04:38:20]   solving river MTT9_25BB_HJ_SB_SRP__986tt / BET413_CALL__7s: 105 z 105
+[04:40:22]     105/105 za 2.0 min
+[04:40:22]   solving river MTT9_25BB_LJ_HJ_SRP__883r / CHECK_BET182_CALL__Jc: 108 z 108
+[04:42:28]     108/108 za 2.1 min
+[04:42:28]   solving river MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR__J66tt / CHECK_CHECK__Jh: 192 z 192
+[04:46:05]     192/192 za 3.6 min
+[04:46:05]   solving river MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH__J87r / CHECK_CHECK__Ah: 104 z 104
+[04:48:07]     104/104 za 2.0 min
+[04:48:07]   solving river MTT9_25BB_UTG_2_SB_SRP__A72r / CHECK_CHECK__5c: 185 z 185
+[04:51:41]     185/185 za 3.6 min
+[04:51:41]   solving river MTT9_25BB_BTN_SB_SRP__986tt / BET413_CALL__5s: 105 z 105
+[04:53:43]     105/105 za 2.0 min
+[04:53:43]   solving river MTT9_25BB_UTG_1_SB_SRP__A72r / CHECK_CHECK__6c: 185 z 185
+[04:57:15]     185/185 za 3.5 min
+[04:57:15]   solving river MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR__943mono / CHECK_CHECK__Js: 88 z 88
+[04:58:57]     88/88 za 1.7 min
+[04:58:58]   solving river MTT9_35BB_CO_BTN_3BP_REPAIR__732tt / CHECK_CHECK__8h: 78 z 78
+[05:00:28]     78/78 za 1.5 min
+[05:00:28]   solving river MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH__T76tt / CHECK_CHECK__Jd: 130 z 130
+[05:02:58]     130/130 za 2.5 min
+[05:02:58]   solving river MTT9_25BB_UTG_1_SB_SRP__A72r / CHECK_CHECK__Th: 65 z 65
+[05:04:16]     65/65 za 1.3 min
+[05:04:16]   solving river MTT9_50BB_CO_BB_SRP_CBET_MIDSPR__333r / CHECK_CHECK__8c: 91 z 91
+[05:06:02]     91/91 za 1.8 min
+[05:06:03]   solving river MTT9_20BB_BTN_BB_SRP_LOWSPR__T84r / CHECK_CHECK__Ac: 185 z 185
+[05:09:33]     185/185 za 3.5 min
+[05:09:33]   solving river MTT9_25BB_HJ_CO_SRP__742r / CHECK_BET275_CALL__7h: 26 z 26
+[05:10:05]     26/26 za 0.5 min
+[05:10:05]   solving river MTT9_25BB_LJ_BTN_SRP__A72r / BET182_CALL__8c: 185 z 185
+[05:13:38]     185/185 za 3.5 min
+[05:13:38]   solving river MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__J73r / BET17_CALL__6h: 39 z 39
+[05:14:26]     39/39 za 0.8 min
+[05:14:26]   solving river MTT9_25BB_UTG_2_LJ_SRP__A72r / CHECK_BET182_CALL__Ah: 52 z 52
+[05:15:28]     52/52 za 1.0 min
+[05:15:28]   solving river MTT9_25BB_CO_BTN_SRP__AT4mono / BET182_CALL__8c: 175 z 175
+[05:18:47]     175/175 za 3.3 min
+[05:18:47]   solving river MTT9_25BB_UTG_2_CO_SRP__742r / BET275_CALL__Ah: 39 z 39
+[05:19:34]     39/39 za 0.8 min
+[05:19:34]   solving river MTT9_25BB_UTG_1_BTN_SRP__742r / BET182_CALL__6c: 185 z 185
+[05:23:06]     185/185 za 3.5 min
+[05:23:06]   solving river MTT9_25BB_UTG_1_SB_SRP__986tt / BET182_CALL__Js: 140 z 140
+[05:25:47]     140/140 za 2.7 min
+[05:25:47]   solving river MTT9_80BB_CO_BTN_3BP_MIDSPR__752tt / CHECK_CHECK__As: 105 z 105
+[05:27:46]     105/105 za 2.0 min
+[05:27:46]   solving river MTT9_25BB_UTG_CO_SRP__986tt / CHECK_BET182_CALL__Jd: 78 z 78
+[05:29:12]     78/78 za 1.4 min
+[05:29:13]   solving river MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR__T64tt / CHECK_CHECK__Jh: 130 z 130
+[05:31:41]     130/130 za 2.5 min
+[05:31:41]   solving river MTT9_25BB_HJ_BTN_SRP__986tt / BET182_CALL__3s: 140 z 140
+[05:34:21]     140/140 za 2.7 min
+[05:34:22]   solving river MTT9_25BB_CO_SB_SRP__883r / BET275_CALL__Qc: 108 z 108
+[05:36:26]     108/108 za 2.1 min
+[05:36:26]   solving river MTT9_25BB_HJ_SB_SRP__K98tt / CHECK_BET182_CALL__Kd: 100 z 100
+[05:38:23]     100/100 za 1.9 min
+[05:38:23]   solving river MTT9_150BB_CO_BTN_3BP_HIGHSPR__A85mono / CHECK_BET79_CALL__5c: 70 z 70
+[05:39:46]     70/70 za 1.4 min
+[05:39:46]   solving river MTT9_80BB_CO_BTN_3BP_MIDSPR__JT9tt / BET79_CALL__Qh: 105 z 105
+[05:41:50]     105/105 za 2.1 min
+[05:41:50]   solving river MTT9_25BB_UTG_BTN_SRP__K98tt / BET182_CALL__5d: 130 z 130
+[05:44:19]     130/130 za 2.5 min
+[05:44:19]   solving river MTT9_25BB_UTG_HJ_SRP__K98tt / BET275_CALL__7c: 74 z 74
+[05:45:46]     74/74 za 1.4 min
+[05:45:46]   solving river MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR__632mono / BET25_CALL__Ks: 132 z 132
+[05:48:17]     132/132 za 2.5 min
+[05:48:17]   solving river MTT9_25BB_UTG_SB_SRP__K98tt / CHECK_BET182_CALL__7s: 140 z 140
+[05:50:58]     140/140 za 2.7 min
+[05:50:58]   solving river MTT9_150BB_CO_BTN_3BP_HIGHSPR__883r / CHECK_CHECK__Qh: 65 z 65
+[05:52:16]     65/65 za 1.3 min
+[05:52:16]   solving river MTT9_25BB_HJ_BTN_SRP__883r / BET275_CALL__6c: 108 z 108
+[05:54:19]     108/108 za 2.1 min
+[05:54:19]   solving river MTT9_25BB_UTG_HJ_SRP__883r / CHECK_BET275_CALL__3h: 26 z 26
+[05:54:50]     26/26 za 0.5 min
+[05:54:50]   solving river MTT9_50BB_CO_BB_SRP_CBET_MIDSPR__QJ2tt / CHECK_CHECK__9s: 208 z 208
+[05:58:45]     208/208 za 3.9 min
+[05:58:45]   solving river MTT9_25BB_UTG_2_BTN_SRP__AT4mono / BET182_CALL__Qs: 66 z 66
+[06:00:03]     66/66 za 1.3 min
+[06:00:03]   solving river MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR__KQ5r / BET17_CALL__8h: 52 z 52
+[06:01:07]     52/52 za 1.1 min
+[06:01:07]   solving river MTT9_25BB_UTG_1_LJ_SRP__742r / CHECK_CHECK__3h: 65 z 65
+[06:02:25]     65/65 za 1.3 min
+[06:02:25]   solving river MTT9_150BB_CO_BTN_3BP_HIGHSPR__875tt / CHECK_CHECK__Qs: 210 z 210
+[06:06:15]     210/210 za 3.8 min
+[06:06:15]   solving river MTT9_40BB_UTG_BB_SRP__J85tt / CHECK_CHECK__Ac: 111 z 111
+[06:08:22]     111/111 za 2.1 min
+[06:08:22]   solving river MTT9_25BB_UTG_BTN_SRP__986tt / BET182_CALL__Td: 78 z 78
+[06:09:52]     78/78 za 1.5 min
+[06:09:52]   solving river MTT9_25BB_CO_BTN_SRP__986tt / BET182_CALL__6c: 144 z 144
+[06:12:37]     144/144 za 2.8 min
+[06:12:38]   solving river MTT9_25BB_UTG_2_CO_SRP__986tt / CHECK_BET182_CALL__7c: 111 z 111
+[06:14:49]     111/111 za 2.2 min
+[06:14:50]   solving river MTT9_25BB_UTG_1_SB_SRP__A72r / CHECK_CHECK__5c: 185 z 185
+[06:18:19]     185/185 za 3.5 min
+[06:18:20]   solving river MTT9_25BB_UTG_HJ_SRP__986tt / CHECK_CHECK__5c: 148 z 148
+[06:21:11]     148/148 za 2.9 min
+[06:21:11]   solving river MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR__632mono / BET25_CALL__Qs: 132 z 132
+[06:23:42]     132/132 za 2.5 min
+[06:23:42]   solving river MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR__KJTmono / CHECK_CHECK__Qs: 198 z 198
+[06:27:26]     198/198 za 3.7 min
+[06:27:26]   solving river MTT9_20BB_BTN_BB_SRP_LOWSPR__J73r / CHECK_CHECK__Jc: 148 z 148
+[06:30:15]     148/148 za 2.8 min
+[06:30:15]   solving river MTT9_25BB_UTG_1_HJ_SRP__986tt / CHECK_CHECK__5c: 148 z 148
+[06:33:06]     148/148 za 2.9 min
+[06:33:06]   solving river MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR__Q72r / BET17_CALL__Th: 52 z 52
+[06:34:08]     52/52 za 1.0 min
+[06:34:09]   solving river MTT9_25BB_HJ_BTN_SRP__883r / BET275_CALL__7c: 108 z 108
+[06:36:12]     108/108 za 2.0 min
+[06:36:12]   solving river MTT9_50BB_CO_BB_SRP_CBET_MIDSPR__742r / BET17_CALL__Ac: 111 z 111
+[06:38:19]     111/111 za 2.1 min
+[06:38:20]   solving river MTT9_25BB_CO_SB_SRP__AT4mono / CHECK_CHECK__Qc: 140 z 140
+[06:41:01]     140/140 za 2.7 min
+[06:41:01]   solving river MTT9_25BB_UTG_2_SB_SRP__986tt / BET182_CALL__3s: 175 z 175
+[06:44:19]     175/175 za 3.3 min
+[06:44:19]   solving river MTT9_80BB_BTN_BB_SRP_HIGHSPR__T32tt / CHECK_BET25_CALL__Qs: 105 z 105
+[06:46:19]     105/105 za 2.0 min
+[06:46:19]   solving river MTT9_25BB_UTG_HJ_SRP__A72r / BET182_CALL__Ah: 52 z 52
+[06:47:22]     52/52 za 1.0 min
+[06:47:22]   solving river MTT9_25BB_HJ_BTN_SRP__883r / BET275_CALL__8c: 108 z 108
+[06:49:26]     108/108 za 2.1 min
+[06:49:26]   solving river MTT9_25BB_LJ_CO_SRP__986tt / CHECK_BET182_CALL__Js: 105 z 105
+[06:51:28]     105/105 za 2.0 min
+[06:51:28]   solving river MTT9_25BB_UTG_2_CO_SRP__986tt / CHECK_BET182_CALL__Js: 105 z 105
+[06:53:29]     105/105 za 2.0 min
+[06:53:29]   solving river MTT9_25BB_LJ_SB_SRP__986tt / BET182_CALL__4c: 148 z 148
+[06:56:16]     148/148 za 2.8 min
+[06:56:16]   končím 3.7 min před deadline: na novou vrstvu je pozdě
+[06:56:16] river phase: 101 turnových podher dostalo riverovou vrstvu; vrstva 2.1 min medián, 4.0 max
+[06:56:16]      8 vrstev,   1087 podher do MTT9_25BB_UTG_2_SB_SRP
+[06:56:16]      6 vrstev,    618 podher do MTT9_25BB_CO_SB_SRP
+[06:56:16]      5 vrstev,    514 podher do MTT9_25BB_UTG_2_CO_SRP
+[06:56:16]      5 vrstev,    556 podher do MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR
+[06:56:16]      4 vrstev,    463 podher do MTT9_25BB_LJ_HJ_SRP
+[06:56:16]      4 vrstev,    764 podher do MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR
+[06:56:16]      4 vrstev,    530 podher do MTT9_150BB_CO_BTN_3BP_HIGHSPR
+[06:56:16]      4 vrstev,    606 podher do MTT9_25BB_LJ_SB_SRP
+[06:56:16]      4 vrstev,    575 podher do MTT9_25BB_UTG_1_SB_SRP
+[06:56:16]      4 vrstev,    464 podher do MTT9_25BB_HJ_BTN_SRP
+[06:56:16]      4 vrstev,    300 podher do MTT9_25BB_UTG_HJ_SRP
+[06:56:16]      3 vrstev,    288 podher do MTT9_80BB_CO_BTN_3BP_MIDSPR
+[06:56:16]      3 vrstev,    270 podher do MTT9_25BB_UTG_1_HJ_SRP
+[06:56:16]      3 vrstev,    296 podher do MTT9_25BB_UTG_BTN_SRP
+[06:56:16]      3 vrstev,    401 podher do MTT9_25BB_LJ_BTN_SRP
+[06:56:16]      3 vrstev,    169 podher do MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR
+[06:56:16]      3 vrstev,    313 podher do MTT9_25BB_HJ_SB_SRP
+[06:56:16]      3 vrstev,    410 podher do MTT9_50BB_CO_BB_SRP_CBET_MIDSPR
+[06:56:16]      2 vrstev,    325 podher do MTT9_25BB_UTG_SB_SRP
+[06:56:16]      2 vrstev,    175 podher do MTT9_25BB_UTG_1_LJ_SRP
+[06:56:16]      2 vrstev,    259 podher do MTT9_80BB_BTN_BB_SRP_HIGHSPR
+[06:56:16]      2 vrstev,    234 podher do MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH
+[06:56:16]      2 vrstev,    333 podher do MTT9_20BB_BTN_BB_SRP_LOWSPR
+[06:56:16]      2 vrstev,    319 podher do MTT9_25BB_CO_BTN_SRP
+[06:56:16]      2 vrstev,    264 podher do MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR
+[06:56:16]      1 vrstev,     65 podher do MTT9_50BB_BTN_BB_SRP
+[06:56:16]      1 vrstev,     39 podher do MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR
+[06:56:16]      1 vrstev,    111 podher do MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR
+[06:56:16]      1 vrstev,     35 podher do MTT9_25BB_UTG_2_HJ_SRP
+[06:56:16]      1 vrstev,    105 podher do MTT9_25BB_BTN_SB_SRP
+[06:56:16]      1 vrstev,     78 podher do MTT9_35BB_CO_BTN_3BP_REPAIR
+[06:56:16]      1 vrstev,     26 podher do MTT9_25BB_HJ_CO_SRP
+[06:56:16]      1 vrstev,     39 podher do MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR
+[06:56:16]      1 vrstev,     52 podher do MTT9_25BB_UTG_2_LJ_SRP
+[06:56:16]      1 vrstev,    185 podher do MTT9_25BB_UTG_1_BTN_SRP
+[06:56:16]      1 vrstev,     78 podher do MTT9_25BB_UTG_CO_SRP
+[06:56:16]      1 vrstev,     66 podher do MTT9_25BB_UTG_2_BTN_SRP
+[06:56:16]      1 vrstev,    111 podher do MTT9_40BB_UTG_BB_SRP
+[06:56:16]      1 vrstev,    105 podher do MTT9_25BB_LJ_CO_SRP
+[21:01:02] nastagováno 0 desek bez checkpointu; deadline 07:00
+[21:01:02] na disku volno 250.8 GB (hranice 8 GB)
+[21:01:02] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:02] nastagováno 0 desek bez checkpointu; deadline 07:00
+[21:01:02] na disku volno 746.7 GB (hranice 8 GB)
+[21:01:02] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:03] nastagováno 0 desek bez checkpointu; deadline 07:00
+[21:01:03] na disku volno 743.1 GB (hranice 8 GB)
+[21:01:03] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:10:50] nastagováno 0 desek bez checkpointu; deadline 07:00
+[21:10:50] na disku volno 740.6 GB (hranice 8 GB)
+[21:10:50] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:02] nastagováno 0 desek bez checkpointu; deadline 07:00
+[21:01:02] na disku volno 740.2 GB (hranice 8 GB)
+[21:01:02] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:01] nastagováno 0 desek bez checkpointu; deadline 07:00
+[21:01:01] na disku volno 737.2 GB (hranice 8 GB)
+[21:01:01] není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write
+[21:01:01] nastagováno 276 desek bez checkpointu; deadline 07:00
+[21:01:01] na disku volno 624.7 GB (hranice 8 GB)
+[21:01:01] stroj se drží vzhůru po dobu běhu
+[21:01:01] solving MTT9_25BB_LJ_HJ_SRP A72r
+[21:23:03]   hotovo za 22.0 min, checkpoint 22 MB
+[21:23:03] solving MTT9_25BB_LJ_HJ_SRP 883r
+[21:35:34]   hotovo za 12.5 min, checkpoint 25 MB
+[21:35:34] solving MTT9_25BB_LJ_HJ_SRP 986tt
+[21:43:18]   hotovo za 7.7 min, checkpoint 24 MB
+[21:43:18] solving MTT9_25BB_LJ_HJ_SRP AT4mono
+[21:45:35]   hotovo za 2.3 min, checkpoint 18 MB
+[21:45:35] solving MTT9_25BB_LJ_HJ_SRP 742r
+[21:57:17]   hotovo za 11.7 min, checkpoint 26 MB
+[21:57:17] solving MTT9_25BB_LJ_HJ_SRP K98tt
+[22:01:23]   hotovo za 4.1 min, checkpoint 25 MB
+[22:01:23] solving MTT9_25BB_HJ_BTN_SRP A72r
+[22:10:11]   hotovo za 8.8 min, checkpoint 42 MB
+[22:10:11] solving MTT9_25BB_HJ_BTN_SRP 883r
+[22:28:02]   hotovo za 17.9 min, checkpoint 41 MB
+[22:28:02] solving MTT9_25BB_HJ_BTN_SRP 986tt
+[22:34:40]   hotovo za 6.6 min, checkpoint 43 MB
+[22:34:40] solving MTT9_25BB_HJ_BTN_SRP AT4mono
+[22:37:56]   hotovo za 3.3 min, checkpoint 30 MB
+[22:37:56] solving MTT9_25BB_HJ_BTN_SRP 742r
+[22:54:57]   hotovo za 17.0 min, checkpoint 42 MB
+[22:54:57] solving MTT9_25BB_HJ_BTN_SRP K98tt
+[23:06:36]   hotovo za 11.6 min, checkpoint 36 MB
+[23:06:36] solving MTT9_25BB_UTG_BTN_SRP A72r
+[23:18:10]   hotovo za 11.6 min, checkpoint 25 MB
+[23:18:10] solving MTT9_25BB_UTG_BTN_SRP 883r
+[23:26:40]   hotovo za 8.5 min, checkpoint 27 MB
+[23:26:40] solving MTT9_25BB_UTG_BTN_SRP 986tt
+[23:35:35]   hotovo za 8.9 min, checkpoint 26 MB
+[23:35:35] solving MTT9_25BB_UTG_BTN_SRP AT4mono
+[23:37:56]   hotovo za 2.3 min, checkpoint 19 MB
+[23:37:56] solving MTT9_25BB_UTG_BTN_SRP 742r
+[23:50:01]   hotovo za 12.1 min, checkpoint 26 MB
+[23:50:01] solving MTT9_25BB_UTG_BTN_SRP K98tt
+[23:57:57]   hotovo za 7.9 min, checkpoint 24 MB
+[23:57:57] solving MTT9_25BB_CO_BTN_SRP A72r
+[00:07:42]   hotovo za 9.7 min, checkpoint 48 MB
+[00:07:42] solving MTT9_25BB_CO_BTN_SRP 883r
+[00:20:54]   hotovo za 13.2 min, checkpoint 45 MB
+[00:20:54] solving MTT9_25BB_CO_BTN_SRP 986tt
+[00:27:22]   hotovo za 6.5 min, checkpoint 48 MB
+[00:27:22] solving MTT9_25BB_CO_BTN_SRP AT4mono
+[00:31:15]   hotovo za 3.9 min, checkpoint 33 MB
+[00:31:15] solving MTT9_25BB_CO_BTN_SRP 742r
+[00:51:12]   hotovo za 20.0 min, checkpoint 46 MB
+[00:51:12] solving MTT9_25BB_CO_BTN_SRP K98tt
+[01:03:52]   hotovo za 12.7 min, checkpoint 41 MB
+[01:03:52] solving MTT9_25BB_UTG_LJ_SRP A72r
+[01:17:41]   hotovo za 13.8 min, checkpoint 15 MB
+[01:17:41] solving MTT9_25BB_UTG_LJ_SRP 883r
+[01:23:59]   hotovo za 6.3 min, checkpoint 17 MB
+[01:23:59] solving MTT9_25BB_UTG_LJ_SRP 986tt
+[01:36:32]   hotovo za 12.6 min, checkpoint 16 MB
+[01:36:32] solving MTT9_25BB_UTG_LJ_SRP AT4mono
+[01:38:21]   hotovo za 1.8 min, checkpoint 12 MB
+[01:38:21] solving MTT9_25BB_UTG_LJ_SRP 742r
+[01:52:06]   hotovo za 13.8 min, checkpoint 17 MB
+[01:52:06] solving MTT9_25BB_UTG_LJ_SRP K98tt
+[01:57:49]   hotovo za 5.7 min, checkpoint 15 MB
+[01:57:49] solving MTT9_25BB_HJ_CO_SRP A72r
+[02:13:20]   hotovo za 15.5 min, checkpoint 34 MB
+[02:13:20] solving MTT9_25BB_HJ_CO_SRP 883r
+[02:19:28]   hotovo za 6.1 min, checkpoint 39 MB
+[02:19:28] solving MTT9_25BB_HJ_CO_SRP 986tt
+[02:29:37]   hotovo za 10.2 min, checkpoint 35 MB
+[02:29:37] solving MTT9_25BB_HJ_CO_SRP AT4mono
+[02:32:47]   hotovo za 3.2 min, checkpoint 26 MB
+[02:32:47] solving MTT9_25BB_HJ_CO_SRP 742r
+[02:41:06]   hotovo za 8.3 min, checkpoint 40 MB
+[02:41:06] solving MTT9_25BB_HJ_CO_SRP K98tt
+[02:50:33]   hotovo za 9.4 min, checkpoint 32 MB
+[02:50:33] solving MTT9_25BB_UTG_HJ_SRP A72r
+[03:00:01]   hotovo za 9.5 min, checkpoint 17 MB
+[03:00:01] solving MTT9_25BB_UTG_HJ_SRP 883r
+[03:07:17]   hotovo za 7.3 min, checkpoint 18 MB
+[03:07:17] solving MTT9_25BB_UTG_HJ_SRP 986tt
+[03:13:28]   hotovo za 6.2 min, checkpoint 18 MB
+[03:13:28] solving MTT9_25BB_UTG_HJ_SRP AT4mono
+[03:15:20]   hotovo za 1.9 min, checkpoint 13 MB
+[03:15:20] solving MTT9_25BB_UTG_HJ_SRP 742r
+[03:25:11]   hotovo za 9.9 min, checkpoint 19 MB
+[03:25:11] solving MTT9_25BB_UTG_HJ_SRP K98tt
+[03:31:28]   hotovo za 6.3 min, checkpoint 17 MB
+[03:31:28] solving MTT9_25BB_UTG_CO_SRP A72r
+[03:37:09]   hotovo za 5.7 min, checkpoint 21 MB
+[03:37:09] solving MTT9_25BB_UTG_CO_SRP 883r
+[03:40:56]   hotovo za 3.8 min, checkpoint 23 MB
+[03:40:56] solving MTT9_25BB_UTG_CO_SRP 986tt
+[03:44:38]   hotovo za 3.7 min, checkpoint 22 MB
+[03:44:38] solving MTT9_25BB_UTG_CO_SRP AT4mono
+[03:46:39]   hotovo za 2.0 min, checkpoint 15 MB
+[03:46:39] solving MTT9_25BB_UTG_CO_SRP 742r
+[03:52:11]   hotovo za 5.5 min, checkpoint 22 MB
+[03:52:11] solving MTT9_25BB_UTG_CO_SRP K98tt
+[03:58:53]   hotovo za 6.7 min, checkpoint 18 MB
+[03:58:53] solving MTT9_25BB_LJ_BTN_SRP A72r
+[04:20:47]   hotovo za 21.9 min, checkpoint 32 MB
+[04:20:47] solving MTT9_25BB_LJ_BTN_SRP 883r
+[04:30:59]   hotovo za 10.2 min, checkpoint 33 MB
+[04:30:59] solving MTT9_25BB_LJ_BTN_SRP 986tt
+[04:36:35]   hotovo za 5.6 min, checkpoint 34 MB
+[04:36:35] solving MTT9_25BB_LJ_BTN_SRP AT4mono
+[04:39:26]   hotovo za 2.8 min, checkpoint 24 MB
+[04:39:26] solving MTT9_25BB_LJ_BTN_SRP 742r
+[04:54:11]   hotovo za 14.8 min, checkpoint 33 MB
+[04:54:11] solving MTT9_25BB_LJ_BTN_SRP K98tt
+[05:03:34]   hotovo za 9.4 min, checkpoint 30 MB
+[05:03:34] solving MTT9_25BB_LJ_CO_SRP A72r
+[05:16:01]   hotovo za 12.5 min, checkpoint 25 MB
+[05:16:01] solving MTT9_25BB_LJ_CO_SRP 883r
+[05:24:54]   hotovo za 8.9 min, checkpoint 29 MB
+[05:24:54] solving MTT9_25BB_LJ_CO_SRP 986tt
+[05:29:14]   hotovo za 4.3 min, checkpoint 29 MB
+[05:29:14] solving MTT9_25BB_LJ_CO_SRP AT4mono
+[05:31:48]   hotovo za 2.6 min, checkpoint 20 MB
+[05:31:48] solving MTT9_25BB_LJ_CO_SRP 742r
+[05:38:44]   hotovo za 6.9 min, checkpoint 31 MB
+[05:38:44] solving MTT9_25BB_LJ_CO_SRP K98tt
+[05:46:53]   hotovo za 8.2 min, checkpoint 25 MB
+[05:46:53] solving MTT9_25BB_HJ_SB_SRP A72r
+[05:53:39]   hotovo za 6.8 min, checkpoint 29 MB
+[05:53:39] solving MTT9_25BB_HJ_SB_SRP 883r
+[06:08:44]   hotovo za 15.1 min, checkpoint 33 MB
+[06:08:44] solving MTT9_25BB_HJ_SB_SRP 986tt
+[06:13:34]   hotovo za 4.8 min, checkpoint 31 MB
+[06:13:34] solving MTT9_25BB_HJ_SB_SRP AT4mono
+[06:16:09]   hotovo za 2.6 min, checkpoint 22 MB
+[06:16:09] solving MTT9_25BB_HJ_SB_SRP 742r
+[06:30:26]   hotovo za 14.3 min, checkpoint 33 MB
+[06:30:26] solving MTT9_25BB_HJ_SB_SRP K98tt
+[06:44:25]   hotovo za 14.0 min, checkpoint 29 MB
+[06:44:25] solving MTT9_25BB_LJ_SB_SRP A72r
+[06:44:41]   spadlo po 0.3 min (rc=3221225477); zkouším znovu
+[06:50:20]   hotovo za 5.7 min, checkpoint 20 MB (napodruhé)
+[06:50:20] končím 10 min před deadline: deska potřebuje asi 12
+[06:50:20] expansion: hotovo 67, selhalo 0, zbývá 209
+[06:50:20] fronta není prázdná, rozkladu okno nepředávám
+[16:38:59] okno by trvalo 14.4 h, což je víc než 11 - běh se pravděpodobně spouští mimo noc. Spusť po 21:00, nebo přidej --force.
+[21:01:01] viko na siti: nedelat nic (overeno v registru)
+[21:01:02] nastagováno 209 desek bez checkpointu; deadline 07:00
+[21:01:02] na disku volno 738.9 GB (hranice 8 GB)
+[21:01:02] stroj se drží vzhůru po dobu běhu
+[21:01:02] solving MTT9_25BB_CO_BTN_SRP A76tt
+[21:15:36]   hotovo za 14.6 min, checkpoint 44 MB
+[21:15:36] solving MTT9_25BB_CO_BTN_SRP J73r
+[21:45:36]   SELHALO po 30.0 min (rc=timeout); odloženo natrvalo, smaž .failed pro další pokus
+[21:45:36] solving MTT9_25BB_CO_BTN_SRP T84r
+[22:15:37]   SELHALO po 30.0 min (rc=timeout); odloženo natrvalo, smaž .failed pro další pokus
+[22:15:37] solving MTT9_25BB_CO_BTN_SRP 654r
+[22:38:49]   hotovo za 23.2 min, checkpoint 47 MB
+[22:38:49] solving MTT9_25BB_CO_BTN_SRP QQ7r
+[23:00:11]   hotovo za 21.4 min, checkpoint 42 MB
+[23:00:11] solving MTT9_25BB_CO_BTN_SRP 955tt
+[23:07:22]   hotovo za 7.2 min, checkpoint 50 MB
+[23:07:22] solving MTT9_25BB_HJ_BTN_SRP A76tt
+[23:13:19]   hotovo za 6.0 min, checkpoint 42 MB
+[23:13:19] solving MTT9_25BB_HJ_BTN_SRP J73r
+[23:31:53]   hotovo za 18.6 min, checkpoint 40 MB
+[23:31:53] solving MTT9_25BB_HJ_BTN_SRP T84r
+[23:50:46]   hotovo za 18.9 min, checkpoint 40 MB
+[23:50:46] solving MTT9_25BB_HJ_BTN_SRP 654r
+[00:10:33]   hotovo za 19.8 min, checkpoint 41 MB
+[00:10:33] solving MTT9_25BB_HJ_BTN_SRP QQ7r
+[00:28:29]   hotovo za 17.9 min, checkpoint 36 MB
+[00:28:29] solving MTT9_25BB_HJ_BTN_SRP 955tt
+[00:39:55]   hotovo za 11.4 min, checkpoint 41 MB
+[00:39:55] solving MTT9_25BB_HJ_CO_SRP A76tt
+[00:45:07]   hotovo za 5.2 min, checkpoint 36 MB
+[00:45:07] solving MTT9_25BB_HJ_CO_SRP J73r
+[00:52:48]   hotovo za 7.7 min, checkpoint 38 MB
+[00:52:48] solving MTT9_25BB_HJ_CO_SRP T84r
+[01:08:28]   hotovo za 15.7 min, checkpoint 35 MB
+[01:08:28] solving MTT9_25BB_HJ_CO_SRP 654r
+[01:16:35]   hotovo za 8.1 min, checkpoint 40 MB
+[01:16:35] solving MTT9_25BB_HJ_CO_SRP QQ7r
+[01:31:53]   hotovo za 15.3 min, checkpoint 31 MB
+[01:31:53] solving MTT9_25BB_HJ_CO_SRP 955tt
+[01:41:41]   hotovo za 9.8 min, checkpoint 35 MB
+[01:41:41] solving MTT9_25BB_HJ_SB_SRP A76tt
+[01:45:43]   hotovo za 4.0 min, checkpoint 29 MB
+[01:45:43] solving MTT9_25BB_HJ_SB_SRP J73r
+[02:05:18]   hotovo za 19.6 min, checkpoint 29 MB
+[02:05:18] solving MTT9_25BB_HJ_SB_SRP T84r
+[02:19:53]   hotovo za 14.6 min, checkpoint 27 MB
+[02:19:53] solving MTT9_25BB_HJ_SB_SRP 654r
+[02:34:56]   hotovo za 15.1 min, checkpoint 33 MB
+[02:34:56] solving MTT9_25BB_HJ_SB_SRP QQ7r
+[02:44:59]   hotovo za 10.0 min, checkpoint 28 MB
+[02:44:59] solving MTT9_25BB_HJ_SB_SRP 955tt
+[02:50:01]   hotovo za 5.0 min, checkpoint 32 MB
+[02:50:01] solving MTT9_25BB_LJ_BTN_SRP A76tt
+[02:55:07]   hotovo za 5.1 min, checkpoint 33 MB
+[02:55:07] solving MTT9_25BB_LJ_BTN_SRP J73r
+[03:10:56]   hotovo za 15.8 min, checkpoint 31 MB
+[03:10:56] solving MTT9_25BB_LJ_BTN_SRP T84r
+[03:26:38]   hotovo za 15.7 min, checkpoint 32 MB
+[03:26:38] solving MTT9_25BB_LJ_BTN_SRP 654r
+[03:42:59]   hotovo za 16.3 min, checkpoint 34 MB
+[03:42:59] solving MTT9_25BB_LJ_BTN_SRP QQ7r
+[03:48:19]   hotovo za 5.3 min, checkpoint 33 MB
+[03:48:19] solving MTT9_25BB_LJ_BTN_SRP 955tt
+[03:57:38]   hotovo za 9.3 min, checkpoint 34 MB
+[03:57:38] solving MTT9_25BB_LJ_CO_SRP A76tt
+[04:01:43]   hotovo za 4.1 min, checkpoint 27 MB
+[04:01:43] solving MTT9_25BB_LJ_CO_SRP J73r
+[04:08:36]   hotovo za 6.9 min, checkpoint 29 MB
+[04:08:36] solving MTT9_25BB_LJ_CO_SRP T84r
+[04:27:51]   hotovo za 19.3 min, checkpoint 26 MB
+[04:27:51] solving MTT9_25BB_LJ_CO_SRP 654r
+[04:35:10]   hotovo za 7.3 min, checkpoint 31 MB
+[04:35:10] solving MTT9_25BB_LJ_CO_SRP QQ7r
+[04:48:52]   hotovo za 13.7 min, checkpoint 24 MB
+[04:48:52] solving MTT9_25BB_LJ_CO_SRP 955tt
+[05:03:35]   hotovo za 14.7 min, checkpoint 27 MB
+[05:03:35] solving MTT9_25BB_LJ_HJ_SRP A76tt
+[05:11:43]   hotovo za 8.1 min, checkpoint 22 MB
+[05:11:43] solving MTT9_25BB_LJ_HJ_SRP J73r
+[05:31:08]   hotovo za 19.4 min, checkpoint 24 MB
+[05:31:08] solving MTT9_25BB_LJ_HJ_SRP T84r
+[05:31:30]   spadlo po 0.4 min (rc=3); zkouším znovu
+[05:44:47]   hotovo za 13.3 min, checkpoint 24 MB (napodruhé)
+[05:44:47] solving MTT9_25BB_LJ_HJ_SRP 654r
+[05:57:16]   hotovo za 12.5 min, checkpoint 26 MB
+[05:57:16] solving MTT9_25BB_LJ_HJ_SRP QQ7r
+[06:06:03]   hotovo za 8.8 min, checkpoint 24 MB
+[06:06:03] solving MTT9_25BB_LJ_HJ_SRP 955tt
+[06:13:46]   hotovo za 7.7 min, checkpoint 25 MB
+[06:13:46] solving MTT9_25BB_UTG_BTN_SRP A76tt
+[06:21:31]   hotovo za 7.7 min, checkpoint 24 MB
+[06:21:31] solving MTT9_25BB_UTG_BTN_SRP J73r
+[06:34:31]   hotovo za 13.0 min, checkpoint 25 MB
+[06:34:31] solving MTT9_25BB_UTG_BTN_SRP T84r
+[06:47:46]   hotovo za 13.2 min, checkpoint 25 MB
+[06:47:46] solving MTT9_25BB_UTG_BTN_SRP 654r
+[07:01:30]   hotovo za 13.7 min, checkpoint 27 MB
+[07:01:30] deadline; končím mezi deskami
+[07:01:30] expansion: hotovo 44, selhalo 2, zbývá 163
+[07:01:30] fronta není prázdná, rozkladu okno nepředávám
+[09:08:01] spusteni mimo okno 20:45-06:45, koncim bez prace
+[21:01:01] viko na siti: nedelat nic (overeno v registru)
+[21:01:02] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:01:02] nastagováno 163 desek bez checkpointu; deadline 07:00
+[21:01:02] na disku volno 719.0 GB (hranice 8 GB)
+[21:01:02] stroj se drží vzhůru po dobu běhu
+[21:01:02] solving MTT9_25BB_UTG_BTN_SRP QQ7r
+[21:14:33]   hotovo za 13.5 min, checkpoint 23 MB
+[21:14:33] solving MTT9_25BB_UTG_BTN_SRP 955tt
+[21:23:12]   hotovo za 8.6 min, checkpoint 27 MB
+[21:23:12] solving MTT9_25BB_UTG_CO_SRP A76tt
+[21:27:01]   hotovo za 3.8 min, checkpoint 21 MB
+[21:27:01] solving MTT9_25BB_UTG_CO_SRP J73r
+[21:33:04]   hotovo za 6.1 min, checkpoint 21 MB
+[21:33:04] solving MTT9_25BB_UTG_CO_SRP T84r
+[21:50:15]   hotovo za 17.2 min, checkpoint 20 MB
+[21:50:15] solving MTT9_25BB_UTG_CO_SRP 654r
+[21:56:33]   hotovo za 6.3 min, checkpoint 23 MB
+[21:56:33] solving MTT9_25BB_UTG_CO_SRP QQ7r
+[22:11:21]   hotovo za 14.8 min, checkpoint 17 MB
+[22:11:21] solving MTT9_25BB_UTG_CO_SRP 955tt
+[22:18:19]   hotovo za 7.0 min, checkpoint 21 MB
+[22:18:19] solving MTT9_25BB_UTG_HJ_SRP A76tt
+[22:27:38]   hotovo za 9.3 min, checkpoint 16 MB
+[22:27:38] solving MTT9_25BB_UTG_HJ_SRP J73r
+[22:37:59]   hotovo za 10.3 min, checkpoint 18 MB
+[22:37:59] solving MTT9_25BB_UTG_HJ_SRP T84r
+[22:48:06]   hotovo za 10.1 min, checkpoint 18 MB
+[22:48:06] solving MTT9_25BB_UTG_HJ_SRP 654r
+[22:58:54]   hotovo za 10.8 min, checkpoint 19 MB
+[22:58:54] solving MTT9_25BB_UTG_HJ_SRP QQ7r
+[23:09:18]   hotovo za 10.4 min, checkpoint 16 MB
+[23:09:18] solving MTT9_25BB_UTG_HJ_SRP 955tt
+[07:36:51]   hotovo za 507.5 min, checkpoint 18 MB (napodruhé)
+[07:36:51] deadline; končím mezi deskami
+[07:36:52] expansion: hotovo 14, selhalo 0, zbývá 149
+[07:36:52] fronta není prázdná, rozkladu okno nepředávám
+[12:48:18] spusteni mimo okno 20:45-06:45, koncim bez prace
+[21:01:01] napajeni: sit
+[21:01:01] viko na siti: nedelat nic (overeno v registru)
+[21:01:01] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:01:02] nastagováno 151 desek bez checkpointu; deadline 07:00
+[21:01:02] na disku volno 714.7 GB (hranice 8 GB)
+[21:01:02] stroj se drží vzhůru po dobu běhu
+[21:01:02] napájení: síť
+[21:01:02] solving MTT9_25BB_UTG_LJ_SRP A76tt
+[21:07:30]   hotovo za 6.5 min, checkpoint 15 MB
+[21:07:30] solving MTT9_25BB_UTG_LJ_SRP J73r
+[21:17:38]   hotovo za 10.1 min, checkpoint 16 MB
+[21:17:38] solving MTT9_25BB_UTG_LJ_SRP T84r
+[21:27:37]   hotovo za 10.0 min, checkpoint 16 MB
+[21:27:37] solving MTT9_25BB_UTG_LJ_SRP 654r
+[21:43:33]   hotovo za 15.9 min, checkpoint 18 MB
+[21:43:33] solving MTT9_25BB_UTG_LJ_SRP QQ7r
+[21:50:05]   hotovo za 6.5 min, checkpoint 14 MB
+[21:50:05] solving MTT9_25BB_UTG_LJ_SRP 955tt
+[21:59:16]   hotovo za 9.2 min, checkpoint 17 MB
+[21:59:16] solving MTT9_25BB_LJ_SB_SRP 883r
+[21:59:35]   spadlo po 0.3 min (rc=3221225477); zkouším znovu
+[22:08:08]   hotovo za 8.5 min, checkpoint 25 MB (napodruhé)
+[22:08:08] solving MTT9_25BB_LJ_SB_SRP 986tt
+[22:11:56]   hotovo za 3.8 min, checkpoint 23 MB
+[22:11:56] solving MTT9_25BB_LJ_SB_SRP AT4mono
+[22:15:57]   hotovo za 4.0 min, checkpoint 15 MB
+[22:15:57] solving MTT9_25BB_LJ_SB_SRP 742r
+[22:28:44]   hotovo za 12.8 min, checkpoint 24 MB
+[22:28:44] solving MTT9_25BB_LJ_SB_SRP K98tt
+[22:35:59]   hotovo za 7.2 min, checkpoint 21 MB
+[22:35:59] solving MTT9_25BB_LJ_SB_SRP A76tt
+[22:39:42]   hotovo za 3.7 min, checkpoint 21 MB
+[22:39:42] solving MTT9_25BB_LJ_SB_SRP J73r
+[22:51:51]   hotovo za 12.2 min, checkpoint 22 MB
+[22:51:51] solving MTT9_25BB_LJ_SB_SRP T84r
+[23:03:36]   hotovo za 11.8 min, checkpoint 21 MB
+[23:03:36] solving MTT9_25BB_LJ_SB_SRP 654r
+[23:16:02]   hotovo za 12.4 min, checkpoint 24 MB
+[23:16:02] solving MTT9_25BB_LJ_SB_SRP QQ7r
+[23:24:07]   hotovo za 8.1 min, checkpoint 22 MB
+[23:24:07] solving MTT9_25BB_LJ_SB_SRP 955tt
+[23:35:03]   hotovo za 10.9 min, checkpoint 23 MB
+[23:35:03] solving MTT9_25BB_UTG_1_BTN_SRP A72r
+[23:47:17]   hotovo za 12.2 min, checkpoint 25 MB
+[23:47:17] solving MTT9_25BB_UTG_1_BTN_SRP 883r
+[23:56:27]   hotovo za 9.2 min, checkpoint 27 MB
+[23:56:27] solving MTT9_25BB_UTG_1_BTN_SRP 986tt
+[00:00:39]   hotovo za 4.2 min, checkpoint 28 MB
+[00:00:39] solving MTT9_25BB_UTG_1_BTN_SRP AT4mono
+[00:03:03]   hotovo za 2.4 min, checkpoint 19 MB
+[00:03:03] solving MTT9_25BB_UTG_1_BTN_SRP 742r
+[00:16:07]   hotovo za 13.1 min, checkpoint 27 MB
+[00:16:07] solving MTT9_25BB_UTG_1_BTN_SRP K98tt
+[00:23:49]   hotovo za 7.7 min, checkpoint 24 MB
+[00:23:49] solving MTT9_25BB_UTG_1_BTN_SRP A76tt
+[00:27:51]   hotovo za 4.0 min, checkpoint 27 MB
+[00:27:51] solving MTT9_25BB_UTG_1_BTN_SRP J73r
+[00:40:29]   hotovo za 12.6 min, checkpoint 25 MB
+[00:40:29] solving MTT9_25BB_UTG_1_BTN_SRP T84r
+[00:53:04]   hotovo za 12.6 min, checkpoint 26 MB
+[00:53:04] solving MTT9_25BB_UTG_1_BTN_SRP 654r
+[01:06:08]   hotovo za 13.1 min, checkpoint 27 MB
+[01:06:08] solving MTT9_25BB_UTG_1_BTN_SRP QQ7r
+[01:14:32]   hotovo za 8.4 min, checkpoint 24 MB
+[01:14:32] solving MTT9_25BB_UTG_1_BTN_SRP 955tt
+[01:22:19]   hotovo za 7.8 min, checkpoint 27 MB
+[01:22:19] solving MTT9_25BB_UTG_1_CO_SRP A72r
+[01:28:06]   hotovo za 5.8 min, checkpoint 21 MB
+[01:28:06] solving MTT9_25BB_UTG_1_CO_SRP 883r
+[01:32:30]   hotovo za 4.4 min, checkpoint 23 MB
+[01:32:30] solving MTT9_25BB_UTG_1_CO_SRP 986tt
+[01:36:10]   hotovo za 3.7 min, checkpoint 22 MB
+[01:36:10] solving MTT9_25BB_UTG_1_CO_SRP AT4mono
+[01:38:13]   hotovo za 2.0 min, checkpoint 15 MB
+[01:38:13] solving MTT9_25BB_UTG_1_CO_SRP 742r
+[01:44:10]   hotovo za 5.9 min, checkpoint 23 MB
+[01:44:10] solving MTT9_25BB_UTG_1_CO_SRP K98tt
+[01:53:52]   hotovo za 9.7 min, checkpoint 19 MB
+[01:53:52] solving MTT9_25BB_UTG_1_CO_SRP A76tt
+[01:57:27]   hotovo za 3.6 min, checkpoint 21 MB
+[01:57:27] solving MTT9_25BB_UTG_1_CO_SRP J73r
+[02:03:08]   hotovo za 5.7 min, checkpoint 22 MB
+[02:03:08] solving MTT9_25BB_UTG_1_CO_SRP T84r
+[02:19:30]   hotovo za 16.4 min, checkpoint 20 MB
+[02:19:30] solving MTT9_25BB_UTG_1_CO_SRP 654r
+[02:25:24]   hotovo za 5.9 min, checkpoint 23 MB
+[02:25:24] solving MTT9_25BB_UTG_1_CO_SRP QQ7r
+[02:36:08]   hotovo za 10.7 min, checkpoint 18 MB
+[02:36:08] solving MTT9_25BB_UTG_1_CO_SRP 955tt
+[02:43:00]   hotovo za 6.9 min, checkpoint 21 MB
+[02:43:00] solving MTT9_25BB_UTG_1_HJ_SRP A72r
+[02:53:03]   hotovo za 10.0 min, checkpoint 17 MB
+[02:53:03] solving MTT9_25BB_UTG_1_HJ_SRP 883r
+[03:00:14]   hotovo za 7.2 min, checkpoint 19 MB
+[03:00:14] solving MTT9_25BB_UTG_1_HJ_SRP 986tt
+[03:06:50]   hotovo za 6.6 min, checkpoint 18 MB
+[03:06:50] solving MTT9_25BB_UTG_1_HJ_SRP AT4mono
+[03:08:44]   hotovo za 1.9 min, checkpoint 14 MB
+[03:08:44] solving MTT9_25BB_UTG_1_HJ_SRP 742r
+[03:19:20]   hotovo za 10.6 min, checkpoint 19 MB
+[03:19:20] solving MTT9_25BB_UTG_1_HJ_SRP K98tt
+[03:25:47]   hotovo za 6.4 min, checkpoint 18 MB
+[03:25:47] solving MTT9_25BB_UTG_1_HJ_SRP A76tt
+[03:35:10]   hotovo za 9.4 min, checkpoint 17 MB
+[03:35:10] solving MTT9_25BB_UTG_1_HJ_SRP J73r
+[03:45:34]   hotovo za 10.4 min, checkpoint 18 MB
+[03:45:34] solving MTT9_25BB_UTG_1_HJ_SRP T84r
+[03:56:15]   hotovo za 10.7 min, checkpoint 18 MB
+[03:56:15] solving MTT9_25BB_UTG_1_HJ_SRP 654r
+[04:07:14]   hotovo za 11.0 min, checkpoint 20 MB
+[04:07:14] solving MTT9_25BB_UTG_1_HJ_SRP QQ7r
+[04:17:13]   hotovo za 10.0 min, checkpoint 16 MB
+[04:17:13] solving MTT9_25BB_UTG_1_HJ_SRP 955tt
+[04:26:52]   hotovo za 9.6 min, checkpoint 18 MB
+[04:26:52] solving MTT9_25BB_UTG_1_LJ_SRP A72r
+[04:36:50]   hotovo za 10.0 min, checkpoint 15 MB
+[04:36:50] solving MTT9_25BB_UTG_1_LJ_SRP 883r
+[04:44:00]   hotovo za 7.2 min, checkpoint 18 MB
+[04:44:00] solving MTT9_25BB_UTG_1_LJ_SRP 986tt
+[04:53:12]   hotovo za 9.2 min, checkpoint 17 MB
+[04:53:12] solving MTT9_25BB_UTG_1_LJ_SRP AT4mono
+[04:55:06]   hotovo za 1.9 min, checkpoint 12 MB
+[04:55:06] solving MTT9_25BB_UTG_1_LJ_SRP 742r
+[05:10:25]   hotovo za 15.3 min, checkpoint 18 MB
+[05:10:25] solving MTT9_25BB_UTG_1_LJ_SRP K98tt
+[05:16:21]   hotovo za 5.9 min, checkpoint 16 MB
+[05:16:21] solving MTT9_25BB_UTG_1_LJ_SRP A76tt
+[05:19:37]   hotovo za 3.3 min, checkpoint 17 MB
+[05:19:37] solving MTT9_25BB_UTG_1_LJ_SRP J73r
+[05:35:02]   hotovo za 15.4 min, checkpoint 16 MB
+[05:35:02] solving MTT9_25BB_UTG_1_LJ_SRP T84r
+[05:45:02]   hotovo za 10.0 min, checkpoint 17 MB
+[05:45:02] solving MTT9_25BB_UTG_1_LJ_SRP 654r
+[06:00:06]   hotovo za 15.1 min, checkpoint 18 MB
+[06:00:06] solving MTT9_25BB_UTG_1_LJ_SRP QQ7r
+[06:06:46]   hotovo za 6.7 min, checkpoint 15 MB
+[06:06:46] solving MTT9_25BB_UTG_1_LJ_SRP 955tt
+[06:19:03]   hotovo za 12.3 min, checkpoint 17 MB
+[06:19:03] solving MTT9_25BB_UTG_1_SB_SRP A72r
+[06:24:15]   hotovo za 5.2 min, checkpoint 14 MB
+[06:24:15] solving MTT9_25BB_UTG_1_SB_SRP 883r
+[06:34:44]   hotovo za 10.5 min, checkpoint 18 MB
+[06:34:44] solving MTT9_25BB_UTG_1_SB_SRP 986tt
+[06:41:25]   hotovo za 6.7 min, checkpoint 17 MB
+[06:41:25] solving MTT9_25BB_UTG_1_SB_SRP AT4mono
+[06:43:17]   hotovo za 1.9 min, checkpoint 12 MB
+[06:43:17] solving MTT9_25BB_UTG_1_SB_SRP 742r
+[06:53:41]   hotovo za 10.4 min, checkpoint 18 MB
+[06:53:41] končím 6 min před deadline: deska potřebuje asi 12
+[06:53:41] expansion: hotovo 70, selhalo 0, zbývá 81
+[06:53:41] fronta není prázdná, rozkladu okno nepředávám
+[21:01:02] napajeni: sit
+[21:01:02] viko na siti: nedelat nic (overeno v registru)
+[21:01:02] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:01:02] nastagováno 81 desek bez checkpointu; deadline 07:00
+[21:01:02] na disku volno 709.1 GB (hranice 8 GB)
+[21:01:02] stroj se drží vzhůru po dobu běhu
+[21:01:02] napájení: síť
+[21:01:02] solving MTT9_25BB_UTG_1_SB_SRP K98tt
+[21:07:40]   hotovo za 6.6 min, checkpoint 15 MB
+[21:07:40] solving MTT9_25BB_UTG_1_SB_SRP A76tt
+[21:10:58]   hotovo za 3.3 min, checkpoint 15 MB
+[21:10:58] solving MTT9_25BB_UTG_1_SB_SRP J73r
+[21:21:14]   hotovo za 10.3 min, checkpoint 16 MB
+[21:21:14] solving MTT9_25BB_UTG_1_SB_SRP T84r
+[21:31:28]   hotovo za 10.2 min, checkpoint 15 MB
+[21:31:28] solving MTT9_25BB_UTG_1_SB_SRP 654r
+[21:42:03]   hotovo za 10.6 min, checkpoint 18 MB
+[21:42:03] solving MTT9_25BB_UTG_1_SB_SRP QQ7r
+[21:49:05]   hotovo za 7.0 min, checkpoint 14 MB
+[21:49:05] solving MTT9_25BB_UTG_1_SB_SRP 955tt
+[21:58:28]   hotovo za 9.4 min, checkpoint 16 MB
+[21:58:28] solving MTT9_25BB_UTG_2_BTN_SRP A72r
+[22:11:43]   hotovo za 13.3 min, checkpoint 28 MB
+[22:11:43] solving MTT9_25BB_UTG_2_BTN_SRP 883r
+[22:21:42]   hotovo za 10.0 min, checkpoint 30 MB
+[22:21:42] solving MTT9_25BB_UTG_2_BTN_SRP 986tt
+[22:30:30]   hotovo za 8.8 min, checkpoint 29 MB
+[22:30:30] solving MTT9_25BB_UTG_2_BTN_SRP AT4mono
+[22:33:03]   hotovo za 2.5 min, checkpoint 21 MB
+[22:33:03] solving MTT9_25BB_UTG_2_BTN_SRP 742r
+[22:47:03]   hotovo za 14.0 min, checkpoint 30 MB
+[22:47:03] solving MTT9_25BB_UTG_2_BTN_SRP K98tt
+[22:55:21]   hotovo za 8.3 min, checkpoint 28 MB
+[22:55:21] solving MTT9_25BB_UTG_2_BTN_SRP A76tt
+[22:59:42]   hotovo za 4.4 min, checkpoint 30 MB
+[22:59:42] solving MTT9_25BB_UTG_2_BTN_SRP J73r
+[23:13:32]   hotovo za 13.8 min, checkpoint 29 MB
+[23:13:32] solving MTT9_25BB_UTG_2_BTN_SRP T84r
+[23:27:44]   hotovo za 14.2 min, checkpoint 29 MB
+[23:27:44] solving MTT9_25BB_UTG_2_BTN_SRP 654r
+[23:41:57]   hotovo za 14.2 min, checkpoint 30 MB
+[23:41:57] solving MTT9_25BB_UTG_2_BTN_SRP QQ7r
+[23:51:14]   hotovo za 9.3 min, checkpoint 27 MB
+[23:51:14] solving MTT9_25BB_UTG_2_BTN_SRP 955tt
+[00:00:09]   hotovo za 8.9 min, checkpoint 31 MB
+[00:00:09] solving MTT9_25BB_UTG_2_CO_SRP A72r
+[00:06:16]   hotovo za 6.1 min, checkpoint 24 MB
+[00:06:16] solving MTT9_25BB_UTG_2_CO_SRP 883r
+[00:10:52]   hotovo za 4.6 min, checkpoint 27 MB
+[00:10:52] solving MTT9_25BB_UTG_2_CO_SRP 986tt
+[00:22:06]   hotovo za 11.2 min, checkpoint 24 MB
+[00:22:06] solving MTT9_25BB_UTG_2_CO_SRP AT4mono
+[00:24:18]   hotovo za 2.2 min, checkpoint 17 MB
+[00:24:18] solving MTT9_25BB_UTG_2_CO_SRP 742r
+[00:30:34]   hotovo za 6.3 min, checkpoint 27 MB
+[00:30:34] solving MTT9_25BB_UTG_2_CO_SRP K98tt
+[00:37:49]   hotovo za 7.2 min, checkpoint 22 MB
+[00:37:49] solving MTT9_25BB_UTG_2_CO_SRP A76tt
+[00:41:39]   hotovo za 3.8 min, checkpoint 24 MB
+[00:41:39] solving MTT9_25BB_UTG_2_CO_SRP J73r
+[00:47:50]   hotovo za 6.2 min, checkpoint 26 MB
+[00:47:50] solving MTT9_25BB_UTG_2_CO_SRP T84r
+[01:05:50]   hotovo za 18.0 min, checkpoint 23 MB
+[01:05:50] solving MTT9_25BB_UTG_2_CO_SRP 654r
+[01:12:12]   hotovo za 6.4 min, checkpoint 27 MB
+[01:12:12] solving MTT9_25BB_UTG_2_CO_SRP QQ7r
+[01:32:11]   hotovo za 20.0 min, checkpoint 21 MB
+[01:32:11] solving MTT9_25BB_UTG_2_CO_SRP 955tt
+[01:39:49]   hotovo za 7.6 min, checkpoint 24 MB
+[01:39:49] solving MTT9_25BB_UTG_2_HJ_SRP A72r
+[01:50:43]   hotovo za 10.9 min, checkpoint 20 MB
+[01:50:43] solving MTT9_25BB_UTG_2_HJ_SRP 883r
+[01:58:57]   hotovo za 8.2 min, checkpoint 23 MB
+[01:58:57] solving MTT9_25BB_UTG_2_HJ_SRP 986tt
+[02:06:02]   hotovo za 7.1 min, checkpoint 21 MB
+[02:06:02] solving MTT9_25BB_UTG_2_HJ_SRP AT4mono
+[02:08:05]   hotovo za 2.1 min, checkpoint 16 MB
+[02:08:05] solving MTT9_25BB_UTG_2_HJ_SRP 742r
+[02:19:39]   hotovo za 11.6 min, checkpoint 23 MB
+[02:19:39] solving MTT9_25BB_UTG_2_HJ_SRP K98tt
+[02:26:34]   hotovo za 6.9 min, checkpoint 21 MB
+[02:26:34] solving MTT9_25BB_UTG_2_HJ_SRP A76tt
+[02:33:27]   hotovo za 6.9 min, checkpoint 20 MB
+[02:33:27] solving MTT9_25BB_UTG_2_HJ_SRP J73r
+[02:44:54]   hotovo za 11.4 min, checkpoint 22 MB
+[02:44:54] solving MTT9_25BB_UTG_2_HJ_SRP T84r
+[02:56:08]   hotovo za 11.2 min, checkpoint 21 MB
+[02:56:08] solving MTT9_25BB_UTG_2_HJ_SRP 654r
+[03:08:08]   hotovo za 12.0 min, checkpoint 23 MB
+[03:08:08] solving MTT9_25BB_UTG_2_HJ_SRP QQ7r
+[03:15:56]   hotovo za 7.8 min, checkpoint 21 MB
+[03:15:56] solving MTT9_25BB_UTG_2_HJ_SRP 955tt
+[03:26:25]   hotovo za 10.5 min, checkpoint 22 MB
+[03:26:25] solving MTT9_25BB_UTG_2_LJ_SRP A72r
+[03:42:18]   hotovo za 15.9 min, checkpoint 17 MB
+[03:42:18] solving MTT9_25BB_UTG_2_LJ_SRP 883r
+[03:53:46]   hotovo za 11.5 min, checkpoint 21 MB
+[03:53:46] solving MTT9_25BB_UTG_2_LJ_SRP 986tt
+[04:06:51]   hotovo za 13.1 min, checkpoint 20 MB
+[04:06:51] solving MTT9_25BB_UTG_2_LJ_SRP AT4mono
+[04:08:49]   hotovo za 2.0 min, checkpoint 15 MB
+[04:08:49] solving MTT9_25BB_UTG_2_LJ_SRP 742r
+[04:20:14]   hotovo za 11.4 min, checkpoint 21 MB
+[04:20:14] solving MTT9_25BB_UTG_2_LJ_SRP K98tt
+[04:26:50]   hotovo za 6.6 min, checkpoint 18 MB
+[04:26:50] solving MTT9_25BB_UTG_2_LJ_SRP A76tt
+[04:33:35]   hotovo za 6.7 min, checkpoint 19 MB
+[04:33:35] solving MTT9_25BB_UTG_2_LJ_SRP J73r
+[04:50:57]   hotovo za 17.4 min, checkpoint 20 MB
+[04:50:57] solving MTT9_25BB_UTG_2_LJ_SRP T84r
+[05:07:52]   hotovo za 16.9 min, checkpoint 20 MB
+[05:07:52] solving MTT9_25BB_UTG_2_LJ_SRP 654r
+[05:19:14]   hotovo za 11.4 min, checkpoint 22 MB
+[05:19:14] solving MTT9_25BB_UTG_2_LJ_SRP QQ7r
+[05:30:05]   hotovo za 10.9 min, checkpoint 18 MB
+[05:30:05] solving MTT9_25BB_UTG_2_LJ_SRP 955tt
+[05:36:52]   hotovo za 6.8 min, checkpoint 21 MB
+[05:36:52] solving MTT9_25BB_UTG_2_SB_SRP A72r
+[05:42:19]   hotovo za 5.5 min, checkpoint 16 MB
+[05:42:19] solving MTT9_25BB_UTG_2_SB_SRP 883r
+[05:53:58]   hotovo za 11.6 min, checkpoint 21 MB
+[05:53:58] solving MTT9_25BB_UTG_2_SB_SRP 986tt
+[06:04:16]   hotovo za 10.3 min, checkpoint 20 MB
+[06:04:16] solving MTT9_25BB_UTG_2_SB_SRP AT4mono
+[06:06:16]   hotovo za 2.0 min, checkpoint 14 MB
+[06:06:16] solving MTT9_25BB_UTG_2_SB_SRP 742r
+[06:17:37]   hotovo za 11.3 min, checkpoint 22 MB
+[06:17:37] solving MTT9_25BB_UTG_2_SB_SRP K98tt
+[06:24:19]   hotovo za 6.7 min, checkpoint 19 MB
+[06:24:19] solving MTT9_25BB_UTG_2_SB_SRP A76tt
+[06:27:46]   hotovo za 3.4 min, checkpoint 17 MB
+[06:27:46] solving MTT9_25BB_UTG_2_SB_SRP J73r
+[06:38:52]   hotovo za 11.1 min, checkpoint 19 MB
+[06:38:52] solving MTT9_25BB_UTG_2_SB_SRP T84r
+[06:49:59]   hotovo za 11.1 min, checkpoint 18 MB
+[06:49:59] končím 10 min před deadline: deska potřebuje asi 12
+[06:49:59] expansion: hotovo 64, selhalo 0, zbývá 17
+[06:49:59] fronta není prázdná, rozkladu okno nepředávám
+[21:01:02] napajeni: sit
+[21:01:02] viko na siti: nedelat nic (overeno v registru)
+[21:01:02] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:01:02] nastagováno 17 desek bez checkpointu; deadline 07:00
+[21:01:02] na disku volno 707.5 GB (hranice 8 GB)
+[21:01:02] stroj se drží vzhůru po dobu běhu
+[21:01:02] napájení: síť
+[21:01:02] solving MTT9_25BB_UTG_2_SB_SRP 654r
+[21:13:05]   hotovo za 12.0 min, checkpoint 21 MB
+[21:13:05] solving MTT9_25BB_UTG_2_SB_SRP QQ7r
+[21:24:08]   hotovo za 11.1 min, checkpoint 18 MB
+[21:24:08] solving MTT9_25BB_UTG_2_SB_SRP 955tt
+[21:44:18]   hotovo za 20.2 min, checkpoint 20 MB
+[21:44:18] solving MTT9_25BB_UTG_SB_SRP A72r
+[21:49:27]   hotovo za 5.2 min, checkpoint 14 MB
+[21:49:27] solving MTT9_25BB_UTG_SB_SRP 883r
+[21:59:38]   hotovo za 10.2 min, checkpoint 18 MB
+[21:59:38] solving MTT9_25BB_UTG_SB_SRP 986tt
+[22:05:53]   hotovo za 6.3 min, checkpoint 16 MB
+[22:05:53] solving MTT9_25BB_UTG_SB_SRP AT4mono
+[22:07:45]   hotovo za 1.9 min, checkpoint 12 MB
+[22:07:45] solving MTT9_25BB_UTG_SB_SRP 742r
+[22:18:35]   hotovo za 10.8 min, checkpoint 17 MB
+[22:18:35] solving MTT9_25BB_UTG_SB_SRP K98tt
+[22:24:48]   hotovo za 6.2 min, checkpoint 15 MB
+[22:24:48] solving MTT9_25BB_UTG_SB_SRP A76tt
+[22:28:03]   hotovo za 3.2 min, checkpoint 15 MB
+[22:28:03] solving MTT9_25BB_UTG_SB_SRP J73r
+[22:44:12]   hotovo za 16.2 min, checkpoint 16 MB
+[22:44:12] solving MTT9_25BB_UTG_SB_SRP T84r
+[23:02:12]   hotovo za 18.0 min, checkpoint 15 MB
+[23:02:12] solving MTT9_25BB_UTG_SB_SRP 654r
+[23:21:56]   hotovo za 19.7 min, checkpoint 18 MB
+[23:21:56] solving MTT9_25BB_UTG_SB_SRP QQ7r
+[23:28:23]   hotovo za 6.4 min, checkpoint 15 MB
+[23:28:23] solving MTT9_25BB_UTG_SB_SRP 955tt
+[23:40:49]   hotovo za 12.4 min, checkpoint 16 MB
+[23:40:49] solving MTT9_25BB_CO_BTN_SRP J73r (stupeň 1: strop 60 min, přesnost 0.5 %)
+[00:27:32]   hotovo za 46.7 min, checkpoint 43 MB
+[00:27:32] solving MTT9_25BB_CO_BTN_SRP T84r (stupeň 1: strop 60 min, přesnost 0.5 %)
+[01:13:13]   hotovo za 45.7 min, checkpoint 44 MB
+[01:13:13] expansion: hotovo 17, selhalo 0, zbývá 0
+[01:13:13] fronta prázdná, 5.8 h okna předávám rozkladu
+[01:13:13] porada už dnešní noc proběhla, vyhodnocení se nepouští znovu
+[01:13:13] na disku volno 707.0 GB (hranice pro další desku je 8 GB)
+[01:13:13] stroj se drží vzhůru po dobu běhu
+[01:13:13] rozkládám, ačkoli priorita je NEW_FAMILIES: nastagováno jen 0 desek bez checkpointu, práh je 8 (rodin bez jediného checkpointu 0, runner ano). Rozhodnutí se dnes nekonalo - nová práce se musí nastagovat, jinak se nebude mít co převzít.
+[01:13:13]   174 desek vynecháno z rozkladu: jen flop (flop-only-boards.txt)
+[01:13:52] 751 boards have a monolithic checkpoint; deadline 07:00
+[01:13:52] solving MTT9_25BB_HJ_BTN_SRP AT4mono: 93 of 138 subgames left
+[01:22:25]   138/138 after 8.5 min
+[01:23:10] solving MTT9_25BB_HJ_BTN_SRP K98tt: 323 of 324 subgames left
+[01:50:10]   324/324 after 27.0 min
+[01:50:10] solving MTT9_25BB_HJ_CO_SRP 742r: 52 of 52 subgames left
+[01:54:37]   52/52 after 4.4 min
+[01:54:37] solving MTT9_25BB_HJ_CO_SRP 883r: 78 of 78 subgames left
+[02:01:25]   78/78 after 6.8 min
+[02:01:25] solving MTT9_25BB_HJ_CO_SRP 986tt: 252 of 252 subgames left
+[02:24:34]   252/252 after 23.1 min
+[02:24:34] planning MTT9_25BB_HJ_CO_SRP A72r (As,7d,2c, pot 550, stack 2250)
+[02:24:35] solving MTT9_25BB_HJ_CO_SRP A72r: 78 of 78 subgames left
+[02:32:09]   78/78 after 7.6 min
+[02:32:09] solving MTT9_25BB_HJ_CO_SRP AT4mono: 115 of 115 subgames left
+[02:43:24]   115/115 after 11.2 min
+[02:43:24] solving MTT9_25BB_HJ_CO_SRP K98tt: 108 of 108 subgames left
+[02:55:13]   108/108 after 11.8 min
+[02:55:13] solving MTT9_25BB_HJ_SB_SRP 742r: 104 of 104 subgames left
+[03:04:12]   104/104 after 9.0 min
+[03:04:12] solving MTT9_25BB_HJ_SB_SRP 883r: 26 of 26 subgames left
+[03:06:45]   26/26 after 2.5 min
+[03:06:45] solving MTT9_25BB_HJ_SB_SRP 986tt: 72 of 72 subgames left
+[03:13:02]     solve_plan skončil rc=1; výstup v C:\Users\stachal\PKRTrainer\PKRTrainer\artifacts/decomposition\MTT9_25BB_HJ_SB_SRP__986tt
+[03:13:02]   72/72 after 6.3 min
+[03:13:02] planning MTT9_25BB_HJ_SB_SRP A72r (As,7d,2c, pot 550, stack 2250)
+[03:13:02] solving MTT9_25BB_HJ_SB_SRP A72r: 104 of 104 subgames left
+[03:23:40]   104/104 after 10.6 min
+[03:23:40] planning MTT9_25BB_HJ_SB_SRP AT4mono (As,Ts,4s, pot 550, stack 2250)
+[03:23:41] solving MTT9_25BB_HJ_SB_SRP AT4mono: 138 of 138 subgames left
+[03:34:53]   138/138 after 11.2 min
+[03:34:53] planning MTT9_25BB_HJ_SB_SRP K98tt (Ks,9s,8d, pot 550, stack 2250)
+[03:34:54] solving MTT9_25BB_HJ_SB_SRP K98tt: 108 of 108 subgames left
+[03:46:21]   108/108 after 11.4 min
+[03:46:21] planning MTT9_25BB_LJ_BTN_SRP 742r (7s,4d,2c, pot 550, stack 2250)
+[03:46:22] solving MTT9_25BB_LJ_BTN_SRP 742r: 156 of 156 subgames left
+[03:59:24]   156/156 after 13.0 min
+[03:59:24] planning MTT9_25BB_LJ_BTN_SRP 883r (8s,8d,3c, pot 550, stack 2250)
+[03:59:25] solving MTT9_25BB_LJ_BTN_SRP 883r: 130 of 130 subgames left
+[04:10:23]   130/130 after 11.0 min
+[04:10:23] planning MTT9_25BB_LJ_BTN_SRP 986tt (9s,8s,6d, pot 550, stack 2250)
+[04:10:24] solving MTT9_25BB_LJ_BTN_SRP 986tt: 252 of 252 subgames left
+[04:33:21]   252/252 after 23.0 min
+[04:33:21] solving MTT9_25BB_LJ_BTN_SRP AT4mono: 33 of 184 subgames left
+[04:35:39]   184/184 after 2.3 min
+[04:35:39] solving MTT9_25BB_LJ_BTN_SRP K98tt: 324 of 324 subgames left
+[04:50:57]     solve_plan skončil rc=1; výstup v C:\Users\stachal\PKRTrainer\PKRTrainer\artifacts/decomposition\MTT9_25BB_LJ_BTN_SRP__K98tt
+[04:50:57]   145/324 after 15.3 min
+[04:50:57] solving MTT9_25BB_LJ_CO_SRP 742r: 104 of 104 subgames left
+[05:00:45]   104/104 after 9.8 min
+[05:00:45] solving MTT9_25BB_LJ_CO_SRP 883r: 78 of 78 subgames left
+[05:08:00]   78/78 after 7.2 min
+[05:08:00] solving MTT9_25BB_LJ_CO_SRP 986tt: 180 of 180 subgames left
+[05:26:28]   180/180 after 18.5 min
+[05:26:28] solving MTT9_25BB_LJ_CO_SRP A72r: 52 of 52 subgames left
+[05:31:22]   52/52 after 4.9 min
+[05:31:22] solving MTT9_25BB_LJ_CO_SRP AT4mono: 69 of 69 subgames left
+[05:36:53]   69/69 after 5.5 min
+[05:36:53] solving MTT9_25BB_LJ_CO_SRP K98tt: 180 of 180 subgames left
+[05:52:15]   180/180 after 15.4 min
+[05:52:15] solving MTT9_25BB_LJ_HJ_SRP 742r: 182 of 182 subgames left
+[06:08:56]   182/182 after 16.7 min
+[06:08:56] solving MTT9_25BB_LJ_HJ_SRP 883r: 182 of 182 subgames left
+[06:24:15]   182/182 after 15.3 min
+[06:24:15] solving MTT9_25BB_LJ_HJ_SRP 986tt: 144 of 144 subgames left
+[06:37:31]   144/144 after 13.3 min
+[06:37:31] stopping 22 min before the deadline: the next board needs about 27 min and would overrun it
+[06:37:31] boards worked 28, already complete 549, failed 0
+[06:37:31] river phase se nespouští: turn není hotový (87 % desek) a má přednost
+[21:01:02] napajeni: sit
+[21:01:02] viko na siti: nedelat nic (overeno v registru)
+[21:01:02] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:01:03] nastagováno 123 desek bez checkpointu; deadline 07:00
+[21:01:03] na disku volno 701.4 GB (hranice 8 GB)
+[21:01:03] stroj se drží vzhůru po dobu běhu
+[21:01:03] napájení: síť
+[21:01:03] solving MTT9_25BB_BTN_SB_SRP 432mono
+[21:06:02]   hotovo za 5.0 min, checkpoint 43 MB
+[21:06:02] solving MTT9_25BB_CO_BTN_SRP 432mono
+[21:16:51]   hotovo za 10.8 min, checkpoint 35 MB
+[21:16:51] solving MTT9_25BB_CO_SB_SRP 432mono
+[21:26:00]   hotovo za 9.1 min, checkpoint 27 MB
+[21:26:00] solving MTT9_25BB_HJ_BB_SRP 432mono
+[21:38:05]   hotovo za 12.1 min, checkpoint 60 MB
+[21:38:05] solving MTT9_25BB_HJ_BTN_SRP 432mono
+[21:44:55]   hotovo za 6.8 min, checkpoint 32 MB
+[21:44:55] solving MTT9_25BB_HJ_CO_SRP 432mono
+[21:51:00]   hotovo za 6.1 min, checkpoint 28 MB
+[21:51:00] solving MTT9_25BB_HJ_SB_SRP 432mono
+[21:53:57]   hotovo za 3.0 min, checkpoint 26 MB
+[21:53:57] solving MTT9_25BB_LJ_BB_SRP 432mono
+[21:59:37]   hotovo za 5.7 min, checkpoint 57 MB
+[21:59:37] solving MTT9_25BB_LJ_BTN_SRP 432mono
+[22:05:18]   hotovo za 5.7 min, checkpoint 24 MB
+[22:05:18] solving MTT9_25BB_LJ_CO_SRP 432mono
+[22:10:17]   hotovo za 5.0 min, checkpoint 21 MB
+[22:10:17] solving MTT9_25BB_LJ_HJ_SRP J85tt
+[22:18:02]   hotovo za 7.7 min, checkpoint 24 MB
+[22:18:02] solving MTT9_25BB_UTG_1_BB_SRP 432mono
+[22:23:08]   hotovo za 5.1 min, checkpoint 52 MB
+[22:23:08] solving MTT9_25BB_UTG_2_BB_SRP 432mono
+[22:28:24]   hotovo za 5.3 min, checkpoint 55 MB
+[22:28:24] solving MTT9_25BB_BTN_SB_SRP AAAr
+[22:28:40]   spadlo po 0.3 min (rc=3221225477); zkouším znovu
+[22:36:59]   hotovo za 8.3 min, checkpoint 32 MB (napodruhé)
+[22:36:59] solving MTT9_25BB_CO_BTN_SRP AAAr
+[22:44:37]   hotovo za 7.6 min, checkpoint 29 MB
+[22:44:37] solving MTT9_25BB_CO_SB_SRP AAAr
+[22:53:53]   hotovo za 9.3 min, checkpoint 22 MB
+[22:53:53] solving MTT9_25BB_HJ_BB_SRP AAAr
+[23:06:21]   hotovo za 12.5 min, checkpoint 52 MB
+[23:06:21] solving MTT9_25BB_HJ_BTN_SRP AAAr
+[23:13:22]   hotovo za 7.0 min, checkpoint 25 MB
+[23:13:22] solving MTT9_25BB_HJ_CO_SRP AAAr
+[23:16:32]   hotovo za 3.2 min, checkpoint 23 MB
+[23:16:32] solving MTT9_25BB_HJ_SB_SRP AAAr
+[23:22:05]   hotovo za 5.5 min, checkpoint 18 MB
+[23:22:05] solving MTT9_25BB_LJ_BB_SRP AAAr
+[23:38:30]   hotovo za 16.4 min, checkpoint 46 MB
+[23:38:30] solving MTT9_25BB_LJ_BTN_SRP AAAr
+[23:41:27]   hotovo za 3.0 min, checkpoint 21 MB
+[23:41:27] solving MTT9_25BB_LJ_CO_SRP AAAr
+[23:44:02]   hotovo za 2.6 min, checkpoint 17 MB
+[23:44:02] solving MTT9_25BB_LJ_HJ_SRP A85mono
+[23:50:27]   hotovo za 6.4 min, checkpoint 17 MB
+[23:50:27] solving MTT9_25BB_UTG_1_BB_SRP AAAr
+[00:10:31]   hotovo za 20.1 min, checkpoint 42 MB
+[00:10:31] solving MTT9_25BB_UTG_2_BB_SRP AAAr
+[00:26:30]   hotovo za 16.0 min, checkpoint 41 MB
+[00:26:30] solving MTT9_25BB_LJ_HJ_SRP 432mono
+[00:29:00]   hotovo za 2.5 min, checkpoint 21 MB
+[00:29:00] solving MTT9_25BB_LJ_HJ_SRP AAAr
+[00:31:27]   hotovo za 2.4 min, checkpoint 15 MB
+[00:31:27] solving MTT9_40BB_UTG_2_HJ_SRP 883r
+[00:53:31]   hotovo za 22.1 min, checkpoint 37 MB
+[00:53:31] solving MTT9_40BB_UTG_2_HJ_SRP 986tt
+[01:12:49]   hotovo za 19.3 min, checkpoint 36 MB
+[01:12:49] solving MTT9_40BB_UTG_2_HJ_SRP AT4mono
+[01:22:41]   hotovo za 9.9 min, checkpoint 24 MB
+[01:22:41] solving MTT9_40BB_UTG_2_HJ_SRP 742r
+[01:52:42]   SELHALO po 30.0 min (rc=timeout); příští noc stupeň 1 - strop 60 min, přesnost 0.5 %
+[01:52:42] solving MTT9_40BB_UTG_2_HJ_SRP K98tt
+[02:11:13]   hotovo za 18.5 min, checkpoint 35 MB
+[02:11:13] solving MTT9_40BB_UTG_2_LJ_SRP A72r
+[02:40:16]   hotovo za 29.1 min, checkpoint 30 MB
+[02:40:16] solving MTT9_40BB_UTG_2_LJ_SRP 883r
+[02:55:08]   hotovo za 14.9 min, checkpoint 34 MB
+[02:55:08] solving MTT9_40BB_UTG_2_LJ_SRP 986tt
+[03:13:43]   hotovo za 18.6 min, checkpoint 32 MB
+[03:13:43] solving MTT9_40BB_UTG_2_LJ_SRP AT4mono
+[03:20:04]   hotovo za 6.3 min, checkpoint 21 MB
+[03:20:04] solving MTT9_40BB_UTG_2_LJ_SRP 742r
+[03:50:04]   SELHALO po 30.0 min (rc=timeout); příští noc stupeň 1 - strop 60 min, přesnost 0.5 %
+[03:50:04] solving MTT9_40BB_UTG_2_LJ_SRP K98tt
+[04:01:42]   hotovo za 11.6 min, checkpoint 31 MB
+[04:01:42] solving MTT9_40BB_UTG_1_LJ_SRP A72r
+[04:28:10]   hotovo za 26.5 min, checkpoint 25 MB
+[04:28:10] solving MTT9_40BB_UTG_1_LJ_SRP 883r
+[04:47:25]   hotovo za 19.3 min, checkpoint 29 MB
+[04:47:25] solving MTT9_40BB_UTG_1_LJ_SRP 986tt
+[05:09:33]   hotovo za 22.1 min, checkpoint 29 MB
+[05:09:33] solving MTT9_40BB_UTG_1_LJ_SRP AT4mono
+[05:18:17]   hotovo za 8.7 min, checkpoint 19 MB
+[05:18:17] solving MTT9_40BB_UTG_1_LJ_SRP 742r
+[05:46:21]   hotovo za 28.1 min, checkpoint 30 MB
+[05:46:21] solving MTT9_40BB_UTG_1_LJ_SRP K98tt
+[06:02:33]   hotovo za 16.2 min, checkpoint 26 MB
+[06:02:33] solving MTT9_40BB_UTG_1_HJ_SRP A72r
+[06:31:07]   hotovo za 28.6 min, checkpoint 28 MB
+[06:31:07] solving MTT9_40BB_UTG_1_HJ_SRP 883r
+[06:51:29]   hotovo za 20.4 min, checkpoint 32 MB
+[06:51:29] končím 9 min před deadline: deska potřebuje asi 12
+[06:51:29] expansion: hotovo 45, selhalo 2, zbývá 78
+[06:51:29] fronta není prázdná, rozkladu okno nepředávám
+[21:01:02] napajeni: sit
+[21:01:02] viko na siti: nedelat nic (overeno v registru)
+[21:01:02] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:01:03] nastagováno 173 desek bez checkpointu; deadline 07:00
+[21:01:03] na disku volno 704.8 GB (hranice 8 GB)
+[21:01:03] stroj se drží vzhůru po dobu běhu
+[21:01:03] napájení: síť
+[21:01:03] cena desky změřena 2026-10-06 04:51 na 715 deskách: 25 bb 6.4 min, 40 bb 19.3 min, 50 bb 39.8 min (extrapolace)
+[21:01:03] solving MTT9_40BB_UTG_2_HJ_SRP 742r
+[21:42:01]   hotovo za 41.0 min, checkpoint 37 MB
+[21:42:01] solving MTT9_40BB_UTG_2_LJ_SRP 742r
+[22:18:50]   hotovo za 36.8 min, checkpoint 34 MB
+[22:18:50] solving MTT9_40BB_UTG_1_HJ_SRP 986tt
+[22:49:36]   hotovo za 30.8 min, checkpoint 31 MB
+[22:49:36] solving MTT9_40BB_UTG_1_HJ_SRP AT4mono
+[23:01:47]   hotovo za 12.2 min, checkpoint 21 MB
+[23:01:47] solving MTT9_40BB_UTG_1_HJ_SRP 742r
+[23:37:06]   hotovo za 35.3 min, checkpoint 33 MB
+[23:37:07] solving MTT9_40BB_UTG_1_HJ_SRP K98tt
+[23:58:24]   hotovo za 21.3 min, checkpoint 29 MB
+[23:58:24] solving MTT9_40BB_UTG_2_BTN_SRP A72r
+[00:27:16]   hotovo za 28.9 min, checkpoint 44 MB
+[00:27:16] solving MTT9_40BB_UTG_2_BTN_SRP 883r
+[01:10:48]   hotovo za 43.5 min, checkpoint 48 MB
+[01:10:48] solving MTT9_40BB_UTG_2_BTN_SRP 986tt
+[01:51:04]   hotovo za 40.3 min, checkpoint 48 MB
+[01:51:04] solving MTT9_40BB_UTG_2_BTN_SRP AT4mono
+[02:01:58]   hotovo za 10.9 min, checkpoint 32 MB
+[02:01:58] solving MTT9_40BB_UTG_2_BTN_SRP 742r
+[02:48:44]   hotovo za 46.8 min, checkpoint 48 MB
+[02:48:44] solving MTT9_40BB_UTG_2_BTN_SRP K98tt
+[03:08:29]   hotovo za 19.8 min, checkpoint 45 MB
+[03:08:29] solving MTT9_40BB_UTG_BTN_SRP A72r
+[03:35:48]   hotovo za 27.3 min, checkpoint 41 MB
+[03:35:48] solving MTT9_40BB_UTG_BTN_SRP 883r
+[04:05:22]   hotovo za 29.6 min, checkpoint 44 MB
+[04:05:22] solving MTT9_40BB_UTG_BTN_SRP 986tt
+[04:32:57]   hotovo za 27.6 min, checkpoint 42 MB
+[04:32:57] solving MTT9_40BB_UTG_BTN_SRP AT4mono
+[04:43:01]   hotovo za 10.1 min, checkpoint 29 MB
+[04:43:01] solving MTT9_40BB_UTG_BTN_SRP 742r
+[05:43:02]   SELHALO po 60.0 min (rc=timeout); příští noc stupeň 1 - strop 90 min, přesnost 0.5 %
+[05:43:02] solving MTT9_40BB_UTG_BTN_SRP K98tt
+[06:19:52]   hotovo za 36.8 min, checkpoint 39 MB
+[06:19:52] solving MTT9_40BB_UTG_1_CO_SRP A72r
+[06:44:22]   hotovo za 24.5 min, checkpoint 34 MB
+[06:44:22] končím 16 min před deadline: deska potřebuje asi 29
+[06:44:22] expansion: hotovo 18, selhalo 1, zbývá 155
+[06:44:22] fronta není prázdná, rozkladu okno nepředávám
+[21:01:02] POZOR: napajeni je BATERIE ({0} %); nastaveni pro sit neplati a Windows uspi stroj, az baterie dojde. Okno neni jiste - zapoj stroj.
+[21:01:03] viko na siti: nedelat nic (overeno v registru)
+[21:01:03] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:01:04] nastagováno 155 desek bez checkpointu; deadline 07:00
+[21:01:04] na disku volno 700.4 GB (hranice 8 GB)
+[21:01:04] stroj se drží vzhůru po dobu běhu
+[21:01:04] POZOR: napájení je baterie (90 %) - víko a nečinnost se nastavují pro síť, takže na baterii neplatí a Windows uspí stroj, až baterie dojde. Noc 1.-2. 10. 2026 tím přišla o 8 h 21 min. Solvit se bude dál, ale okno není jisté.
+[21:01:04] cena desky změřena 2026-10-07 04:44 na 733 deskách: 25 bb 6.4 min, 40 bb 22.1 min, 50 bb 45.6 min (extrapolace)
+[21:01:04] solving MTT9_40BB_UTG_1_CO_SRP 883r
+[21:34:38]   hotovo za 33.6 min, checkpoint 35 MB
+[21:34:38] solving MTT9_40BB_UTG_1_CO_SRP 986tt
+[22:02:58]   hotovo za 28.3 min, checkpoint 36 MB
+[22:02:58] solving MTT9_40BB_UTG_1_CO_SRP AT4mono
+[22:10:52]   hotovo za 7.9 min, checkpoint 24 MB
+[22:10:52] solving MTT9_40BB_UTG_1_CO_SRP 742r
+[22:46:20]   hotovo za 35.5 min, checkpoint 37 MB
+[22:46:20] solving MTT9_40BB_UTG_1_CO_SRP K98tt
+[23:00:17]   hotovo za 13.9 min, checkpoint 32 MB
+[23:00:17] solving MTT9_40BB_UTG_2_CO_SRP A72r
+[23:24:07]   hotovo za 23.8 min, checkpoint 38 MB
+[23:24:07] solving MTT9_40BB_UTG_2_CO_SRP 883r
+[23:59:36]   hotovo za 35.5 min, checkpoint 41 MB
+[23:59:36] solving MTT9_40BB_UTG_2_CO_SRP 986tt
+[00:23:04]   hotovo za 23.5 min, checkpoint 39 MB
+[00:23:04] solving MTT9_40BB_UTG_2_CO_SRP AT4mono
+[00:31:09]   hotovo za 8.1 min, checkpoint 27 MB
+[00:31:09] solving MTT9_40BB_UTG_2_CO_SRP 742r
+[01:09:09]   hotovo za 38.0 min, checkpoint 43 MB
+[01:09:09] solving MTT9_40BB_UTG_2_CO_SRP K98tt
+[01:38:33]   hotovo za 29.4 min, checkpoint 37 MB
+[01:38:33] solving MTT9_40BB_UTG_LJ_SRP A72r
+[02:07:14]   hotovo za 28.7 min, checkpoint 24 MB
+[02:07:14] solving MTT9_40BB_UTG_LJ_SRP 883r
+[02:27:41]   hotovo za 20.4 min, checkpoint 28 MB
+[02:27:41] solving MTT9_40BB_UTG_LJ_SRP 986tt
+[02:45:50]   hotovo za 18.2 min, checkpoint 28 MB
+[02:45:50] solving MTT9_40BB_UTG_LJ_SRP AT4mono
+[02:58:06]   hotovo za 12.3 min, checkpoint 18 MB
+[02:58:06] solving MTT9_40BB_UTG_LJ_SRP 742r
+[03:38:27]   hotovo za 40.3 min, checkpoint 29 MB
+[03:38:27] solving MTT9_40BB_UTG_LJ_SRP K98tt
+[04:02:18]   hotovo za 23.9 min, checkpoint 25 MB
+[04:02:18] solving MTT9_40BB_UTG_HJ_SRP A72r
+[04:32:47]   hotovo za 30.5 min, checkpoint 28 MB
+[04:32:47] solving MTT9_40BB_UTG_HJ_SRP 883r
+[05:01:43]   hotovo za 28.9 min, checkpoint 32 MB
+[05:01:43] solving MTT9_40BB_UTG_HJ_SRP 986tt
+[05:29:18]   hotovo za 27.6 min, checkpoint 31 MB
+[05:29:18] solving MTT9_40BB_UTG_HJ_SRP AT4mono
+[05:43:20]   hotovo za 14.0 min, checkpoint 21 MB
+[05:43:20] solving MTT9_40BB_UTG_HJ_SRP 742r
+[06:15:30]   hotovo za 32.2 min, checkpoint 33 MB
+[06:15:30] solving MTT9_40BB_UTG_HJ_SRP K98tt
+[06:28:20]   hotovo za 12.8 min, checkpoint 29 MB
+[06:28:20] končím 32 min před deadline: deska potřebuje asi 41
+[06:28:21] expansion: hotovo 23, selhalo 0, zbývá 132
+[06:28:21] fronta není prázdná, rozkladu okno nepředávám
+[06:31:02] napajeni: sit
+[06:31:03] viko na siti: nedelat nic (overeno v registru)
+[06:31:03] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[06:31:03] nastagováno 132 desek bez checkpointu; deadline 07:00
+[06:31:03] na disku volno 699.4 GB (hranice 8 GB)
+[06:31:03] stroj se drží vzhůru po dobu běhu
+[06:31:03] napájení: síť
+[06:31:03] cena desky změřena 2026-10-07 04:44 na 733 deskách: 25 bb 6.4 min, 40 bb 22.1 min, 50 bb 45.6 min (extrapolace)
+[06:31:03] končím 29 min před deadline: deska potřebuje asi 41
+[06:31:03] expansion: hotovo 0, selhalo 0, zbývá 132
+[06:31:03] fronta není prázdná, rozkladu okno nepředávám
+[11:41:26] spusteni mimo okno 20:45-06:45, koncim bez prace
+[21:01:02] napajeni: sit
+[21:01:02] viko na siti: nedelat nic (overeno v registru)
+[21:01:02] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:01:02] nastagováno 132 desek bez checkpointu; deadline 07:00
+[21:01:02] na disku volno 698.2 GB (hranice 8 GB)
+[21:01:02] stroj se drží vzhůru po dobu běhu
+[21:01:02] napájení: síť
+[21:01:02] cena desky změřena 2026-10-08 04:31 na 756 deskách: 25 bb 6.4 min, 40 bb 24.5 min, 50 bb 50.6 min (extrapolace)
+[21:01:02] solving MTT9_40BB_UTG_CO_SRP A72r
+[21:21:50]   hotovo za 20.8 min, checkpoint 33 MB
+[21:21:50] solving MTT9_40BB_UTG_CO_SRP 883r
+[21:51:05]   hotovo za 29.2 min, checkpoint 36 MB
+[21:51:05] solving MTT9_40BB_UTG_CO_SRP 986tt
+[22:10:09]   hotovo za 19.1 min, checkpoint 34 MB
+[22:10:09] solving MTT9_40BB_UTG_CO_SRP AT4mono
+[22:16:52]   hotovo za 6.7 min, checkpoint 24 MB
+[22:16:52] solving MTT9_40BB_UTG_CO_SRP 742r
+[23:09:45]   hotovo za 52.9 min, checkpoint 37 MB
+[23:09:45] solving MTT9_40BB_UTG_CO_SRP K98tt
+[23:27:45]   hotovo za 18.0 min, checkpoint 32 MB
+[23:27:45] solving MTT9_40BB_UTG_1_BTN_SRP A72r
+[23:50:04]   hotovo za 22.3 min, checkpoint 40 MB
+[23:50:04] solving MTT9_40BB_UTG_1_BTN_SRP 883r
+[00:23:34]   hotovo za 33.5 min, checkpoint 45 MB
+[00:23:34] solving MTT9_40BB_UTG_1_BTN_SRP 986tt
+[00:45:27]   hotovo za 21.9 min, checkpoint 43 MB
+[00:45:27] solving MTT9_40BB_UTG_1_BTN_SRP AT4mono
+[00:53:27]   hotovo za 8.0 min, checkpoint 29 MB
+[00:53:27] solving MTT9_40BB_UTG_1_BTN_SRP 742r
+[02:13:27]   SELHALO po 80.0 min (rc=timeout); příští noc stupeň 1 - strop 90 min, přesnost 0.5 %
+[02:13:27] solving MTT9_40BB_UTG_1_BTN_SRP K98tt
+[02:27:17]   hotovo za 13.8 min, checkpoint 40 MB
+[02:27:17] solving MTT9_40BB_LJ_SB_SRP A72r
+[02:50:08]   hotovo za 22.9 min, checkpoint 39 MB
+[02:50:08] solving MTT9_40BB_LJ_SB_SRP 883r
+[03:23:26]   hotovo za 33.3 min, checkpoint 42 MB
+[03:23:26] solving MTT9_40BB_LJ_SB_SRP 986tt
+[03:44:41]   hotovo za 21.2 min, checkpoint 39 MB
+[03:44:41] solving MTT9_40BB_LJ_SB_SRP AT4mono
+[03:52:16]   hotovo za 7.6 min, checkpoint 28 MB
+[03:52:16] solving MTT9_40BB_LJ_SB_SRP 742r
+[04:39:32]   hotovo za 47.3 min, checkpoint 43 MB
+[04:39:32] solving MTT9_40BB_LJ_SB_SRP K98tt
+[05:06:52]   hotovo za 27.3 min, checkpoint 37 MB
+[05:06:52] solving MTT9_40BB_UTG_1_SB_SRP A72r
+[05:26:24]   hotovo za 19.5 min, checkpoint 30 MB
+[05:26:24] solving MTT9_40BB_UTG_1_SB_SRP 883r
+[05:46:53]   hotovo za 20.5 min, checkpoint 33 MB
+[05:46:53] solving MTT9_40BB_UTG_1_SB_SRP 986tt
+[05:59:07]   hotovo za 12.2 min, checkpoint 31 MB
+[05:59:07] solving MTT9_40BB_UTG_1_SB_SRP AT4mono
+[06:05:33]   hotovo za 6.4 min, checkpoint 22 MB
+[06:05:33] solving MTT9_40BB_UTG_1_SB_SRP 742r
+[06:36:17]   hotovo za 30.7 min, checkpoint 33 MB
+[06:36:17] končím 24 min před deadline: deska potřebuje asi 38
+[06:36:17] expansion: hotovo 22, selhalo 1, zbývá 110
+[06:36:17] fronta není prázdná, rozkladu okno nepředávám
+[21:01:02] napajeni: sit
+[21:01:02] viko na siti: nedelat nic (overeno v registru)
+[21:01:02] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:01:03] nastagováno 110 desek bez checkpointu; deadline 07:00
+[21:01:03] na disku volno 696.3 GB (hranice 8 GB)
+[21:01:03] stroj se drží vzhůru po dobu běhu
+[21:01:03] napájení: síť
+[21:01:03] cena desky změřena 2026-10-09 04:36 na 778 deskách: 25 bb 6.4 min, 40 bb 22.9 min, 50 bb 47.3 min (extrapolace)
+[21:01:03] solving MTT9_40BB_UTG_1_SB_SRP K98tt
+[21:16:42]   hotovo za 15.6 min, checkpoint 30 MB
+[21:16:42] solving MTT9_40BB_UTG_2_SB_SRP A72r
+[21:33:45]   hotovo za 17.0 min, checkpoint 35 MB
+[21:33:45] solving MTT9_40BB_UTG_2_SB_SRP 883r
+[21:52:21]   hotovo za 18.6 min, checkpoint 37 MB
+[21:52:21] solving MTT9_40BB_UTG_2_SB_SRP 986tt
+[22:09:28]   hotovo za 17.1 min, checkpoint 37 MB
+[22:09:28] solving MTT9_40BB_UTG_2_SB_SRP AT4mono
+[22:15:31]   hotovo za 6.1 min, checkpoint 25 MB
+[22:15:31] solving MTT9_40BB_UTG_2_SB_SRP 742r
+[22:42:39]   hotovo za 27.1 min, checkpoint 39 MB
+[22:42:39] solving MTT9_40BB_UTG_2_SB_SRP K98tt
+[22:58:59]   hotovo za 16.3 min, checkpoint 35 MB
+[22:58:59] solving MTT9_40BB_UTG_SB_SRP A72r
+[23:14:20]   hotovo za 15.3 min, checkpoint 30 MB
+[23:14:20] solving MTT9_40BB_UTG_SB_SRP 883r
+[23:31:00]   hotovo za 16.7 min, checkpoint 31 MB
+[23:31:00] solving MTT9_40BB_UTG_SB_SRP 986tt
+[23:46:26]   hotovo za 15.4 min, checkpoint 29 MB
+[23:46:26] solving MTT9_40BB_UTG_SB_SRP AT4mono
+[23:54:24]   hotovo za 8.0 min, checkpoint 22 MB
+[23:54:24] solving MTT9_40BB_UTG_SB_SRP 742r
+[00:18:54]   hotovo za 24.5 min, checkpoint 33 MB
+[00:18:54] solving MTT9_40BB_UTG_SB_SRP K98tt
+[00:28:48]   hotovo za 9.9 min, checkpoint 30 MB
+[00:28:48] solving MTT9_50BB_UTG_2_HJ_SRP 883r (přesnost 1.0 %, strop 90 min)
+[00:47:22]   hotovo za 18.6 min, checkpoint 56 MB
+[00:47:22] solving MTT9_50BB_UTG_2_HJ_SRP 986tt (přesnost 1.0 %, strop 90 min)
+[01:04:03]   hotovo za 16.7 min, checkpoint 54 MB
+[01:04:03] solving MTT9_50BB_UTG_2_HJ_SRP AT4mono (přesnost 1.0 %, strop 90 min)
+[01:13:15]   hotovo za 9.2 min, checkpoint 37 MB
+[01:13:15] solving MTT9_50BB_UTG_2_HJ_SRP 742r (přesnost 1.0 %, strop 90 min)
+[01:46:29]   hotovo za 33.2 min, checkpoint 57 MB
+[01:46:29] solving MTT9_50BB_UTG_2_HJ_SRP K98tt (přesnost 1.0 %, strop 90 min)
+[02:06:25]   hotovo za 19.9 min, checkpoint 52 MB
+[02:06:25] solving MTT9_50BB_UTG_2_LJ_SRP A72r (přesnost 1.0 %, strop 90 min)
+[02:35:25]   hotovo za 29.0 min, checkpoint 44 MB
+[02:35:25] solving MTT9_50BB_UTG_2_LJ_SRP 883r (přesnost 1.0 %, strop 90 min)
+[02:57:16]   hotovo za 21.9 min, checkpoint 51 MB
+[02:57:16] solving MTT9_50BB_UTG_2_LJ_SRP 986tt (přesnost 1.0 %, strop 90 min)
+[03:17:08]   hotovo za 19.9 min, checkpoint 49 MB
+[03:17:08] solving MTT9_50BB_UTG_2_LJ_SRP AT4mono (přesnost 1.0 %, strop 90 min)
+[03:27:06]   hotovo za 10.0 min, checkpoint 33 MB
+[03:27:06] solving MTT9_50BB_UTG_2_LJ_SRP 742r (přesnost 1.0 %, strop 90 min)
+[03:56:50]   hotovo za 29.7 min, checkpoint 52 MB
+[03:56:50] solving MTT9_50BB_UTG_2_LJ_SRP K98tt (přesnost 1.0 %, strop 90 min)
+[04:15:01]   hotovo za 18.2 min, checkpoint 47 MB
+[04:15:01] solving MTT9_50BB_UTG_1_LJ_SRP A72r (přesnost 1.0 %, strop 90 min)
+[04:39:49]   hotovo za 24.8 min, checkpoint 37 MB
+[04:39:49] solving MTT9_50BB_UTG_1_LJ_SRP 883r (přesnost 1.0 %, strop 90 min)
+[04:57:49]   hotovo za 18.0 min, checkpoint 43 MB
+[04:57:49] solving MTT9_50BB_UTG_1_LJ_SRP 986tt (přesnost 1.0 %, strop 90 min)
+[05:14:59]   hotovo za 17.2 min, checkpoint 42 MB
+[05:14:59] solving MTT9_50BB_UTG_1_LJ_SRP AT4mono (přesnost 1.0 %, strop 90 min)
+[05:23:36]   hotovo za 8.6 min, checkpoint 28 MB
+[05:23:36] solving MTT9_50BB_UTG_1_LJ_SRP 742r (přesnost 1.0 %, strop 90 min)
+[06:04:30]   hotovo za 40.9 min, checkpoint 44 MB
+[06:04:30] končím 55 min před deadline: deska potřebuje asi 79
+[06:04:30] expansion: hotovo 29, selhalo 0, zbývá 81
+[06:04:30] fronta není prázdná, rozkladu okno nepředávám
+[06:31:02] napajeni: sit
+[06:31:02] viko na siti: nedelat nic (overeno v registru)
+[06:31:03] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[06:31:03] nastagováno 81 desek bez checkpointu; deadline 07:00
+[06:31:03] na disku volno 692.6 GB (hranice 8 GB)
+[06:31:03] stroj se drží vzhůru po dobu běhu
+[06:31:03] napájení: síť
+[06:31:03] cena desky změřena 2026-10-09 04:36 na 778 deskách: 25 bb 6.4 min, 40 bb 22.9 min, 50 bb 47.3 min (extrapolace)
+[06:31:03] končím 29 min před deadline: deska potřebuje asi 79
+[06:31:03] expansion: hotovo 0, selhalo 0, zbývá 81
+[06:31:03] fronta není prázdná, rozkladu okno nepředávám
+[21:01:02] POZOR: napajeni je BATERIE ({0} %); nastaveni pro sit neplati a Windows uspi stroj, az baterie dojde. Okno neni jiste - zapoj stroj.
+[21:01:02] viko na siti: nedelat nic (overeno v registru)
+[21:01:02] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:01:03] nastagováno 81 desek bez checkpointu; deadline 07:00
+[21:01:03] na disku volno 693.0 GB (hranice 8 GB)
+[21:01:03] stroj se drží vzhůru po dobu běhu
+[21:01:03] POZOR: napájení je baterie (96 %) - víko a nečinnost se nastavují pro síť, takže na baterii neplatí a Windows uspí stroj, až baterie dojde. Noc 1.-2. 10. 2026 tím přišla o 8 h 21 min. Solvit se bude dál, ale okno není jisté.
+[21:01:03] cena desky změřena 2026-10-10 04:31 na 807 deskách: 25 bb 6.4 min, 40 bb 21.3 min, 50 bb 19.9 min
+[21:01:03] solving MTT9_50BB_UTG_1_LJ_SRP K98tt (přesnost 1.0 %, strop 70 min)
+[21:17:53]   hotovo za 16.8 min, checkpoint 39 MB
+[21:17:53] solving MTT9_50BB_UTG_1_HJ_SRP A72r (přesnost 1.0 %, strop 70 min)
+[21:45:41]   hotovo za 27.8 min, checkpoint 42 MB
+[21:45:41] solving MTT9_50BB_UTG_1_HJ_SRP 883r (přesnost 1.0 %, strop 70 min)
+[22:14:46]   hotovo za 29.1 min, checkpoint 46 MB
+[22:14:46] solving MTT9_50BB_UTG_1_HJ_SRP 986tt (přesnost 1.0 %, strop 70 min)
+[22:31:56]   hotovo za 17.2 min, checkpoint 46 MB
+[22:31:56] solving MTT9_50BB_UTG_1_HJ_SRP AT4mono (přesnost 1.0 %, strop 70 min)
+[22:40:50]   hotovo za 8.9 min, checkpoint 31 MB
+[22:40:50] solving MTT9_50BB_UTG_1_HJ_SRP 742r (přesnost 1.0 %, strop 70 min)
+[23:25:09]   hotovo za 44.3 min, checkpoint 48 MB
+[23:25:09] solving MTT9_50BB_UTG_1_HJ_SRP K98tt (přesnost 1.0 %, strop 70 min)
+[23:41:51]   hotovo za 16.7 min, checkpoint 43 MB
+[23:41:51] solving MTT9_50BB_UTG_2_BTN_SRP A72r (přesnost 1.0 %, strop 70 min)
+[00:18:13]   hotovo za 36.4 min, checkpoint 65 MB
+[00:18:13] solving MTT9_50BB_UTG_2_BTN_SRP 883r (přesnost 1.0 %, strop 70 min)
+[00:44:46]   hotovo za 26.6 min, checkpoint 72 MB
+[00:44:46] solving MTT9_50BB_UTG_2_BTN_SRP 986tt (přesnost 1.0 %, strop 70 min)
+[01:18:57]   hotovo za 34.2 min, checkpoint 68 MB
+[01:18:57] solving MTT9_50BB_UTG_2_BTN_SRP AT4mono (přesnost 1.0 %, strop 70 min)
+[01:31:07]   hotovo za 12.2 min, checkpoint 49 MB
+[01:31:07] solving MTT9_50BB_UTG_2_BTN_SRP 742r (přesnost 1.0 %, strop 70 min)
+[02:08:41]   hotovo za 37.6 min, checkpoint 71 MB
+[02:08:41] solving MTT9_50BB_UTG_2_BTN_SRP K98tt (přesnost 1.0 %, strop 70 min)
+[02:30:24]   hotovo za 21.7 min, checkpoint 66 MB
+[02:30:24] solving MTT9_50BB_UTG_BTN_SRP A72r (přesnost 1.0 %, strop 70 min)
+[03:21:31]   hotovo za 51.1 min, checkpoint 57 MB
+[03:21:31] solving MTT9_50BB_UTG_BTN_SRP 883r (přesnost 1.0 %, strop 70 min)
+[03:45:38]   hotovo za 24.1 min, checkpoint 62 MB
+[03:45:38] solving MTT9_50BB_UTG_BTN_SRP 986tt (přesnost 1.0 %, strop 70 min)
+[04:26:30]   hotovo za 40.9 min, checkpoint 59 MB
+[04:26:30] solving MTT9_50BB_UTG_BTN_SRP AT4mono (přesnost 1.0 %, strop 70 min)
+[04:37:23]   hotovo za 10.9 min, checkpoint 42 MB
+[04:37:23] solving MTT9_50BB_UTG_BTN_SRP 742r (přesnost 1.0 %, strop 70 min)
+[05:30:05]   hotovo za 52.7 min, checkpoint 63 MB
+[05:30:05] solving MTT9_50BB_UTG_BTN_SRP K98tt (přesnost 1.0 %, strop 70 min)
+[05:49:54]   hotovo za 19.8 min, checkpoint 57 MB
+[05:49:54] solving MTT9_50BB_UTG_1_CO_SRP A72r (přesnost 1.0 %, strop 70 min)
+[06:19:26]   hotovo za 29.5 min, checkpoint 48 MB
+[06:19:26] solving MTT9_50BB_UTG_1_CO_SRP 883r (přesnost 1.0 %, strop 70 min)
+[06:51:04]   hotovo za 31.6 min, checkpoint 54 MB
+[06:51:04] končím 9 min před deadline: deska potřebuje asi 34
+[06:51:04] expansion: hotovo 21, selhalo 0, zbývá 60
+[06:51:04] fronta není prázdná, rozkladu okno nepředávám
+[08:07:02] spusteni mimo okno 20:45-06:45, koncim bez prace
+[08:37:03] spusteni mimo okno 20:45-06:45, koncim bez prace
+[08:54:06] spusteni mimo okno 20:45-06:45, koncim bez prace
+[21:01:01] napajeni: sit
+[21:01:02] viko na siti: nedelat nic (overeno v registru)
+[21:01:02] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:01:02] nastagováno 60 desek bez checkpointu; deadline 07:00
+[21:01:02] na disku volno 689.7 GB (hranice 8 GB)
+[21:01:02] stroj se drží vzhůru po dobu běhu
+[21:01:02] napájení: síť
+[21:01:02] cena desky změřena 2026-10-12 06:07 na 828 deskách: 25 bb 6.4 min, 40 bb 21.3 min, 50 bb 21.9 min
+[21:01:02] solving MTT9_50BB_UTG_1_CO_SRP 986tt (přesnost 1.0 %, strop 90 min)
+[21:21:04]   hotovo za 20.0 min, checkpoint 51 MB
+[21:21:04] solving MTT9_50BB_UTG_1_CO_SRP AT4mono (přesnost 1.0 %, strop 90 min)
+[21:31:06]   hotovo za 10.0 min, checkpoint 35 MB
+[21:31:06] solving MTT9_50BB_UTG_1_CO_SRP 742r (přesnost 1.0 %, strop 90 min)
+[22:03:02]   hotovo za 31.9 min, checkpoint 55 MB
+[22:03:02] solving MTT9_50BB_UTG_1_CO_SRP K98tt (přesnost 1.0 %, strop 90 min)
+[22:20:53]   hotovo za 17.9 min, checkpoint 47 MB
+[22:20:53] solving MTT9_50BB_UTG_2_CO_SRP A72r (přesnost 1.0 %, strop 90 min)
+[22:53:03]   hotovo za 32.2 min, checkpoint 57 MB
+[22:53:03] solving MTT9_50BB_UTG_2_CO_SRP 883r (přesnost 1.0 %, strop 90 min)
+[23:29:04]   hotovo za 36.0 min, checkpoint 62 MB
+[23:29:04] solving MTT9_50BB_UTG_2_CO_SRP 986tt (přesnost 1.0 %, strop 90 min)
+[23:49:35]   hotovo za 20.5 min, checkpoint 60 MB
+[23:49:35] solving MTT9_50BB_UTG_2_CO_SRP AT4mono (přesnost 1.0 %, strop 90 min)
+[00:05:41]   hotovo za 16.1 min, checkpoint 41 MB
+[00:05:41] solving MTT9_50BB_UTG_2_CO_SRP 742r (přesnost 1.0 %, strop 90 min)
+[00:41:23]   hotovo za 35.7 min, checkpoint 63 MB
+[00:41:23] solving MTT9_50BB_UTG_2_CO_SRP K98tt (přesnost 1.0 %, strop 90 min)
+[01:11:03]   hotovo za 29.7 min, checkpoint 56 MB
+[01:11:03] solving MTT9_50BB_UTG_LJ_SRP A72r (přesnost 1.0 %, strop 90 min)
+[01:36:31]   hotovo za 25.5 min, checkpoint 36 MB
+[01:36:31] solving MTT9_50BB_UTG_LJ_SRP 883r (přesnost 1.0 %, strop 90 min)
+[02:04:35]   hotovo za 28.1 min, checkpoint 42 MB
+[02:04:35] solving MTT9_50BB_UTG_LJ_SRP 986tt (přesnost 1.0 %, strop 90 min)
+[02:28:48]   hotovo za 24.2 min, checkpoint 41 MB
+[02:28:48] solving MTT9_50BB_UTG_LJ_SRP AT4mono (přesnost 1.0 %, strop 90 min)
+[02:37:39]   hotovo za 8.8 min, checkpoint 27 MB
+[02:37:39] solving MTT9_50BB_UTG_LJ_SRP 742r (přesnost 1.0 %, strop 90 min)
+[03:18:15]   hotovo za 40.6 min, checkpoint 44 MB
+[03:18:15] solving MTT9_50BB_UTG_LJ_SRP K98tt (přesnost 1.0 %, strop 90 min)
+[03:33:40]   hotovo za 15.4 min, checkpoint 38 MB
+[03:33:40] solving MTT9_50BB_UTG_HJ_SRP A72r (přesnost 1.0 %, strop 90 min)
+[04:00:15]   hotovo za 26.6 min, checkpoint 42 MB
+[04:00:15] solving MTT9_50BB_UTG_HJ_SRP 883r (přesnost 1.0 %, strop 90 min)
+[04:30:08]   hotovo za 29.9 min, checkpoint 46 MB
+[04:30:08] solving MTT9_50BB_UTG_HJ_SRP 986tt (přesnost 1.0 %, strop 90 min)
+[04:47:27]   hotovo za 17.3 min, checkpoint 45 MB
+[04:47:27] solving MTT9_50BB_UTG_HJ_SRP AT4mono (přesnost 1.0 %, strop 90 min)
+[04:56:14]   hotovo za 8.8 min, checkpoint 31 MB
+[04:56:14] solving MTT9_50BB_UTG_HJ_SRP 742r (přesnost 1.0 %, strop 90 min)
+[05:37:59]   hotovo za 41.8 min, checkpoint 48 MB
+[05:37:59] solving MTT9_50BB_UTG_HJ_SRP K98tt (přesnost 1.0 %, strop 90 min)
+[06:01:55]   hotovo za 23.9 min, checkpoint 43 MB
+[06:01:55] solving MTT9_50BB_UTG_CO_SRP A72r (přesnost 1.0 %, strop 90 min)
+[06:45:58]   hotovo za 44.0 min, checkpoint 48 MB
+[06:45:58] končím 14 min před deadline: deska potřebuje asi 41
+[06:45:58] expansion: hotovo 23, selhalo 0, zbývá 37
+[06:45:58] fronta není prázdná, rozkladu okno nepředávám

@@ -7,6 +7,26 @@ dist-ssr/
 dist-e2e-*/
 artifacts/
 
+# Tři výjimky z `artifacts/`, sledované přes `git add -f`
+#
+# Nejsou to výstupy, jsou to **vstupy**, a nedají se přepočítat - nesou historii,
+# která vznikla během nocí a jinde neexistuje:
+#
+#   artifacts/decomposition/expansion.log  časy 851 solvů; `boardCost.mts` z nich
+#                                          počítá, kolik minut noc desce dá
+#   artifacts/cycle-cost.json              cena fází ranního cyklu proti vlastní
+#                                          historii (alarm při 3x medián)
+#   artifacts/turn-ev-attempts.json        počítadlo žebříku pokusů; bez něj se
+#                                          odložená rodina zkouší znovu od nuly
+#
+# Že to byl rozpor, se našlo 13. 10. 2026 při inventuře dat: v gitu leží
+# `Agents/solver-input/decomposition/board-cost.generated.json`, který ve svém
+# poli `source` jmenuje `artifacts/decomposition/expansion.log` - tedy derivát
+# byl zálohovaný a jeho zdroj ne. Obnovit ten log nelze; naměřit cenu desky znovu
+# znamená desítky nocí.
+#
+# Ignorování platí jen pro nesledované soubory, takže stačilo jednou `-f`.
+
 # Generated FTP release packages
 deploy/pkrtrainer-ftp-*/
 deploy/pkrtrainer-ftp-*.zip
