@@ -248,7 +248,30 @@ describe("release bundle metadata", () => {
     // součtů měří, co se po drátě přenese. Raw zůstává pojistkou proti řádovému
     // skoku. Až kousne gzip, odpovědí není další zvednutí, ale ořez podle
     // změřené poptávky.
-    expect(budgetScript).toContain('"BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 84992');
+    //
+    // ## Gzip kousl 13. 10. 2026 a zvedlo se znovu - vědomě proti té větě výš
+    //
+    // Tenhle test byl to jediné, co tu větu připomnělo: spadl na zadrátovaném
+    // 84 992 a teprve pak jsem si ji přečetl. Platí tedy, že odpověď podle plánu
+    // z 27. 8. měl být **ořez podle změřené poptávky**, ne zvednutí.
+    //
+    // Ořez jsem změřil a je dnes špatný: tabulky EV drží 75 % líné knihovny
+    // (turn 5 247 KiB, river 4 044 z 12 333), takže by zabral - ale
+    // `mtt:post-answer` hlásí EV akcí u **72 % turnů a 89,7 % riverů** a nula
+    // nevyřešených spotů. Není to mrtvý obsah podle poptávky, je to to, co hráč
+    // dostává; ořez by mu vzal oceněné spoty. S tím měřením rozhodl vlastník
+    // zvednout („13312 a do budoucna musíme vyřešit nějak systémově").
+    //
+    // Role raw stropu se přitom **obrátila**, což bod 139 nepředvídal: tempo za
+    // tři noci je gzip 14,4 KiB a raw 124,0 (tabulky EV se komprimují asi 8,6:1),
+    // takže raw by kousl za 8 nocí a gzip za 68. Raw proto nejde nahoru
+    // proporčně, ale výš - 94 208 vydrží 82 nocí, takže pojistka zůstane
+    // pojistkou a brzdou je zase gzip.
+    //
+    // Co z původní věty platí dál: **další zvednutí už odpověď není.** Příště se
+    // musí dělit líná knihovna po variantách (úkol v `MTT_COMPLETION_PLAN.md`),
+    // protože tenhle strop měří jednu variantu a druhá přinese další násobek.
+    expect(budgetScript).toContain('"BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 94208');
     expect(budgetScript).toContain('"BUNDLE_MAX_LAZY_MTT_TOTAL_GZIP_KB",');
     // Řetěz je připnutý schválně: má se měnit vědomě, ne mimochodem. Poslední
     // článek přibyl 24. 8. 2026 a je to oprava chybějící brány - Chrome E2E

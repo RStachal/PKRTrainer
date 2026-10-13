@@ -231,10 +231,55 @@ const MAX_LAZY_MTT_GZIP_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_GZIP_KB", 128);
  * `resolveJsonModule` čte všechny. Není to vada obsahu ani typů, je to zděděná
  * mez - proto má `build` i `typecheck` v `package.json` explicitních 8 GB.
  */
-const MAX_LAZY_MTT_TOTAL_JS_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 84992);
+/*
+ * **Zvednuto potřetí, 13. 10. 2026, rozhodnutím vlastníka: gzip 12 288 → 13 312
+ * (12 → 13 MiB), raw 84 992 → 92 160 (83 → 90 MiB).**
+ *
+ * Narazilo to samo, ne při zvětšování obsahu: noci přidaly třináct rodin a gzip
+ * přetekl o 45 KiB (12 333 proti 12 288). Vlastník zvolil 13 MiB z nabídnutých
+ * možností a dodal k tomu, co je napsané níž - že se to má vyřešit systémově.
+ *
+ * ## Proč se zvedly **oba** - a proč raw víc
+ *
+ * Vlastník rozhodl o jednom čísle, ale stropy jsou dva a ten druhý by narazil
+ * dřív. Změřeno na třech nocích (9.-13. 10.):
+ *
+ * | | stav 13. 10. | tempo/noc | dnešní strop | vydrží |
+ * |---|---|---|---|---|
+ * | gzip | 12 333 KiB | 14,4 KiB | 12 288 | **už přetekl** |
+ * | raw | 83 988 KiB | 124,0 KiB | 84 992 | **8 nocí** |
+ *
+ * **Tím se obrátila role raw stropu, a je to proti tomu, co bod 139 zařídil.**
+ * Ten ho 27. 8. 2026 zvedl schválně tam, „kam už nedosáhne dřív než gzip", a
+ * napsal k tomu: ze dvou součtových stropů měří něco skutečného jen gzip (kolik
+ * se přenese po drátě), raw zůstává **pojistkou proti řádovému skoku, ne denní
+ * brzdou**. Dnes by kousl za osm nocí, kdežto gzip za 68 - tedy přesně naopak.
+ *
+ * Důvod je v obsahu, který noci přidávají: tabulky EV se komprimují asi 8,6:1,
+ * takže raw roste osmkrát rychleji než gzip. Raw proto nejde nahoru ve stejném
+ * poměru jako gzip, ale **výš**: 94 208 KiB (92 MiB) vydrží 82 nocí proti 68 u
+ * gzipu, takže pojistka zůstane pojistkou a brzdou je zase gzip.
+ *
+ * ## Co platí dál a co se tím neřeší
+ *
+ * Platí, proč tenhle strop vůbec je: **není to kontrola správnosti, je to místo,
+ * kde se růst musí obhájit.** Proto se nedal rovnou na 64 MiB.
+ *
+ * Neřeší se tím ale to podstatné, a vlastník to řekl sám: *„do budoucna musíme
+ * vyřešit nějak systémově"*. Tenhle strop měří **jednu variantu** (full ring 9,
+ * regular, chipEV). Cash game nebo SNG ho nepřeteče o kilobajty - přinese druhou
+ * takhle velkou knihovnu, a pak nepůjde o konstantu, ale o to, že se líná
+ * knihovna musí dělit po variantách a hráč stahovat jen tu svou. Zapsáno jako
+ * úkol v `Agents/MTT_COMPLETION_PLAN.md`.
+ *
+ * Co hráč platí dnes, zůstává malé: rodina stojí asi 200 KiB gzip (turn EV ~109,
+ * river EV ~84, strategie), a instalační cesta se nemění vůbec - precache je
+ * 397 KiB a má vlastní strop.
+ */
+const MAX_LAZY_MTT_TOTAL_JS_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 94208);
 const MAX_LAZY_MTT_TOTAL_GZIP_KB = numberFromEnv(
   "BUNDLE_MAX_LAZY_MTT_TOTAL_GZIP_KB",
-  12288,
+  13312,
 );
 // The equity table is fetched when a session starts, so it is off the install
 // path and does not belong in the precache totals - but it is not an MTT

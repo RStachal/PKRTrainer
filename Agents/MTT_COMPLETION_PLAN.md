@@ -398,6 +398,32 @@ Rozhodnout se dá trojím způsobem a **žádný z nich není úklid v kódu**:
 Technicky je turn navíc dražší než river: riverový showdown je porovnání karet
 bez rekurze, turnový uzel má pod sebou celou riverovou vrstvu v jiném souboru.
 
+### Co se z toho rozhodlo, a co z toho zbývá (13. 10. 2026)
+
+Vlastník zvolil **možnost 1** a strop se zvedl potřetí: gzip 12 288 → 13 312,
+raw 84 992 → 92 160. Zvedly se oba, protože raw by při změřeném tempu
+124 KiB za noc narazil za **osm nocí**, kdežto gzip za 68 - zvednout jen jeden
+by znamenalo tutéž otázku znovu o týden později.
+
+Možnost 2 jsem **nedoporučil a je to změřené**: tabulky EV drží 75 % líné
+knihovny (turn 5 247 KiB, river 4 044 z 12 333), ale rozdávají se - `mtt:post-answer`
+hlásí EV akcí u **72 % turnů a 89,7 % riverů** a nula nevyřešených spotů. Ubrat
+je tedy neznamená uklidit mrtvý obsah, ale vzít hráči oceněné spoty.
+
+**Zbývá to podstatné, a vlastník to zadal slovy „do budoucna musíme vyřešit
+nějak systémově":**
+
+> Tenhle strop měří **jednu variantu** - full ring 9, regular, chipEV. Druhá
+> varianta (cash game, SNG, six-max v produkci) ho nepřeteče o kilobajty;
+> přinese druhou takhle velkou knihovnu. Pak už nepůjde o konstantu, ale o model:
+> líná knihovna se musí dělit **po variantách** a hráč stahovat jen tu svou.
+
+Dokud to platí jako dnes, každá nová varianta si vyžádá další zvednutí stropu -
+a to je ta past, kterou strop sám má odhalovat, ne kterou má krmit. Rozhodnutí,
+kdy se do toho modelu pustit, je rozpočtové: dnešní noc dodává obsah jedné
+varianty a fronta je na dvě noci, takže to není na dnes - ale je to na dřív než
+na chvíli, kdy druhá varianta začne vznikat.
+
 **Než se rozhodne, fáze nezačíná.** Spočítat 11 MB, které se nedodají, je horší
 než nespočítat nic.
 
