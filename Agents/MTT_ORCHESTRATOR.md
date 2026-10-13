@@ -358,8 +358,16 @@ níž, se hlásí jako ztrátová, i když všechny ostatní brány svítí zele
    - **tři zablokované dvojice** — `UTG_UTG_1`, `UTG_UTG_2`, `UTG_1_UTG_2` se
      nedají založit, protože preflop pack nemá `VS_OPEN|UTG+1|25` ani
      `VS_OPEN|UTG+2|25`. Není to práce pro solver, je to **mezera v obsahu
-     preflopu** - a je to tentýž druh mezery, jakou zavírá vlastníkovo čtení
-     ranží z RYE.
+     preflopu** - a ~~je to tentýž druh mezery, jakou zavírá vlastníkovo čtení
+     ranží z RYE~~.
+
+     **Změřeno 13. 10. 2026: RYE je nezavírá.** V kandidátovi na import
+     (`artifacts/rye-import/candidate`, 414 zpřesněných záznamů) není ani jeden
+     `VS_OPEN|UTG+1|25` ani `VS_OPEN|UTG+2|25`; sedačky obránce, které kandidát
+     na 25 bb nese, jsou **BB, BTN, CO, HJ, LJ, SB**. Zdroj je organizovaný
+     podle hrdinovy sedačky a „UTG+1 se brání proti otevření z UTG" v něm
+     nefiguruje. Čekat tyhle tři dvojice od importu RYE je tedy omyl - chtějí
+     jiný zdroj, nebo rozhodnutí, že se ty spoty učit nebudou.
    - **squeeze obsah z RYE** — leží hotový a čeká na přečtení 54 mřížek
      vlastníkem; bez něj do packu nejde (viz `Agents/range-intake`).
 

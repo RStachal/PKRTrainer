@@ -165,6 +165,7 @@
     "mtt:turn-ev-build-probe": "node scripts/run-cli.mjs scripts/measureFullTurnEvBuild.mts",
     "mtt:night-turn-ev": "node scripts/run-cli.mjs scripts/measureNightTurnEvAlignment.mts",
     "mtt:night-ready": "node scripts/run-cli.mjs scripts/checkNightReadiness.mts",
+    "mtt:vs-open-refinement": "node scripts/run-cli.mjs scripts/measureVsOpenRefinementCoverage.mts",
     "mtt:flop-ev-feasibility": "node scripts/run-cli.mjs scripts/measureFlopEvFeasibility.mts",
     "mtt:ev-bounds": "node scripts/run-cli.mjs scripts/checkShippedEvBounds.mts",
     "mtt:turn-ev-stale": "node scripts/run-cli.mjs scripts/checkTurnEvStaleness.mts",
