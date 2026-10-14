@@ -88,6 +88,10 @@ function extrapolate(depthBB: number, measured: readonly DepthCost[]): DepthCost
     p90,
     max: 0,
     planMinutes: Math.round(base.median * ratio * 10) / 10,
+    // Slib se extrapoluje z průměru základu, ne z jeho mediánu: jinak by
+    // extrapolovaná hloubka slibovala podle statistiky, která se mýlí na
+    // opačnou stranu, a byla by to tichá výjimka z pravidla v `boardCost.mts`.
+    promiseMinutes: Math.round(base.promiseMinutes * ratio * 10) / 10,
     capMinutes: capFromP90(p90),
     reserveMinutes: Math.ceil(p90),
     basis: "extrapolace",
@@ -118,14 +122,20 @@ function main(): void {
 
   console.log(`změřeno ${solves.length} desek v ${EXPANSION_LOG_PATH}`);
   console.log("");
-  console.log("hloubka  desek  medián    p90    max  |  plán  strop  rezerva  základ");
+  // Průměr se tiskne vedle mediánu schválně. Je to jediné místo, kde je vidět,
+  // že ty dvě statistiky nejsou totéž - a slib noci se počítá z průměru.
+  console.log(
+    "hloubka  desek  medián  průměr    p90    max  |  plán   slib  strop  rezerva  základ",
+  );
   for (const row of depths) {
     console.log(`${String(row.depthBB).padStart(5)}bb`
       + `${String(row.boards).padStart(7)}`
       + `${row.median.toFixed(1).padStart(8)}`
+      + `${row.promiseMinutes.toFixed(1).padStart(8)}`
       + `${row.p90.toFixed(1).padStart(7)}`
       + `${row.max.toFixed(1).padStart(7)}`
       + `  |${row.planMinutes.toFixed(1).padStart(6)}`
+      + `${row.promiseMinutes.toFixed(1).padStart(7)}`
       + `${String(row.capMinutes).padStart(7)}`
       + `${String(row.reserveMinutes).padStart(9)}`
       + `  ${row.basis}${row.note === undefined ? "" : ` (${row.note})`}`);

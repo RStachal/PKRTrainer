@@ -130,6 +130,36 @@ describe("depthCostsFrom", () => {
     expect(row.planMinutes).toBeLessThan(row.p90);
   });
 
+  it("slib je průměr, ne medián - a u zešikmeného rozdělení je nad ním", () => {
+    // Opačný směr než u plánu výš, a proto druhé pole. Slib „noc dokončí tuhle
+    // rodinu" je součet N desek a nezkreslený odhad součtu je `N krát průměr`.
+    // Medián by slíbil rodinu, která nedojde, a ráno by se nedodalo nic.
+    //
+    // Změřeno 14. 10. 2026 na skutečných datech: 25 bb má medián 6,4 a průměr
+    // 7,3 (zkreslení 14,1 %), 50 bb 23,9 proti 25,6 (7,1 %). Zdejší vzorek je
+    // zešikmený stejným směrem, jen ostřeji, aby byl rozdíl vidět na očích.
+    const solves = [2, 4, 6, 8, 100].map((minutes) => ({
+      family: "MTT9_25BB_CO_BTN_SRP", board: "x", depthBB: 25, minutes, level: 0,
+    }));
+    const [row] = depthCostsFrom(solves);
+    expect(row.promiseMinutes).toBe(24); // (2+4+6+8+100)/5
+    expect(row.promiseMinutes).toBeGreaterThan(row.median);
+    // A nesmí to být tatáž hodnota jako plán, jinak by se ta oprava dala
+    // nedopatřením vrátit zpátky na medián a nic by to neohlásilo.
+    expect(row.promiseMinutes).not.toBe(row.planMinutes);
+  });
+
+  it("u symetrického rozdělení slib a plán splynou - rozdíl dělá chvost, ne statistika sama", () => {
+    // Falsifikace testu výš: kdyby `promiseMinutes` bylo prostě „něco většího",
+    // prošlo by i tady. Průměr se od mediánu odchyluje jen tím, co je ve chvostu.
+    const solves = [10, 20, 30].map((minutes) => ({
+      family: "MTT9_25BB_CO_BTN_SRP", board: "x", depthBB: 25, minutes, level: 0,
+    }));
+    const [row] = depthCostsFrom(solves);
+    expect(row.promiseMinutes).toBe(20);
+    expect(row.promiseMinutes).toBe(row.median);
+  });
+
   it("neznámá hloubka nemá cenu, místo aby dostala cizí", () => {
     // Tichá výchozí hodnota byla ta vada: hlídač měl `MINUTES_PER_BOARD_DEEP = 40`
     // a na hloubku, kterou nikdo nezměřil, odpověděl číslem.

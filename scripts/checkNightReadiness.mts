@@ -122,6 +122,25 @@ function minutesPerBoard(family: string): number | undefined {
   return costForDepth(BOARD_COST, depthOfFamily(family))?.planMinutes;
 }
 
+/**
+ * Minuty pro **slib**, tedy pro „dokončí noc tuhle rodinu".
+ *
+ * Jiná statistika než `minutesPerBoard` schválně: tam je bezpečné cenu
+ * podstřelit (fronta zčervená dřív), tady je to to nebezpečné. Důvod a měření
+ * jsou u `promiseMinutes` v `boardCost.mts`.
+ *
+ * Chybějící hodnota se **nedoplňuje mediánem**. Starší `board-cost.generated.json`
+ * to pole nemá a `readBoardCostTable` nic nevaliduje, takže záloha na medián by
+ * byla tichý návrat k té optimistické statistice. Bez ceny se tedy neslíbí nic -
+ * stejně jako u hloubky, kterou nikdo nezměřil.
+ */
+function promiseMinutesPerBoard(family: string): number | undefined {
+  const row = costForDepth(BOARD_COST, depthOfFamily(family));
+  if (row === undefined) return undefined;
+  const promise = (row as { promiseMinutes?: number }).promiseMinutes;
+  return typeof promise === "number" && promise > 0 ? promise : undefined;
+}
+
 type Check = { label: string; ok: boolean; got: string; want: string };
 const checks: Check[] = [];
 const ESCALATION_STEPS = escalationSteps();
@@ -392,7 +411,12 @@ const willFinish = [...progress.entries()]
   .reduce<{ seen: number; families: string[] }>((acc, [family, row]) => {
     // Rozpočet noci je v **minutách**, ne v deskách: deska na 40 bb stojí
     // dvakrát tolik co na 25, takže počítat je po kusech nadhodnocuje průtok.
-    const minutes = minutesPerBoard(family);
+    //
+    // **Průměr, ne medián** (14. 10. 2026). Tady se počítá součet desek a
+    // nezkreslený odhad součtu je `N krát průměr`; medián ho u zešikmeného
+    // rozdělení nadhodnocuje o 4,3 %. Zásoba níž zůstává na mediánu schválně,
+    // protože se smí mýlit na druhou stranu.
+    const minutes = promiseMinutesPerBoard(family);
     // Rodina bez ceny se do „dokončí se" nepočítá: tvrdit, že doběhne, by
     // znamenalo mít její cenu za nulovou, a to je ta nejhorší možná odpověď.
     // Že cena chybí, hlásí vlastní řádek níž.

@@ -27,6 +27,12 @@
  *   noc, a dvě sesterské rodiny tutéž texturu dokončily za 28,1 a 30,0.
  * - **Rezerva na konci okna** („už nezačínej") - devadesátý percentil, protože
  *   přesně to ta věta znamená: nezačínej, co s pravděpodobností 0,9 nedoběhne.
+ * - **Slib** („dokončí dnešní noc tuhle rodinu?") - **průměr**. Doplněno
+ *   14. 10. 2026; tenhle konzument tu chyběl a půjčil si medián od zásoby,
+ *   tedy statistiku, která se mýlí na opačnou stranu. Počítá se součet N desek
+ *   a nezkreslený odhad součtu je `N krát průměr`; u zprava zešikmeného
+ *   rozdělení je průměr nad mediánem, takže medián slib nadhodnocuje. Změřeno
+ *   na 50 bb: 60 desek dalo průměr 25,18 proti mediánu 24,15, zkreslení 4,3 %.
  *
  * Takže jeden **změřený** řádek na hloubku a tři odvozená čísla s rozepsaným
  * směrem, kterým se smí mýlit. Ne pět konstant.
@@ -153,6 +159,21 @@ export interface DepthCost {
   max: number;
   /** Zásoba: kolik minut si na desku počítat při odhadu, na kolik nocí práce je. */
   planMinutes: number;
+  /**
+   * Slib („dokončí dnešní noc tuhle rodinu?"): **průměr**, ne medián.
+   *
+   * Čtvrtý konzument, který na seznamu výš chyběl - a mýlí se na **opačnou
+   * stranu** než zásoba. U zásoby je bezpečné cenu podstřelit, protože fronta
+   * pak zčervená dřív. U slibu je podstřelení to nebezpečné: slíbí rodinu,
+   * která nedojde, a ráno se nedodá nic.
+   *
+   * Statistika musí být průměr, protože se počítá **součet** N desek, a
+   * nezkreslený odhad součtu je `N krát průměr`. U zprava zešikmeného
+   * rozdělení je průměr nad mediánem, takže medián slib systematicky
+   * nadhodnocuje. Změřeno 14. 10. 2026 na 50 bb: 60 desek dřívějších nocí dalo
+   * průměr 25,18 a medián 24,15, tedy zkreslení **4,3 %**.
+   */
+  promiseMinutes: number;
   /** Strop jednoho solve. */
   capMinutes: number;
   /** Rezerva na konci okna: pod tolik minut už desku nezačínat. */
@@ -200,6 +221,9 @@ export function depthCostsFrom(solves: readonly BoardSolve[]): DepthCost[] {
         p90: round1(p90),
         max: round1(sorted[sorted.length - 1]),
         planMinutes: round1(quantile(sorted, 0.5)),
+        promiseMinutes: round1(
+          sorted.reduce((sum, value) => sum + value, 0) / sorted.length,
+        ),
         capMinutes: capFromP90(p90),
         reserveMinutes: Math.ceil(p90),
         basis: "měřeno" as const,
