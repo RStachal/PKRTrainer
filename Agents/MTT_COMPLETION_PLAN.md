@@ -526,6 +526,29 @@ telefonu, nikdo neví.
    (rozpočet knihovny podle jmen počítá); a každý `load()` by JSON parsoval
    znovu, takže je potřeba ověřit, že loadery drží slib v mezipaměti.
    Očekávaný zisk podle sondy: typecheck **6,37 GB -> ~0,5 GB, 38,8 -> 5 az 8 s**.
+
+   **Obě rizika přečtená týž večer, před implementací:**
+   - **Pojmenování chunků sklaplo by počtvrté.** `mttProductionChunkNameForModuleId`
+     (`src/pwa/precacheManifestBuild.ts`) testuje `fileName.endsWith(".generated.json")`
+     a s `?raw` v id by končil na `.json?raw`. Funkce by vrátila `null`, chunk by
+     dostal jméno podle souboru a precache by ho vzal za nutný - komentář u ní tu
+     past popisuje třikrát (instalační cesta 362 kB -> 4,4 MB, pak 386 KiB ->
+     20,7 MB). Oprava: z id odříznout dotaz dřív, než se testuje, a test na id
+     s `?raw`. Strop instalační cesty v `bundle:budget` by to chytil, ale má to
+     být ošetřené předem, ne spoléhat na pád.
+   - **Dvojí parsování nehrozí.** Všech pět spotřebitelů (`turnEvRuntime`,
+     `riverEvRuntime`, `turn/river/flopSolvedStrategyPacks`) drží načtené balíky
+     v mapách a volá `entry.load()` jednou na balík.
+
+   **Kde se to mění - v generátorech, ne v manifestech**, protože ranní cyklus
+   je pouští každé ráno a ruční úpravu by přepsal: `buildFlopStrategyPacks.mts`,
+   `buildTurnStrategyPacks.mts`, `buildTurnEvPacks.mts` (a `measureFullTurnEvBuild.mts`,
+   který zapisuje tentýž manifest), `buildRiverStrategyPacks.mts` (oba riverové).
+
+   **Hotovo, až:** typecheck pod strop z bodu 1, `bundle:budget` s instalační
+   cestou beze změny (~397 KiB) a líná knihovna beze změny (12 343 KiB gzip),
+   e2e zelené včetně offline a rollbacku service workeru, a ranní cyklus jednou
+   proběhne s novými generátory.
 3. **Dělit knihovnu po variantách** (odstavec výš) - nutné dřív, než začne
    vznikat druhá varianta.
 
