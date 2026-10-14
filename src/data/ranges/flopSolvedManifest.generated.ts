@@ -360,10 +360,22 @@ export const solvedFlopManifest: readonly SolvedFlopManifestEntry[] = [
     load: () => import("./flop/mtt9-50bb-co-bb-srp-cbet-midspr.generated.json").then((module) => module.default as unknown as FlopSolvedStrategyPack),
   },
   {
+    familyId: "MTT9_50BB_LJ_SB_SRP",
+    packId: "mtt-full-ring-9-flop-solved-mtt9-50bb-lj-sb-srp-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|FLOP",
+    load: () => import("./flop/mtt9-50bb-lj-sb-srp.generated.json").then((module) => module.default as unknown as FlopSolvedStrategyPack),
+  },
+  {
     familyId: "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
     packId: "mtt-full-ring-9-flop-solved-mtt9-50bb-sb-bb-srp-oop-cbet-midspr-v1",
     profileKey: "FULL_RING_9|REGULAR|CHIP_EV|FLOP",
     load: () => import("./flop/mtt9-50bb-sb-bb-srp-oop-cbet-midspr.generated.json").then((module) => module.default as unknown as FlopSolvedStrategyPack),
+  },
+  {
+    familyId: "MTT9_50BB_UTG_1_BTN_SRP",
+    packId: "mtt-full-ring-9-flop-solved-mtt9-50bb-utg-1-btn-srp-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|FLOP",
+    load: () => import("./flop/mtt9-50bb-utg-1-btn-srp.generated.json").then((module) => module.default as unknown as FlopSolvedStrategyPack),
   },
   {
     familyId: "MTT9_50BB_UTG_1_CO_SRP",
@@ -412,6 +424,12 @@ export const solvedFlopManifest: readonly SolvedFlopManifestEntry[] = [
     packId: "mtt-full-ring-9-flop-solved-mtt9-50bb-utg-btn-srp-v1",
     profileKey: "FULL_RING_9|REGULAR|CHIP_EV|FLOP",
     load: () => import("./flop/mtt9-50bb-utg-btn-srp.generated.json").then((module) => module.default as unknown as FlopSolvedStrategyPack),
+  },
+  {
+    familyId: "MTT9_50BB_UTG_CO_SRP",
+    packId: "mtt-full-ring-9-flop-solved-mtt9-50bb-utg-co-srp-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|FLOP",
+    load: () => import("./flop/mtt9-50bb-utg-co-srp.generated.json").then((module) => module.default as unknown as FlopSolvedStrategyPack),
   },
   {
     familyId: "MTT9_50BB_UTG_HJ_SRP",

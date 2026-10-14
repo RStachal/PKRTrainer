@@ -1,11 +1,11 @@
 {
   "schemaVersion": "PKRTRAINER_NIGHT_PRIORITY_V2",
-  "decidedAt": "2026-10-12",
+  "decidedAt": "2026-10-13",
   "priority": "NEW_FAMILIES",
   "reason": "river je nasycený: 48/48 packů na stropu (39 na pravidlech, 10 bajtově)",
-  "stagedBoards": 58,
-  "stagedFamilies": 9,
-  "stagedMinutes": 1270,
+  "stagedBoards": 35,
+  "stagedFamilies": 5,
+  "stagedMinutes": 847,
   "yieldMinMinutes": 30,
   "yieldMinBoards": 8,
   "willYield": true

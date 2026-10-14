@@ -2933,3 +2933,67 @@ UnicodeDecodeError: 'charmap' codec can't decode byte 0x88 in position 1122: cha
 [06:45:58] končím 14 min před deadline: deska potřebuje asi 41
 [06:45:58] expansion: hotovo 23, selhalo 0, zbývá 37
 [06:45:58] fronta není prázdná, rozkladu okno nepředávám
+[21:01:01] napajeni: sit
+[21:01:02] viko na siti: nedelat nic (overeno v registru)
+[21:01:02] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:01:02] nastagováno 37 desek bez checkpointu; deadline 07:00
+[21:01:02] na disku volno 662.6 GB (hranice 8 GB)
+[21:01:02] stroj se drží vzhůru po dobu běhu
+[21:01:02] napájení: síť
+[21:01:02] cena desky změřena 2026-10-13 04:45 na 851 deskách: 25 bb 6.4 min, 40 bb 21.3 min, 50 bb 24.2 min
+[21:01:02] solving MTT9_50BB_UTG_CO_SRP 883r (přesnost 1.0 %, strop 90 min)
+[21:35:51]   hotovo za 34.8 min, checkpoint 52 MB
+[21:35:51] solving MTT9_50BB_UTG_CO_SRP 986tt (přesnost 1.0 %, strop 90 min)
+[21:55:33]   hotovo za 19.7 min, checkpoint 50 MB
+[21:55:33] solving MTT9_50BB_UTG_CO_SRP AT4mono (přesnost 1.0 %, strop 90 min)
+[22:05:46]   hotovo za 10.2 min, checkpoint 35 MB
+[22:05:46] solving MTT9_50BB_UTG_CO_SRP 742r (přesnost 1.0 %, strop 90 min)
+[22:56:31]   hotovo za 50.8 min, checkpoint 54 MB
+[22:56:31] solving MTT9_50BB_UTG_CO_SRP K98tt (přesnost 1.0 %, strop 90 min)
+[23:19:50]   hotovo za 23.3 min, checkpoint 46 MB
+[23:19:50] solving MTT9_50BB_UTG_1_BTN_SRP A72r (přesnost 1.0 %, strop 90 min)
+[00:22:03]   hotovo za 62.2 min, checkpoint 58 MB
+[00:22:03] solving MTT9_50BB_UTG_1_BTN_SRP 883r (přesnost 1.0 %, strop 90 min)
+[00:53:29]   hotovo za 31.4 min, checkpoint 62 MB
+[00:53:29] solving MTT9_50BB_UTG_1_BTN_SRP 986tt (přesnost 1.0 %, strop 90 min)
+[01:18:38]   hotovo za 25.2 min, checkpoint 61 MB
+[01:18:38] solving MTT9_50BB_UTG_1_BTN_SRP AT4mono (přesnost 1.0 %, strop 90 min)
+[01:31:02]   hotovo za 12.4 min, checkpoint 42 MB
+[01:31:02] solving MTT9_50BB_UTG_1_BTN_SRP 742r (přesnost 1.0 %, strop 90 min)
+[02:06:35]   hotovo za 35.5 min, checkpoint 63 MB
+[02:06:35] solving MTT9_50BB_UTG_1_BTN_SRP K98tt (přesnost 1.0 %, strop 90 min)
+[02:27:08]   hotovo za 20.5 min, checkpoint 57 MB
+[02:27:08] solving MTT9_50BB_LJ_SB_SRP A72r (přesnost 1.0 %, strop 90 min)
+[03:01:30]   hotovo za 34.4 min, checkpoint 58 MB
+[03:01:30] solving MTT9_50BB_LJ_SB_SRP 883r (přesnost 1.0 %, strop 90 min)
+[03:25:05]   hotovo za 23.6 min, checkpoint 64 MB
+[03:25:05] solving MTT9_50BB_LJ_SB_SRP 986tt (přesnost 1.0 %, strop 90 min)
+[03:46:29]   hotovo za 21.4 min, checkpoint 60 MB
+[03:46:29] solving MTT9_50BB_LJ_SB_SRP AT4mono (přesnost 1.0 %, strop 90 min)
+[04:10:07]   hotovo za 23.6 min, checkpoint 41 MB
+[04:10:07] solving MTT9_50BB_LJ_SB_SRP 742r (přesnost 1.0 %, strop 90 min)
+[04:44:01]   hotovo za 33.9 min, checkpoint 65 MB
+[04:44:02] solving MTT9_50BB_LJ_SB_SRP K98tt (přesnost 1.0 %, strop 90 min)
+[05:05:00]   hotovo za 21.0 min, checkpoint 57 MB
+[05:05:00] solving MTT9_50BB_UTG_1_SB_SRP A72r (přesnost 1.0 %, strop 90 min)
+[05:34:04]   hotovo za 29.1 min, checkpoint 44 MB
+[05:34:04] solving MTT9_50BB_UTG_1_SB_SRP 883r (přesnost 1.0 %, strop 90 min)
+[05:54:13]   hotovo za 20.1 min, checkpoint 48 MB
+[05:54:13] solving MTT9_50BB_UTG_1_SB_SRP 986tt (přesnost 1.0 %, strop 90 min)
+[06:11:39]   hotovo za 17.4 min, checkpoint 45 MB
+[06:11:39] solving MTT9_50BB_UTG_1_SB_SRP AT4mono (přesnost 1.0 %, strop 90 min)
+[06:25:25]   hotovo za 13.8 min, checkpoint 32 MB
+[06:25:25] končím 35 min před deadline: deska potřebuje asi 41
+[06:25:25] expansion: hotovo 21, selhalo 0, zbývá 16
+[06:25:25] fronta není prázdná, rozkladu okno nepředávám
+[06:31:02] napajeni: sit
+[06:31:02] viko na siti: nedelat nic (overeno v registru)
+[06:31:02] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[06:31:03] nastagováno 16 desek bez checkpointu; deadline 07:00
+[06:31:03] na disku volno 637.1 GB (hranice 8 GB)
+[06:31:03] stroj se drží vzhůru po dobu běhu
+[06:31:03] napájení: síť
+[06:31:03] cena desky změřena 2026-10-13 04:45 na 851 deskách: 25 bb 6.4 min, 40 bb 21.3 min, 50 bb 24.2 min
+[06:31:03] končím 29 min před deadline: deska potřebuje asi 41
+[06:31:03] expansion: hotovo 0, selhalo 0, zbývá 16
+[06:31:03] fronta není prázdná, rozkladu okno nepředávám
