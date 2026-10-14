@@ -458,6 +458,58 @@ na chvíli, kdy druhá varianta začne vznikat.
 **Než se rozhodne, fáze nezačíná.** Spočítat 11 MB, které se nedodají, je horší
 než nespočítat nic.
 
+### Data přes typový systém - změřeno 14. 10. 2026, a je to ta hlavní brzda
+
+Vlastník 14. 10.: „přemýšlejme o refaktoru, aby aplikace postupným rozvojem
+nebyla pomalejší a pomalejší". Než se navrhlo cokoli, změřilo se, co roste.
+
+**Velikost dat to není** - v gitu za dva týdny 82,6 -> 83,4 MB (240 -> 267
+JSONů). Build je 7 az 17 s a neroste. Testy skáčou mezi 6 a 25 minutami podle
+toho, co běží vedle, ne podle růstu.
+
+**Je to typecheck.** `tsconfig.json` má `resolveJsonModule: true` a data se
+načítají 267 dynamickými `import("./x.json")`, takže TypeScript odvozuje typy
+pro **všech 81 MB** JSONu. Změřeno `tsc --extendedDiagnostics`, tentýž strom
+s vypnutým `resolveJsonModule` pro srovnání:
+
+| | dnes | bez typování JSONu |
+|---|---|---|
+| paměť | **6,37 GB** | **0,52 GB** |
+| čas celkem | **38,8 s** | **4,5 s** |
+| parse | 9,3 s | 0,5 s |
+| check | 25,4 s | 2,8 s |
+
+**92 % paměti a 88 % času** typecheckeru padá na data, ne na 147 tisíc řádků
+kódu. A roste to lineárně s každou rodinou a každou variantou: haldu jsme už
+dvakrát zvedali (dnes 8 GB pro typecheck, 12 GB pro build) a druhá varianta by
+přes ni přetekla - tedy přesně „každým rozvojem pomalejší", jen v čase vývoje,
+ne u hráče.
+
+U hráče je to podobné o patro jinde: ty JSONy se balí jako **JS moduly** (turnová
+EV jedné rodiny až 1 047 kB), takže je telefon parsuje jako kód. Rychlost u hráče
+přitom dnes **neměří žádná vrstva** orchestrace - vrstva 0 měří, co dojde, ne za
+jak dlouho.
+
+**Postup, a v tomhle pořadí:**
+
+1. **Měřit dřív, než se mění.** Do brány strop na paměť a čas typecheckeru
+   (dnešní hodnota s rezervou, aby růst spadl hned), a do Chrome e2e čas od
+   „Next spot" po vykreslený spot - za studena (první spot rodiny, stahuje se
+   chunk) i za tepla, se zpomaleným CPU a sítí jako na telefonu. Bez toho se
+   „nebude pomalejší" nedá hlídat, a to je na tomhle projektu ta lekce pořád
+   dokola.
+2. **Data jako JSON assety, ne moduly.** Načítat přes `?url` a `fetch` (v Node
+   přes souborový systém) s typovaným loaderem a lehkou kontrolou tvaru místo
+   `import()`. Odhadovaný strop zisku je ta tabulka výš - typecheck z 6,4 GB na
+   desetinu - a telefon parsuje `JSON.parse` místo kódu. Generátory se změní,
+   ne ruční místa; dotkne se to registru líných modulů, rozpočtu knihovny
+   (počítá JS chunky) a service workeru, takže po krocích a s měřením z bodu 1.
+3. **Dělit knihovnu po variantách** (odstavec výš) - nutné dřív, než začne
+   vznikat druhá varianta.
+
+EV tabulky se zmenšovat nebudou: už jsou kvantované (celá čísla v setinách BB
+a bitová maska kombinací v base64), takže by to dalo málo.
+
 ## Fáze 2b — posledních 12 % riverové EV — **uzavřeno měřením: nedělat**
 
 EV se ukáže u **87,7 %** rozdaných riverových spotů. Zbylých 12,3 % má jedinou
