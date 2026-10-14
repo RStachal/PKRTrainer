@@ -35,18 +35,18 @@ import {
   solvedTurnSpots,
 } from "../data/ranges/solvedTurnSpotCatalogue";
 import {
-  pickSolvedFlopSpot,
-  solvedFlopSpotConfig,
-  solvedFlopSpots,
-} from "../data/ranges/solvedFlopSpotCatalogue";
-import {
   pickSolvedRiverSpot,
-  solvedRiverSpotConfig,
-  solvedRiverSpots,
   solvedRiversForTurnBoard,
 } from "../data/ranges/solvedRiverSpotCatalogue";
+import {
+  primeRiverEvForSeed,
+  primeTurnEvForSeed,
+  selectedActionNode,
+  solvedFlopConfigForSeed,
+  solvedRiverConfigForSeed,
+  solvedTurnConfigForSeed,
+} from "../data/ranges/solvedSpotDealing";
 import { primeRiverEvForPack } from "../data/ranges/riverEvPrefetch";
-import { primeTurnEvForFamily } from "../data/ranges/turnEvPrefetch";
 import { mulberry32 } from "../core/rng";
 import { RANKS, SUITS } from "../core/poker";
 import { POSITION_ORDER, type Card, type Position, type Suit } from "../core/types";
@@ -382,12 +382,34 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
       // situation selector to reach solved content would answer a question they
       // did not ask, which is a worse failure than falling back to a heuristic on
       // the question they did.
-      const dealsSolved = options.initialPositionContext == null;
+      /*
+       * Katalog se používá **vždy**, i když si hráč situaci vybral.
+       *
+       * Do 14. 10. 2026 tu stálo `dealsSolved = initialPositionContext == null`,
+       * tedy katalog se obcházel, jakmile si hráč něco vybral - a deska se
+       * losovala. Změřeno (`npm run mtt:picked-situation`, 300 spotů na ulici):
+       * matice se tím barvila podle akce v **0,0 %** spotů proti 100 % na
+       * katalogové cestě, a cena akce na flopu klesla z 31,3 % na nulu.
+       * Odpovídal texturový pilot, který `rangeBuckets` nenese, takže matice
+       * přepnula na sílu ruky - správné chování, ale jiná osa, než na jakou se
+       * hráč ptá.
+       *
+       * Vyřešený obsah přitom pro **35 z 61** nabízených situací existuje
+       * (`npm run mtt:catalogue-situations`). Stačí tedy katalog filtrovat
+       * podle vybraného vzoru místo obcházení; když pro ten vzor nic nemá,
+       * vrátí `undefined` a spadne se na dosavadní chování s losovanou deskou.
+       */
+      const situation = options.initialPositionContext
+        ? {
+          positionPattern: options.initialPositionContext.positionPattern,
+          stackBB: options.initialEffectiveStackBB,
+        }
+        : undefined;
       // `Partial`, protože katalog nemusí nabídnout nic a pak se nepřebíjí nic:
       // prázdný katalog nesmí znamenat, že se nedá hrát.
       const solvedTurn: Partial<Parameters<typeof generatePostflopSpot>[0]> = (
-        dealsSolved && street === "TURN"
-          ? solvedTurnConfigForSeed(seed, actionNode)
+        street === "TURN"
+          ? solvedTurnConfigForSeed(seed, actionNode, situation)
           // Flop ze stejného důvodu a od 21. 8. 2026: rodin se dodává 47 a bez
           // katalogu se na vyřešenou desku trefil hráč v 0,0 % rozdání.
           //
@@ -396,11 +418,11 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
           // protože chartové packy odpovídají na třídu textury. Původní
           // měření hlásilo nulu všude, protože se ptalo na neexistující pole
           // `spot.recommendation` - opraveno 26. 8. 2026.
-          : dealsSolved && street === "FLOP"
-            ? solvedFlopConfigForSeed(seed, actionNode)
+          : street === "FLOP"
+            ? solvedFlopConfigForSeed(seed, actionNode, situation)
             // A river, poslední ulice, která katalog pro jednotlivý spot neměla.
-            : dealsSolved && street === "RIVER"
-              ? solvedRiverConfigForSeed(seed, actionNode)
+            : street === "RIVER"
+              ? solvedRiverConfigForSeed(seed, actionNode, situation)
               : undefined
       ) ?? {};
       // Tabulka EV se musí stihnout načíst, jinak ji resolver uprostřed rozdání
@@ -410,10 +432,12 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
       // důvodu: **nečeká se, když není na co**. Bez téhle podmínky by `await`
       // udělal z každého rozdání asynchronní operaci - i tam, kde se žádná
       // tabulka nenačítá - a spot by se přestal vykreslovat synchronně.
-      const priming = dealsSolved && street === "RIVER"
-        ? primeRiverEvForSeed(seed, actionNode)
-        : dealsSolved && street === "TURN"
-          ? primeTurnEvForSeed(seed, actionNode)
+      // Tentýž vzor jako u rozdání - jinak by se předčetla tabulka jiné rodiny
+      // než té rozdané (viz `solvedSpotDealing.ts`).
+      const priming = street === "RIVER"
+        ? primeRiverEvForSeed(seed, actionNode, situation)
+        : street === "TURN"
+          ? primeTurnEvForSeed(seed, actionNode, situation)
           : undefined;
       if (priming) await priming;
       const spot = generatePostflopSpot({
@@ -2016,102 +2040,6 @@ function actionLabel(action: PostflopAction): string {
  * walk the catalogue in order rather than sample it.
  */
 /**
- * Vyřešený flop pro tenhle seed, nebo nic, když žádný není načtený.
- *
- * Stejná úvaha jako u turnu a stejně měřená: dodává se 47 flopových rodin a
- * trenažér rozdával náhodnou desku, takže se na vyřešenou trefil zhruba nikdy -
- * změřeno 0,0 % z 1500 rozdaných flopů - **a to číslo bylo chybné**: měřicí
- * skript se ptal na neexistující pole a hlásil nulu vždy. Po opravě
- * (26. 8. 2026) je to u flopu 18,8 %, protože chartové packy odpovídají na
- * třídu textury. Katalog má smysl dál - vyřešený flop odpovídá na konkrétní
- * desku, kterou někdo spočítal, a na tu se hráč náhodou netrefí.
- */
-function solvedFlopConfigForSeed(seed: number, actionNode: PostflopActionNode) {
-  const candidates = solvedFlopSpots().filter((spot) => spot.actionNode === actionNode);
-  if (candidates.length === 0) return undefined;
-  const rng = mulberry32(seed);
-  rng();
-  const spot = pickSolvedFlopSpot(rng(), candidates);
-  if (spot === undefined) return undefined;
-  return solvedFlopSpotConfig(spot, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS, rng());
-}
-
-/**
- * Vyřešený river pro tenhle seed, jako **jednotlivý spot**.
- *
- * Katalog se dosud používal jen uvnitř linky. Hráč, který si vybral river jako
- * samostatný dril, dostával náhodnou pětikartovou desku - a šance, že padne
- * jedna z 908 vyřešených, je mizivá. Sedmnáct riverových rodin se dodávalo,
- * stahovalo a nikdo je nemohl potkat.
- */
-function pickRiverSpotForSeed(seed: number, actionNode: PostflopActionNode) {
-  const candidates = solvedRiverSpots().filter((spot) => spot.actionNode === actionNode);
-  if (candidates.length === 0) return undefined;
-  const rng = mulberry32(seed);
-  rng();
-  const spot = pickSolvedRiverSpot(rng(), candidates);
-  // `rng` jde zpátky s ním: konfigurace si z něj bere další los, takže dva
-  // nezávislé generátory by daly jinou desku než jaké se předtím načetla EV.
-  return spot === undefined ? undefined : { spot, rng };
-}
-
-function solvedRiverConfigForSeed(seed: number, actionNode: PostflopActionNode) {
-  const picked = pickRiverSpotForSeed(seed, actionNode);
-  if (picked === undefined) return undefined;
-  return solvedRiverSpotConfig(
-    picked.spot, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS, picked.rng(),
-  );
-}
-
-/**
- * Načíst tabulku EV rodiny, ze které se bude rozdávat, a teprve pak rozdat.
- *
- * Vlastní práce bydlí v `riverEvPrefetch`, protože po ní sahá i
- * `mtt:post-answer` - brána musí měřit tutéž cestu, kterou jde produkt.
- * Kdyby to zůstalo tady, měřilo by se něco vedle.
- */
-function primeRiverEvForSeed(
-  seed: number,
-  actionNode: PostflopActionNode,
-): Promise<unknown> | undefined {
-  const picked = pickRiverSpotForSeed(seed, actionNode);
-  return picked === undefined ? undefined : primeRiverEvForPack(picked.spot.packId);
-}
-
-/**
- * Spot, ze kterého se turn rozdá - jedno místo pro obojí.
- *
- * Předčítání tabulky i samotné rozdání musí sáhnout po **téže** rodině. Kdyby
- * si každé losovalo zvlášť, předčetla by se jiná než ta rozdaná a EV by chyběla
- * přesně tak, jako by řetěz nebyl - a zvenku by to vypadalo stejně.
- */
-function pickTurnSpotForSeed(seed: number, actionNode: PostflopActionNode) {
-  const candidates = solvedTurnSpots().filter((spot) => spot.actionNode === actionNode);
-  if (candidates.length === 0) return undefined;
-  const rng = mulberry32(seed);
-  rng();
-  const spot = pickSolvedTurnSpot(rng(), candidates);
-  return spot === undefined ? undefined : { spot, rng };
-}
-
-function solvedTurnConfigForSeed(seed: number, actionNode: PostflopActionNode) {
-  const picked = pickTurnSpotForSeed(seed, actionNode);
-  if (picked === undefined) return undefined;
-  return solvedTurnSpotConfig(
-    picked.spot, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS, picked.rng(),
-  );
-}
-
-/** Totéž co `primeRiverEvForSeed`, jen o ulici dřív. */
-function primeTurnEvForSeed(
-  seed: number,
-  actionNode: PostflopActionNode,
-): Promise<unknown> | undefined {
-  const picked = pickTurnSpotForSeed(seed, actionNode);
-  return picked === undefined ? undefined : primeTurnEvForFamily(picked.spot.sourceDirectory);
-}
-
-/**
  * Konfigurace linky postavená kolem vyřešeného turnu.
  *
  * Linka rozdávala náhodnou pětikartovou desku a resolver ji - správně - odmítal:
@@ -2188,24 +2116,6 @@ function solvedLineConfigForSeed(seed: number): {
 
 function parseStreet(value: string): PostflopStreet {
   return value === "TURN" || value === "RIVER" ? value : "FLOP";
-}
-
-function selectedActionNode(
-  street: PostflopStreet,
-  situation: string,
-  potType: PostflopPotType | undefined,
-): PostflopActionNode {
-  if (situation === "facing-bet") {
-    if (street === "FLOP") return "FLOP_FACING_BET";
-    if (street === "TURN") return "TURN_FACING_BET";
-    return "RIVER_FACING_BET";
-  }
-  if (situation === "oop-lead" && street === "TURN") return "TURN_OOP_LEAD";
-  if (street === "TURN") return "TURN_BARREL";
-  if (street === "RIVER") return "RIVER_PRESSURE";
-  return potType === "THREE_BET_POT"
-    ? "THREE_BET_POT_CBET"
-    : "SINGLE_RAISED_POT_CBET";
 }
 
 function parseSeed(raw: string): number | null {

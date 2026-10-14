@@ -1,6 +1,8 @@
 import {
   POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS,
   generatePostflopSpot,
+  type PostflopPositionContext,
+  type PostflopPotType,
   type PostflopStreet,
 } from "../src/core/postflopGenerator";
 import { createDefaultPostflopStrategyResolver } from "../src/data/ranges/postflopStrategyRegistry";
@@ -10,37 +12,47 @@ import { DISPLAYABLE_ACTION_EV_SOURCES, isActionEvSetUsable } from "../src/core/
 import { loadSolvedFlopPacks } from "../src/data/ranges/flopSolvedStrategyPacks";
 import { loadAllSolvedTurnPacks } from "../src/data/ranges/turnSolvedStrategyPacks";
 import { loadSolvedRiverPacks } from "../src/data/ranges/riverSolvedStrategyPacks";
+import {
+  primeRiverEvForSeed,
+  primeTurnEvForSeed,
+  selectedActionNode,
+  solvedFlopConfigForSeed,
+  solvedRiverConfigForSeed,
+  solvedTurnConfigForSeed,
+  type DealSituation,
+} from "../src/data/ranges/solvedSpotDealing";
 
 /**
- * Co hráč dostane, **když si situaci vybere sám**.
+ * Co hráč dostane, **když si situaci vybere sám** - před opravou a po ní.
  *
  *   npm run mtt:picked-situation
  *
- * ## Proč to musí vzniknout
+ * ## Proč to vzniklo
  *
  * `mtt:post-answer` měří doručení „rozdáno z katalogu, tak jak rozdává
- * trenažér" - a to je pravda jen pro **jednu ze dvou cest**. V
- * `postflopView.ts` stojí:
+ * trenažér" - a do 14. 10. 2026 to platilo jen pro **jednu ze dvou cest**.
+ * Pohled měl `dealsSolved = options.initialPositionContext == null`, takže
+ * katalog vyřešených spotů obešel, jakmile si hráč situaci vybral, a losoval
+ * desku. Vrstva 0 orchestrace („dojde odpověď k hráči") tak měla slepé místo
+ * přesně tam, kde hráč něco volí.
  *
- *     const dealsSolved = options.initialPositionContext == null;
+ * Nalezeno, když vlastník poslal snímek matice barvené podle **síly ruky**
+ * místo podle akce a napsal, že to nevypadá, že máme solving hotový.
+ * `mtt:post-answer` přitom hlásil matici podle akce ve 100 % spotů - obojí byla
+ * pravda, každé o jiné cestě.
  *
- * Katalog vyřešených spotů se tedy použije jen tehdy, když si hráč situaci
- * **nevybral**. Jakmile si ji vybere, deska se losuje a katalog se obchází -
- * a komentář o pár řádků níž říká, co to znamená: „bez katalogu se na
- * vyřešenou desku trefil hráč v **0,0 %** rozdání", u flopu 18,8 %, protože
- * tam odpovídají chartové packy na třídu textury.
+ * ## Proč to rozdává přes `solvedSpotDealing`
  *
- * Vrstva 0 orchestrace („dojde odpověď k hráči") tedy měla slepé místo přesně
- * tam, kde hráč něco volí. Nalezeno 14. 10. 2026, když vlastník poslal snímek
- * matice barvené podle **síly ruky** místo podle akce a napsal, že to
- * nevypadá, že máme solving hotový. `mtt:post-answer` přitom hlásí matici
- * podle akce ve 100 % spotů - obojí je pravda, každé o jiné cestě.
+ * Rozdávání z katalogu je od té opravy **sdílený modul**, který volá pohled
+ * i tenhle skript. Dřív byly ty funkce soukromé v pohledu a brána rozdávala
+ * kopií - a kopie se rozejde při první změně, přesně jak se to stalo.
  *
- * ## Co se měří
+ * ## Co se tiskne
  *
- * Totéž co u katalogové cesty, aby se ta dvě čísla dala položit vedle sebe:
- * podíl spotů, kde pravidlo nese kbelíky (a matice se tedy barví podle akce),
- * kde dojde EV akcí, a kde dojde cena.
+ * Dva sloupce pro každou metriku: „bez katalogu" je cesta do 14. 10. (vybraná
+ * situace, losovaná deska), „s katalogem" je dnešní cesta (katalog filtrovaný
+ * podle vzoru a hloubky, a teprve když nic nemá, losovaná deska). Rozdíl je
+ * tedy měřený dopad opravy, ne odhad.
  */
 
 /*
@@ -55,111 +67,141 @@ await loadSolvedRiverPacks("FULL_RING_9|REGULAR|CHIP_EV|RIVER|OFF");
 
 const STREETS: readonly PostflopStreet[] = ["FLOP", "TURN", "RIVER"];
 const SPOTS_PER_STREET = 300;
+/** Hloubky, které hráč ve filtrech vybírá; 40 je i výchozí, když nevybere nic. */
+const DEPTHS = [25, 40, 50, 100] as const;
+/** Volby v nabídce situací pohledu, viz `selectedActionNode`. */
+const SITUATIONS = ["initiative", "facing-bet", "oop-lead"] as const;
 
-interface Row {
-  street: string;
+interface Tally {
   dealt: number;
   withBuckets: number;
   actionEv: number;
   priced: number;
-  solvedSource: number;
 }
 
-function measure(street: PostflopStreet): Row {
-  const row: Row = {
-    street,
-    dealt: 0,
-    withBuckets: 0,
-    actionEv: 0,
-    priced: 0,
-    solvedSource: 0,
-  };
-  const resolver = createDefaultPostflopStrategyResolver();
+const emptyTally = (): Tally => ({ dealt: 0, withBuckets: 0, actionEv: 0, priced: 0 });
 
-  for (let index = 0; index < SPOTS_PER_STREET; index += 1) {
-    // Situace se bere z téhož seznamu, který nabízí UI, a cyklicky, aby se
-    // neměřila jedna oblíbená dvojice sedaček.
-    const context = POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS[
-      index % POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS.length
-    ];
-    let generated;
-    try {
-      generated = generatePostflopSpot({
-        seed: 2000 + index,
-        street,
-        strategyResolver: resolver,
-        // Tohle je ten rozdíl proti `mtt:post-answer`: vybraná situace a
-        // **žádná konfigurace z katalogu**, tedy přesně stav, do kterého se
-        // produkt dostane po „Change situation".
-        positionContext: context,
-      } as never);
-    } catch {
-      continue;
-    }
-    if (generated.strategySource === undefined) continue;
+function potTypeOf(context: PostflopPositionContext): PostflopPotType {
+  return String(context.positionPattern).startsWith("3BP_") ? "THREE_BET_POT" : "SINGLE_RAISED";
+}
 
-    const spot = postflopSpotToTrainingSpot(generated);
-    row.dealt += 1;
+async function deal(
+  street: PostflopStreet,
+  index: number,
+  useCatalogue: boolean,
+): Promise<ReturnType<typeof postflopSpotToTrainingSpot> | undefined> {
+  const contexts = POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS;
+  const context = contexts[index % contexts.length];
+  const stackBB = DEPTHS[Math.floor(index / contexts.length) % DEPTHS.length];
+  const potType = potTypeOf(context);
+  const actionNode = selectedActionNode(street, SITUATIONS[index % SITUATIONS.length], potType);
+  const seed = 2000 + index;
 
-    const source = spot.explanation.source;
-    if (source.kind === "STRATEGY_PACK") row.solvedSource += 1;
+  const situation: DealSituation = { positionPattern: context.positionPattern, stackBB };
 
-    // Kbelíky jsou to, co `postflopRangeMatrixView` potřebuje, aby matici
-    // obarvil podle akce; bez nich spadne na sílu ruky. Čtou se **stejnou
-    // cestou** jako v `mtt:post-answer` (`source.rangeBuckets`), jinak by se
-    // ta dvě čísla nedala položit vedle sebe - a při prvním pokusu jsem je
-    // bral z `explanation.buckets`, což je pole, které neexistuje, takže
-    // vycházela nula i tam, kde kbelíky jsou.
-    const buckets = source.kind === "STRATEGY_PACK" ? source.rangeBuckets ?? [] : [];
-    if (buckets.length > 0) row.withBuckets += 1;
+  // Tatáž větev jako v `postflopView.ts` - konfigurace z katalogu, a když
+  // pro situaci nic nemá, prázdný objekt a losovaná deska.
+  const config = useCatalogue
+    ? (street === "TURN"
+      ? solvedTurnConfigForSeed(seed, actionNode, situation)
+      : street === "FLOP"
+        ? solvedFlopConfigForSeed(seed, actionNode, situation)
+        : solvedRiverConfigForSeed(seed, actionNode, situation)) ?? {}
+    : {};
 
-    // Stejná podmínka jako v `mtt:post-answer`: ne „tabulka existuje", ale
-    // „bublina se ukáže". Jinak by se ta dvě čísla nedala porovnat.
-    const legal = spot.actions.map((item) => item.action);
-    if (isActionEvSetUsable(spot.actionEvs, legal, DISPLAYABLE_ACTION_EV_SOURCES)) {
-      row.actionEv += 1;
-    }
-    if (postflopDecisionPrices(spot).length > 0) row.priced += 1;
+  if (useCatalogue) {
+    const priming = street === "RIVER"
+      ? primeRiverEvForSeed(seed, actionNode, situation)
+      : street === "TURN"
+        ? primeTurnEvForSeed(seed, actionNode, situation)
+        : undefined;
+    if (priming) await priming;
   }
-  return row;
+
+  try {
+    const generated = generatePostflopSpot({
+      seed,
+      street,
+      potType,
+      actionNode,
+      effectiveStackBB: stackBB,
+      positionContext: context,
+      strategyResolver: createDefaultPostflopStrategyResolver(),
+      ...(config as object),
+    } as never);
+    if (generated.strategySource === undefined) return undefined;
+    return postflopSpotToTrainingSpot(generated);
+  } catch {
+    return undefined;
+  }
+}
+
+function count(tally: Tally, spot: ReturnType<typeof postflopSpotToTrainingSpot>): void {
+  tally.dealt += 1;
+  const source = spot.explanation.source;
+  // Stejná cesta jako `mtt:post-answer`: `source.rangeBuckets`, ne
+  // `explanation.buckets` - to pole neexistuje a dává nulu i tam, kde kbelíky
+  // jsou (spáleno 14. 10. 2026).
+  const buckets = source.kind === "STRATEGY_PACK" ? source.rangeBuckets ?? [] : [];
+  if (buckets.length > 0) tally.withBuckets += 1;
+  const legal = spot.actions.map((item) => item.action);
+  if (isActionEvSetUsable(spot.actionEvs, legal, DISPLAYABLE_ACTION_EV_SOURCES)) {
+    tally.actionEv += 1;
+  }
+  if (postflopDecisionPrices(spot).length > 0) tally.priced += 1;
 }
 
 function pct(part: number, total: number): string {
   return total === 0 ? "-" : `${((100 * part) / total).toFixed(1)} %`;
 }
 
-function main(): void {
+async function main(): Promise<void> {
   console.log("Co hráč dostane, když si situaci vybere sám");
-  console.log(`vzorek: ${SPOTS_PER_STREET} pokusů na ulici, situace z nabídky UI`);
+  console.log(
+    `vzorek: ${SPOTS_PER_STREET} pokusů na ulici; situace z nabídky UI, hloubky `
+    + `${DEPTHS.join("/")} bb, volby ${SITUATIONS.join("/")}`,
+  );
   console.log("");
   console.log(
+    "".padEnd(7)
+    + "matice podle akce".padStart(26)
+    + "EV akcí".padStart(22)
+    + "cena akce".padStart(22),
+  );
+  console.log(
     "ulice".padEnd(7)
-    + "rozdáno".padStart(9)
-    + "vyřešený zdroj".padStart(16)
-    + "matice akcí".padStart(13)
-    + "EV akcí".padStart(10)
-    + "cena".padStart(9),
+    + "bez katalogu".padStart(14) + "s katalogem".padStart(12)
+    + "bez katalogu".padStart(14) + "s katalogem".padStart(12)
+    + "bez katalogu".padStart(14) + "s katalogem".padStart(12),
   );
 
-  const rows = STREETS.map(measure);
-  for (const row of rows) {
+  for (const street of STREETS) {
+    const before = emptyTally();
+    const after = emptyTally();
+    for (let index = 0; index < SPOTS_PER_STREET; index += 1) {
+      const old = await deal(street, index, false);
+      if (old !== undefined) count(before, old);
+      const fresh = await deal(street, index, true);
+      if (fresh !== undefined) count(after, fresh);
+    }
     console.log(
-      row.street.padEnd(7)
-      + String(row.dealt).padStart(9)
-      + pct(row.solvedSource, row.dealt).padStart(16)
-      + pct(row.withBuckets, row.dealt).padStart(13)
-      + pct(row.actionEv, row.dealt).padStart(10)
-      + pct(row.priced, row.dealt).padStart(9),
+      street.padEnd(7)
+      + pct(before.withBuckets, before.dealt).padStart(14)
+      + pct(after.withBuckets, after.dealt).padStart(12)
+      + pct(before.actionEv, before.dealt).padStart(14)
+      + pct(after.actionEv, after.dealt).padStart(12)
+      + pct(before.priced, before.dealt).padStart(14)
+      + pct(after.priced, after.dealt).padStart(12),
     );
   }
 
   console.log("");
   console.log(
-    "Porovnej s `npm run mtt:post-answer`, který měří katalogovou cestu.\n"
-    + "Rozdíl mezi těmi dvěma tabulkami není vada kódu - je to **cena volby**:\n"
-    + "jakmile si hráč vybere situaci, deska se losuje a vyřešený obsah\n"
-    + "odpovídá jen na desky, které solver skutečně spočítal.",
+    "„Bez katalogu“ je cesta do 14. 10. 2026: vybraná situace, losovaná deska.\n"
+    + "„S katalogem“ je dnešní: katalog filtrovaný podle vzoru a hloubky, a\n"
+    + "losovaná deska jen tam, kde pro tu situaci vyřešený obsah není.\n"
+    + "Zbytek do 100 % je otázka šířky solvingu, ne cesty.",
   );
 }
 
-main();
+await main();
