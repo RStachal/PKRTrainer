@@ -485,10 +485,16 @@ dvakrát zvedali (dnes 8 GB pro typecheck, 12 GB pro build) a druhá varianta by
 přes ni přetekla - tedy přesně „každým rozvojem pomalejší", jen v čase vývoje,
 ne u hráče.
 
-U hráče je to podobné o patro jinde: ty JSONy se balí jako **JS moduly** (turnová
-EV jedné rodiny až 1 047 kB), takže je telefon parsuje jako kód. Rychlost u hráče
-přitom dnes **neměří žádná vrstva** orchestrace - vrstva 0 měří, co dojde, ne za
-jak dlouho.
+~~U hráče je to podobné o patro jinde: ty JSONy se balí jako **JS moduly**
+(turnová EV jedné rodiny až 1 047 kB), takže je telefon parsuje jako kód.~~
+**Vyvráceno týž večer, a napsal jsem to vlastníkovi dřív, než jsem to ověřil.**
+`vite.config.ts` má `json: { stringify: true }` (deník 275, kvůli paměti buildu)
+a skutečný chunk začíná `const l=JSON.parse('{…')` - telefon tedy data **už**
+parsuje rychlou cestou `JSON.parse`. Formát doručení u hráče problém není.
+
+Co platí: rychlost u hráče dnes **neměří žádná vrstva** orchestrace - vrstva 0
+měří, co dojde, ne za jak dlouho. Jaký je skutečný čas od „Next spot" po spot na
+telefonu, nikdo neví.
 
 **Postup, a v tomhle pořadí:**
 
@@ -498,12 +504,28 @@ jak dlouho.
    chunk) i za tepla, se zpomaleným CPU a sítí jako na telefonu. Bez toho se
    „nebude pomalejší" nedá hlídat, a to je na tomhle projektu ta lekce pořád
    dokola.
-2. **Data jako JSON assety, ne moduly.** Načítat přes `?url` a `fetch` (v Node
-   přes souborový systém) s typovaným loaderem a lehkou kontrolou tvaru místo
-   `import()`. Odhadovaný strop zisku je ta tabulka výš - typecheck z 6,4 GB na
-   desetinu - a telefon parsuje `JSON.parse` místo kódu. Generátory se změní,
-   ne ruční místa; dotkne se to registru líných modulů, rozpočtu knihovny
-   (počítá JS chunky) a service workeru, takže po krocích a s měřením z bodu 1.
+2. **TypeScriptu data nedávat - a Vite nechat, jak je.** ~~Data jako JSON assety
+   přes `fetch`~~ - to byl zbytečně velký zásah, když se ukázalo, že runtime
+   problém nemá. Doměřeno týž večer:
+   - Všech **267 importů JSONu je v pěti generovaných manifestech**
+     (`flopSolvedManifest`, `turnSolvedManifest`, `turnEvManifest`,
+     `riverSolvedManifest`, `riverEvManifest`). Sonda s vypnutým
+     `resolveJsonModule` dala 267 chyb a **všechny tam** - nic jiného v kódu
+     na odvozených typech dat nezávisí.
+   - A manifesty ty typy hned zahazují: `module.default as unknown as
+     TurnEvPack`. TypeScript tedy počítá 6 GB typů, které **nikdo nepoužije**.
+   - Zástupná deklarace `declare module "*.json"` relativní importy nepřebije
+     (TS2732 zůstává), takže to nejde jen konfigurací.
+
+   Postup: generátory manifestů emitují `import("./x.json?raw")` a
+   `JSON.parse(module.default)`; k tomu jednořádková deklarace pro `*?raw`
+   (`vite/client` v `types` není). U hráče to dělá tutéž práci jako dnešní
+   `json.stringify` - `JSON.parse` jednoho řetězce - takže runtime se nezmění.
+   **Rizika, která se musí ověřit před nasazením:** `manualChunks` jmenuje
+   chunky přes `mttProductionChunkNameForModuleId(id)` a s `?raw` se id změní
+   (rozpočet knihovny podle jmen počítá); a každý `load()` by JSON parsoval
+   znovu, takže je potřeba ověřit, že loadery drží slib v mezipaměti.
+   Očekávaný zisk podle sondy: typecheck **6,37 GB -> ~0,5 GB, 38,8 -> 5 az 8 s**.
 3. **Dělit knihovnu po variantách** (odstavec výš) - nutné dřív, než začne
    vznikat druhá varianta.
 
