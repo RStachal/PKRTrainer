@@ -218,14 +218,42 @@ rozdává trenažér" - což byla pravda pro jednu větev a nikdo ji nepřeměř
 přibyla druhá. Je to tatáž třída vady jako celá vrstva 0: měřilo se něco, co
 vypadá jako doručení, ale je to doručení **po jedné cestě**.
 
-**A nestojí to na nocích solveru.** Katalog má 3 723 vyřešených flopových spotů
-ve 34 patternech; UI nabízí 61 situací v 53 patternech a **35 z těch 61
-(57,4 %) v katalogu obsah má**. Rozdíl mezi dnešními 0 % a tím je filtr, ne
-solve: při vybrané situaci filtrovat katalog podle `positionPattern` místo toho,
-aby se obcházel. Měří to `npm run mtt:catalogue-situations`.
+**~~A nestojí to na nocích solveru.~~ Stálo to na filtru - ale ne na tom, který
+jsem napsal napoprvé.** Tady stálo „35 z 61 situací (57,4 %) v katalogu obsah
+má, rozdíl je filtr podle `positionPattern`". To číslo bylo z **jiného seznamu**,
+než co vyrobí výběr hráče: měřil jsem nad `POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS`,
+kdežto hráč situaci skládá z filtrů (`postflopIntentFromFilters`). Doměřeno
+cestou produktu, přes všech 45 kombinací pozic, které filtry umí, a vyšly
+**dvě další mezery**, které ten seznam schovával:
 
-Zbylých 26 situací obsah nemá; tam je fallback na sílu ruky správná odpověď
-a je to otázka šířky solvingu, tedy nocí.
+1. **Obrana velkého blindu dostává hrubý vzor.** Filtry dávají `EP_VS_BB` pro
+   kteréhokoli otvírače od UTG po CO, a `BTN_VS_BB`, `SB_VS_BB` - vzory
+   texturových pilotů. Katalog je vede jemně (`SRP_CO_VS_BB`), takže filtr
+   podle vzoru nesedl **u žádného z deseti** výběrů „X proti BB", přestože
+   jemný obsah pro každý z nich je. Řešeno převodem jen pro hledání v katalogu
+   (`cataloguePatternFor`); kontext i záloha na piloty zůstávají beze změny.
+2. **Výběr „otvírač + SB" padal na `null`** a pohled pak rozdal libovolnou
+   situaci z celého katalogu - hráč chtěl CO proti SB a dostal cokoli, beze
+   slova. Sedm ze 45 výběrů. Doplněna větev v `postflopIntent.ts`.
+
+Filtr bere vedle vzoru i **hloubku** (`effectiveStackBB`): filtry ji fixují
+a bez ní by hráč, který si vybral 25 bb, dostal spot ze 100 bb.
+
+**Změřený dopad** (`npm run mtt:picked-situation`, 45 výběrů pozic krát hloubky
+25/40/50/100 bb, všechny tři volby nabídky situací):
+
+| | matice podle akce | EV akcí | cena akce |
+|---|---|---|---|
+| FLOP | 0 → **44,3 %** | 0 → 0 | 0 → **14,2 %** |
+| TURN | 0 → **21,6 %** | 0 → **16,5 %** | 0 → **9,7 %** |
+| RIVER | 0 → **27,8 %** | 0 → **19,3 %** | 0 → **9,7 %** |
+
+Zahozených voleb **8 → 1** (zbyl samotný BB, který je skutečně nejednoznačný).
+Zbytek do 100 % je **šířka solvingu**: pro tu kombinaci vzoru, hloubky a uzlu
+vyřešený obsah není, a losovaná deska s pilotem je správná odpověď.
+
+Co katalog obsahuje po ulicích, hloubkách a uzlech, tiskne
+`npm run mtt:catalogue-situations`.
 
 **Pravidlo pro příště:** když přibude cesta, kterou se obsah k hráči dostává,
 musí přibýt i řádek ve vrstvě 0. Jinak brána měří tu starou a zůstává zelená.

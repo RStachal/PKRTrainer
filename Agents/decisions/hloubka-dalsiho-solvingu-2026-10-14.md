@@ -1,4 +1,27 @@
-# Co solvovat dál — rozhodnutí o hloubce — k vyplnění vlastníkem
+# Co solvovat dál — rozhodnutí o hloubce
+
+> **Aktualizace 14. 10. 2026 odpoledne — tenhle dokument už nevyžaduje tvoji
+> odpověď.** Jeho premisa („obě automatické osy jsou vyčerpané") byla **chybná**:
+> `mtt:seat-pair-expansion` počítal „co už máme" bez hloubky a z adresáře
+> rozkladu místo checkpointů, takže na 40 a 50 bb chybějící dvojice nenabídl
+> vůbec. Opraveno (deník 308).
+>
+> | | rodin | desek | nocí |
+> |---|---|---|---|
+> | **40 bb — nastagováno, běží od dnešní noci** | 16 | 96 | ve frontě celkem 4,2 |
+> | 50 bb — připraveno, nastaguje se, až 40 bb dojíždí | 18 | 108 | ~4,7 |
+>
+> Šířka na 40 i 50 bb je tedy zajištěná bez rozhodnutí. Pod pravomocí, kterou
+> jsi mi dal 14. 10. („nechám na tvém profesionálním rozhodnutí další kroky"),
+> to pořadí řídím já. Otevřené zůstávají jen 3BP sonda a přesolvení 100 bb
+> z července — obojí není pilné a rozhodnu je, až 40 a 50 bb dojedou.
+>
+> Text níž zůstává, jak byl napsán ráno, aby bylo vidět, z čeho se vycházelo.
+> Čísla o dvojicích v něm platí; závěr „je to rozpočtové rozhodnutí" ne.
+
+---
+
+# (původní znění z rána) — k vyplnění vlastníkem
 
 **Vznik:** 14. 10. 2026 ráno, po noci, která frontu snížila na 16 desek
 **Proč teď:** fronta vydrží **0,6 noci**. Dnešní noc ji dojede a zítra nebude na čem jet.
