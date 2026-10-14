@@ -8,6 +8,7 @@ import {
 import type {
   PostflopPositionContext,
   PostflopPotType,
+  PostflopPositionPattern,
 } from "./postflopGenerator";
 
 export interface PostflopIntent {
@@ -88,6 +89,30 @@ function postflopPositionContextFromSortedPositions(
       : epVsBbContext(firstNonBlind);
   }
 
+  /*
+   * Otvírač proti dorovnávajícímu **malému** blindu.
+   *
+   * Do 14. 10. 2026 tu tahle větev chyběla a výběr třeba „CO + SB" spadl až na
+   * `return null`. Pohled pak `null` bere jako „hráč nic nevybral" a rozdá
+   * **cokoli** z celého katalogu - hráč chtěl CO proti SB a dostal třeba UTG
+   * proti BTN, bez jediného slova. Změřeno: 7 ze 45 výběrů pozic, které filtry
+   * umí, takhle tiše propadalo (`npm run mtt:picked-situation`). Vyřešený obsah
+   * přitom pro všech sedm existuje (`SRP_CO_VS_SB` a spol.) - noc 13.-14. 10.
+   * dodala třeba `MTT9_50BB_LJ_SB_SRP`.
+   *
+   * Vzor je rovnou jemný (`SRP_CO_VS_SB`): hrubý pilotní vzor pro malý blind
+   * jako dorovnávajícího neexistuje, takže není co zachovávat. Jen pro single
+   * raised pot - „otvírač a SB" ve 3bet potu je jiný spot a zůstává, jak byl.
+   */
+  if (
+    firstNonBlind
+    && positions.includes("SB")
+    && !positions.includes("BB")
+    && potType !== "THREE_BET_POT"
+  ) {
+    return openerVsSbCallerContext(firstNonBlind);
+  }
+
   if (positions.length === 1) {
     const only = positions[0];
     if (only === "BTN") return btnVsBbContext();
@@ -155,6 +180,21 @@ function epVsBbContext(heroPosition: Position): PostflopPositionContext {
     inPosition: true,
     callerType: "BIG_BLIND",
     positionPattern: "EP_VS_BB",
+  };
+}
+
+/** Otvírač proti malému blindu, který dorovnal; zrcadlo `epVsBbContext`. */
+function openerVsSbCallerContext(heroPosition: Position): PostflopPositionContext {
+  return {
+    heroPosition,
+    villainPosition: "SB",
+    aggressorPosition: heroPosition,
+    callerPosition: "SB",
+    // Malý blind jedná po flopu první proti každé sedačce, takže otvírač je
+    // v pozici - stejně jako proti velkému blindu.
+    inPosition: true,
+    callerType: "OUT_OF_POSITION_CALLER",
+    positionPattern: `SRP_${heroPosition.replace("+", "_")}_VS_SB` as PostflopPositionPattern,
   };
 }
 

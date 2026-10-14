@@ -1,7 +1,7 @@
 import { POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS } from "../src/core/postflopGenerator";
-import { solvedFlopSpots } from "../src/data/ranges/solvedFlopSpotCatalogue";
-import { solvedTurnSpots } from "../src/data/ranges/solvedTurnSpotCatalogue";
-import { solvedRiverSpots } from "../src/data/ranges/solvedRiverSpotCatalogue";
+import { solvedFlopSpotConfig, solvedFlopSpots } from "../src/data/ranges/solvedFlopSpotCatalogue";
+import { solvedTurnSpotConfig, solvedTurnSpots } from "../src/data/ranges/solvedTurnSpotCatalogue";
+import { solvedRiverSpotConfig, solvedRiverSpots } from "../src/data/ranges/solvedRiverSpotCatalogue";
 import { loadSolvedFlopPacks } from "../src/data/ranges/flopSolvedStrategyPacks";
 import { loadAllSolvedTurnPacks } from "../src/data/ranges/turnSolvedStrategyPacks";
 import { loadSolvedRiverPacks } from "../src/data/ranges/riverSolvedStrategyPacks";
@@ -58,13 +58,29 @@ function main(): void {
   console.log("Vyřešený katalog proti nabídce situací");
   console.log(`UI nabízí ${offered.length} situací v ${offeredPatterns.size} vzorech\n`);
 
-  const streets: [string, readonly CatalogueSpot[]][] = [
+  /*
+   * Spot, ke kterému `positionContextForSolvedSeats` nenajde kontext, se
+   * **nedá rozdat vůbec** - ani z výchozí katalogové cesty. Vylosuje se,
+   * konfigurace vrátí `undefined` a pohled tiše spadne na losovanou desku.
+   * `mtt:post-answer` takové spoty vyřazuje ze jmenovatele
+   * (`if (config === undefined) continue`), takže jeho 100 % se počítá jen
+   * z toho, co se rozdat dá. Tady se to počítá zvlášť.
+   */
+  const config = {
+    FLOP: (spot: unknown) => solvedFlopSpotConfig(spot as never, offered),
+    TURN: (spot: unknown) => solvedTurnSpotConfig(spot as never, offered),
+    RIVER: (spot: unknown) => solvedRiverSpotConfig(spot as never, offered),
+  } as const;
+
+  const streets: ["FLOP" | "TURN" | "RIVER", readonly CatalogueSpot[]][] = [
     ["FLOP", solvedFlopSpots() as unknown as readonly CatalogueSpot[]],
     ["TURN", solvedTurnSpots() as unknown as readonly CatalogueSpot[]],
     ["RIVER", solvedRiverSpots() as unknown as readonly CatalogueSpot[]],
   ];
 
   for (const [street, spots] of streets) {
+    const undealable = spots.filter((spot) => config[street](spot) === undefined);
+    const undealableByPattern = countBy(undealable, (spot) => spot.positionPattern);
     const patterns = new Set(spots.map((spot) => spot.positionPattern));
     const covered = offered.filter((ctx) => patterns.has(String(ctx.positionPattern))).length;
     console.log(`${street}: ${spots.length} spotů, ${patterns.size} vzorů`);
@@ -78,6 +94,11 @@ function main(): void {
     if (orphan.length > 0) {
       console.log(`  vzory, které UI nenabízí (vyřešené a nedosažitelné): ${orphan.join(", ")}`);
     }
+    console.log(
+      `  nedá se rozdat vůbec (chybí kontext): ${undealable.length} z ${spots.length}`
+      + ` = ${spots.length === 0 ? "-" : ((100 * undealable.length) / spots.length).toFixed(1)} %`,
+    );
+    if (undealable.length > 0) console.log(`    po vzorech: ${line(undealableByPattern)}`);
     console.log("");
   }
 }

@@ -4,6 +4,7 @@ import { loadSolvedFlopPacks } from "../../src/data/ranges/flopSolvedStrategyPac
 import { loadAllSolvedTurnPacks } from "../../src/data/ranges/turnSolvedStrategyPacks";
 import { loadSolvedRiverPacks } from "../../src/data/ranges/riverSolvedStrategyPacks";
 import {
+  cataloguePatternFor,
   pickRiverSpotForSeed,
   pickTurnSpotForSeed,
   selectedActionNode,
@@ -101,6 +102,22 @@ describe("rozdávání z katalogu podle vybrané situace", () => {
     const anywhere = [...Array(20).keys()].some((seed) =>
       pickTurnSpotForSeed(seed, "TURN_FACING_BET") !== undefined);
     expect(anywhere).toBe(true);
+  });
+
+  it("hrubý vzor obrany blindu se pro katalog převede na jemný", () => {
+    // Filtry dávají u obrany BB hrubé `EP_VS_BB` pro kteréhokoli otvírače od
+    // UTG po CO; katalog vede `SRP_CO_VS_BB`. Bez převodu všech deset výběrů
+    // „X proti BB" vyřešený obsah míjelo - přestože ho pro každý z nich máme.
+    const ctx = (pattern: string, aggressor: string, caller: string) => ({
+      positionPattern: pattern as never, aggressorPosition: aggressor, callerPosition: caller,
+    });
+    expect(cataloguePatternFor(ctx("EP_VS_BB", "CO", "BB"))).toBe("SRP_CO_VS_BB");
+    expect(cataloguePatternFor(ctx("EP_VS_BB", "UTG+1", "BB"))).toBe("SRP_UTG_1_VS_BB");
+    expect(cataloguePatternFor(ctx("BTN_VS_BB", "BTN", "BB"))).toBe("SRP_BTN_VS_BB");
+    expect(cataloguePatternFor(ctx("SB_VS_BB", "SB", "BB"))).toBe("SRP_SB_VS_BB");
+    // Jemné vzory se nechávají být - i 3bet pot, kde agresor není otvírač.
+    expect(cataloguePatternFor(ctx("SRP_LJ_VS_HJ", "LJ", "HJ"))).toBe("SRP_LJ_VS_HJ");
+    expect(cataloguePatternFor(ctx("3BP_HJ_VS_LJ", "LJ", "HJ"))).toBe("3BP_HJ_VS_LJ");
   });
 
   it("uzel rozhodnutí se volí stejně, jak ho volí nabídka situací", () => {

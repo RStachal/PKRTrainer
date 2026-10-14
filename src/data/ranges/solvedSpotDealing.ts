@@ -71,6 +71,37 @@ export interface DealSituation {
   stackBB?: number;
 }
 
+/**
+ * Vzor, pod kterým katalog vede vyřešený obsah pro vybranou situaci.
+ *
+ * ## Proč to nejde vzít z kontextu přímo
+ *
+ * Filtry (`postflopIntentFromFilters`) staví u obrany velkého blindu **hrubé**
+ * vzory: `EP_VS_BB` pro kteréhokoli otvírače od UTG po CO, `BTN_VS_BB`,
+ * `SB_VS_BB`. Jsou to vzory texturových pilotů a záloha na ně spoléhá, takže je
+ * kontext měnit nesmí. Katalog ale vede vyřešené spoty **jemně**:
+ * `SRP_CO_VS_BB`, `SRP_HJ_VS_BB` atd.
+ *
+ * Změřeno 14. 10. 2026 přes všech 45 kombinací pozic, které filtry umí: všech
+ * deset „X proti BB" dostalo hrubý vzor, který v katalogu **není** - přestože
+ * jemný pro každou z nich je. Obrana blindů, nejčastější postflopový spot
+ * v turnaji, tedy vyřešený obsah míjela vždy.
+ *
+ * Hrubý vzor ztrácí, kdo otevřel (`EP_VS_BB` je UTG i CO), ale kontext to ví:
+ * agresor a dorovnávající. Z nich se jemný vzor složí - jen pro hledání
+ * v katalogu, kontext samotný zůstává, jak ho filtry postavily.
+ */
+export function cataloguePatternFor(context: {
+  positionPattern: PostflopPositionPattern;
+  aggressorPosition: string;
+  callerPosition: string;
+}): PostflopPositionPattern {
+  const pattern = String(context.positionPattern);
+  if (pattern.startsWith("SRP_") || pattern.startsWith("3BP_")) return context.positionPattern;
+  const seat = (position: string) => position.replace("+", "_");
+  return `SRP_${seat(context.aggressorPosition)}_VS_${seat(context.callerPosition)}` as PostflopPositionPattern;
+}
+
 function matches(
   spot: {
     actionNode: PostflopActionNode;

@@ -39,6 +39,7 @@ import {
   solvedRiversForTurnBoard,
 } from "../data/ranges/solvedRiverSpotCatalogue";
 import {
+  cataloguePatternFor,
   primeRiverEvForSeed,
   primeTurnEvForSeed,
   selectedActionNode,
@@ -399,9 +400,12 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
        * podle vybraného vzoru místo obcházení; když pro ten vzor nic nemá,
        * vrátí `undefined` a spadne se na dosavadní chování s losovanou deskou.
        */
+      // Vzor pro katalog, ne vzor kontextu: filtry u obrany blindu dávají hrubé
+      // `EP_VS_BB`, kdežto katalog vede jemné `SRP_CO_VS_BB` (viz
+      // `cataloguePatternFor`). Kontext pro generátor a zálohu zůstává beze změny.
       const situation = options.initialPositionContext
         ? {
-          positionPattern: options.initialPositionContext.positionPattern,
+          positionPattern: cataloguePatternFor(options.initialPositionContext),
           stackBB: options.initialEffectiveStackBB,
         }
         : undefined;

@@ -1,10 +1,9 @@
 import {
-  POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS,
   generatePostflopSpot,
-  type PostflopPositionContext,
-  type PostflopPotType,
   type PostflopStreet,
 } from "../src/core/postflopGenerator";
+import { postflopIntentFromFilters, type PostflopIntent } from "../src/core/postflopIntent";
+import type { Position, StackBucket } from "../src/core/types";
 import { createDefaultPostflopStrategyResolver } from "../src/data/ranges/postflopStrategyRegistry";
 import { postflopSpotToTrainingSpot } from "../src/core/postflopTrainingSpot";
 import { postflopDecisionPrices } from "../src/core/postflopDecisionPrice";
@@ -19,6 +18,7 @@ import {
   solvedFlopConfigForSeed,
   solvedRiverConfigForSeed,
   solvedTurnConfigForSeed,
+  cataloguePatternFor,
   type DealSituation,
 } from "../src/data/ranges/solvedSpotDealing";
 
@@ -47,6 +47,15 @@ import {
  * i tenhle skript. Dřív byly ty funkce soukromé v pohledu a brána rozdávala
  * kopií - a kopie se rozejde při první změně, přesně jak se to stalo.
  *
+ * ## Situace se berou z filtrů, ne ze seznamu kontextů
+ *
+ * První verze tohohle skriptu brala situace z `POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS`
+ * - a to je **jiný seznam**, než co vyrobí výběr hráče. Filtry
+ * (`postflopIntentFromFilters`) staví u obrany blindu hrubé vzory (`EP_VS_BB`),
+ * kdežto ten seznam má jemné (`SRP_CO_VS_BB`), takže měření hlásilo pokrytí,
+ * které hráč nedostal. Teď se prochází všech 45 kombinací pozic, které filtry
+ * umí, přesně tak, jak je pohled dostane.
+ *
  * ## Co se tiskne
  *
  * Dva sloupce pro každou metriku: „bez katalogu" je cesta do 14. 10. (vybraná
@@ -66,11 +75,20 @@ await loadAllSolvedTurnPacks("FULL_RING_9|REGULAR|CHIP_EV|TURN|OFF");
 await loadSolvedRiverPacks("FULL_RING_9|REGULAR|CHIP_EV|RIVER|OFF");
 
 const STREETS: readonly PostflopStreet[] = ["FLOP", "TURN", "RIVER"];
-const SPOTS_PER_STREET = 300;
-/** Hloubky, které hráč ve filtrech vybírá; 40 je i výchozí, když nevybere nic. */
-const DEPTHS = [25, 40, 50, 100] as const;
+/** Hloubky, které hráč ve filtrech vybírá. */
+const DEPTHS: readonly StackBucket[] = [25, 40, 50, 100] as StackBucket[];
 /** Volby v nabídce situací pohledu, viz `selectedActionNode`. */
 const SITUATIONS = ["initiative", "facing-bet", "oop-lead"] as const;
+const SEATS: readonly Position[] = ["UTG", "UTG+1", "UTG+2", "LJ", "HJ", "CO", "BTN", "SB", "BB"];
+
+/** Všechny výběry pozic, které filtry umí: jedna sedačka nebo dvojice. */
+const POSITION_PICKS: readonly Position[][] = (() => {
+  const picks: Position[][] = SEATS.map((seat) => [seat]);
+  for (let i = 0; i < SEATS.length; i += 1) {
+    for (let j = i + 1; j < SEATS.length; j += 1) picks.push([SEATS[i], SEATS[j]]);
+  }
+  return picks;
+})();
 
 interface Tally {
   dealt: number;
@@ -81,8 +99,11 @@ interface Tally {
 
 const emptyTally = (): Tally => ({ dealt: 0, withBuckets: 0, actionEv: 0, priced: 0 });
 
-function potTypeOf(context: PostflopPositionContext): PostflopPotType {
-  return String(context.positionPattern).startsWith("3BP_") ? "THREE_BET_POT" : "SINGLE_RAISED";
+/** Tentýž záměr, jaký pohled dostane z filtrů. */
+function intentFor(index: number): PostflopIntent {
+  const positions = POSITION_PICKS[index % POSITION_PICKS.length];
+  const bucket = DEPTHS[Math.floor(index / POSITION_PICKS.length) % DEPTHS.length];
+  return postflopIntentFromFilters({ positions, contexts: [], buckets: [bucket] } as never);
 }
 
 async function deal(
@@ -90,14 +111,19 @@ async function deal(
   index: number,
   useCatalogue: boolean,
 ): Promise<ReturnType<typeof postflopSpotToTrainingSpot> | undefined> {
-  const contexts = POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS;
-  const context = contexts[index % contexts.length];
-  const stackBB = DEPTHS[Math.floor(index / contexts.length) % DEPTHS.length];
-  const potType = potTypeOf(context);
-  const actionNode = selectedActionNode(street, SITUATIONS[index % SITUATIONS.length], potType);
+  const intent = intentFor(index);
+  const context = intent.positionContext;
+  // Výběr, ze kterého filtry kontext nesložily, se do téhle cesty nepočítá:
+  // pohled ho bere jako „nic nevybráno" a rozdá z celého katalogu. Počítá
+  // se zvlášť jako zahozená volba.
+  if (context === null) return undefined;
+  const actionNode = selectedActionNode(street, SITUATIONS[index % SITUATIONS.length], intent.potType);
   const seed = 2000 + index;
 
-  const situation: DealSituation = { positionPattern: context.positionPattern, stackBB };
+  const situation: DealSituation = {
+    positionPattern: cataloguePatternFor(context),
+    stackBB: intent.effectiveStackBB,
+  };
 
   // Tatáž větev jako v `postflopView.ts` - konfigurace z katalogu, a když
   // pro situaci nic nemá, prázdný objekt a losovaná deska.
@@ -122,9 +148,10 @@ async function deal(
     const generated = generatePostflopSpot({
       seed,
       street,
-      potType,
+      potType: intent.potType,
       actionNode,
-      effectiveStackBB: stackBB,
+      potBB: intent.potBB,
+      effectiveStackBB: intent.effectiveStackBB,
       positionContext: context,
       strategyResolver: createDefaultPostflopStrategyResolver(),
       ...(config as object),
@@ -155,11 +182,15 @@ function pct(part: number, total: number): string {
   return total === 0 ? "-" : `${((100 * part) / total).toFixed(1)} %`;
 }
 
+const SAMPLE = POSITION_PICKS.length * DEPTHS.length;
+
 async function main(): Promise<void> {
+  const discarded = POSITION_PICKS.filter((positions) =>
+    postflopIntentFromFilters({ positions, contexts: [] } as never).positionContext === null);
   console.log("Co hráč dostane, když si situaci vybere sám");
   console.log(
-    `vzorek: ${SPOTS_PER_STREET} pokusů na ulici; situace z nabídky UI, hloubky `
-    + `${DEPTHS.join("/")} bb, volby ${SITUATIONS.join("/")}`,
+    `vzorek: ${SAMPLE} pokusů na ulici = ${POSITION_PICKS.length} výběrů pozic z filtrů`
+    + ` x hloubky ${DEPTHS.join("/")} bb; volby ${SITUATIONS.join("/")}`,
   );
   console.log("");
   console.log(
@@ -178,7 +209,7 @@ async function main(): Promise<void> {
   for (const street of STREETS) {
     const before = emptyTally();
     const after = emptyTally();
-    for (let index = 0; index < SPOTS_PER_STREET; index += 1) {
+    for (let index = 0; index < SAMPLE; index += 1) {
       const old = await deal(street, index, false);
       if (old !== undefined) count(before, old);
       const fresh = await deal(street, index, true);
@@ -195,6 +226,12 @@ async function main(): Promise<void> {
     );
   }
 
+  console.log("");
+  console.log(
+    `zahozená volba (filtry z ní kontext nesložily, pohled rozdá cokoli): `
+    + `${discarded.length} z ${POSITION_PICKS.length} výběrů pozic - `
+    + discarded.map((positions) => positions.join("+")).join(", "),
+  );
   console.log("");
   console.log(
     "„Bez katalogu“ je cesta do 14. 10. 2026: vybraná situace, losovaná deska.\n"
