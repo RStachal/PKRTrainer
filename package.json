@@ -178,6 +178,8 @@
     "mtt:review-fidelity": "node scripts/run-cli.mjs scripts/checkReviewDeskFidelity.mts",
     "mtt:state-page": "node scripts/run-cli.mjs scripts/buildStatePage.mts",
     "mtt:solved-coverage": "node scripts/run-cli.mjs scripts/checkSolvedSpotCoverage.mts",
+    "mtt:catalogue-situations": "node scripts/run-cli.mjs scripts/measureCatalogueSituationCoverage.mts",
+    "mtt:picked-situation": "node scripts/run-cli.mjs scripts/measurePickedSituationDelivery.mts",
     "mtt:post-answer": "node scripts/run-cli.mjs scripts/measurePostAnswerFeedback.mts",
     "mtt:rye-corpus": "node scripts/run-cli.mjs scripts/checkRyeRangeCorpus.mts",
     "mtt:rye-partial-shape": "node scripts/run-cli.mjs scripts/measureRyePartialShape.mts",

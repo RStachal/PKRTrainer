@@ -187,6 +187,49 @@ pravidel, doručení 30,0 -> **89,7 %** rozdaných riverových spotů. Stálo to
 syrové knihovny (strop 44 -> 53 MB) a žádný nový solve. Gzip celé knihovny je
 6,18 z 8 MB, takže druhý součtový strop se ani nehnul.
 
+#### Vrstva 0 měřila jednu ze dvou cest rozdávání (14. 10. 2026)
+
+**Nalezeno na vlastníkovo pozorování**, že matice ukazuje sílu ruky místo akcí
+a že to „nevypadá, že máme solving hotový". `mtt:post-answer` přitom hlásí
+matici podle akce ve **100 %** spotů. Obojí je pravda a každé o jiné cestě.
+
+V `postflopView.ts` stojí jedna řádka, na které to celé visí:
+
+    const dealsSolved = options.initialPositionContext == null;
+
+Katalog vyřešených spotů se použije, **jen když si hráč situaci nevybral**.
+Jakmile si ji vybere, deska se losuje a katalog se obchází. Změřeno novým
+`npm run mtt:picked-situation`, 300 spotů na ulici, situace z nabídky UI:
+
+| | katalogová cesta | vybraná situace |
+|---|---|---|
+| matice se barví podle akce | **100 %** | **0,0 %** |
+| cena akce na flopu | 31,3 % | **0,0 %** |
+| EV akcí na flopu | 0 % | 0 % |
+| odpovídá vyřešený pack | — | 65 az 74 % |
+
+Ten poslední řádek je jádro věci: pack **odpovídá**, ale je to texturový pilot,
+který `rangeBuckets` nenese - a bez nich `postflopRangeMatrixView` přepne osu na
+sílu ruky. Chová se tak správně (jednobarevná matice by byla k ničemu a legenda
+to přizná), ale hráč dostane **jinou osu, než na jakou se ptá**.
+
+**Proč to brána nechytila:** `mtt:post-answer` rozdává „z katalogu, tak jak
+rozdává trenažér" - což byla pravda pro jednu větev a nikdo ji nepřeměřil, když
+přibyla druhá. Je to tatáž třída vady jako celá vrstva 0: měřilo se něco, co
+vypadá jako doručení, ale je to doručení **po jedné cestě**.
+
+**A nestojí to na nocích solveru.** Katalog má 3 723 vyřešených flopových spotů
+ve 34 patternech; UI nabízí 61 situací v 53 patternech a **35 z těch 61
+(57,4 %) v katalogu obsah má**. Rozdíl mezi dnešními 0 % a tím je filtr, ne
+solve: při vybrané situaci filtrovat katalog podle `positionPattern` místo toho,
+aby se obcházel. Měří to `npm run mtt:catalogue-situations`.
+
+Zbylých 26 situací obsah nemá; tam je fallback na sílu ruky správná odpověď
+a je to otázka šířky solvingu, tedy nocí.
+
+**Pravidlo pro příště:** když přibude cesta, kterou se obsah k hráči dostává,
+musí přibýt i řádek ve vrstvě 0. Jinak brána měří tu starou a zůstává zelená.
+
 ### 1. Cíl a vzdálenost k němu — **stojí**
 
 Cíl je v `MTT_COMPLETION_PLAN.md`, vzdálenost měří `mtt:playable-beta` (stav a

@@ -276,6 +276,7 @@ if (!asJson) {
     + "cena".padStart(9)
     + "frekvence".padStart(11)
     + "EV komb.".padStart(10)
+    + "matice akcí".padStart(13)
     + "tříd s akcí".padStart(13)
     + "z toho blaf".padStart(13),
   );
@@ -287,10 +288,32 @@ if (!asJson) {
       + pct(row.priced, row.dealt).padStart(9)
       + pct(row.mixShown, row.dealt).padStart(11)
       + pct(row.comboEv, row.dealt).padStart(10)
+      + pct(row.withBuckets, row.dealt).padStart(13)
       + String(median(row.bucketClasses)).padStart(13)
       + String(median(row.bluffClasses)).padStart(13),
     );
   }
+  console.log("");
+  /*
+   * „Matice akcí" je podíl spotů, kde pravidlo nese kbelíky - a tedy kde se
+   * matice barví **podle akce**, ne podle síly ruky.
+   *
+   * Počítalo se od začátku jako `withBuckets` a **nikdy se netisklo**
+   * (nalezeno 14. 10. 2026 na vlastníkovo pozorování, že matice ukazuje
+   * kategorie ruky místo akcí). Vedle něj stál medián „tříd s akcí", který
+   * z nenulových spotů vypadá dobře, i když by matice byla po akcích jen ve
+   * zlomku rozdání - medián totiž nic neříká o tom, kolik spotů má nulu.
+   *
+   * `postflopRangeMatrixView` přepíná osu podle `productionByHand.size > 0`:
+   * bez kbelíků by byla matice jednobarevná, takže ukáže sílu ruky a legenda
+   * to přizná. Je to správné chování, ale **znamená to, že hráč vidí jinou
+   * osu, než na jakou se ptá** - a kolikrát, se do dneška neměřilo.
+   */
+  console.log(
+    "Sloupec „matice akcí“ je podíl spotů, kde se matice barví podle akce.\n"
+    + "Zbytek ukazuje sílu ruky, protože pravidlo kbelíky nemá - je to přiznaná\n"
+    + "náhrada, ne vada, ale je to jiná osa, než na kterou se hráč ptá.",
+  );
   console.log("");
   console.log("Proč cena chybí (na flopu a turnu je to jediné číslo, které tam být může)");
   console.log(
