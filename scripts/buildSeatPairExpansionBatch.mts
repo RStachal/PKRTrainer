@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import {
@@ -149,14 +149,58 @@ const SEATS: readonly Position[] = [
   "UTG", "UTG+1", "UTG+2", "LJ", "HJ", "CO", "BTN", "SB", "BB",
 ];
 
-function heldPairs(): Set<string> {
+/**
+ * Rodiny, které už máme - podle **hloubky**, a podle checkpointů, ne rozkladu.
+ *
+ * ## Dvě vady, které tenhle výpočet měl, a obě bránily stagovat novou práci
+ *
+ * **Byl slepý vůči hloubce.** Klíčoval se jen dvojicí sedaček
+ * (`MTT9_\d+BB_(pair)`), takže dvojice vyřešená na 25 bb platila za hotovou
+ * i pro 40 a 50. Běh s `--depths=40` proto ty opravdu chybějící dvojice
+ * přeskočil a hloubka se nedala rozšířit vůbec.
+ *
+ * **A četl rozklad místo checkpointů.** `artifacts/decomposition` má 33 rodin,
+ * kdežto checkpointy 81 - rozklad běží až po solvu a zdaleka ne všude. Rodina
+ * vyřešená, ale nerozložená, tedy platila za chybějící a skript pro ni vyrobil
+ * parametry znovu.
+ *
+ * Dohromady to dávalo tohle: 14. 10. 2026 zapsal běh s `--depths=40`
+ * **96 parametrů** a práce pro noc přitom **klesla ze 16 na 14 desek**, protože
+ * všech 96 už checkpoint mělo. Fronta se takhle nedala naplnit a vypadalo to,
+ * že osa je vyčerpaná - přitom na 40 bb chybělo třináct dvojic, které se nikdy
+ * nenabídly.
+ *
+ * Drží se proto celé jméno rodiny (`MTT9_40BB_HJ_BB_SRP`) a sjednocení obou
+ * zdrojů: co je vyřešené **nebo** rozložené, se znovu nestaguje.
+ */
+function heldFamilies(): Set<string> {
   const held = new Set<string>();
-  if (!existsSync(WORK)) return held;
-  for (const name of readdirSync(WORK)) {
-    if (!name.includes("__")) continue;
-    const match = /^MTT9_\d+BB_([A-Z0-9_]+?_[A-Z0-9_]+?_(?:SRP|3BP))/.exec(name.split("__")[0]);
-    if (match !== null) held.add(match[1]);
+
+  if (existsSync(WORK)) {
+    for (const name of readdirSync(WORK)) {
+      if (!name.includes("__")) continue;
+      held.add(name.split("__")[0]);
+    }
   }
+
+  if (existsSync(CHECKPOINT_BASE)) {
+    for (const name of readdirSync(CHECKPOINT_BASE)) {
+      // Prázdná složka rodiny neznamená vyřešeno; rozhoduje aspoň jeden
+      // neprázdný checkpoint, stejně jako to počítá hlídač nocí.
+      const raw = join(CHECKPOINT_BASE, name, "raw");
+      if (!existsSync(raw)) continue;
+      const solved = readdirSync(raw).some((file) => {
+        if (!file.endsWith(".json")) return false;
+        try {
+          return statSync(join(raw, file)).size > 0;
+        } catch {
+          return false;
+        }
+      });
+      if (solved) held.add(name);
+    }
+  }
+
   return held;
 }
 
@@ -168,7 +212,7 @@ function pairId(opener: Position, defender: Position): string {
 
 await loadCompleteMttProductionRegistry();
 
-const held = heldPairs();
+const held = heldFamilies();
 const planned: {
   familyId: string;
   pair: string;
@@ -180,8 +224,10 @@ const skipped: string[] = [];
 for (const [openerIndex, opener] of SEATS.entries()) {
   for (const defender of SEATS.slice(openerIndex + 1)) {
     const pair = pairId(opener, defender);
-    if (held.has(pair)) continue;
     for (const depth of DEPTHS) {
+      // Drží se **rodina**, ne dvojice: táž dvojice na jiné hloubce je jiná
+      // práce. Dokud se to testovalo na dvojici, nešla hloubka rozšířit vůbec.
+      if (held.has(`MTT9_${depth}BB_${pair}`)) continue;
       const ranges = srpSolverInputRanges({
         openerSeat: opener, defenderSeat: defender, bucket: depth, ante: "OFF",
       });
@@ -254,7 +300,7 @@ const selected = limit > 0 ? planned.slice(0, limit) : planned;
 const pairs = new Set(selected.map((row) => row.pair));
 console.log("Rozšíření na chybějící dvojice sedaček");
 console.log("");
-console.log(`drženo dnes: ${held.size} dvojic`);
+console.log(`drženo dnes: ${held.size} rodin (vyřešených nebo rozložených)`);
 console.log(`k založení:  ${pairs.size} dvojic, ${selected.length} rodin, ${selected.length * BOARD_IDS.length} desek`);
 console.log(demand.measured
   ? "pořadí:      podle změřené poptávky trenažéru"
