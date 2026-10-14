@@ -62,11 +62,32 @@ describe("hero range consistency", () => {
     expect(cutoff).toBeGreaterThan(2);
     expect(cutoff).toBeLessThan(8);
 
+    /*
+     * Buttonové rodiny jsou dnes **dvojí**, a obojí je v pořádku.
+     *
+     * Do 14. 10. 2026 tu stálo, že *každá* má mezeru přes 19 bodů - platilo to,
+     * dokud existovaly jen ty staré s ručně psanou úzkou range. Ten den se na
+     * 40 bb nastagovaly nové rodiny (`MTT9_40BB_BTN_BB_SRP` a spol.), jejichž
+     * hero range se odvozuje z dnešního packu přes `srpSolverInputRanges`
+     * (bod 86), takže s ním sedí **na nulu** - a test padl na rodině, která je
+     * postavená správně.
+     *
+     * Navíc `compareHeroRanges` čte i `pkrtrainer_mtt_seat_pair_expansion_v1`,
+     * který je gitignorovaný a přegenerovává se, takže výsledek závisí na tom,
+     * co je právě nastagované. Proto se tvrdí něco, co platí v každém stavu:
+     * buttonová rodina je **buď** stará úzká (přes 19 bodů - ta vada, kterou
+     * tenhle test nachází), **nebo** odvozená z packu (pod 2 body). Nic mezi -
+     * to by byla rodina postavená napůl, a tu chceme chytit.
+     */
     const button = rows.filter((row) => row.seat === "BTN" && row.gapPoints !== null);
     expect(button.length).toBeGreaterThan(0);
     for (const row of button) {
-      expect(row.gapPoints, row.familyId).toBeGreaterThan(19);
+      const gap = row.gapPoints ?? Number.NaN;
+      expect(gap > 19 || gap < 2, `${row.familyId}: mezera ${gap} bodů`).toBe(true);
     }
+    // Staré úzké rodiny pořád existují a detektor je musí najít - až se
+    // přesolví, tenhle řádek spadne a má se smazat spolu s nimi.
+    expect(button.some((row) => (row.gapPoints ?? 0) > 19)).toBe(true);
   });
 
   it("lists a family it cannot compare rather than dropping it", () => {

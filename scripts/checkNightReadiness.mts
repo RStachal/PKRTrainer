@@ -575,9 +575,20 @@ if (failed.length === 0) {
    * ta stojí jinak: 25 bb je 148 s na desku, 100 bb přes 2,5 h. Hlídač to
    * nerozhodne a nemá předstírat, že na to má příkaz.
    */
+  /*
+   * **Napřed zkusit další hloubku, teprve pak mluvit o vyčerpání** (14. 10. 2026).
+   *
+   * Tady stálo jen „když obojí vrátí nulu, je osa vyčerpaná" - a obojí vracelo
+   * nulu i tehdy, když na 40 a 50 bb chybělo po třinácti až osmnácti dvojicích,
+   * protože `mtt:seat-pair-expansion` počítal „co už máme" bez hloubky. Po
+   * opravě se dají založit (40 bb: 16 rodin, 96 desek; 50 bb: 18 rodin,
+   * 108 desek), ale bez `--depths=` je skript pořád na 25 bb a ten nulu vrátí
+   * oprávněně. Vyčerpání se tedy smí hlásit, až nulu vrátí **každá** hloubka.
+   */
   if (nightsAhead < NIGHTS_AHEAD_MIN) {
-    console.log("Když obojí vrátí nulu, je osa vyčerpaná a další práce chce rozhodnutí");
-    console.log("o hloubce - měřené ceny a možnosti jsou v Agents/MTT_ORCHESTRATOR.md, vrstva 7.");
+    console.log("Další hloubka: npm run mtt:seat-pair-expansion -- --depths=50 (pak 40, 100) a ověřit,");
+    console.log("že práce po zápisu přibyla. Teprve když nulu vrátí každá hloubka, je osa vyčerpaná");
+    console.log("a chce rozhodnutí - měřené ceny a možnosti jsou v Agents/MTT_ORCHESTRATOR.md, vrstva 7.");
   }
   if (stuck.length > 0) {
     console.log(`Zaseknutou rodinu taky ne: deska vyčerpala všechny ${ESCALATION_STEPS} stupně`);
