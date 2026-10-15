@@ -15,6 +15,7 @@ import {
   srpMonolithParams,
 } from "./lib/srpMonolithParams.mts";
 import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
+import { queuedFamilies, readExpansionQueue, type ExpansionQueue } from "./lib/expansionQueue.mts";
 import type { Position, StackBucket } from "../src/core/types";
 
 /**
@@ -172,8 +173,14 @@ const SEATS: readonly Position[] = [
  *
  * Drží se proto celé jméno rodiny (`MTT9_40BB_HJ_BB_SRP`) a sjednocení obou
  * zdrojů: co je vyřešené **nebo** rozložené, se znovu nestaguje.
+ *
+ * **A co leží ve frontě, taky.** Rodina nastagovaná, ale ještě bez checkpointu
+ * do 15. 10. 2026 držená nebyla: návrh pro 40 bb hlásil „13 rodin k založení"
+ * a bylo to přesně těch třináct, které ve frontě čekaly na noc. Zápis by je
+ * zapsal znovu pod jinými čísly a runner, který tehdy kopie nerozeznával, by
+ * každou desku solvil dvakrát.
  */
-function heldFamilies(): Set<string> {
+function heldFamilies(queue: ExpansionQueue): Set<string> {
   const held = new Set<string>();
 
   if (existsSync(WORK)) {
@@ -201,6 +208,8 @@ function heldFamilies(): Set<string> {
     }
   }
 
+  for (const family of queuedFamilies(queue)) held.add(family);
+
   return held;
 }
 
@@ -212,7 +221,8 @@ function pairId(opener: Position, defender: Position): string {
 
 await loadCompleteMttProductionRegistry();
 
-const held = heldFamilies();
+const queue = readExpansionQueue();
+const held = heldFamilies(queue);
 const planned: {
   familyId: string;
   pair: string;
@@ -300,7 +310,7 @@ const selected = limit > 0 ? planned.slice(0, limit) : planned;
 const pairs = new Set(selected.map((row) => row.pair));
 console.log("Rozšíření na chybějící dvojice sedaček");
 console.log("");
-console.log(`drženo dnes: ${held.size} rodin (vyřešených nebo rozložených)`);
+console.log(`drženo dnes: ${held.size} rodin (vyřešených, rozložených nebo ve frontě)`);
 console.log(`k založení:  ${pairs.size} dvojic, ${selected.length} rodin, ${selected.length * BOARD_IDS.length} desek`);
 console.log(demand.measured
   ? "pořadí:      podle změřené poptávky trenažéru"
@@ -341,7 +351,10 @@ if (!write) {
   for (const family of selected) {
     mkdirSync(join(CHECKPOINT_BASE, family.familyId, "raw"), { recursive: true });
   }
-  let index = 0;
+  // Za konec fronty, ne od jedničky: runner jde podle jména, takže zápis od
+  // `0001` by nové rodiny vmíchal mezi ty, které na noc čekají.
+  let index = queue.highestIndex;
+  const first = index + 1;
   for (const family of selected) {
     for (const file of family.files) {
       index += 1;
@@ -353,6 +366,6 @@ if (!write) {
     }
   }
   console.log("");
-  console.log(`Zapsáno ${index} parametrů do ${OUTPUT_DIR}`);
+  console.log(`Zapsáno ${index - first + 1} parametrů do ${OUTPUT_DIR} (čísla od ${String(first).padStart(4, "0")})`);
   console.log("Solve je monolitický běh; tenhle skript ho nespouští.");
 }

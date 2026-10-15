@@ -34,10 +34,18 @@
  * potřebuje), prázdnou frontu `mtt:resolve-stage` nebo `mtt:seat-pair-expansion`.
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 import { costForDepth, depthOfFamily, readBoardCostTable } from "./lib/boardCost.mts";
-import { escalationSteps, failureLevel } from "./lib/nightEscalation.mts";
+import { escalationSteps } from "./lib/nightEscalation.mts";
+import {
+  familiesFinishingWithin,
+  NIGHT_WINDOW_MINUTES,
+  queueRunway,
+  readExpansionQueue,
+  RUNWAY_NIGHTS_MIN,
+  type ExpansionQueue,
+} from "./lib/expansionQueue.mts";
 import { shouldYield, yieldThresholds } from "./lib/nightYield.mts";
 import { join } from "node:path";
 
@@ -76,7 +84,7 @@ const STAGED_PARAMS = join(
 const CHECKPOINT_ROOT = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
 
 /** Kolik minut má noční okno (21:00-07:00 minus rezerva na konci). */
-const WINDOW_MINUTES = 587;
+const WINDOW_MINUTES = NIGHT_WINDOW_MINUTES;
 
 /*
  * Kolik minut stojí deska, podle hloubky. **Nečte se to odsud** - čte se to
@@ -301,39 +309,30 @@ add("na síti neusne nečinností", idleSleep === "0", idleSleep === "" ? "nepř
 const wakeTimers = powershell(SLEEP_READ("bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d"));
 add("časovače probuzení na síti povolené", wakeTimers === "1", wakeTimers === "" ? "nepřečteno" : wakeTimers, "1");
 
-/** Nastagované desky a jejich checkpointy, po rodinách. */
-function stagedProgress(): Map<string, { have: number; want: number; retrying: number; exhausted: number; order: number }> {
+/**
+ * Nastagované desky a jejich checkpointy, po rodinách.
+ *
+ * Fronta se čte sdíleným modulem, tedy jako ji čte runner: deska jednou, i když
+ * ji nese víc souborů. Do 15. 10. 2026 se tu počítaly soubory a hlídač hlásil
+ * 101 desek místo 99 a „k opakování 2" u rodiny s jednou spadlou deskou.
+ *
+ * Spadlá deska je od 2. 10. 2026 dvojí, a splést je dohromady by znamenalo
+ * lhát v obě strany. Runner má žebřík tří stupňů (rozhodnutí vlastníka 3a):
+ * deska, které stupně zbývají, se **příští noc nabídne** - je to čekající
+ * práce, ne mrtvý konec. Teprve deska, která žebřík vyčerpala, drží rodinu
+ * nehotovou navždy.
+ */
+function stagedProgress(queue: ExpansionQueue): Map<string, { have: number; want: number; retrying: number; exhausted: number; order: number }> {
   const progress = new Map<string, { have: number; want: number; retrying: number; exhausted: number; order: number }>();
-  if (!existsSync(STAGED_PARAMS)) return progress;
-  for (const name of readdirSync(STAGED_PARAMS).sort()) {
-    if (!name.endsWith(".txt")) continue;
-    const stem = name.slice(0, -4).replace(/^[0-9]+_/, "");
-    const match = /(MTT9_[0-9]+BB_[A-Z0-9_]+?_(?:SRP|3BP)[A-Z0-9_]*)_([^_]+)$/.exec(stem);
-    if (match === null) continue;
-    const [, family, board] = match;
-    const row = progress.get(family) ?? { have: 0, want: 0, retrying: 0, exhausted: 0, order: Number.MAX_SAFE_INTEGER };
+  for (const board of queue.boards) {
+    const row = progress.get(board.familyId)
+      ?? { have: 0, want: 0, retrying: 0, exhausted: 0, order: Number.MAX_SAFE_INTEGER };
     row.want += 1;
-    const checkpoint = join(CHECKPOINT_ROOT, family, "raw", `pkrtrainer_${family}_${board}.json`);
-    if (existsSync(checkpoint) && statSync(checkpoint).size > 0) row.have += 1;
-    /*
-     * Spadlá deska je od 2. 10. 2026 dvojí, a splést je dohromady by znamenalo
-     * lhát v obě strany.
-     *
-     * Runner má žebřík tří stupňů (rozhodnutí vlastníka 3a): 30 min, 60 min,
-     * 60 min s přesností 1 %. Deska, které stupně zbývají, se **příští noc
-     * nabídne** - je to čekající práce, ne mrtvý konec. Teprve deska, která
-     * žebřík vyčerpala, drží rodinu nehotovou navždy.
-     *
-     * Do 2. 10. tu stálo „deska s `.failed` už se nikdy nenabídne", což tehdy
-     * platilo a dnes neplatí; nechat to tak by hlásilo zaseknutou rodinu nad
-     * deskou, která má dnes v noci přijít na řadu.
-     */
-    else if (existsSync(`${checkpoint}.failed`)) {
-      if (failureLevel(`${checkpoint}.failed`) >= ESCALATION_STEPS) row.exhausted += 1;
-      else row.retrying += 1;
-    }
-    else row.order = Math.min(row.order, Number(/^([0-9]+)_/.exec(name)?.[1] ?? Number.MAX_SAFE_INTEGER));
-    progress.set(family, row);
+    if (board.state === "SOLVED") row.have += 1;
+    else if (board.state === "RETRY") row.retrying += 1;
+    else if (board.state === "EXHAUSTED") row.exhausted += 1;
+    else row.order = Math.min(row.order, board.index);
+    progress.set(board.familyId, row);
   }
   return progress;
 }
@@ -350,7 +349,10 @@ add("žebřík pokusů se přečetl z runneru", ESCALATION_STEPS > 1,
   `${ESCALATION_STEPS} ${ESCALATION_STEPS === 1 ? "stupeň (nepřečteno?)" : "stupně"}`,
   "víc než 1");
 
-const progress = stagedProgress();
+const expansionQueue = readExpansionQueue({
+  dir: STAGED_PARAMS, checkpointBase: CHECKPOINT_ROOT, steps: ESCALATION_STEPS,
+});
+const progress = stagedProgress(expansionQueue);
 const pending = [...progress.values()].reduce((sum, row) => sum + (row.want - row.have), 0);
 
 if (!existsSync(TONIGHT)) {
@@ -405,26 +407,14 @@ if (!existsSync(TONIGHT)) {
 
 // Tohle je ta otázka, kterou si nikdo nepoložil a stála celou noc (bod 279):
 // noc může odsolvit 67 desek a nedodat **nic**, když žádnou rodinu nedokončí.
-const willFinish = [...progress.entries()]
-  .filter(([, row]) => row.have < row.want)
-  .sort((a, b) => a[1].order - b[1].order)
-  .reduce<{ seen: number; families: string[] }>((acc, [family, row]) => {
-    // Rozpočet noci je v **minutách**, ne v deskách: deska na 40 bb stojí
-    // dvakrát tolik co na 25, takže počítat je po kusech nadhodnocuje průtok.
-    //
-    // **Průměr, ne medián** (14. 10. 2026). Tady se počítá součet desek a
-    // nezkreslený odhad součtu je `N krát průměr`; medián ho u zešikmeného
-    // rozdělení nadhodnocuje o 4,3 %. Zásoba níž zůstává na mediánu schválně,
-    // protože se smí mýlit na druhou stranu.
-    const minutes = promiseMinutesPerBoard(family);
-    // Rodina bez ceny se do „dokončí se" nepočítá: tvrdit, že doběhne, by
-    // znamenalo mít její cenu za nulovou, a to je ta nejhorší možná odpověď.
-    // Že cena chybí, hlásí vlastní řádek níž.
-    if (minutes === undefined) return acc;
-    const next = acc.seen + (row.want - row.have) * minutes;
-    if (next <= WINDOW_MINUTES) return { seen: next, families: [...acc.families, family] };
-    return acc;
-  }, { seen: 0, families: [] });
+// Počítá se popořadě, jako runner - proč, viz `familiesFinishingWithin`.
+//
+// Rozpočet noci je v **minutách**, ne v deskách: deska na 40 bb stojí dvakrát
+// tolik co na 25. **Průměr, ne medián** (14. 10. 2026): součet desek se
+// nezkresleně odhaduje jako `N krát průměr`; zásoba níž zůstává na mediánu
+// schválně, protože se smí mýlit na druhou stranu.
+const promised = familiesFinishingWithin(expansionQueue, promiseMinutesPerBoard, WINDOW_MINUTES);
+const willFinish = { seen: promised.finishedAt, families: promised.families };
 
 add("noc dokončí aspoň jednu rodinu", willFinish.families.length > 0,
   `${willFinish.families.length} rodin do ${Math.round(willFinish.seen)} z ${WINDOW_MINUTES} min`,
@@ -440,22 +430,15 @@ add("noc dokončí aspoň jednu rodinu", willFinish.families.length > 0,
  * na nule a 5. 10. v 19:07 neměla noc na čem jet. Útes byl spočitatelný tři
  * dny dopředu a nikdo se nedíval.
  *
- * Práh je dvě noci: nastagovat další dávku stojí minuty, ale vědět se o tom
- * musí den dopředu, ne v devatenáct hodin.
+ * Práh (`RUNWAY_NIGHTS_MIN`) a výpočet (`queueRunway`) jsou sdílené s
+ * orchestrátorem, který podle téhož čísla od 15. 10. 2026 frontu sám doplní.
  *
  * Prázdná fronta **neznamená prázdnou noc**: rozklad si okno vezme na riverové
  * vrstvy, jak udělal 4. 10. od 01:13 do 06:37. Znamená ale, že se nedodá žádná
  * nová rodina, a to je ta dražší polovina.
  */
-const NIGHTS_AHEAD_MIN = 2;
-const queue = [...progress.entries()].reduce((acc, [family, row]) => {
-  const boards = Math.max(0, row.want - row.have - row.exhausted);
-  // Rodina bez změřené ceny přidá desky, ale **nula minut**. Je to schválně na
-  // tuhle stranu: výhled tím vyjde kratší, hlídač zčervená dřív a nastaguje se
-  // dávka. Opačná volba by ohlásila zásobu, která není.
-  const minutes = minutesPerBoard(family) ?? 0;
-  return { boards: acc.boards + boards, minutes: acc.minutes + boards * minutes };
-}, { boards: 0, minutes: 0 });
+const NIGHTS_AHEAD_MIN = RUNWAY_NIGHTS_MIN;
+const queue = queueRunway(expansionQueue, minutesPerBoard);
 const nightsAhead = queue.minutes / WINDOW_MINUTES;
 add("fronta vydrží aspoň dvě noci", nightsAhead >= NIGHTS_AHEAD_MIN,
   `${queue.boards} desek za ~${Math.round(queue.minutes / 60)} h, tedy ${nightsAhead.toFixed(1)} noci`,

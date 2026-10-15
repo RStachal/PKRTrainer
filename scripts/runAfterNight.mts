@@ -4,7 +4,8 @@ import { cpus, freemem } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 
-import { escalationSteps, failureLevel } from "./lib/nightEscalation.mts";
+import { escalationSteps } from "./lib/nightEscalation.mts";
+import { readExpansionQueue } from "./lib/expansionQueue.mts";
 import { judgeCycleCost, readCycleCost, recordCycleCost } from "./lib/cycleCost.mts";
 import {
   PACK_INPUTS_PATH,
@@ -330,37 +331,30 @@ const STAGED_PARAMS = join(
 );
 const ESCALATION_STEPS = escalationSteps();
 
+/**
+ * Nastagované desky po rodinách - deska jednou, i když ji nese víc souborů.
+ *
+ * Fronta se čte sdíleným modulem, tedy jako ji čte runner. Do 15. 10. 2026 se
+ * tu počítaly soubory a fronta nesla 192 kopií z 5. 10.
+ *
+ * Spadlá deska je dvojí a splést je dohromady lže v obě strany. Deska, které
+ * zbývají stupně žebříku, se **příští noc nabídne** - rodina tedy čeká na
+ * práci, ne na člověka. Teprve deska, která žebřík vyčerpala, drží pack
+ * nehotový navždy, a bez toho rozlišení by rodina s jednou takovou deskou
+ * vypadala navždy jako „rozdělaná" (naměřeno 1. 10. 2026 na
+ * MTT9_25BB_CO_BTN_SRP, dvě desky na timeout 30 min). Do 6. 10. 2026 tady
+ * stálo „monolit ji už nenabídne" u obou druhů; noc 5.-6. 10. to vyvrátila.
+ */
 function stagedProgress(): Map<string, { have: number; want: number; retrying: string[]; exhausted: string[] }> {
   const progress = new Map<string, { have: number; want: number; retrying: string[]; exhausted: string[] }>();
-  if (!existsSync(STAGED_PARAMS)) return progress;
-  for (const name of readdirSync(STAGED_PARAMS)) {
-    if (!name.endsWith(".txt")) continue;
-    const stem = name.slice(0, -4).replace(/^[0-9]+_/, "");
-    const match = /(MTT9_[0-9]+BB_[A-Z0-9_]+?_(?:SRP|3BP)[A-Z0-9_]*)_([^_]+)$/.exec(stem);
-    if (match === null) continue;
-    const [, family, board] = match;
-    const row = progress.get(family) ?? { have: 0, want: 0, retrying: [], exhausted: [] };
+  const queue = readExpansionQueue({ dir: STAGED_PARAMS, checkpointBase: CHECKPOINT_ROOT, steps: ESCALATION_STEPS });
+  for (const board of queue.boards) {
+    const row = progress.get(board.familyId) ?? { have: 0, want: 0, retrying: [], exhausted: [] };
     row.want += 1;
-    const checkpoint = join(CHECKPOINT_ROOT, family, "raw", `pkrtrainer_${family}_${board}.json`);
-    if (existsSync(checkpoint) && statSync(checkpoint).size > 0) row.have += 1;
-    /*
-     * Spadlá deska je dvojí a splést je dohromady lže v obě strany.
-     *
-     * Deska, které zbývají stupně žebříku, se **příští noc nabídne** - rodina
-     * tedy čeká na práci, ne na člověka. Teprve deska, která žebřík vyčerpala,
-     * drží pack nehotový navždy, a bez toho rozlišení by rodina s jednou
-     * takovou deskou vypadala navždy jako „rozdělaná" (naměřeno 1. 10. 2026 na
-     * MTT9_25BB_CO_BTN_SRP, dvě desky na timeout 30 min).
-     *
-     * Do 6. 10. 2026 tady stálo „monolit ji už nenabídne" u obou druhů. Noc
-     * 5.-6. 10. to vyvrátila sama: runner obě desky `742r` tu noc znovu nabídl,
-     * a ranní cyklus přesto hlásil, že rozhodnutí je na člověku.
-     */
-    else if (existsSync(`${checkpoint}.failed`)) {
-      if (failureLevel(`${checkpoint}.failed`) >= ESCALATION_STEPS) row.exhausted.push(board);
-      else row.retrying.push(board);
-    }
-    progress.set(family, row);
+    if (board.state === "SOLVED") row.have += 1;
+    else if (board.state === "RETRY") row.retrying.push(board.boardId);
+    else if (board.state === "EXHAUSTED") row.exhausted.push(board.boardId);
+    progress.set(board.familyId, row);
   }
   return progress;
 }

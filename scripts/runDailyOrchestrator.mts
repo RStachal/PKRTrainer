@@ -1,7 +1,14 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
-import { basename, join } from "node:path";
+import { join } from "node:path";
 import { costForDepth, depthOfFamily, readBoardCostTable } from "./lib/boardCost.mts";
+import {
+  NIGHT_WINDOW_MINUTES,
+  queueRunway,
+  queuedFamilies,
+  readExpansionQueue,
+  RUNWAY_NIGHTS_MIN,
+} from "./lib/expansionQueue.mts";
 import { shouldYield, yieldThresholds } from "./lib/nightYield.mts";
 import { nightFamilyRows, riverPhaseRate } from "./lib/nightLog.mts";
 import { MODULE_BUDGET_BYTES } from "./lib/solvedPackBuilding.mts";
@@ -381,31 +388,27 @@ const CHECKPOINT_ROOT = "Agents/solver-input/gto-plus/sample-postflop-v1/output/
  */
 const YIELD = yieldThresholds();
 
+/**
+ * Čerstvé desky ve frontě: bez checkpointu a bez značky `.failed`.
+ *
+ * **Týž filtr jako u ustoupení v runneru rozkladu** (`staged_work_without_checkpoint`):
+ * deska odložená po pádu není práce, kvůli které má rozklad ustoupit. Bez toho
+ * hlásil orchestrátor 155 desek tam, kde runner viděl 154, a u malé fronty by
+ * se ty dva mohly rozejít i v rozhodnutí: orchestrátor by napsal
+ * `willYield: true` a runner by neustoupil.
+ *
+ * Fronta se čte sdíleným modulem - deska jednou, i když ji nese víc souborů, a
+ * hotová podle cesty checkpointu, ne podle podřetězce v názvu souboru, jak se
+ * to tu dělalo do 15. 10. 2026.
+ */
+function freshStagedBoards() {
+  return readExpansionQueue({ checkpointBase: CHECKPOINT_ROOT }).boards
+    .filter((board) => board.state === "FRESH");
+}
+
 /** Nastagované desky, které ještě nemají odsolvený checkpoint. */
 function stagedBoardsWithoutCheckpoint(): number {
-  const stagedRoot = join(
-    "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters",
-    "pkrtrainer_mtt_seat_pair_expansion_v1",
-  );
-  if (!existsSync(stagedRoot)) return 0;
-  let pending = 0;
-  for (const name of readdirSync(stagedRoot, { recursive: true, encoding: "utf8" })) {
-    if (!name.endsWith(".txt")) continue;
-    const stem = basename(name, ".txt").replace(/^[0-9]+_/, "");
-    const match = /(MTT9_[0-9]+BB_[A-Z0-9_]+?_(?:SRP|3BP)[A-Z0-9_]*)_([^_]+)$/.exec(stem);
-    if (match === null) continue;
-    const raw = join(CHECKPOINT_ROOT, match[1], "raw");
-    const files = existsSync(raw) ? readdirSync(raw) : [];
-    const solved = files.some((file) => file.includes(match[2]) && file.endsWith(".json"));
-    // Deska odložená natrvalo není čekající práce - **týž filtr jako v runneru**.
-    // Bez něj hlásil orchestrátor 155 desek tam, kde runner viděl 154, a u malé
-    // fronty by se ty dva mohly rozejít i v rozhodnutí: orchestrátor by napsal
-    // `willYield: true` a runner by neustoupil. Komentář u prahu si na to, že
-    // tahle dvojice musí sedět, stěžuje od 29. 9. 2026.
-    const parked = files.some((file) => file.includes(match[2]) && file.endsWith(".failed"));
-    if (!solved && !parked) pending += 1;
-  }
-  return pending;
+  return freshStagedBoards().length;
 }
 
 /**
@@ -416,11 +419,6 @@ function stagedBoardsWithoutCheckpoint(): number {
  * deska je zdarma - a práh by pak mlčel přesně tam, kde má mluvit.
  */
 function stagedMinutesWithoutCheckpoint(): number | undefined {
-  const stagedRoot = join(
-    "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters",
-    "pkrtrainer_mtt_seat_pair_expansion_v1",
-  );
-  if (!existsSync(stagedRoot)) return 0;
   let cost;
   try {
     cost = readBoardCostTable();
@@ -428,36 +426,18 @@ function stagedMinutesWithoutCheckpoint(): number | undefined {
     return undefined;
   }
   let minutes = 0;
-  for (const name of readdirSync(stagedRoot, { recursive: true, encoding: "utf8" })) {
-    if (!name.endsWith(".txt")) continue;
-    const stem = basename(name, ".txt").replace(/^[0-9]+_/, "");
-    const match = /(MTT9_[0-9]+BB_[A-Z0-9_]+?_(?:SRP|3BP)[A-Z0-9_]*)_([^_]+)$/.exec(stem);
-    if (match === null) continue;
-    const raw = join(CHECKPOINT_ROOT, match[1], "raw");
-    const files = existsSync(raw) ? readdirSync(raw) : [];
-    const solved = files.some((file) => file.includes(match[2]) && file.endsWith(".json"));
-    const parked = files.some((file) => file.includes(match[2]) && file.endsWith(".failed"));
-    if (solved || parked) continue;
-    const row = costForDepth(cost, depthOfFamily(match[1]));
+  for (const board of freshStagedBoards()) {
+    const row = costForDepth(cost, depthOfFamily(board.familyId));
     if (row === undefined) return undefined;
     minutes += row.planMinutes;
   }
   return minutes;
 }
 
+/** Rodiny ve frontě, které nemají jediný checkpoint - tatáž otázka jako v runneru rozkladu. */
 function stagedFamiliesWithoutCheckpoint(): string[] {
-  const stagedRoot = join(
-    "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters",
-    "pkrtrainer_mtt_seat_pair_expansion_v1",
-  );
-  if (!existsSync(stagedRoot)) return [];
   const families = new Set<string>();
-  for (const name of readdirSync(stagedRoot, { recursive: true, encoding: "utf8" })) {
-    if (!name.endsWith(".txt")) continue;
-    const stem = basename(name, ".txt").replace(/^[0-9]+_/, "");
-    const match = /(MTT9_[0-9]+BB_[A-Z0-9_]+?_(?:SRP|3BP)[A-Z0-9_]*)_[^_]+$/.exec(stem);
-    if (match === null) continue;
-    const family = match[1];
+  for (const family of queuedFamilies(readExpansionQueue({ checkpointBase: CHECKPOINT_ROOT }))) {
     const checkpoint = join(CHECKPOINT_ROOT, family, "raw");
     const solved = existsSync(checkpoint)
       && readdirSync(checkpoint).some((file) => file.endsWith(".json"));
@@ -473,6 +453,65 @@ const asked = askedMatch === null ? null : Number(askedMatch[1]);
 const held = heldMatch === null ? null : Number(heldMatch[1]);
 
 say(`  rozklad drží ${pairs.size} dvojic sedaček: ${[...pairs.keys()].join(", ")}`);
+
+/**
+ * Fronta noční expanze se doplňuje sama.
+ *
+ * Do 15. 10. 2026 tu bylo jen doporučení „mtt:seat-pair-expansion -- --write
+ * založí N dvojic" a čekalo na člověka - a ptalo se jen na 25 bb, takže by po
+ * založení 25bb rodin hlásilo „šířka vyčerpaná", i když na 40 a 50 bb zbývalo
+ * 29 rodin. Doporučení, které stroj nečte, není doporučení.
+ *
+ * Doplňuje se jen na hloubkách se **změřenou cenou desky**. Hloubka bez ceny
+ * (dnes 100 bb, kolem 2,5 h na desku) je rozhodnutí o tom, kam dát desítky
+ * nocí, ne mechanika fronty - to se jen nahlásí. Zápis je idempotentní (drží
+ * rodiny, které ve frontě leží, a zapisuje za její konec), takže opakovaný běh
+ * nic nezdvojí. Práh a výpočet výdrže jsou tytéž, podle kterých barví hlídač.
+ */
+const COST_TABLE = (() => {
+  try {
+    return readBoardCostTable();
+  } catch {
+    return undefined;
+  }
+})();
+// Jen změřené: extrapolovaný řádek je dohoda, ne cena, a podle dohody se
+// desítky nocí nezakládají.
+const MEASURED_DEPTHS = (COST_TABLE?.depths ?? [])
+  .filter((row) => row.basis === "měřeno")
+  .map((row) => row.depthBB)
+  .sort((a, b) => a - b);
+const planMinutesFor = (family: string): number | undefined => (
+  COST_TABLE === undefined ? undefined : costForDepth(COST_TABLE, depthOfFamily(family))?.planMinutes
+);
+const runwayBefore = queueRunway(readExpansionQueue({ checkpointBase: CHECKPOINT_ROOT }), planMinutesFor);
+const nightsBefore = runwayBefore.minutes / NIGHT_WINDOW_MINUTES;
+say(`  fronta expanze: ${runwayBefore.boards} desek, ~${Math.round(runwayBefore.minutes / 60)} h,`
+  + ` tedy ${nightsBefore.toFixed(1)} noci (práh ${RUNWAY_NIGHTS_MIN})`);
+if (nightsBefore < RUNWAY_NIGHTS_MIN) {
+  if (MEASURED_DEPTHS.length === 0) {
+    say("  POZOR: fronta dochází a cena desky není změřená pro žádnou hloubku - doplnit ji nejde.");
+  } else {
+    const depthsArg = `--depths=${MEASURED_DEPTHS.join(",")}`;
+    const run = runScript("scripts/buildSeatPairExpansionBatch.mts", write ? [depthsArg, "--write"] : [depthsArg]);
+    const families = Number(/k založení:\s+\d+ dvojic, (\d+) rodin/.exec(run)?.[1] ?? "0");
+    const written = /Zapsáno (\d+) parametrů do .* \(čísla od (\d+)\)/.exec(run);
+    if (families === 0) {
+      say(`  POZOR: fronta je pod ${RUNWAY_NIGHTS_MIN} noci a na změřených hloubkách`
+        + ` (${MEASURED_DEPTHS.join(", ")} bb) není co založit.`);
+      say("  Další osa je rozhodnutí, ne mechanika: hloubka bez změřené ceny (100 bb),");
+      say("  další desky existujícím rodinám (mtt:board-growth), nebo 3BP. Do té doby noc");
+      say("  jede rozklad.");
+    } else if (written !== null) {
+      const after = queueRunway(readExpansionQueue({ checkpointBase: CHECKPOINT_ROOT }), planMinutesFor);
+      say(`  DOPLNĚNO: ${families} rodin, ${written[1]} desek (čísla od ${written[2]});`
+        + ` fronta teď vydrží ${(after.minutes / NIGHT_WINDOW_MINUTES).toFixed(1)} noci.`);
+    } else {
+      say(`  Fronta je pod ${RUNWAY_NIGHTS_MIN} noci; s --write se doplní ${families} rodin`
+        + ` (${MEASURED_DEPTHS.join(", ")} bb).`);
+    }
+  }
+}
 
 /**
  * Rozhodnutí pro noc ve strojově čitelné podobě.
@@ -539,7 +578,8 @@ if (asked === null || held === null) {
   // Proto se odpověď **čte z toho skriptu**, který by ten krok dělal. Stojí to
   // jeden podproces navíc, ale orchestrátor běží jednou denně a tvrzení, které
   // nikdo nepřeměřuje, tady vydrželo devět nocí.
-  const expansion = runScript("scripts/buildSeatPairExpansionBatch.mts");
+  const expansion = runScript("scripts/buildSeatPairExpansionBatch.mts",
+    MEASURED_DEPTHS.length > 0 ? [`--depths=${MEASURED_DEPTHS.join(",")}`] : []);
   const pairsToCreate = Number(/k založení:\s+([0-9]+) dvojic/.exec(expansion)?.[1] ?? "0");
   const pairsBlocked = Number(/nezaloženo \(([0-9]+)\)/.exec(expansion)?.[1] ?? "0");
 
@@ -582,7 +622,8 @@ if (asked === null || held === null) {
     if (pairsToCreate > 0) {
       say(`  Krok, který ji odemkne: mtt:seat-pair-expansion -- --write založí ${pairsToCreate} dvojic.`);
     } else {
-      say(`  Rozšíření dvojic sedaček je ale vyčerpané: 0 k založení, ${pairsBlocked} zablokováno`);
+      say(`  Rozšíření dvojic sedaček je ale vyčerpané na změřených hloubkách`
+        + ` (${MEASURED_DEPTHS.join(", ")} bb): 0 k založení, ${pairsBlocked} zablokováno`);
       say("  chybějící obrannou preflop ranží (VS_OPEN pro UTG+1 a UTG+2 pack nemá");
       say("  na žádné hloubce). Nové rodiny odsud nepřibudou a vymyslet tu ranži");
       say("  nelze - je to rozhodnutí o zdroji dat, ne úloha na noc.");

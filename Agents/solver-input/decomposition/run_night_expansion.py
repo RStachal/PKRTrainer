@@ -398,6 +398,13 @@ def pending_boards():
     if not os.path.isdir(PARAMS):
         return []
     fresh, retries = [], []
+    # Deska je jedna, i když ji ve frontě nese víc souborů. Bere se první podle
+    # jména; ostatní se přeskočí. Do 15. 10. 2026 se brala každá kopie: fronta
+    # nesla 192 bajtově shodných kopií z 5. 10. (čísla 1xxx a 2xxx) a dvě z nich
+    # byly spadlé desky - runner by je zkusil dvakrát v téže noci, a protože
+    # stupeň žebříku se čte před začátkem noci, podruhé na stejném stupni.
+    seen = set()
+    duplicates = 0
     for name in sorted(os.listdir(PARAMS)):
         if not name.endswith(".txt"):
             continue
@@ -407,6 +414,10 @@ def pending_boards():
             continue
         family, board = match.group(1), match.group(2)
         checkpoint = os.path.join(OUTPUT_BASE, family, "raw", f"pkrtrainer_{family}_{board}.json")
+        if checkpoint in seen:
+            duplicates += 1
+            continue
+        seen.add(checkpoint)
         if os.path.exists(checkpoint) and os.path.getsize(checkpoint) > 0:
             continue
         entry = (os.path.join(PARAMS, name), family, board, checkpoint)
@@ -417,6 +428,8 @@ def pending_boards():
             # Spadlá deska se zkusí znovu, ale **až po** všech čerstvých a jen
             # tolikrát, kolik má žebřík stupňů (rozhodnutí vlastníka 3a).
             retries.append(entry + (level,))
+    if duplicates:
+        log(f"ve frontě {duplicates} souborů pro desku, kterou už nese jiný; beru první podle jména")
     return fresh + retries
 
 
@@ -494,6 +507,11 @@ def main():
         if available < MIN_FREE_GB:
             log(f"končím: na disku zbývá {available:.1f} GB")
             break
+        # Seznam se sestavil před začátkem noci; mezitím mohla desku dodělat
+        # jiná položka nebo jiný běh. Hotová se znovu nesolví.
+        if solved(checkpoint):
+            log(f"přeskakuji {family} {board}: checkpoint už existuje")
+            continue
 
         os.makedirs(os.path.dirname(checkpoint), exist_ok=True)
         # Parametry se přepisují i na **stupni nula**: od rozhodnutí 2c nese jinou

@@ -384,13 +384,25 @@ níž, se hlásí jako ztrátová, i když všechny ostatní brány svítí zele
    a 17, fronta byla 4. 10. v 01:13 na nule a 5. 10. v 19 hodin neměla noc na
    čem jet. Útes byl spočitatelný tři dny dopředu.
 
-   Doplněn řádek **„fronta vydrží aspoň dvě noci"** (`pendingBoards /
-   BOARDS_PER_NIGHT`). Dvě noci proto, že nastagovat dávku stojí minuty, ale
-   vědět se o tom musí den dopředu.
+   Doplněn řádek **„fronta vydrží aspoň dvě noci"** (dnes v minutách podle
+   změřené ceny desky: `queueRunway` a `RUNWAY_NIGHTS_MIN` ze
+   `scripts/lib/expansionQueue.mts`). Dvě noci proto, že nastagovat dávku stojí
+   minuty, ale vědět se o tom musí den dopředu.
 
    **Prázdná fronta neznamená prázdnou noc:** rozklad si okno vezme na riverové
    vrstvy, jak udělal 4. 10. od 01:13 do 06:37 (751 desek s checkpointem).
    Znamená ale, že se nedodá žádná **nová rodina**, a to je ta dražší polovina.
+
+   **Od 15. 10. 2026 se fronta doplňuje sama.** Orchestrátor (`mtt:daily
+   --write`, který si noc pouští ve 21:00) spočítá výdrž stejně jako hlídač a
+   pod dvěma nocemi pustí `mtt:seat-pair-expansion --write` přes všechny
+   hloubky se **změřenou** cenou desky. Zápis je idempotentní: rodiny, které ve
+   frontě leží, drží, a zapisuje za konec fronty, takže nic nezdvojí ani
+   nevmíchá mezi čekající desky. Hloubku bez změřené ceny ani jinou osu sám
+   nezaloží - to zůstává rozhodnutím (viz níž) a orchestrátor ho v tu chvíli
+   nahlásí. Tentýž den se ukázalo, že frontu četlo sedm míst a každé počítalo
+   soubory místo desek (deník 314); teď ji všichni čtou modulem
+   `expansionQueue.mts` se sémantikou runneru.
 
    ### Osa 25 BB je k 5. 10. 2026 vyčerpaná na všech třech směrech
 
@@ -425,7 +437,8 @@ níž, se hlásí jako ztrátová, i když všechny ostatní brány svítí zele
 
      **50 bb je nastagované (96 desek) a v tabulce jako extrapolace**, plán
      39,8 min na desku z poměru dvou ručních sond. První noc na 50 bb ten řádek
-     přepíše na měření sama.
+     přepíše na měření sama. **(Přepsala: k 15. 10. 2026 je 50 bb změřené,
+     medián 23,9 min z 81 desek - extrapolace byla o dvě třetiny výš.)**
    - **tři zablokované dvojice** — `UTG_UTG_1`, `UTG_UTG_2`, `UTG_1_UTG_2` se
      nedají založit, protože preflop pack nemá `VS_OPEN|UTG+1|25` ani
      `VS_OPEN|UTG+2|25`. Není to práce pro solver, je to **mezera v obsahu

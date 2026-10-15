@@ -235,6 +235,9 @@ def staged_work_without_checkpoint():
     count = 0
     minutes = 0.0
     priced = cost != {}
+    # Deska, ne soubor: fronta umí nést tutéž desku ve víc souborech (5. 10. 2026
+    # takhle přibylo 192 kopií) a expanzní runner ji vezme jen jednou.
+    seen = set()
     if not os.path.isdir(STAGED_PARAMS):
         return count
     for base, _dirs, files in os.walk(STAGED_PARAMS):
@@ -249,11 +252,17 @@ def staged_work_without_checkpoint():
             checkpoint = os.path.join(
                 OUTPUT_BASE, family, "raw", f"pkrtrainer_{family}_{board}.json",
             )
+            if checkpoint in seen:
+                continue
+            seen.add(checkpoint)
             # Deska odložená natrvalo není čekající práce. Bez tohohle by
             # jediný opakovaný pád solveru držel prioritu NEW_FAMILIES navždy:
             # rozklad by ustupoval každou noc a expanze by tu desku pokaždé
             # přeskočila, takže by noc shořela na dvanácti vteřinách.
-            if not os.path.exists(checkpoint) and not os.path.exists(checkpoint + ".failed"):
+            # Prázdný checkpoint není hotová deska: expanzní runner ji solví
+            # znovu (`solved()` tam), takže je to čekající práce i tady.
+            solved_already = os.path.exists(checkpoint) and os.path.getsize(checkpoint) > 0
+            if not solved_already and not os.path.exists(checkpoint + ".failed"):
                 count += 1
                 depth = re.search(r"_(\d+)BB_", family)
                 row = None if depth is None else cost.get(int(depth.group(1)))

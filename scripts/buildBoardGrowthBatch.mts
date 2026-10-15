@@ -18,6 +18,7 @@ import {
   SRP_POT_BB,
   srpMonolithParams,
 } from "./lib/srpMonolithParams.mts";
+import { readExpansionQueue } from "./lib/expansionQueue.mts";
 import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 
 /**
@@ -130,25 +131,13 @@ function boardsOnDisk(): Map<string, string[]> {
   return out;
 }
 
-/** Desky už nastagované pro noc (i bez checkpointu), aby se nezapsaly dvakrát. */
+/**
+ * Desky už nastagované pro noc (i bez checkpointu), aby se nezapsaly dvakrát.
+ * Fronta se čte sdíleným modulem, tedy stejně jako ji čte runner.
+ */
+const queue = readExpansionQueue();
 function stagedBoards(): Set<string> {
-  const out = new Set<string>();
-  if (!existsSync(EXPANSION_PARAMS_DIR)) return out;
-  for (const name of readdirSync(EXPANSION_PARAMS_DIR)) {
-    const match = /^\d+_(MTT9_\d+BB_.+_SRP)_([^_]+)\.txt$/.exec(name);
-    if (match !== null) out.add(`${match[1]}__${match[2]}`);
-  }
-  return out;
-}
-
-function nextFileIndex(): number {
-  if (!existsSync(EXPANSION_PARAMS_DIR)) return 0;
-  let top = 0;
-  for (const name of readdirSync(EXPANSION_PARAMS_DIR)) {
-    const match = /^(\d+)_/.exec(name);
-    if (match !== null) top = Math.max(top, Number(match[1]));
-  }
-  return top;
+  return new Set(queue.boards.map((board) => `${board.familyId}__${board.boardId}`));
 }
 
 /** Deska za kohortu: nejdřív ta, kterou projekt už solvil jinde. */
@@ -280,7 +269,7 @@ if (!write) {
 } else {
   mkdirSync(EXPANSION_PARAMS_DIR, { recursive: true });
   for (const plan of plans) mkdirSync(join(CHECKPOINT_BASE, plan.familyId, "raw"), { recursive: true });
-  let index = nextFileIndex();
+  let index = queue.highestIndex;
   for (const file of files) {
     index += 1;
     writeFileSync(join(EXPANSION_PARAMS_DIR, `${String(index).padStart(4, "0")}_${file.name}`), file.body, "utf8");
