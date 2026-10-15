@@ -39,7 +39,8 @@ export interface TurnSubgameNode {
   node_type?: string;
   player?: number;
   actions?: readonly string[];
-  strategy?: { actions?: readonly string[]; strategy?: Readonly<Record<string, readonly number[]>> };
+  /** `strategy: null` je uzel, který solver nespočítal - nevyřešená vrstva, viz `SolverStrategy`. */
+  strategy?: { actions?: readonly string[]; strategy?: Readonly<Record<string, readonly number[]>> | null };
 }
 
 export interface TurnActionFrequency {
@@ -96,7 +97,9 @@ export function handClassOf(combo: string): HandLabel | undefined {
 export function readTurnSubgame(node: TurnSubgameNode): TurnSubgameStrategy | undefined {
   const actions = node.actions ?? node.strategy?.actions;
   const table = node.strategy?.strategy;
-  if (actions === undefined || actions.length === 0 || table === undefined) return undefined;
+  // `null` je nespočítaný uzel; do 15. 10. 2026 tu stálo jen `=== undefined`
+  // a `Object.entries(null)` by spadlo stejně jako stavěč riverových packů.
+  if (actions === undefined || actions.length === 0 || table === undefined || table === null) return undefined;
 
   const totals = new Map<HandLabel, { sums: number[]; combos: number }>();
   let combosRead = 0;

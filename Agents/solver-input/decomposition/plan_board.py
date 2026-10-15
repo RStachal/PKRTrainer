@@ -45,7 +45,11 @@ def collect_lines(dump):
             return
         if kind != "action_node":
             return
-        block = node["strategy"]
+        block = node.get("strategy")
+        # `"strategy": null` is a node the solver did not compute: no reach can
+        # be carried through it, and `None.items()` would end the planning.
+        if block is None or block.get("strategy") is None:
+            return
         actions, player = block["actions"], node["player"]
         for index, action in enumerate(actions):
             child = (node.get("childrens") or {}).get(action)
@@ -113,7 +117,9 @@ def main():
     for line in lines:
         line["weight"] = joint_reach(line["reach"])
     # A line that already has both stacks in has no turn strategy left to solve.
-    live = [l for l in lines if l["level"] < stack - 0.5]
+    # Neither has a line nobody plays: with zero reach the solver gets empty
+    # ranges and writes the tree back unsolved (see plan_river.py, 15 Oct 2026).
+    live = [l for l in lines if l["level"] < stack - 0.5 and l["weight"] > 0]
     live.sort(key=lambda l: l["weight"], reverse=True)
     live_total = sum(l["weight"] for l in live) or 1.0
 
@@ -129,6 +135,12 @@ def main():
     for line in chosen:
         for card, equivalents in turns.items():
             blocked = set(board) | {card}
+            oop = weighted_classes(line["reach"][1], blocked)
+            ip = weighted_classes(line["reach"][0], blocked)
+            # A player with no hand left has nothing to solve for, and the solver
+            # does not say so - it writes the tree back unsolved.
+            if not oop or not ip:
+                continue
             items.append({
                 "line": line["path"],
                 "turn": card,
@@ -137,8 +149,8 @@ def main():
                 "pot": pot + 2 * line["level"],
                 "stack": stack - line["level"],
                 "board": board + [card],
-                "oop": weighted_classes(line["reach"][1], blocked),
-                "ip": weighted_classes(line["reach"][0], blocked),
+                "oop": oop,
+                "ip": ip,
             })
 
     json.dump({

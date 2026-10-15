@@ -30,7 +30,51 @@ import { showdownRank } from "./showdownRank";
 
 export interface SolverStrategy {
   actions: string[];
-  strategy: Record<string, number[]>;
+  /**
+   * Strategie po kombinacích - nebo `null`, když solver uzel nespočítal.
+   *
+   * `null` znamená, že solver **nevyřešil vrstvu**, ne že se do uzlu nedojde.
+   * Změřeno 15. 10. 2026 na vzorku 26 520 vrstev: `null` je jen ve 438
+   * vrstvách, kterým plán zadal linku s prázdnou nebo skoro prázdnou range
+   * jednoho z hráčů; solver pak nic nepočítá a ostatní uzly vrátí (až na šest
+   * vrstev) přesně na výchozích 1/n. Ve vyřešených vrstvách nebyl `null` ani
+   * rovnoměrný uzel žádný (0 z 218 344 uzlů). Na disku takových zadání bylo
+   * 1 415 riverových, všechna na 25 bb proti velkému blindu, a 52 turnových,
+   * všechna v desce `MTT9_25BB_HJ_SB_SRP__A72r`; plánovače je od téhož dne
+   * nezadávají.
+   *
+   * Do 15. 10. 2026 to typ zamlčoval a kontroly se ptaly jen na `=== undefined`,
+   * takže stavěč riverových packů na těch vrstvách padal. Typ je teď poctivý a
+   * kompilátor ukáže každé čtení, které na to není připravené.
+   */
+  strategy: Record<string, number[]> | null;
+}
+
+/**
+ * Strategie uzlu po kombinacích, nebo `undefined`, když chybí nebo ji solver
+ * nespočítal (`null`). Jediné místo, kde se ty dvě nepřítomnosti sjednocují -
+ * pro všechny čtenáře je to totéž: uzel bez strategie.
+ */
+export function strategyMap(node: SolverNode | undefined): Record<string, number[]> | undefined {
+  return node?.strategy?.strategy ?? undefined;
+}
+
+/** Strom výstupu solveru, jak ho vidí `hasUncomputedNode`; sedí na oba popisy uzlu. */
+interface StrategyTree {
+  strategy?: { strategy?: unknown };
+  childrens?: Readonly<Record<string, StrategyTree>>;
+}
+
+/**
+ * Leží v podstromu uzel, který solver nespočítal (`strategy: null`)?
+ *
+ * Takový podstrom není rovnováha, ani když nad ním stojí uzel s čísly: v
+ * nevyřešené vrstvě jsou to výchozí 1/n (viz `SolverStrategy`). Kdo z něj
+ * počítá, počítá z ničeho.
+ */
+export function hasUncomputedNode(node: StrategyTree): boolean {
+  if (node.strategy?.strategy === null) return true;
+  return Object.values(node.childrens ?? {}).some(hasUncomputedNode);
 }
 
 export interface SolverNode {
@@ -149,7 +193,7 @@ function expandRange(
  */
 export function riverActionEv(input: RiverEvInput): ComboActionEv[] {
   const { node, board, potChips } = input;
-  if (node.node_type !== "action_node" || node.strategy === undefined) return [];
+  if (node.node_type !== "action_node" || strategyMap(node) === undefined) return [];
   if (board.length !== 5) return [];
 
   const dead = new Set(board);
@@ -162,7 +206,8 @@ export function riverActionEv(input: RiverEvInput): ComboActionEv[] {
   let ipWeights = expandRange(input.ip, dead);
   let startCommitted: [number, number] = [0, 0];
   for (const step of input.line ?? []) {
-    if (current.node_type !== "action_node" || current.strategy === undefined) return [];
+    const stepMap = strategyMap(current);
+    if (current.node_type !== "action_node" || current.strategy === undefined || stepMap === undefined) return [];
     const index = current.strategy.actions.indexOf(step);
     const child = current.childrens?.[step];
     if (index < 0 || child === undefined) return [];
@@ -170,7 +215,7 @@ export function riverActionEv(input: RiverEvInput): ComboActionEv[] {
     const narrow = (list: Weighted[]) => list
       .map((item) => ({
         ...item,
-        weight: item.weight * (current.strategy?.strategy[item.combo]?.[index] ?? 0),
+        weight: item.weight * (stepMap[item.combo]?.[index] ?? 0),
       }))
       .filter((item) => item.weight > 0);
     if (acting === 1) oopWeights = narrow(oopWeights);
@@ -178,7 +223,7 @@ export function riverActionEv(input: RiverEvInput): ComboActionEv[] {
     startCommitted = committedAfter(step, acting, startCommitted);
     current = child;
   }
-  if (current.node_type !== "action_node" || current.strategy === undefined) return [];
+  if (current.node_type !== "action_node" || current.strategy === undefined || strategyMap(current) === undefined) return [];
 
   // Uzel, který neřekne, čí je to rozhodnutí, se nedá zodpovědět.
   //
@@ -191,6 +236,10 @@ export function riverActionEv(input: RiverEvInput): ComboActionEv[] {
   // 0 z 8 936 turnových se strategií), takže se tím dnes nic nedodává ani
   // neztrácí. Je to díra v ošetření, ne ztráta obsahu.
   if (current.player === undefined) return [];
+  // Rozhodnutí, pod kterým solver něco nespočítal, se neocení. `null` není
+  // konec hry - ten je uzel **bez** strategie, za dorovnáním - ale nevyřešená
+  // vrstva; dosadit za něj showdown by dalo věrohodné vymyšlené číslo.
+  if (hasUncomputedNode(current)) return [];
   const heroIsOop = current.player === 1;
   const heroRange = heroIsOop ? oopWeights : ipWeights;
   const villainRange = heroIsOop ? ipWeights : oopWeights;
@@ -270,16 +319,22 @@ export function riverActionEv(input: RiverEvInput): ComboActionEv[] {
     const total = () => villains.reduce((sum, item) => sum + item.weight, 0);
     const showdown = () => showdownValue(heroCards, villains, committed);
 
+    // Uzel bez strategie je konec hry: solver za terminální akcí nic nepíše.
     if (current.node_type !== "action_node" || current.strategy === undefined) {
       return showdown();
     }
+    // `null` sem dojít nemůže - rozhodnutí s nespočítaným uzlem v podstromu se
+    // vůbec nepočítá (`hasUncomputedNode` výš). Kdyby přece, je to porušený
+    // předpoklad: radši pád než showdown dosazený za nevyřešenou vrstvu.
+    const map = current.strategy.strategy;
+    if (map === null) throw new Error("riverActionEv: nespočítaný uzel v podstromu rozhodnutí");
 
     const actions = current.strategy.actions;
     const acting = current.player ?? 0;
 
     if (acting === heroPlayer) {
       // Hrdina na tahu pod kořenem: hraje svou strategii dál.
-      const own = current.strategy.strategy[`${heroCards[0]}${heroCards[1]}`];
+      const own = map[`${heroCards[0]}${heroCards[1]}`];
       let sum = 0;
       for (const [index, action] of actions.entries()) {
         const frequency = own?.[index] ?? 0;
@@ -298,7 +353,7 @@ export function riverActionEv(input: RiverEvInput): ComboActionEv[] {
     for (const [index, action] of actions.entries()) {
       const branch: Weighted[] = [];
       for (const villain of villains) {
-        const frequency = current.strategy.strategy[villain.combo]?.[index] ?? 0;
+        const frequency = map[villain.combo]?.[index] ?? 0;
         if (frequency > 0) branch.push({ ...villain, weight: villain.weight * frequency });
       }
       if (branch.length === 0) continue;

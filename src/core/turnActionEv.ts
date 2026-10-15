@@ -147,11 +147,15 @@ export function turnActionEv(input: TurnEvInput): TurnEvResult {
   for (const step of input.line ?? []) {
     if (current.node_type !== "action_node" || current.strategy === undefined) return empty;
     const strategy = current.strategy;
+    // Nespočítaný uzel (`null`) na lince: rozhodnutí pod ním nejde ocenit,
+    // stejně jako pod uzlem bez strategie.
+    const stepMap = strategy.strategy;
+    if (stepMap === null) return empty;
     const index = strategy.actions.indexOf(step);
     if (index < 0) return empty;
     const acting = current.player ?? 0;
     const narrow = (list: readonly Weighted[]): Weighted[] => list
-      .map((row) => ({ combo: row.combo, weight: row.weight * (strategy.strategy[row.combo]?.[index] ?? 0) }))
+      .map((row) => ({ combo: row.combo, weight: row.weight * (stepMap[row.combo]?.[index] ?? 0) }))
       .filter((row) => row.weight > 0);
     // Hráč 1 je OOP, ne 0. Tatáž konvence jako v `riverActionEv`; obrácená se
     // pozná jen tím, že se hrdinovi nabídne soupeřova range - čísla zůstanou
@@ -167,7 +171,10 @@ export function turnActionEv(input: TurnEvInput): TurnEvResult {
   }
 
   const decisionStrategy = current.strategy;
-  if (current.node_type !== "action_node" || decisionStrategy === undefined) return empty;
+  // Nespočítaný uzel (`null`) není rozhodnutí - stejně jako v `riverActionEv`
+  // a ve výčtu rozhodnutí podhry, který ho vůbec nenabídne.
+  if (current.node_type !== "action_node" || decisionStrategy === undefined
+    || decisionStrategy.strategy === null) return empty;
   const decision = current;
   // Táž zásada jako v `riverActionEv`: uzel, který neřekne, čí je to
   // rozhodnutí, se nezodpoví. Tady si to sice neodporovalo - `?? 0` dalo
@@ -234,10 +241,19 @@ export function turnActionEv(input: TurnEvInput): TurnEvResult {
     }
 
     const strategy = node.strategy;
+    const map = strategy.strategy;
+    // Uzel, který solver nespočítal (`null` - nevyřešená vrstva, viz
+    // `SolverStrategy`): jeho váha je **nepokrytá**, ne nulová EV - tatáž
+    // zásada jako u kombinace, kterou uzel nevede (bod 204). Ukáže se to jako
+    // menší pokrytí, ne jako spočítaná nula.
+    if (map === null) {
+      missingWeight += heroShare * weight;
+      return 0;
+    }
     const acting = node.player ?? 0;
 
     if (acting === heroPlayer) {
-      const own = strategy.strategy[heroCombo];
+      const own = map[heroCombo];
       // Kombinace, kterou solver v tomhle uzlu **nevede**, nemá nulovou EV -
       // nemá žádnou. Všechny frekvence by vyšly nula, součet taky, a podstrom by
       // se tiše sečetl na nulu **s plným pokrytím**, tedy jako spočítaný
@@ -270,7 +286,7 @@ export function turnActionEv(input: TurnEvInput): TurnEvResult {
     // uzlu jich vede 152, tedy 16 % váhy stranou.
     const present: Weighted[] = [];
     for (const villain of live) {
-      if (strategy.strategy[villain.combo] === undefined) absentWeight += heroShare * villain.weight;
+      if (map[villain.combo] === undefined) absentWeight += heroShare * villain.weight;
       else present.push(villain);
     }
 
@@ -278,7 +294,7 @@ export function turnActionEv(input: TurnEvInput): TurnEvResult {
     for (const [index, action] of strategy.actions.entries()) {
       const branch: Weighted[] = [];
       for (const villain of present) {
-        const frequency = strategy.strategy[villain.combo]?.[index] ?? 0;
+        const frequency = map[villain.combo]?.[index] ?? 0;
         if (frequency > 0) branch.push({ combo: villain.combo, weight: villain.weight * frequency });
       }
       if (branch.length === 0) continue;

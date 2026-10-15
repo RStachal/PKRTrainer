@@ -38,7 +38,7 @@ export function handClassOfCombo(combo: string): string | undefined {
  * margin that the answer is not a coin toss.
  */
 export function heroSideOfNode(
-  node: { player?: unknown; strategy?: { strategy?: Record<string, unknown> } },
+  node: { player?: unknown; strategy?: { strategy?: Record<string, unknown> | null } },
   item: { oop?: Record<string, number>; ip?: Record<string, number> },
 ): { side: "OOP" | "IP"; confidence: number; source: "OVERLAP" | "NODE_PLAYER" } | undefined {
   // Solver sám říká, kdo je na tahu, a plán mapuje jeho indexy: `reach[1]` je

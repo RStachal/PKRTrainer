@@ -40,7 +40,7 @@ import { solvedTurnSpots } from "../src/data/ranges/solvedTurnSpotCatalogue";
 import { decodeComboMask, decodeEvDeltas, encodeComboMask, encodeEvDeltas } from "../src/core/evCodec";
 import { turnActionEv } from "../src/core/turnActionEv";
 import type { SolverNode } from "../src/core/riverActionEv";
-import { riverActionEv } from "../src/core/riverActionEv";
+import { riverActionEv, strategyMap } from "../src/core/riverActionEv";
 import { manifestLoadExpression, readManifestEntries } from "./lib/manifestEntries.mts";
 
 const ROOT = "artifacts/decomposition";
@@ -266,7 +266,10 @@ class SubgameLayers {
     const node = JSON.parse(readFileSync(path, "utf8")) as SolverNode;
     // Vrstva se použije jen tehdy, když v jejím kořeni hraje hráč 1 (OOP) -
     // hodnota uzlu se skládá z jeho vlastní strategie.
-    if (node.player !== 1 || node.strategy === undefined) return undefined;
+    // Kořen vrstvy bez spočítané strategie (`null`) hodnotu nedá - stejně jako
+    // kořen bez strategie.
+    const rootMap = strategyMap(node);
+    if (node.player !== 1 || node.strategy === undefined || rootMap === undefined) return undefined;
     const rows = riverActionEv({
       node, board: item.board, potChips: item.pot, oop: item.oop, ip: item.ip, line: [],
     });
@@ -274,7 +277,7 @@ class SubgameLayers {
     const byCombo = new Map<string, number>();
     for (const row of rows) {
       const index = strategy.actions.indexOf(row.action);
-      const frequency = strategy.strategy[row.combo]?.[index] ?? 0;
+      const frequency = rootMap[row.combo]?.[index] ?? 0;
       if (frequency <= 0) continue;
       byCombo.set(row.combo, (byCombo.get(row.combo) ?? 0) + frequency * row.evChips);
     }

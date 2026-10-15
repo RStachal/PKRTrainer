@@ -22,6 +22,8 @@
  * velikost sázky, než jakou solver počítal.
  */
 
+import { hasUncomputedNode } from "../../src/core/riverActionEv.ts";
+
 /**
  * Uzel podhry tak, jak ho zapisuje solver.
  *
@@ -36,7 +38,8 @@ export interface SubgameNode {
   actions?: readonly string[];
   strategy?: {
     actions?: readonly string[];
-    strategy?: Readonly<Record<string, readonly number[]>>;
+    /** `null`, když solver uzel nespočítal - viz `SolverStrategy` v `riverActionEv.ts`. */
+    strategy?: Readonly<Record<string, readonly number[]>> | null;
   };
   childrens?: Record<string, SubgameNode>;
 }
@@ -117,6 +120,12 @@ export function subgameDecisions(
   rootStackChips: number,
 ): SubgameDecision[] {
   const found: SubgameDecision[] = [];
+  // Vrstva s nespočítaným uzlem je nevyřešená celá: uzly s čísly jsou v ní
+  // výchozí 1/n, ne rovnováha (viz `SolverStrategy` v `riverActionEv.ts`).
+  // Vypsat z ní kořen by do packu poslalo rovnoměrnou strategii jako odpověď
+  // solveru - u tří turnových vrstev `MTT9_25BB_LJ_CO_SRP__742r` přesně tak
+  // vypadá kořen: čtyři akce po 25 % pro všech 181 kombinací.
+  if (hasUncomputedNode(root)) return found;
 
   const walk = (
     node: SubgameNode,
@@ -127,7 +136,10 @@ export function subgameDecisions(
   ): void => {
     if (node.node_type !== "action_node") return;
     const block = node.strategy;
-    if (block === undefined || block.strategy === undefined) return;
+    // `null` sem po kontrole výš nedojde; podmínka zůstává kvůli typu. Do
+    // 15. 10. 2026 tu stálo jen `=== undefined`, `null` prošlo a
+    // `Object.values(null)` shodilo stavěč riverových packů na 419 vrstvách.
+    if (block === undefined || block.strategy === undefined || block.strategy === null) return;
     const player = node.player === 1 ? 1 : node.player === 0 ? 0 : undefined;
     if (player === undefined) return;
 

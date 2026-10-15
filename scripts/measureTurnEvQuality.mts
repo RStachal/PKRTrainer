@@ -27,7 +27,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { combosOfClass, riverActionEv, type SolverNode } from "../src/core/riverActionEv";
+import { combosOfClass, riverActionEv, strategyMap, type SolverNode } from "../src/core/riverActionEv";
 import { turnActionEv } from "../src/core/turnActionEv";
 
 const [familyArgument, subgameArgument] = process.argv.slice(2);
@@ -105,7 +105,8 @@ function riverControl(): void {
     if (!existsSync(path)) continue;
     const node = JSON.parse(readFileSync(path, "utf8")) as SolverNode;
     const strategy = node.strategy;
-    if (strategy === undefined) continue;
+    const layerMap = strategyMap(node);
+    if (strategy === undefined || layerMap === undefined) continue;
     layers += 1;
 
     const rows = riverActionEv({
@@ -118,7 +119,7 @@ function riverControl(): void {
     }
 
     for (const [combo, actions] of byCombo) {
-      const played = strategy.strategy[combo];
+      const played = layerMap[combo];
       if (played === undefined) continue;
       const evOf = new Map(actions.map((row) => [row.action, row.ev]));
       let mixed = 0;
@@ -178,7 +179,8 @@ function riverValuesFor(item: PlanItem): Map<string, number> | undefined {
   if (!existsSync(path)) return undefined;
   const node = JSON.parse(readFileSync(path, "utf8")) as SolverNode;
   // Hodnota uzlu je součet EV akcí vážený strategií, kterou tam hrdina hraje.
-  if (node.player !== 1 || node.strategy === undefined) return undefined;
+  const rootMap = strategyMap(node);
+  if (node.player !== 1 || node.strategy === undefined || rootMap === undefined) return undefined;
   const rows = riverActionEv({
     node, board: item.board, potChips: item.pot, oop: item.oop, ip: item.ip, line: [],
   });
@@ -186,7 +188,7 @@ function riverValuesFor(item: PlanItem): Map<string, number> | undefined {
   const byCombo = new Map<string, number>();
   for (const row of rows) {
     const index = strategy.actions.indexOf(row.action);
-    const frequency = strategy.strategy[row.combo]?.[index] ?? 0;
+    const frequency = rootMap[row.combo]?.[index] ?? 0;
     if (frequency <= 0) continue;
     byCombo.set(row.combo, (byCombo.get(row.combo) ?? 0) + frequency * row.evChips);
   }
@@ -283,7 +285,7 @@ if (result.rows.length === 0) {
   let maxEv = -Infinity;
   for (const [combo, actions] of byCombo) {
     for (const row of actions) { minEv = Math.min(minEv, row.ev); maxEv = Math.max(maxEv, row.ev); }
-    const played = strategy?.strategy[combo];
+    const played = strategyMap(turnNode)?.[combo];
     if (played === undefined || strategy === undefined) continue;
     let bestPlayed = -1;
     let bestIndex = -1;
@@ -306,7 +308,7 @@ if (result.rows.length === 0) {
     { name: "pod 50 %", min: 0, ok: 0, total: 0, worst: 0, gaps: [] },
   ];
   for (const [combo, actions] of byCombo) {
-    const played = strategy?.strategy[combo];
+    const played = strategyMap(turnNode)?.[combo];
     if (played === undefined || strategy === undefined) continue;
     const evOf = new Map(actions.map((row) => [row.action, row]));
     const playedEv: number[] = [];
@@ -347,7 +349,7 @@ if (result.rows.length === 0) {
   let lossCount = 0;
   let lossWorst = 0;
   for (const [combo, actions] of byCombo) {
-    const played = strategy?.strategy[combo];
+    const played = strategyMap(turnNode)?.[combo];
     if (played === undefined || strategy === undefined) continue;
     const evOf = new Map(actions.map((row) => [row.action, row]));
     let mixed = 0;

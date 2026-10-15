@@ -69,7 +69,9 @@ def collect_lines(dump):
         if kind != "action_node":
             return
         block = node.get("strategy")
-        if block is None:
+        # `"strategy": null` is a node the solver did not compute: no reach can
+        # be carried through it, and `None.items()` would end the planning.
+        if block is None or block.get("strategy") is None:
             return
         actions, player = block["actions"], node["player"]
         for index, action in enumerate(actions):
@@ -143,7 +145,12 @@ def main():
     for line in lines:
         line["weight"] = joint_reach(line["reach"])
     # A line with both stacks already in has no river strategy left to solve.
-    live = [l for l in lines if l["level"] < stack - 0.5]
+    # Neither has a line nobody plays. Until 15 Oct 2026 a subgame whose only
+    # live line had zero reach still planned it: `live_total` fell back to 1.0,
+    # the line was chosen at "reach 0" and the solver got empty ranges for both
+    # players - 419 river layers of MTT9_25BB_LJ_BB_SRP alone, every one of them
+    # written back as `"strategy": null`.
+    live = [l for l in lines if l["level"] < stack - 0.5 and l["weight"] > 0]
     live.sort(key=lambda l: l["weight"], reverse=True)
     live_total = sum(l["weight"] for l in live) or 1.0
 
@@ -159,6 +166,12 @@ def main():
     for line in chosen:
         for card, equivalents in rivers.items():
             blocked = set(board) | {card}
+            oop = weighted_classes(line["reach"][1], blocked)
+            ip = weighted_classes(line["reach"][0], blocked)
+            # A player with no hand left has nothing to solve for, and the solver
+            # does not say so - it writes the tree back unsolved.
+            if not oop or not ip:
+                continue
             items.append({
                 "line": line["path"],
                 "river": card,
@@ -167,8 +180,8 @@ def main():
                 "pot": pot + 2 * line["level"],
                 "stack": stack - line["level"],
                 "board": board + [card],
-                "oop": weighted_classes(line["reach"][1], blocked),
-                "ip": weighted_classes(line["reach"][0], blocked),
+                "oop": oop,
+                "ip": ip,
             })
 
     plan = {
