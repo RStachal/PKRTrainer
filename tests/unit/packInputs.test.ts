@@ -15,6 +15,8 @@ import { describe, expect, it } from "vitest";
 import {
   familiesToGenerate,
   newestCheckpointMs,
+  newestRiverLayerMs,
+  newestTurnLayerMs,
   packSlug,
   sharedInputsHash,
   type PackInputsRecord,
@@ -138,6 +140,74 @@ describe("familiesToGenerate", () => {
     const scaffolded = scaffold();
     const record = { [`turn:${FAMILY}`]: { shared: "abc", checkpointMs: scaffolded.checkpointMs } };
     expect(decide(record, "abc", scaffolded).generate).toEqual([FAMILY]);
+  });
+});
+
+describe("vrstvy rozkladu a verdikt jsou vstup", () => {
+  /** Rozklad jedné desky: turnová vrstva a jedna riverová podhra. */
+  function layers(atMs: number): string {
+    const root = mkdtempSync(join(tmpdir(), "pack-inputs-layers-"));
+    const board = join(root, `${FAMILY}__742r`);
+    mkdirSync(join(board, "river", "CHECK_CHECK__2d"), { recursive: true });
+    writeFileSync(join(board, "plan.json"), "{}", "utf8");
+    const turn = join(board, "CHECK_CHECK__2d.json");
+    writeFileSync(turn, "{}", "utf8");
+    utimesSync(turn, atMs / 1000, atMs / 1000);
+    utimesSync(join(board, "river", "CHECK_CHECK__2d"), atMs / 1000, atMs / 1000);
+    utimesSync(join(board, "river"), atMs / 1000, atMs / 1000);
+    return root;
+  }
+
+  const base = (scaffolded: { checkpointMs: number }, extra: Partial<PackInputsRecord> = {}) => ({
+    [`turn:${FAMILY}`]: { shared: "abc", checkpointMs: scaffolded.checkpointMs, ...extra },
+  });
+
+  it("čte čas vrstev ze souborů turnu a z adresářů riveru, plán nepočítá", () => {
+    const root = layers(Date.parse("2026-10-05T10:00:00Z"));
+    expect(newestTurnLayerMs(root, FAMILY)).toBe(Date.parse("2026-10-05T10:00:00Z"));
+    expect(newestRiverLayerMs(root, FAMILY)).toBe(Date.parse("2026-10-05T10:00:00Z"));
+    expect(newestTurnLayerMs(root, "MTT9_25BB_JINA_SRP")).toBe(0);
+  });
+
+  it("generuje turn, když rozklad přinesl novější vrstvy - i při stejném checkpointu", () => {
+    // Přesně 15. 10. 2026: 7 ze 48 turnových packů starších než jejich vrstvy.
+    const scaffolded = scaffold();
+    const decision = familiesToGenerate({
+      street: "turn", families: [FAMILY], checkpointRoot: scaffolded.checkpointRoot, packDir: scaffolded.packDir,
+      shared: "abc", record: base(scaffolded, { layersMs: 1_000 }), layersMs: () => 2_000,
+    });
+    expect(decision.generate).toEqual([FAMILY]);
+  });
+
+  it("přeskočí turn, když se nezměnily ani vrstvy", () => {
+    const scaffolded = scaffold();
+    const decision = familiesToGenerate({
+      street: "turn", families: [FAMILY], checkpointRoot: scaffolded.checkpointRoot, packDir: scaffolded.packDir,
+      shared: "abc", record: base(scaffolded, { layersMs: 2_000, verdict: "ACCEPTED|h|MECHANICAL" }),
+      layersMs: () => 2_000, verdictFor: () => "ACCEPTED|h|MECHANICAL",
+    });
+    expect(decision.skipped).toEqual([FAMILY]);
+  });
+
+  it("generuje, když se změnil verdikt - druhý průchod ranního cyklu", () => {
+    // Do 15. 10. 2026 nepřegeneroval nic: první průchod těmže rodinám právě
+    // zapsal tytéž vstupy a verdikt mezi nimi nebyl. Nová rodina zůstala LOW.
+    const scaffolded = scaffold();
+    const decision = familiesToGenerate({
+      street: "turn", families: [FAMILY], checkpointRoot: scaffolded.checkpointRoot, packDir: scaffolded.packDir,
+      shared: "abc", record: base(scaffolded, { layersMs: 2_000, verdict: "" }),
+      layersMs: () => 2_000, verdictFor: () => "ACCEPTED|h|MECHANICAL",
+    });
+    expect(decision.generate).toEqual([FAMILY]);
+  });
+
+  it("starý záznam bez nových polí neví, a tedy se generuje", () => {
+    const scaffolded = scaffold();
+    const decision = familiesToGenerate({
+      street: "turn", families: [FAMILY], checkpointRoot: scaffolded.checkpointRoot, packDir: scaffolded.packDir,
+      shared: "abc", record: base(scaffolded), layersMs: () => 2_000, verdictFor: () => "",
+    });
+    expect(decision.generate).toEqual([FAMILY]);
   });
 });
 

@@ -102,6 +102,52 @@ export function newestCheckpointMs(checkpointRoot: string, family: string): numb
   return newest;
 }
 
+/**
+ * Čas nejnovější turnové vrstvy rodiny; 0, když žádná není.
+ *
+ * Turnový pack se staví z vrstev rozkladu, ne z checkpointu. Do 15. 10. 2026
+ * se mezi vstupy nepočítaly, takže noc, která rodinu rozložila znovu (po
+ * přesolvení na nové range), se do turnového packu nepropsala: 7 ze 48 packů
+ * bylo starších než jejich vrstvy, a hráč dostával flop z nového solvu a turn
+ * ze starého.
+ */
+export function newestTurnLayerMs(decompositionRoot: string, family: string): number {
+  if (!existsSync(decompositionRoot)) return 0;
+  let newest = 0;
+  for (const board of readdirSync(decompositionRoot)) {
+    if (!board.startsWith(`${family}__`)) continue;
+    const directory = join(decompositionRoot, board);
+    for (const name of readdirSync(directory)) {
+      if (!name.endsWith(".json") || name === "plan.json") continue;
+      newest = Math.max(newest, statSync(join(directory, name)).mtimeMs);
+    }
+  }
+  return newest;
+}
+
+/**
+ * Čas nejnovější riverové vrstvy rodiny; 0, když žádná není.
+ *
+ * Čte se z adresářů podher, ne ze souborů: riverových vrstev je přes 660 tisíc
+ * a runner vrstvu nikdy nepřepisuje na místě - novou zapíše jako nový soubor,
+ * a tím posune čas adresáře. Přesolvená rodina se rozkládá načisto, takže se
+ * pohne i ten. Kdyby runner začal vrstvy přepisovat, musí se číst soubory.
+ */
+export function newestRiverLayerMs(decompositionRoot: string, family: string): number {
+  if (!existsSync(decompositionRoot)) return 0;
+  let newest = 0;
+  for (const board of readdirSync(decompositionRoot)) {
+    if (!board.startsWith(`${family}__`)) continue;
+    const river = join(decompositionRoot, board, "river");
+    if (!existsSync(river)) continue;
+    newest = Math.max(newest, statSync(river).mtimeMs);
+    for (const subgame of readdirSync(river)) {
+      newest = Math.max(newest, statSync(join(river, subgame)).mtimeMs);
+    }
+  }
+  return newest;
+}
+
 /** `MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR` → `mtt9-100bb-sb-bb-srp-oop-cbet-highspr`. */
 export function packSlug(family: string): string {
   return family.toLowerCase().replace(/_/g, "-");
@@ -112,6 +158,13 @@ export interface PackInputsRecord {
   shared: string;
   /** Čas nejnovějšího checkpointu rodiny v té chvíli. */
   checkpointMs: number;
+  /**
+   * Čas nejnovější vrstvy rozkladu, ze které ulice staví (turn: turnové vrstvy,
+   * river: riverové). U flopu chybí - flop se staví z checkpointů.
+   */
+  layersMs?: number;
+  /** Verdikt kontroly pro (ulici, rodinu) v době generování; pack z něj bere důvěru. */
+  verdict?: string;
 }
 
 export interface SkipDecision {
@@ -134,6 +187,16 @@ export function familiesToGenerate(options: {
   packDir: string;
   shared: string;
   record: Readonly<Record<string, PackInputsRecord>>;
+  /** Čas nejnovější vrstvy, ze které ulice staví; u flopu se nepředává. */
+  layersMs?: (family: string) => number;
+  /**
+   * Verdikt (ulice, rodina) teď. Pack z něj bere důvěru, takže je to vstup jako
+   * každý jiný. Do 15. 10. 2026 nebyl, a druhý průchod ranního cyklu - ten, co
+   * po kontrole přegeneruje rodiny se změněným verdiktem - proto nepřegeneroval
+   * nic: první průchod těmže rodinám právě zapsal tytéž vstupy. Nová rodina tak
+   * zůstala s důvěrou LOW pod produkční branou, dokud se jí nezměnily desky.
+   */
+  verdictFor?: (family: string) => string;
 }): SkipDecision {
   const { street, families, checkpointRoot, packDir, shared, record } = options;
   const generate: string[] = [];
@@ -142,16 +205,21 @@ export function familiesToGenerate(options: {
     const previous = record[`${street}:${family}`];
     const pack = join(packDir, `${packSlug(family)}.generated.json`);
     const checkpointMs = newestCheckpointMs(checkpointRoot, family);
+    const layersMs = options.layersMs?.(family);
+    const verdict = options.verdictFor?.(family);
+    // Záznam bez nového pole (psaný před 15. 10. 2026) neví, a tedy se generuje.
     const unchanged = previous !== undefined
       && previous.shared === shared
       && previous.checkpointMs === checkpointMs
       && checkpointMs > 0
+      && (layersMs === undefined || previous.layersMs === layersMs)
+      && (verdict === undefined || (previous.verdict ?? "") === verdict)
       && existsSync(pack);
     if (unchanged) skipped.push(family);
     else generate.push(family);
   }
   const reason = skipped.length === 0
-    ? "nic nejde přeskočit (chybí záznam, změnily se sdílené vstupy, nebo přišly desky)"
+    ? "nic nejde přeskočit (chybí záznam, změnily se sdílené vstupy, přišly desky, vrstvy nebo verdikt)"
     : `${skipped.length} rodin má pack ze týchž vstupů`;
   return { generate, skipped, reason };
 }

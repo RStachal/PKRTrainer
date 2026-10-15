@@ -11,6 +11,8 @@ import {
   PACK_INPUTS_PATH,
   familiesToGenerate,
   newestCheckpointMs,
+  newestRiverLayerMs,
+  newestTurnLayerMs,
   sharedInputsHash,
   type PackInputsRecord,
 } from "./lib/packInputs.mts";
@@ -584,6 +586,21 @@ async function generateAll(list: readonly string[], label: string): Promise<void
   const { lanes, heapMb, freeGb } = laneBudget();
   const sharedHash = sharedInputsHash();
   const packInputs = readPackInputs();
+  // Verdikty, které generátor teď přečte. Pack z nich bere důvěru, takže patří
+  // mezi vstupy; snímek se bere jednou, před generováním, aby záznam říkal
+  // přesně to, z čeho pack vznikl.
+  const verdicts = verdictSnapshot();
+  const verdictFor = (street: string) => (family: string): string => (
+    verdicts.get(`${street.toUpperCase()}|${family}`) ?? ""
+  );
+  // Turn a river se staví z vrstev rozkladu, ne z checkpointů (viz `packInputs.mts`).
+  const layersFor = (street: string): ((family: string) => number) | undefined => (
+    street === "turn"
+      ? (family: string) => newestTurnLayerMs(WORK, family)
+      : street === "river"
+        ? (family: string) => newestRiverLayerMs(WORK, family)
+        : undefined
+  );
   const heapFor = (street: string): number => heapMb.get(street) ?? LANE_HEAP_CEILING_MB;
   // Prázdný řádek zvlášť, ne `\n` v šabloně: přes vrstvy escapování se v tomhle
   // projektu zpětné lomítko ztratilo dnes už podruhé a stane se z něj skutečný
@@ -654,6 +671,8 @@ async function generateAll(list: readonly string[], label: string): Promise<void
         packDir: STREET_PACK_DIR[street] ?? "",
         shared: sharedHash,
         record: packInputs,
+        layersMs: layersFor(street),
+        verdictFor: verdictFor(street),
       });
       if (decision.skipped.length > 0) {
         console.log(`[${label}] ${street}: generuji ${decision.generate.length} z ${list.length} rodin,`
@@ -676,9 +695,12 @@ async function generateAll(list: readonly string[], label: string): Promise<void
           // jsou **async úlohy jednoho procesu** a sdílejí tenhle jeden objekt,
           // takže si nemají co přepsat. Kdyby se z pruhů kdy staly procesy,
           // tohle je druhé místo, které se musí předělat.
+          const layers = layersFor(street);
           packInputs[`${street}:${family}`] = {
             shared: sharedHash,
             checkpointMs: newestCheckpointMs(CHECKPOINT_ROOT, family),
+            ...(layers === undefined ? {} : { layersMs: layers(family) }),
+            verdict: verdictFor(street)(family),
           };
           writeFileSync(PACK_INPUTS_PATH, `${JSON.stringify(packInputs, null, 2)}\n`, "utf8");
         // **Jen rozpočet chunku.** V generátorech je „vynecháno" ve čtyřech
