@@ -147,7 +147,13 @@ PŘESOLVIT / NECHAT ZATÍM:
 
 *Pozor na jednu věc nezávislou na téhle volbě: cokoli se nastaguje, bude se
 solvit na obraně, která **nerozlišuje, kdo otevřel** — `VS_OPEN` je klíčovaný
-jen sedačkou obránce a hloubkou. Na 40 a 50 bb už přitom packy zpřesnění podle
+jen sedačkou obránce a hloubkou. ~~Na 40 a 50 bb už přitom packy zpřesnění podle
 otvírače mají (56 % a 45 % záznamů). Je to změna v kódu bez jediné noci a
-u těchhle dvou hloubek by se vyplatila dřív než solve. Měří to
-`npm run mtt:vs-open-refinement`.*
+u těchhle dvou hloubek by se vyplatila dřív než solve.~~*
+
+> **Vyvráceno 15. 10. 2026.** Těch 56 % a 45 % bylo průměrem přes všechny packy.
+> Solver ale bere obranu z packů s **ante OFF** (expanze volá `ante: "OFF"`)
+> a ty podle rozhodnutí 7a RYE vrstvu nemají: zpřesnění podle otvírače je tam
+> u 11 ze 77 záznamů (14,3 %) a na každé hloubce stejně, samé vlastní BB proti
+> SB. Úspora „bez jediné noci" pro solver neexistuje; vznikne, až ante OFF
+> dostane zdroj s otvíračem. Měří to opravený `npm run mtt:vs-open-refinement`.

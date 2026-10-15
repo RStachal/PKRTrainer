@@ -92,9 +92,22 @@ async function main(): Promise<void> {
   // **Po hloubkách, protože rozhodnutí o noci je vždy o jedné hloubce.**
   // Součet přes všechny hloubky umí vypadat jako dostatek i tam, kde ta
   // hloubka, která se právě stahuje, nemá nic - a nastagovat se má podle ní.
-  console.log("\npo hloubkách (zpřesněné / všechny VS_OPEN záznamy):");
+  /*
+   * **Po hloubkách jen packy, ze kterých bere solver - tedy ante OFF.**
+   *
+   * `buildSeatPairExpansionBatch.mts` volá `srpSolverInputRanges(… ante: "OFF")`
+   * a vyřešený postflopový obsah je klíčovaný `…|OFF`. Do 15. 10. 2026 tenhle
+   * rozpad sčítal **všechny** packy, a protože ante ON nesou RYE vrstvu (bod 273)
+   * a ante OFF podle rozhodnutí 7a ne, vyšlo „na 40 bb 56 %, na 50 bb 45 %" -
+   * a já z toho napsal vlastníkovi, že zpřesnění podle otvírače ve vstupu
+   * solveru je „změna v kódu bez jediné noci". Pro packy, které solver čte,
+   * je to 11 záznamů ze 77 (14,3 %), samé vlastní BB proti SB. Úspora tedy
+   * neexistuje - a nevznikne, dokud ante OFF nedostane zdroj s otvíračem.
+   */
+  const solverPacks = packs.filter((pack) => isRangePack(pack) && String(pack.id).includes("ante-off"));
+  console.log(`\npo hloubkách - jen packy, ze kterých bere solver (ante OFF, ${solverPacks.length}):`);
   const byBucket = new Map<string, { general: number; refined: number }>();
-  for (const pack of packs) {
+  for (const pack of solverPacks) {
     if (!isRangePack(pack)) continue;
     for (const record of pack.records) {
       if (record.context !== "VS_OPEN") continue;
@@ -117,31 +130,32 @@ async function main(): Promise<void> {
     );
   }
 
-  // **Závěr se čte z hloubky, ne ze součtu, a tohle je ten rozdíl.**
+  // **Závěr se čte z hloubky, ne ze součtu - a z packů, které solver čte.**
   //
   // 13. 10. 2026 jsem z celkových 37,1 % usoudil, že nastagovat 96 desek na
   // 25 bb znamená zapéct do nich vadu, kterou už umíme opravit. Rozpad to
   // vyvrátil: na 25 bb je zpřesněných 4 z 28 (14 %) a jediná pokrytá dvojice
   // je BB proti SB. Lepší vstup pro tu hloubku tedy **neexistuje** a stagování
-  // nic nekazí. Kde ta změna cenu má, je 100 bb (60 %), 40 (56 %) a 30 (54 %).
+  // nic nekazí. (Tvrzení „kde ta změna cenu má, je 100 bb (60 %), 40 (56 %)
+  // a 30 (54 %)" bylo průměrem přes ante ON, které solver nečte - viz výš.)
   const deep = [...byBucket.entries()]
     .filter(([, cell]) => cell.refined > 0 && cell.refined / (cell.general + cell.refined) >= 0.4)
     .map(([bucket]) => bucket + " BB")
     .sort((a, b) => Number.parseInt(a, 10) - Number.parseInt(b, 10));
 
-  if (totalRefined === 0) {
+  if (totalRefined === 0 || deep.length === 0) {
     console.log(
-      "\nŽádné VS_OPEN zpřesnění: ptát se se vsSeat by dnes nevrátilo nic navíc,\n" +
-        "takže ústupek z solverInputRanges.ts zrušit nejde a nastagovat se může.",
+      "\nPro solver (ante OFF) žádná hloubka nemá aspoň 40 % obrany se zpřesněním\n" +
+        "podle otvírače. Ptát se se vsSeat by vstup solveru nezlepšilo - ústupek\n" +
+        "v solverInputRanges.ts trvá, dokud ante OFF nedostane zdroj s otvíračem\n" +
+        "(RYE tam podle rozhodnutí 7a nepatří, počítá s BB ante).",
     );
     return;
   }
   console.log(
-    `\nKde by se vyplatilo ptát se se vsSeat (aspoň 40 % záznamů): ${deep.join(", ")}.\n` +
+    `\nKde by se pro solver vyplatilo ptát se se vsSeat (aspoň 40 % záznamů ante OFF): ${deep.join(", ")}.\n` +
       "Tam obrana dnes vrací totéž proti rané pozici i proti buttonu, a naměřený\n" +
-      "rozdíl je 11,7 bodu v průměru a u BB až 26,9.\n\n" +
-      "Hloubky pod tím lepší vstup nemají, takže se na nich stagovat může bez obav -\n" +
-      "rozhodnutí o noci se čte z řádku té hloubky, ne ze součtu.",
+      "rozdíl je 11,7 bodu v průměru a u BB až 26,9.",
   );
 }
 
