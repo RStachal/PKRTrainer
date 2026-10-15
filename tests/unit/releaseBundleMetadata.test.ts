@@ -289,8 +289,11 @@ describe("release bundle metadata", () => {
     // 17. 9. 2026 přibyl `mtt:preflop-drift`: produkční preflop packy byly dva
     // měsíce snímek z 16. 7. a nikdo to nepoznal, protože sada i brány měřily
     // legacy pack a produkci neměřilo nic (bod 257).
+    // 15. 10. 2026 přibyl `mtt:picked-situation`: doručení na cestě „Change
+    // situation" stálo do 14. 10. na nule a měření z toho dne jen tisklo, takže
+    // by se tam regrese vrátila bez jediné červené (bod 315).
     expect(pkg.scripts["verify:block"])
-      .toBe("npm run typecheck && npm test && npm run verify:ranges && npm run mtt:preflop-drift && npm run mtt:post-answer && npm run mtt:ev-bounds && npm run build && npm run verify:precache && npm run bundle:budget && npm run e2e:chrome:preview");
+      .toBe("npm run typecheck && npm test && npm run verify:ranges && npm run mtt:preflop-drift && npm run mtt:post-answer && npm run mtt:picked-situation && npm run mtt:ev-bounds && npm run build && npm run verify:precache && npm run bundle:budget && npm run e2e:chrome:preview");
     expect(pkg.scripts["release:check"])
       .toBe("npm run typecheck && npm test && npm run mtt:refresh-registry -- --check && npm run mtt:release-gates && npm run verify:ranges && npm run build && npm run verify:precache && npm run bundle:budget && npm run e2e:chrome:preview");
     expect(`${html}\n${manifest.description}\n${pkg.description}`).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);

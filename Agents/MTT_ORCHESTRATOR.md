@@ -258,6 +258,16 @@ Co katalog obsahuje po ulicích, hloubkách a uzlech, tiskne
 **Pravidlo pro příště:** když přibude cesta, kterou se obsah k hráči dostává,
 musí přibýt i řádek ve vrstvě 0. Jinak brána měří tu starou a zůstává zelená.
 
+**Řádek ve vrstvě 0 musí hlídat, ne jen měřit** (15. 10. 2026). Měření z 14. 10.
+tisklo tabulku, ale do `verify:block` se nedostalo, takže by regresi zase nikdo
+nepoznal. Teď má dna kolem 80 % naměřeného (flop: matice 36, cena 11; turn:
+matice 17, EV 13, cena 7; river: 22, 15, 7 - tabulka ve skriptu), končí
+nenulovým kódem a je v bráně hned za `mtt:post-answer`. Volání pohledu ale
+jen napodobuje přes sdílený modul: kdyby pohled modul přestal volat, neviděl
+by to. Proto `tests/unit/postflopViewPickedSituation.test.ts` modul
+odposlouchává a ptá se samotného pohledu, s jakou situací se katalogu ptá -
+ověřeno rozbitím pohledu, tři ulice zčervenaly.
+
 ### 1. Cíl a vzdálenost k němu — **stojí**
 
 Cíl je v `MTT_COMPLETION_PLAN.md`, vzdálenost měří `mtt:playable-beta` (stav a

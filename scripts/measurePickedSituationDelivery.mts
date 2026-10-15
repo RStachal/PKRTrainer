@@ -206,6 +206,7 @@ async function main(): Promise<void> {
     + "bez katalogu".padStart(14) + "s katalogem".padStart(12),
   );
 
+  const measured = new Map<PostflopStreet, Tally>();
   for (const street of STREETS) {
     const before = emptyTally();
     const after = emptyTally();
@@ -215,6 +216,7 @@ async function main(): Promise<void> {
       const fresh = await deal(street, index, true);
       if (fresh !== undefined) count(after, fresh);
     }
+    measured.set(street, after);
     console.log(
       street.padEnd(7)
       + pct(before.withBuckets, before.dealt).padStart(14)
@@ -239,6 +241,67 @@ async function main(): Promise<void> {
     + "losovaná deska jen tam, kde pro tu situaci vyřešený obsah není.\n"
     + "Zbytek do 100 % je otázka šířky solvingu, ne cesty.",
   );
+
+  const failures = belowFloor(measured);
+  console.log("");
+  if (failures.length === 0) {
+    console.log("Doručení vybrané situace drží nad dnem.");
+  } else {
+    console.log("DORUČENÍ VYBRANÉ SITUACE SPADLO POD DNO:");
+    for (const line of failures) console.log(`  ${line}`);
+    console.log("");
+    console.log("Hráč, který si situaci vybere, dostane méně vyřešeného obsahu než dřív.");
+    process.exitCode = 1;
+  }
+}
+
+/**
+ * Dna pro cestu s katalogem.
+ *
+ * Do 15. 10. 2026 tenhle skript jen tiskl, a tak nehlídal nic - přitom právě
+ * tahle cesta stála do 14. 10. na nule, aniž by to kterákoli brána poznala.
+ * Dna jsou kolem 80 % naměřeného, stejně jako u `mtt:post-answer`: chytí
+ * rozbitou cestu, ne kolísání obsahu. Rozdávání je deterministické (semínka
+ * 2000+), takže čísla se mění jen se změnou packů.
+ *
+ * | ulice | matice podle akce | EV akcí | cena akce | (naměřeno 15. 10. 2026) |
+ * |---|---|---|---|---|
+ * | flop | 45,5 % -> dno 36 | 0,0 % -> bez dna | 14,2 % -> dno 11 | |
+ * | turn | 21,6 % -> dno 17 | 16,5 % -> dno 13 | 9,7 % -> dno 7 | |
+ * | river | 27,8 % -> dno 22 | 19,3 % -> dno 15 | 9,7 % -> dno 7 | |
+ *
+ * EV akcí na flopu dno nemá: flopové EV skrz riverové vrstvy neexistuje (deník
+ * 247), a nula je tedy správný stav, ne propad. Každé dno jde přepsat
+ * proměnnou `PICKED_SITUATION_MIN_<ULICE>_<METRIKA>_PCT`.
+ */
+const FLOORS: Record<PostflopStreet, { matrix: number; ev?: number; price: number }> = {
+  FLOP: { matrix: 36, price: 11 },
+  TURN: { matrix: 17, ev: 13, price: 7 },
+  RIVER: { matrix: 22, ev: 15, price: 7 },
+};
+
+function belowFloor(measured: ReadonlyMap<PostflopStreet, Tally>): string[] {
+  const floor = (name: string, fallback: number): number => {
+    const raw = process.env[name];
+    const parsed = raw === undefined ? Number.NaN : Number(raw);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+  const failures: string[] = [];
+  for (const street of STREETS) {
+    const tally = measured.get(street) ?? emptyTally();
+    const share = (part: number) => (tally.dealt === 0 ? 0 : (100 * part) / tally.dealt);
+    const checks: [string, string, number, number | undefined][] = [
+      ["MATRIX", "matice podle akce", share(tally.withBuckets), FLOORS[street].matrix],
+      ["EV", "EV akcí", share(tally.actionEv), FLOORS[street].ev],
+      ["PRICE", "cena akce", share(tally.priced), FLOORS[street].price],
+    ];
+    for (const [key, label, value, fallback] of checks) {
+      if (fallback === undefined) continue;
+      const limit = floor(`PICKED_SITUATION_MIN_${street}_${key}_PCT`, fallback);
+      if (value < limit) failures.push(`${label} na ${street} ${value.toFixed(1)} % pod dnem ${limit} %`);
+    }
+  }
+  return failures;
 }
 
 await main();
