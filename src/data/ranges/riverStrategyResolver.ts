@@ -17,6 +17,7 @@ import type { RiverStrategyPack } from "./riverSolvedRuntimeRegistry";
 import { runtimeSolvedRiverPacks } from "./riverSolvedRuntimeRegistry";
 import type { RiverStrategyRule } from "./riverStrategyRuleBuilder";
 import { translateTurnActions } from "./turnActionTranslation";
+import { ruleBetSizes } from "./solvedBetSizing";
 import { actionNodeForSolvedHero } from "./solvedHeroActionNode";
 import { solvedRangeBuckets, solvedStrategySource } from "./solvedStrategySource";
 
@@ -258,6 +259,9 @@ export function createRiverStrategyResolver(pack: RiverStrategyPack): PostflopSt
         heroHand: input.heroHand,
         // Skutečná velikost sázky z linie, kterou solver hrál.
         facingBetBB: facingBetBB(best.spot),
+        // A velikost vlastní sázky, kterou solver v tomhle uzlu hrál - proti
+        // témuž potu, proti kterému se překládaly akce.
+        heroBetSizes: ruleBetSizes(actions, best.riverSpot.potChips, best.riverSpot.stackChips),
         // Co se dělá s každou třídou rukou. Bez tohohle nemá matice range
         // jedinou buňku s akcí a blafovací část je od složených rukou
         // nerozeznatelná - změřeno 25. 8. 2026 na 0 tříd ze 169.

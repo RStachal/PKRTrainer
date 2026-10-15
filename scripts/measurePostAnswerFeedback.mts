@@ -13,6 +13,7 @@ import { loadRiverEvPack, readyRiverEvPack, resetRiverEvCache } from "../src/dat
 import { primeTurnEvForFamily } from "../src/data/ranges/turnEvPrefetch";
 import { primeRiverEvForPack } from "../src/data/ranges/riverEvPrefetch";
 import { mulberry32 } from "../src/core/rng";
+import { solvedBetSizing } from "../src/data/ranges/solvedBetSizing";
 import {
   pickSolvedFlopSpot, solvedFlopSpotConfig, solvedFlopSpots,
 } from "../src/data/ranges/solvedFlopSpotCatalogue";
@@ -96,6 +97,18 @@ interface Row {
    * hrdina jedná první: tam žádnou cenu neplatí a EV se spočítat nedá.
    */
   mixShown: number;
+  /**
+   * Spotů, kde hráč dostane tlačítko sázky, a z nich těch, kde má velikost od
+   * solveru - každé nabízené tlačítko (`betSizedAll`), nebo aspoň jedno
+   * (`betSizedAny`). Ptá se téže funkce jako tlačítko (`solvedBetSizing`).
+   *
+   * Do 15. 10. 2026 se velikost četla jen z tabulky rodin a vyřešená pravidla
+   * (id `RODINA__deska`) v ní nebyla, takže tlačítko i „Bank po akci" jely na
+   * vyřešeném spotu na modelu 0,33 / 0,75 a žádné měření to neukazovalo.
+   */
+  betButtons: number;
+  betSizedAll: number;
+  betSizedAny: number;
   /** Spotů, kde **obsah** blafovací lajnu má - ať už se vysvětlení ozve, nebo ne. */
   bluffsInContent: number;
   /** Z toho těch, kde vysvětlení mlčí. To je ta vada; zbytek je správně prázdno. */
@@ -132,6 +145,9 @@ async function measureStreet(
     priced: 0,
     priceGaps: new Map<string, number>(),
     mixShown: 0,
+    betButtons: 0,
+    betSizedAll: 0,
+    betSizedAny: 0,
     bluffsInContent: 0,
     bluffsSilent: 0,
     actionsSeen: new Set(),
@@ -194,6 +210,17 @@ async function measureStreet(
     if ((spot.comboEvs?.length ?? 0) > 0) row.comboEv += 1;
     if (spot.explanation.bluffHands.length > 0) row.explanationBluffs += 1;
     if (postflopDecisionPrices(spot).length > 0) row.priced += 1;
+    // Velikost na tlačítku sázky: od solveru, nebo z modelu. Ptá se téže
+    // funkce jako tlačítko v `postflopView.ts`.
+    const betButtons = legal.filter(
+      (action): action is "BET_SMALL" | "BET_BIG" => action === "BET_SMALL" || action === "BET_BIG",
+    );
+    if (betButtons.length > 0) {
+      row.betButtons += 1;
+      const sized = betButtons.map((button) => solvedBetSizing(spot.explanation.source, button) !== undefined);
+      if (sized.every(Boolean)) row.betSizedAll += 1;
+      if (sized.some(Boolean)) row.betSizedAny += 1;
+    }
     // Proč cena chybí, ne jen že chybí. `NEČELÍ_SÁZCE` je správně - hrdina
     // nemá co dorovnávat; `NENÍ_VYŘEŠENÝ` je mez obsahu a `UZEL_NEZNÁ_POT`
     // vada dat. Bez rozlišení vypadají všechny tři jako jedna nula.
@@ -336,10 +363,27 @@ if (!asJson) {
     );
   }
   console.log(
-    "„Nečelí sázce\" je správně: vlastní sázka hrdiny se neoceňuje, protože její\n"
-    + "velikost je model, ne solverovo číslo. Zbylé dva sloupce jsou mez obsahu\n"
-    + "a vada dat - ty se dají spravit.",
+    "„Nečelí sázce\" je zatím správně: vlastní sázka hrdiny se neoceňuje. Velikost\n"
+    + "od solveru má od 15. 10. 2026 vyřešený spot (tabulka níž), ale cena vlastní\n"
+    + "sázky se z ní zatím nepočítá. Zbylé dva sloupce jsou mez obsahu a vada dat.",
   );
+
+  console.log("");
+  console.log("Velikost na tlačítku sázky - od solveru, ne z modelu 0,33 / 0,75");
+  console.log(
+    "ulice".padEnd(7)
+    + "s tlačítkem".padStart(13)
+    + "všechna".padStart(10)
+    + "aspoň jedno".padStart(13),
+  );
+  for (const row of rows) {
+    console.log(
+      row.street.padEnd(7)
+      + String(row.betButtons).padStart(13)
+      + pct(row.betSizedAll, row.betButtons).padStart(10)
+      + pct(row.betSizedAny, row.betButtons).padStart(13),
+    );
+  }
 
   console.log("");
   for (const row of rows) {
@@ -773,6 +817,31 @@ if (!asJson) {
     const share = pricedShare(street);
     if (share < limit) {
       failures.push(`cena akce na ${street} ${share.toFixed(1)} % pod dnem ${limit} %`);
+    }
+  }
+  // Velikost na tlačítku sázky od solveru. Do 15. 10. 2026 **0,0 % na všech
+  // třech ulicích** (vyřešená pravidla tabulka rodin nepoznala); po opravě
+  // flop 78,5 / 100, turn 100 / 100, river 61,5 / 100 % (všechna tlačítka /
+  // aspoň jedno). Dno „aspoň jedno" je vysoko, protože jeho propad znamená
+  // rozbitou cestu; „všechna" kolísá s tím, které velikosti uzly nabízejí -
+  // kde uzel nemá malou sázku, jede malé tlačítko poctivě na modelu.
+  const betFloors: Record<string, { all: number; any: number }> = {
+    FLOP: { all: 60, any: 90 },
+    TURN: { all: 80, any: 90 },
+    RIVER: { all: 50, any: 90 },
+  };
+  for (const row of rows) {
+    const limits = betFloors[row.street];
+    if (limits === undefined || row.betButtons === 0) continue;
+    const all = (100 * row.betSizedAll) / row.betButtons;
+    const any = (100 * row.betSizedAny) / row.betButtons;
+    const allLimit = floor(`POST_ANSWER_MIN_${row.street}_BET_SIZE_ALL_PCT`, limits.all);
+    const anyLimit = floor(`POST_ANSWER_MIN_${row.street}_BET_SIZE_ANY_PCT`, limits.any);
+    if (all < allLimit) {
+      failures.push(`velikost sázky od solveru na všech tlačítkách ${row.street} ${all.toFixed(1)} % pod dnem ${allLimit} %`);
+    }
+    if (any < anyLimit) {
+      failures.push(`velikost sázky od solveru aspoň na jednom tlačítku ${row.street} ${any.toFixed(1)} % pod dnem ${anyLimit} %`);
     }
   }
 

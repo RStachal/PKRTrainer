@@ -3,6 +3,7 @@ import type {
   PostflopActionFrequency,
   PostflopRangeBucket,
   PostflopRecommendationSource,
+  PostflopSolvedBetSizing,
 } from "../../core/postflopGenerator";
 import type { Card, HandLabel } from "../../core/types";
 import { bettingLaneForHand } from "../../core/flopHandCategory";
@@ -58,6 +59,12 @@ export interface SolvedSourceInput {
    * hrdina sázce nečelí, a chybět má: prázdno se pozná, odhad ne.
    */
   facingBetBB?: number;
+  /**
+   * Velikosti hrdinových sázek, které solver v tomhle uzlu hrál - z akcí
+   * pravidla, viz `ruleBetSizes`. Bez nich jede tlačítko i „Bank po akci" na
+   * modelu 0,33 / 0,75, i když pack nese skutečnou velikost.
+   */
+  heroBetSizes?: Partial<Record<"BET_SMALL" | "BET_BIG", PostflopSolvedBetSizing>>;
   /**
    * Třída hrdinovy ruky, aby se dal vybrat **jeho** kbelík.
    *
@@ -127,6 +134,7 @@ export function solvedStrategySource(
     // nese pot, který na stole doopravdy byl. Cena dorovnání musí sedět na
     // tenhle, jinak by se počítala sázka z jedné hry proti potu z jiné.
     ...(input.potBB !== undefined && input.potBB > 0 ? { nodePotBB: input.potBB } : {}),
+    ...(input.heroBetSizes === undefined ? {} : { heroBetSizes: { ...input.heroBetSizes } }),
     // Kbelík hrdinovy vlastní ruky. Je to jediná cesta, kterou se k hráči
     // dostane **frekvence** - jak často solver tu akci hraje - a na flopu
     // a turnu je to jediné číslo, které tam vůbec být může: cenu neplatí, když

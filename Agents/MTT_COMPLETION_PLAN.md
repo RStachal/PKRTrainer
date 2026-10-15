@@ -383,8 +383,20 @@ a to je samostatný krok přes resolvery tří ulic.
 **Hotovo 15. 10. 2026:** tlačítko a simulátor linky čtou velikost z jednoho
 místa (`src/data/ranges/solvedBetSizing.ts`), takže „Bank po akci" sedí
 s tlačítkem všude. Na flopových pilotech je to velikost ze stromu (všechny čtyři
-varianty 0,25 / 0,33 / 0,5 / 0,75, jak vlastník rozhodl), na vyřešeném turnu
-a riveru zatím shodně model.
+varianty 0,25 / 0,33 / 0,5 / 0,75, jak vlastník rozhodl), ~~na vyřešeném turnu
+a riveru zatím shodně model~~.
+
+**A týž den i na vyřešených pravidlech.** Na modelu nejel jen turn a river, ale
+i **vyřešený flop** z rozkladu - má tentýž tvar id `RODINA__deska`. Resolvery
+všech tří ulic teď nesou velikost z akcí samotného uzlu (`heroBetSizes`,
+spočítané `ruleBetSizes` proti potu a stacku uzlu; shove se pozná podle
+stacku). Měřeno `mtt:post-answer` na spotech s tlačítkem sázky: velikost od
+solveru aspoň na jednom tlačítku **z 0,0 % na 100 %** na všech třech ulicích,
+na všech tlačítkách flop 78,5 %, turn 100 %, river 61,5 %. Zbytek jsou uzly,
+které malou sázku nemají - malé tlačítko tam jede poctivě na modelu, a jestli
+ho tam vůbec nabízet, je otázka slovníku tlačítek. Hlídají to dna v bráně.
+Zbývá **cena vlastní sázky hrdiny**: velikost od solveru už má, cena se z ní
+zatím nepočítá.
 
 **Opravený ale nezůstal simulátor linky.** `betSizeBB()`
 (`postflopLineSimulator.ts:958`) tentýž řetězec nemá a 0,33 / 0,75 používá

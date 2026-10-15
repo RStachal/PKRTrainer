@@ -305,6 +305,19 @@ export interface PostflopOpponentPolicyBranch {
  */
 export type PostflopStrategyProvenance = "SOLVER_BACKED" | "PUBLIC_HEURISTIC";
 
+/**
+ * Velikost sázky, kterou solve za tlačítkem skutečně hrál.
+ *
+ * `ratio` je podíl potu; u all-inu 1 a `allIn: true`. `merged` říká, kolik
+ * vyřešených velikostí se pod tím tlačítkem slilo - trenažér má dvě, solve jich
+ * míval tři i čtyři.
+ */
+export interface PostflopSolvedBetSizing {
+  ratio: number;
+  allIn: boolean;
+  merged: number;
+}
+
 export type PostflopRecommendationSource =
   | {
       kind: "STRATEGY_PACK";
@@ -332,6 +345,13 @@ export type PostflopRecommendationSource =
       facingBetBB?: number;
       /** Pot uzlu z vyřešeného pravidla, v blindech. */
       nodePotBB?: number;
+      /**
+       * Velikosti hrdinových sázek, které solver v **tomhle uzlu** hrál, podle
+       * tlačítka. Nese je vyřešené pravidlo (flop, turn i river z rozkladu);
+       * pilot je má v tabulce rodin. Chybějící tlačítko uzel nenabízí a velikost
+       * se pak bere z modelu.
+       */
+      heroBetSizes?: Partial<Record<"BET_SMALL" | "BET_BIG", PostflopSolvedBetSizing>>;
       heroRangeBucket?: PostflopHeroRangeBucket;
       opponentPolicy?: PostflopOpponentPolicyBranch;
       /**

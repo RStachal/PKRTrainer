@@ -7,6 +7,7 @@ import type {
   PostflopStrategyResolver,
 } from "../../core/postflopGenerator";
 import { translateTurnActions } from "./turnActionTranslation";
+import { ruleBetSizes } from "./solvedBetSizing";
 import { actionNodeForSolvedHero } from "./solvedHeroActionNode";
 import { solvedRangeBuckets, solvedStrategySource } from "./solvedStrategySource";
 import {
@@ -274,6 +275,8 @@ export function createTurnStrategyResolver(pack: TurnStrategyPack): PostflopStra
         heroHand: input.heroHand,
         // Skutečná velikost sázky z linie, kterou solver hrál.
         facingBetBB: facingBetBB(rule.spot),
+        // A velikost vlastní sázky, kterou solver v tomhle uzlu hrál.
+        heroBetSizes: ruleBetSizes(actions, rule.spot?.potChips, rule.spot?.stackChips),
         // Co se dělá s každou třídou rukou. Bez tohohle nemá matice range
         // jedinou buňku s akcí a blafovací část je od složených rukou
         // nerozeznatelná - změřeno 25. 8. 2026 na 0 tříd ze 169.

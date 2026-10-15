@@ -12,6 +12,7 @@ import { runtimeSolvedFlopPacks } from "./flopSolvedRuntimeRegistry";
 import { actionNodeForSolvedHero } from "./solvedHeroActionNode";
 import { solvedRangeBuckets, solvedStrategySource } from "./solvedStrategySource";
 import { translateTurnActions } from "./turnActionTranslation";
+import { ruleBetSizes } from "./solvedBetSizing";
 
 /**
  * Vyřešená flopová strategie na konkrétní desce, nebo odmítnutí.
@@ -128,6 +129,10 @@ export function createFlopSolvedStrategyResolver(
         heroHand: input.heroHand,
         // Skutečná velikost sázky z linie, kterou solver hrál.
         facingBetBB: facingBetBB(best.spot),
+        // A velikost vlastní sázky, kterou solver v tomhle uzlu hrál.
+        // Tentýž jmenovatel jako překlad akcí výš, jinak by se podíl potu násobil
+        // jiným potem, než ze kterého vznikl.
+        heroBetSizes: ruleBetSizes(actions, best.flopSpot.potChips, best.flopSpot.stackChips),
         // Co se dělá s každou třídou rukou. Bez tohohle nemá matice range
         // jedinou buňku s akcí a blafovací část je od složených rukou
         // nerozeznatelná - změřeno 25. 8. 2026 na 0 tříd ze 169.

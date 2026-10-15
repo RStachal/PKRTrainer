@@ -28,6 +28,7 @@ const PILOT_RULE = "mtt9_100bb_btn_bb_srp_facing_highspr-test-bet";
 function pilotResolver(
   action: "BET_SMALL" | "BET_BIG",
   ruleId = PILOT_RULE,
+  heroBetSizes?: Partial<Record<"BET_SMALL" | "BET_BIG", { ratio: number; allIn: boolean; merged: number }>>,
 ): PostflopStrategyResolver {
   return () => ({
     action,
@@ -48,6 +49,7 @@ function pilotResolver(
       assumptions: [],
       selectionScore: 1,
       tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+      ...(heroBetSizes === undefined ? {} : { heroBetSizes }),
     } as never,
   });
 }
@@ -87,6 +89,34 @@ describe("velikost hrdinovy sázky v lince", () => {
       const model = Math.min(step.effectiveStackBBBefore, roundTenths(step.potBBBefore * 0.33));
       expect(heroBet?.amountBB, step.street).toBeCloseTo(expected, 1);
       // Falsifikace: kdyby simulátor pořád jel modelem, tady by to spadlo.
+      expect(heroBet?.amountBB, step.street).not.toBeCloseTo(model, 1);
+    }
+  });
+
+  it("vyřešené pravidlo nese velikost samo - id `RODINA__deska` tabulka nepozná", () => {
+    // Do 15. 10. 2026 tady simulátor jel modelem: vyřešené turn, river i flop z
+    // rozkladu mají id, ze kterého tabulka rodin velikost nevyčte. Půl potu
+    // je skutečná malá sázka uzlu, model by dal třetinu.
+    const resolver = pilotResolver("BET_SMALL", "MTT9_25BB_LJ_CO_SRP__742r", {
+      BET_SMALL: { ratio: 0.5, allIn: false, merged: 1 },
+    });
+    const line = generatePostflopLine({
+      seed: 7,
+      heroCards,
+      board,
+      potBB: 6,
+      effectiveStackBB: 100,
+      strategyResolver: resolver,
+      allowFallback: true,
+    } as never);
+    const bets = line.streets.flatMap((street) => street.actionHistory)
+      .filter((step) => step.action === "BET_SMALL");
+    expect(bets.length).toBeGreaterThan(0);
+    for (const step of bets) {
+      const heroBet = step.sequence?.find((item) => item.actor === "HERO" && item.action === "BET_SMALL");
+      const expected = Math.min(step.effectiveStackBBBefore, roundTenths(step.potBBBefore * 0.5));
+      const model = Math.min(step.effectiveStackBBBefore, roundTenths(step.potBBBefore * 0.33));
+      expect(heroBet?.amountBB, step.street).toBeCloseTo(expected, 1);
       expect(heroBet?.amountBB, step.street).not.toBeCloseTo(model, 1);
     }
   });
