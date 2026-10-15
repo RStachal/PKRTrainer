@@ -1,7 +1,7 @@
 {
-  "measuredAt": "2026-10-14 04:31",
+  "measuredAt": "2026-10-15 04:33",
   "source": "artifacts/decomposition/expansion.log",
-  "solves": 872,
+  "solves": 885,
   "depths": [
     {
       "depthBB": 25,
@@ -17,14 +17,14 @@
     },
     {
       "depthBB": 40,
-      "boards": 93,
-      "median": 21.3,
-      "p90": 36.8,
-      "max": 52.9,
-      "planMinutes": 21.3,
-      "promiseMinutes": 22.7,
-      "capMinutes": 80,
-      "reserveMinutes": 37,
+      "boards": 106,
+      "median": 22.3,
+      "p90": 40.3,
+      "max": 69.8,
+      "planMinutes": 22.3,
+      "promiseMinutes": 24.6,
+      "capMinutes": 90,
+      "reserveMinutes": 41,
       "basis": "měřeno"
     },
     {

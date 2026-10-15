@@ -2998,3 +2998,43 @@ UnicodeDecodeError: 'charmap' codec can't decode byte 0x88 in position 1122: cha
 [06:31:03] expansion: hotovo 0, selhalo 0, zbývá 16
 [06:31:03] fronta není prázdná, rozkladu okno nepředávám
 [10:03:54] spusteni mimo okno 20:45-06:45, koncim bez prace
+[21:01:02] napajeni: sit
+[21:01:02] viko na siti: nedelat nic (overeno v registru)
+[21:01:02] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:01:02] nastagováno 114 desek bez checkpointu; deadline 07:00
+[21:01:02] na disku volno 628.7 GB (hranice 8 GB)
+[21:01:02] stroj se drží vzhůru po dobu běhu
+[21:01:02] napájení: síť
+[21:01:02] cena desky změřena 2026-10-14 04:31 na 872 deskách: 25 bb 6.4 min, 40 bb 21.3 min, 50 bb 23.9 min
+[21:01:02] solving MTT9_40BB_LJ_HJ_SRP A72r
+[21:45:52]   hotovo za 44.8 min, checkpoint 38 MB
+[21:45:52] solving MTT9_40BB_LJ_HJ_SRP 883r
+[22:10:10]   hotovo za 24.3 min, checkpoint 40 MB
+[22:10:10] solving MTT9_40BB_LJ_HJ_SRP 986tt
+[22:31:28]   hotovo za 21.3 min, checkpoint 39 MB
+[22:31:28] solving MTT9_40BB_LJ_HJ_SRP AT4mono
+[22:42:33]   hotovo za 11.1 min, checkpoint 27 MB
+[22:42:33] solving MTT9_40BB_LJ_HJ_SRP 742r
+[23:17:29]   hotovo za 34.9 min, checkpoint 43 MB
+[23:17:29] solving MTT9_40BB_LJ_HJ_SRP K98tt
+[23:38:07]   hotovo za 20.6 min, checkpoint 37 MB
+[23:38:07] solving MTT9_40BB_HJ_BB_SRP A72r
+[00:41:23]   hotovo za 63.3 min, checkpoint 134 MB
+[00:41:23] solving MTT9_40BB_HJ_BB_SRP 883r
+[01:51:11]   hotovo za 69.8 min, checkpoint 137 MB
+[01:51:11] solving MTT9_40BB_HJ_BB_SRP 986tt
+[02:30:10]   hotovo za 39.0 min, checkpoint 135 MB
+[02:30:10] solving MTT9_40BB_HJ_BB_SRP AT4mono
+[02:52:39]   hotovo za 22.5 min, checkpoint 98 MB
+[02:52:39] solving MTT9_40BB_HJ_BB_SRP 742r
+[04:12:41]   SELHALO po 80.0 min (rc=timeout); příští noc stupeň 1 - strop 90 min, přesnost 0.5 %
+[04:12:41] solving MTT9_40BB_HJ_BB_SRP K98tt
+[04:13:02]   spadlo po 0.3 min (rc=3221225477); zkouším znovu
+[04:50:49]   hotovo za 37.8 min, checkpoint 133 MB (napodruhé)
+[04:50:49] solving MTT9_40BB_HJ_BTN_SRP A72r
+[05:36:24]   hotovo za 45.6 min, checkpoint 59 MB
+[05:36:24] solving MTT9_40BB_HJ_BTN_SRP 883r
+[06:33:19]   hotovo za 56.9 min, checkpoint 62 MB
+[06:33:19] končím 27 min před deadline: deska potřebuje asi 37
+[06:33:19] expansion: hotovo 13, selhalo 1, zbývá 101
+[06:33:19] fronta není prázdná, rozkladu okno nepředávám

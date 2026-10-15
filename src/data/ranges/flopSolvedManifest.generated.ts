@@ -246,6 +246,12 @@ export const solvedFlopManifest: readonly SolvedFlopManifestEntry[] = [
     load: () => import("./flop/mtt9-35bb-co-btn-3bp-repair.generated.json").then((module) => module.default as unknown as FlopSolvedStrategyPack),
   },
   {
+    familyId: "MTT9_40BB_LJ_HJ_SRP",
+    packId: "mtt-full-ring-9-flop-solved-mtt9-40bb-lj-hj-srp-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|FLOP",
+    load: () => import("./flop/mtt9-40bb-lj-hj-srp.generated.json").then((module) => module.default as unknown as FlopSolvedStrategyPack),
+  },
+  {
     familyId: "MTT9_40BB_LJ_SB_SRP",
     packId: "mtt-full-ring-9-flop-solved-mtt9-40bb-lj-sb-srp-v1",
     profileKey: "FULL_RING_9|REGULAR|CHIP_EV|FLOP",
