@@ -1,4 +1,20 @@
-# Flopové číslo — co na flopu hráč dostane — k vyplnění vlastníkem
+# Flopové číslo — co na flopu hráč dostane
+
+> **Vyřízeno 15. 10. 2026.** Vlastník: „flopovou cenu bych nechal klidně všechny
+> 4 varianty" - tedy velikosti sázek ze stromů (0,25 / 0,33 / 0,5 / 0,75) se
+> nesrovnávají na dvě modelové. Hotovo: tlačítko i „Bank po akci" teď čtou
+> velikost z jednoho místa (`src/data/ranges/solvedBetSizing.ts`), takže spolu
+> sedí všude.
+>
+> **Oprava tvrzení níž:** „tlačítko velikost ze stromu bere" platí jen pro
+> **flopové piloty**. Vyřešená turnová a riverová pravidla mají id
+> `RODINA__deska`, které tabulka velikostí nepozná, takže tam tlačítko i banka
+> jedou zatím shodně na modelu. Skutečná velikost pro turn a river musí přijít
+> z akcí samotného pravidla - zapsáno v `MTT_COMPLETION_PLAN.md`.
+
+---
+
+# (původní znění) — k vyplnění vlastníkem
 
 **Vznik:** 13. 10. 2026, na pokyn vlastníka „začít pracovat na principu flopové EV,
 ať vyvíjíme produkt rovnoměrně, abychom v budoucnu neřešili nějaký bloker"

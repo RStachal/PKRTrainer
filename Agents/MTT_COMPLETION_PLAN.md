@@ -365,9 +365,26 @@ jen to místo, kde se právě měřilo.
 Rozpad říká, že 75 % flopových spotů je `NEČELÍ_SÁZCE` - hrdina jedná první.
 Důvod zapsaný 28. 8. byl „velikost je model (třetina a tři čtvrtiny), ne
 solverovo číslo". **U vyřešených rodin ten předpoklad neplatí** - velikost je ve
-stromě (`ip bet 25,50`, `oop bet 50`) a pohled ji odtud bere, přes
+stromě (`ip bet 25,50`, `oop bet 50`) ~~a pohled ji odtud bere, přes
 `solvedSizing()` a `postflopBetSizing.generated.ts`, kde model slouží už jen
-jako záloha.
+jako záloha~~.
+
+**Opraveno 15. 10. 2026 - pohled ji bere jen u flopových pilotů.** Tabulka
+velikostí se klíčuje rodinou z **pilotního** id pravidla (`mtt9_…_srp-…`),
+které `familyIdFromRuleId` rozdělí na pomlčce. Vyřešená turnová a riverová
+pravidla mají id `RODINA__deska`, rodina se z nich nevyčte, a tlačítko i banka
+u nich jedou na modelu 0,33 / 0,75. Zjištěno, když test velikostí nad
+skutečnými linkami nenašel ani jeden případ. Tabulku na turn a river přenést
+nejde - je změřená na flopu a turnové stromy mají jiné velikosti (v parametrech
+`oop,turn,bet,50`, `ip,turn,bet,50`). Skutečná velikost tam musí přijít z akcí
+samotného pravidla (pack nese `BET 182.000000` v žetonech proti `potChips`),
+a to je samostatný krok přes resolvery tří ulic.
+
+**Hotovo 15. 10. 2026:** tlačítko a simulátor linky čtou velikost z jednoho
+místa (`src/data/ranges/solvedBetSizing.ts`), takže „Bank po akci" sedí
+s tlačítkem všude. Na flopových pilotech je to velikost ze stromu (všechny čtyři
+varianty 0,25 / 0,33 / 0,5 / 0,75, jak vlastník rozhodl), na vyřešeném turnu
+a riveru zatím shodně model.
 
 **Opravený ale nezůstal simulátor linky.** `betSizeBB()`
 (`postflopLineSimulator.ts:958`) tentýž řetězec nemá a 0,33 / 0,75 používá

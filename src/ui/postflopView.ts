@@ -61,8 +61,7 @@ import {
   type FlopzillaLane,
 } from "./postflopRangeMatrixView";
 import { CS, getAppLanguage, localizedText } from "./cs";
-import { familyBetSizing } from "../data/ranges/postflopBetSizing.generated";
-import { familyIdFromRuleId } from "../data/ranges/postflopSolvedSpr";
+import { solvedBetSizing, type SolvedBetSizing } from "../data/ranges/solvedBetSizing";
 import { gradePostflopAction, type PostflopGrade } from "../core/postflopScoring";
 import {
   ACTION_EV_BUTTON_STYLES,
@@ -975,21 +974,10 @@ function betGeometry(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
 function solvedSizing(
   spot: PostflopTrainingSpot,
   action: "BET_SMALL" | "BET_BIG",
-): { ratio: number; allIn: boolean; merged: number } | undefined {
-  const source = spot.explanation.source;
-  if (source.kind !== "STRATEGY_PACK") return undefined;
-  const sizing = familyBetSizing(familyIdFromRuleId(source.ruleId));
-  if (sizing === undefined) return undefined;
-
-  const pcts = action === "BET_SMALL" ? sizing.smallPct : sizing.bigPct;
-  if (action === "BET_BIG" && pcts.length === 0 && sizing.bigIsAllIn) {
-    return { ratio: 1, allIn: true, merged: 1 };
-  }
-  if (pcts.length === 0) return undefined;
-  // Only the sole-action case above is an all-in label. Where a real bet sits
-  // behind the button alongside the shove, calling the whole button "all-in"
-  // overstates it exactly as badly as the fixed 75 percent understated it.
-  return { ratio: Math.max(...pcts) / 100, allIn: false, merged: pcts.length };
+): SolvedBetSizing | undefined {
+  // Sdílené se simulátorem linky, aby tlačítko a „Bank po akci" četly tutéž
+  // velikost (viz `solvedBetSizing.ts`).
+  return solvedBetSizing(spot.explanation.source, action);
 }
 
 function betSizingVisual(spot: PostflopTrainingSpot): {

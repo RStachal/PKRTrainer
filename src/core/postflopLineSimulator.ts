@@ -2,9 +2,11 @@ import {
   generatePostflopSpot,
   type PostflopAction,
   type PostflopConfig,
+  type PostflopRecommendationSource,
   type PostflopSpot,
   type PostflopStreet,
 } from "./postflopGenerator";
+import { solvedBetSizing, type SolvedBetSizing } from "../data/ranges/solvedBetSizing";
 import type { PostflopActionNode } from "./postflopTrainingSpot";
 import type { Card } from "./types";
 
@@ -387,6 +389,7 @@ function resolveLineAction(
       "HERO",
       decision.action,
       lastFullRaiseBB,
+      spot.strategySource,
     );
     stateAfter = heroInitial.state;
     lastFullRaiseBB = heroInitial.lastFullRaiseBB;
@@ -511,7 +514,7 @@ function continueAgainstAggression(
       sequence,
     )
     : chooseHeroResponse(heroResponsePolicy, spot, next, legal, sequence);
-  const applied = applyPlannedAction(next, respondingActor, response, lastRaise);
+  const applied = applyPlannedAction(next, respondingActor, response, lastRaise, spot.strategySource);
   next = applied.state;
   lastRaise = applied.lastFullRaiseBB;
   sequence.push(applied.action);
@@ -558,7 +561,7 @@ function continueAgainstAggression(
       finalLegal,
       sequence,
     );
-  const finalApplied = applyPlannedAction(next, finalActor, finalResponse, lastRaise);
+  const finalApplied = applyPlannedAction(next, finalActor, finalResponse, lastRaise, spot.strategySource);
   next = finalApplied.state;
   lastRaise = finalApplied.lastFullRaiseBB;
   sequence.push(finalApplied.action);
@@ -624,6 +627,9 @@ function applyPlannedAction(
   actor: PostflopLineActor,
   action: PostflopPolicyAction,
   lastFullRaiseBB: number,
+  // Zdroj pravidla spotu: z něj se bere velikost hrdinovy sázky. Soupeřovy
+  // sázky jdou dál modelem - tabulka velikostí popisuje tlačítka hrdiny.
+  source?: PostflopRecommendationSource,
 ): {
   state: PostflopStreetState;
   action: PostflopAtomicAction;
@@ -647,7 +653,12 @@ function applyPlannedAction(
     case "BET_SMALL":
     case "BET_BIG":
       targetContributionBB = roundTenths(
-        actorContribution + betSizeBB(action, livePotBB(state), actorStack(state, actor)),
+        actorContribution + betSizeBB(
+          action,
+          livePotBB(state),
+          actorStack(state, actor),
+          actor === "HERO" ? solvedBetSizing(source, action) : undefined,
+        ),
       );
       break;
     case "RAISE":
@@ -950,12 +961,23 @@ function isFacingBetNode(node: PostflopActionNode | undefined): boolean {
     node === "RIVER_FACING_BET";
 }
 
+/**
+ * Kolik hráč vsadí - **velikostí, kterou hrál solver**, když ji známe.
+ *
+ * Do 15. 10. 2026 tu byl jen model 0,33 / 0,75 potu natvrdo, a „Bank po akci"
+ * se tím rozcházel s tlačítkem, které velikost ze stromu bralo: `BET_BIG` u 63
+ * z 63 rodin (ve stromě 0,50), `BET_SMALL` u 17 z 20. Velikosti ve stromech
+ * jsou čtyři (0,25, 0,33, 0,5, 0,75) a vlastník rozhodl nechat všechny - model
+ * zůstává jen jako záloha pro spot bez vyřešené velikosti.
+ */
 function betSizeBB(
   action: Extract<PostflopAction, "BET_SMALL" | "BET_BIG">,
   potBB: number,
   stackBB: number,
+  solved?: SolvedBetSizing,
 ): number {
-  const ratio = action === "BET_SMALL" ? 0.33 : 0.75;
+  if (solved?.allIn === true) return stackBB;
+  const ratio = solved?.ratio ?? (action === "BET_SMALL" ? 0.33 : 0.75);
   return Math.min(stackBB, roundTenths(potBB * ratio));
 }
 
