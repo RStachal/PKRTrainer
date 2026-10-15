@@ -158,6 +158,30 @@ describe("precache build manifest", () => {
     expect(isDeferredAsset(`assets/${manifest}-AbCd1234.js`)).toBe(true);
   });
 
+  it("data načtená přes `?raw` dostanou totéž odložené jméno jako dřív", () => {
+    // Od 15. 10. 2026 manifesty načítají `…generated.json?raw`, aby data
+    // nečetl TypeScript. Vite pak dává do id i dotaz, a kdyby se neodřízl,
+    // přípona by nesedla, chunk by dostal jméno podle souboru a precache by
+    // vzal všech 84 MB solverových dat za nutná - počtvrté tatáž past.
+    for (const [dir, street] of [
+      ["flop", "flop"],
+      ["turn", "turn"],
+      ["turn-ev", "turn-ev"],
+      ["river", "river"],
+      ["river-ev", "river-ev"],
+    ] as const) {
+      const name = mttProductionChunkNameForModuleId(
+        `/repo/src/data/ranges/${dir}/mtt9-40bb-hj-bb-srp.generated.json?raw`,
+      );
+      expect(name, dir).toBe(`mtt-${street}-solved-mtt9-40bb-hj-bb-srp`);
+      expect(isDeferredAsset(`assets/${name}-AbCd1234.js`), dir).toBe(true);
+    }
+    // A bez dotazu se nemění nic.
+    expect(mttProductionChunkNameForModuleId(
+      "/repo/src/data/ranges/turn-ev/mtt9-40bb-hj-bb-srp.generated.json",
+    )).toBe("mtt-turn-ev-solved-mtt9-40bb-hj-bb-srp");
+  });
+
   it("realny Vite build emituje production modul jako lazy chunk mimo precache", async () => {
     const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-lazy-mtt-"));
     const packId = "mtt-six-max-turbo-turn-chip-ev-ante-off-production-v1";

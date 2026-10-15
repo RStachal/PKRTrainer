@@ -1,5 +1,6 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { manifestLoadExpression } from "./lib/manifestEntries.mts";
 
 /**
  * Přežije build knihovnu o 75 MB, když do ní přibude turnová EV?
@@ -74,7 +75,7 @@ export const turnEvManifest: readonly TurnEvManifestEntry[] = [
 ${rows.map((row) => `  {
     familyId: "${row.familyId}",
     packId: "${row.packId}",
-    load: () => import("./turn-ev/${row.slug}.generated.json").then((module) => module.default as unknown as TurnEvPack),
+    load: ${manifestLoadExpression("turn-ev", row.slug, "TurnEvPack")},
   },`).join("\n")}
 ];
 `, "utf8");

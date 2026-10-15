@@ -8,10 +8,17 @@
     "Naměřeno 26. 8. 2026: samotné zvednutí `lib` odstraní 29 ze 114 chyb -",
     "všechny hlásily chybějící `String.prototype.replaceAll`."
   ],
+  "// proč i src/vite-env.d.ts": [
+    "Od 15. 10. 2026 manifesty vyřešených packů načítají data jako",
+    "`…generated.json?raw`, aby je TypeScript nečetl (typecheck 6,37 GB -> 0,52 GB).",
+    "Deklaraci `*?raw` nese `vite/client`, na který odkazuje `src/vite-env.d.ts`.",
+    "Skripty manifesty importují (např. `checkMttPlayableBeta.mts`), takže bez",
+    "toho souboru hlásil tenhle projekt 268x TS2307 - jednou za každou rodinu."
+  ],
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["node"]
   },
-  "include": ["scripts"]
+  "include": ["scripts", "src/vite-env.d.ts"]
 }

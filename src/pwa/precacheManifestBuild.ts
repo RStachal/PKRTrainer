@@ -82,7 +82,15 @@ export function isDeferredAsset(fileName: string): boolean {
 }
 
 export function mttProductionChunkNameForModuleId(moduleId: string): string | null {
-  const normalized = moduleId.replace(/\\/g, "/");
+  // Dotaz (`?raw`) se odřízne dřív, než se testují přípony.
+  //
+  // Od 15. 10. 2026 manifesty načítají data jako `…generated.json?raw`, aby je
+  // TypeScript nečetl (6,37 GB -> ~0,5 GB typecheckeru). S dotazem v id by
+  // `fileName` končil na `.json?raw`, podmínka `.endsWith(".generated.json")`
+  // níž by nesedla, chunk by dostal jméno podle souboru a precache by ho vzal
+  // za nutný - tedy počtvrté tatáž past, kterou komentář níž popisuje třikrát,
+  // a tentokrát pro všech 84 MB solverových dat naráz.
+  const normalized = moduleId.replace(/\\/g, "/").replace(/\?.*$/, "");
   const fileName = normalized.split("/").pop() ?? "";
   if (fileName === "mttPostflopTrainingRuntime.ts") {
     return "mtt-postflop-pilot-runtime";

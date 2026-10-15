@@ -504,9 +504,17 @@ telefonu, nikdo neví.
    chunk) i za tepla, se zpomaleným CPU a sítí jako na telefonu. Bez toho se
    „nebude pomalejší" nedá hlídat, a to je na tomhle projektu ta lekce pořád
    dokola.
-2. **TypeScriptu data nedávat - a Vite nechat, jak je.** ~~Data jako JSON assety
-   přes `fetch`~~ - to byl zbytečně velký zásah, když se ukázalo, že runtime
-   problém nemá. Doměřeno týž večer:
+2. **TypeScriptu data nedávat - a Vite nechat, jak je. HOTOVO 15. 10. 2026.**
+   Typecheck aplikace **6,37 GB -> 0,50 GB, 38,8 -> 4,6 s**, řádků JSONu 0;
+   instalační cesta a líná knihovna beze změny. Strop 1,5 GB hlídá
+   `scripts/checkTypecheckBudget.mts` uvnitř `typecheck` i `build`, ověřený
+   vynuceným pádem (40 tabulek postaru = 1,62 GB). Čtení i zápis manifestů
+   v jednom modulu `scripts/lib/manifestEntries.mts`. Deklarace pro `*?raw`
+   přidávat nebylo potřeba - `src/vite-env.d.ts` odkazuje na `vite/client`;
+   jen `tsconfig.scripts.json` ten soubor do `include` neměl (268x TS2307).
+
+   ~~Data jako JSON assety přes `fetch`~~ - to byl zbytečně velký zásah, když se
+   ukázalo, že runtime problém nemá. Doměřeno týž večer:
    - Všech **267 importů JSONu je v pěti generovaných manifestech**
      (`flopSolvedManifest`, `turnSolvedManifest`, `turnEvManifest`,
      `riverSolvedManifest`, `riverEvManifest`). Sonda s vypnutým
@@ -518,8 +526,8 @@ telefonu, nikdo neví.
      (TS2732 zůstává), takže to nejde jen konfigurací.
 
    Postup: generátory manifestů emitují `import("./x.json?raw")` a
-   `JSON.parse(module.default)`; k tomu jednořádková deklarace pro `*?raw`
-   (`vite/client` v `types` není). U hráče to dělá tutéž práci jako dnešní
+   `JSON.parse(module.default)`; ~~k tomu jednořádková deklarace pro `*?raw`
+   (`vite/client` v `types` není)~~ (nebyla potřeba, viz výš). U hráče to dělá tutéž práci jako dnešní
    `json.stringify` - `JSON.parse` jednoho řetězce - takže runtime se nezmění.
    **Rizika, která se musí ověřit před nasazením:** `manualChunks` jmenuje
    chunky přes `mttProductionChunkNameForModuleId(id)` a s `?raw` se id změní

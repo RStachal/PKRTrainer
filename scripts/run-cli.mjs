@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -32,6 +32,34 @@ import { build } from "esbuild";
 
 const CACHE_DIR = resolve(".cache/cli");
 const WATCHED = ["src", "scripts", "package.json", "tsconfig.json"];
+
+/**
+ * `import("./x.json?raw")` vrací obsah souboru jako **řetězec** - stejně jako
+ * ve Vite a ve vitestu.
+ *
+ * Od 15. 10. 2026 načítají manifesty vyřešených packů data přes `?raw`
+ * a `JSON.parse`, aby je nečetl TypeScript (typecheck 6,37 -> 0,50 GB).
+ * esbuild ale dotaz při rozlišení cesty zahodí a `.json` nahraje svým JSON
+ * loaderem, takže `module.default` byl v CLI **objekt** a `JSON.parse` na něm
+ * padal: „"[object Object]" is not valid JSON". Ve vitestu i v buildu to
+ * fungovalo, takže 2 113 testů prošlo a spadly jen ty, které pouštějí CLI -
+ * a přes CLI jede ranní cyklus.
+ *
+ * Plugin dává `?raw` týž význam jako Vite: textový loader, žádné parsování.
+ */
+const RAW_IMPORTS = {
+  name: "vite-compatible-raw",
+  setup(builder) {
+    builder.onResolve({ filter: /\?raw$/ }, (args) => ({
+      path: resolve(args.resolveDir, args.path.slice(0, -"?raw".length)),
+      namespace: "raw-file",
+    }));
+    builder.onLoad({ filter: /.*/, namespace: "raw-file" }, (args) => ({
+      contents: readFileSync(args.path, "utf8"),
+      loader: "text",
+    }));
+  },
+};
 
 function walk(path) {
   const entries = [];
@@ -100,6 +128,7 @@ if (!existsSync(outfile)) {
     // and inlining them would make the bundle slower to produce than to skip.
     packages: "external",
     logLevel: "error",
+    plugins: [RAW_IMPORTS],
   });
   try {
     renameSync(partial, outfile);
