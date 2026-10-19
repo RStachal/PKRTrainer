@@ -9,6 +9,31 @@
 $repo = "C:\Users\stachal\PKRTrainer\PKRTrainer"
 $node = "C:\Program Files\nodejs\node.exe"
 $log = Join-Path $repo "artifacts\after-night-turn-ev.log"
+# Plny cyklus packu (pack-cycle.ps1) dela vsechno, co tenhle, a vic. Dva cykly
+# vedle sebe by zapisovaly tytez manifesty, verdikty a zaznam vstupu, takze
+# kdyz plny bezi, lehky se vynecha.
+. (Join-Path $PSScriptRoot "lib-night-window.ps1")
+if (Test-PackCycleRunning -Repo $repo) {
+  Write-NightLog -Log $log -Message "bezi plny cyklus packu, lehky ranni cyklus se vynechava"
+  exit 0
+}
+# Vikend (od 15. 10. 2026, jen s vikendovym rozvrhem v Planovaci): sobotni rano
+# patri plnemu cyklu - packy vsech ulic, kontrola, EV - a solver na nej pocka
+# (`Test-NightWindow`). Nedele patri solveru cela, lehky cyklus ji nebrzdi;
+# zastarale turnove tabulky dozene pondelni rano. Plny cyklus se pusti jen
+# tehdy, kdyz ho strop ulohy unese (prvni beh prestavi vsechno, i 6 h).
+$weekend = Test-WeekendSchedule -TaskName "PKRTrainer-Night-Decomposition"
+$day = (Get-Date).DayOfWeek
+if ($weekend -and $day -eq [DayOfWeek]::Saturday -and
+    (Get-TaskTimeLimit -TaskName "PKRTrainer-After-Night-TurnEv") -ge [TimeSpan]::FromHours(8)) {
+  Write-NightLog -Log $log -Message "sobota: misto lehkeho cyklu bezi plny (pack-cycle.ps1)"
+  & (Join-Path $PSScriptRoot "pack-cycle.ps1")
+  exit $LASTEXITCODE
+}
+if ($weekend -and $day -eq [DayOfWeek]::Sunday) {
+  Write-NightLog -Log $log -Message "nedele: ranni cyklus se vynechava, stroj patri solveru"
+  exit 0
+}
 $command = "/c cd /d `"$repo`" && `"$node`" scripts\run-cli.mjs scripts\runAfterNight.mts --write --streets-if-new=flop --turn-ev-minutes=210 >> `"$log`" 2>&1"
 $process = Start-Process -FilePath "cmd.exe" -ArgumentList $command -WindowStyle Hidden -Wait -PassThru
 exit $process.ExitCode

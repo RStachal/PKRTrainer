@@ -7,12 +7,24 @@ $log = Join-Path $repo "artifacts\decomposition\expansion.log"
 # Brána okna a umlčení víka; obojí se musí dělat **každou noc**, ne jednou -
 # viz lib-night-window.ps1.
 . (Join-Path $PSScriptRoot "lib-night-window.ps1")
-if (-not (Test-NightWindow -Log $log)) { exit 0 }
+# Vikendovy rozvrh (od 15. 10. 2026) se pozna z Planovace; dokud ho uloha nema,
+# chova se vsechno jako dosud - okno do 07:00, o vikendu pres den nic.
+$weekend = Test-WeekendSchedule -TaskName "PKRTrainer-Night-Expansion"
+if (-not (Test-NightWindow -Log $log -Weekend $weekend -Repo $repo)) { exit 0 }
+# Plny cyklus packu a solver se o stroj nedeli (viz pack-cycle.ps1): kdyz
+# cyklus bezi, solver pocka na dalsi tik. Mrtvy proces v zamku se nepocita.
+if (Test-PackCycleRunning -Repo $repo) {
+  Write-NightLog -Log $log -Message "bezi plny cyklus packu, solver pocka na dalsi tik"
+  exit 0
+}
 # Zdroj napajeni jako prvni: rozhoduje o tom, jestli maji dva radky pod nim
 # vubec ucinek (viz Write-PowerSource).
 Write-PowerSource -Log $log
 Set-LidIgnoredOnAc -Log $log
 Set-NoIdleSleepOnAc -Log $log
-$command = "/c set PYTHONIOENCODING=utf-8 && `"$python`" `"$script`" --until=07:00 --workers=8 --river-workers=16 --river-threads=1 >> `"$log`" 2>&1"
+# Konec okna absolutne: o vikendu je to jiny den nez zitrejsi 07:00.
+$until = Get-NightDeadline -Weekend $weekend
+Write-NightLog -Log $log -Message "konec okna $until (vikendovy rozvrh: $weekend)"
+$command = "/c set PYTHONIOENCODING=utf-8 && `"$python`" `"$script`" --until=$until --workers=8 --river-workers=16 --river-threads=1 >> `"$log`" 2>&1"
 $process = Start-Process -FilePath "cmd.exe" -ArgumentList $command -WindowStyle Hidden -Wait -PassThru
 exit $process.ExitCode

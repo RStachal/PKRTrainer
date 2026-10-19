@@ -65,13 +65,110 @@ function Write-PowerSource {
   }
 }
 
-# Brána okna. Runner se sám brání jen oknu delšímu než 11 h
-# (`MAX_WINDOW_HOURS`), což pustí i běh začatý v 19:00. Spouštěč při startu
-# systému může padnout kdykoli za dne, a to se má zapsat a skončit, ne solvit.
+# ## Víkend (od 15. 10. 2026)
+#
+# Majitel: „stroj na vývoj a solvení na 100 % můžeš využít v těchto termínech:
+# pondělí až pátek 21 - 7, kdykoli o víkendu". Od pátečních 21:00 do pondělní
+# sedmé je tedy stroj celý k dispozici - 58 hodin, které noc do té doby
+# nevyužívala. Sobotní ráno dostane plný ranní cyklus (`after-night.ps1`: packy
+# všech ulic, kontrola, EV), zbytek víkendu solver.
+#
+# Víkendový režim se zapne **jen tehdy, když ho Plánovač doopravdy má**:
+# týdenní spouštěč a strop běhu přes dva dny. Nastavuje je instalátor pod
+# správcem; do té doby se všechno chová přesně jako dosud. Čte se z úlohy, ne
+# ze značky, aby to nemohlo lhát.
+
+# Strop běhu úlohy jako čas; prázdný nebo `PT0S` znamená bez stropu.
+function Get-TaskTimeLimit {
+  param([string]$TaskName)
+  try {
+    $limit = (Get-ScheduledTask -TaskName $TaskName -ErrorAction Stop).Settings.ExecutionTimeLimit
+    if ([string]::IsNullOrEmpty($limit) -or $limit -eq "PT0S") { return [TimeSpan]::MaxValue }
+    return [System.Xml.XmlConvert]::ToTimeSpan($limit)
+  } catch {
+    return [TimeSpan]::Zero
+  }
+}
+
+# Má úloha víkendový rozvrh (týdenní spouštěč a strop aspoň 46 h)?
+function Test-WeekendSchedule {
+  param([string]$TaskName)
+  try {
+    $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction Stop
+    $weekly = @($task.Triggers | Where-Object { $_.CimClass.CimClassName -eq "MSFT_TaskWeeklyTrigger" })
+    return ($weekly.Count -gt 0 -and (Get-TaskTimeLimit -TaskName $TaskName) -ge [TimeSpan]::FromHours(46))
+  } catch {
+    return $false
+  }
+}
+
+# Konec okna pro runner, absolutně (`yyyy-MM-ddTHH:mm`), jak ho čte
+# `parse_until` v `run_night_decomposition.py`.
+#
+# Bez víkendového rozvrhu nejbližší 07:00 - přesně jako dosud `--until=07:00`.
+# S ním nejbližší 07:00, které nepadne na neděli: sobotní sedmá zůstává koncem,
+# protože sobotní ráno patří plnému ranním cyklu, a po něm běží solver v kuse
+# až do pondělní sedmé.
+function Get-NightDeadline {
+  param([bool]$Weekend, [datetime]$Now = (Get-Date))
+  $deadline = $Now.Date.AddHours(7)
+  if ($deadline -le $Now) { $deadline = $deadline.AddDays(1) }
+  if ($Weekend) {
+    while ($deadline.DayOfWeek -eq [DayOfWeek]::Sunday) { $deadline = $deadline.AddDays(1) }
+  }
+  return $deadline.ToString("yyyy-MM-ddTHH:mm", [Globalization.CultureInfo]::InvariantCulture)
+}
+
+# Plný ranní cyklus a solver se o stroj nedělí: cyklus si na river bere 16 GB
+# haldy a vedle solveru by běžel několikrát déle (8. 10. 2026 naměřeno pět- až
+# šestkrát pomalejší fáze, když mu něco konkurovalo). Zámek drží PID wrapperu
+# cyklu; mrtvý proces znamená starý zámek, ne běžící cyklus.
+function Test-PackCycleRunning {
+  param([string]$Repo)
+  $lock = Join-Path $Repo "artifacts\pack-cycle.lock"
+  if (-not (Test-Path $lock)) { return $false }
+  try {
+    $owner = [int](Get-Content -Path $lock -TotalCount 1)
+    return [bool](Get-Process -Id $owner -ErrorAction SilentlyContinue)
+  } catch {
+    return $false
+  }
+}
+
+# Proběhl dnes plný ranní cyklus (ať dopadl jakkoli)?
+function Test-PackCycleDoneToday {
+  param([string]$Repo, [datetime]$Now = (Get-Date))
+  $done = Join-Path $Repo "artifacts\pack-cycle.done"
+  if (-not (Test-Path $done)) { return $false }
+  return ((Get-Item $done).LastWriteTime.Date -eq $Now.Date)
+}
+
+# Brána okna. Runner se sám brání jen oknu delšímu, než dovoluje (`MAX_WINDOW_HOURS`
+# u `HH:MM`), což pustí i běh začatý v 19:00. Spouštěč při startu systému může
+# padnout kdykoli za dne, a to se má zapsat a skončit, ne solvit.
+#
+# O víkendu (jen s víkendovým rozvrhem) je okno celý den. V sobotu ale solver
+# počká, dokud běží plný ranní cyklus, a do desíti i na to, než se spustí -
+# v 07:00 by jinak předběhl cyklus, který startuje v 07:05. Když se do desíti
+# nespustil vůbec, solver nečeká dál: prázdná sobota je horší.
 function Test-NightWindow {
-  param([string]$Log)
-  $now = (Get-Date).TimeOfDay
-  if ($now -ge [TimeSpan]'20:45:00' -or $now -lt [TimeSpan]'06:45:00') { return $true }
+  param([string]$Log, [bool]$Weekend = $false, [string]$Repo = "", [datetime]$Now = (Get-Date))
+  $time = $Now.TimeOfDay
+  if ($time -ge [TimeSpan]"20:45:00" -or $time -lt [TimeSpan]"06:45:00") { return $true }
+  $isWeekend = $Now.DayOfWeek -eq [DayOfWeek]::Saturday -or $Now.DayOfWeek -eq [DayOfWeek]::Sunday
+  if ($Weekend -and $isWeekend) {
+    if ($Now.DayOfWeek -eq [DayOfWeek]::Saturday) {
+      if (Test-PackCycleRunning -Repo $Repo) {
+        Write-NightLog -Log $Log -Message "sobota: bezi plny ranni cyklus, solver pocka"
+        return $false
+      }
+      if (-not (Test-PackCycleDoneToday -Repo $Repo -Now $Now) -and $time -lt [TimeSpan]"10:00:00") {
+        Write-NightLog -Log $Log -Message "sobota: plny ranni cyklus jeste neprobehl, solver pocka nejdele do 10:00"
+        return $false
+      }
+    }
+    return $true
+  }
   Write-NightLog -Log $Log -Message "spusteni mimo okno 20:45-06:45, koncim bez prace"
   return $false
 }

@@ -52,11 +52,28 @@ if (-not $isAdmin) {
 $account = "$env:USERDOMAIN\$env:USERNAME"
 Write-Host "Ucet pro ulohy: $account"
 
+# Počátek spouštěče **v místním čase, bez zóny.** Plánovač čas se zónou
+# (`+02:00`, jak ho do 19. 10. 2026 ukládal tenhle skript) bere jako UTC, takže
+# po konci letního času (25. 10. 2026) by noc začínala ve 20:00 a ranní cyklus
+# v 06:05 - hodinu do běžící noci. Bez zóny platí 21:00 místního času v zimě
+# i v létě.
+function Set-LocalBoundary {
+  param($Trigger, [string]$At)
+  $Trigger.StartBoundary = (Get-Date).ToString("yyyy-MM-dd") + "T" + $At + ":00"
+}
+
 # ---- 1-3, 5: Planovac ------------------------------------------------------
 
+# 6. **Vikend (od 15. 10. 2026).** Majitel: „pondeli az patek 21 - 7, kdykoli
+#    o vikendu". Nocni ulohy dostanou tydenni spoustec v sobotu a v nedeli od
+#    07:00 s opakovanim po 30 min na 14 h a strop behu 48 h (od soboty po
+#    rannim cyklu do pondelni sedme je to az 46 h). Kdy solver o vikendu smi
+#    zacit, rozhoduje brana ve wrapperech (`Test-NightWindow`): v sobotu pocka
+#    na plny ranni cyklus. Ranni uloha dostane strop 12 h, aby sobotni plny
+#    cyklus (prvni beh prestavi vsechno) nedorazil Planovac v pulce.
 $nightTasks = @(
-  @{ Name = "PKRTrainer-Night-Decomposition"; At = "21:00"; BootDelay = "PT2M" },
-  @{ Name = "PKRTrainer-Night-Expansion";     At = "21:01"; BootDelay = "PT3M" }
+  @{ Name = "PKRTrainer-Night-Decomposition"; At = "21:00"; WeekendAt = "07:00"; BootDelay = "PT2M" },
+  @{ Name = "PKRTrainer-Night-Expansion";     At = "21:01"; WeekendAt = "07:01"; BootDelay = "PT3M" }
 )
 
 foreach ($spec in $nightTasks) {
@@ -71,6 +88,14 @@ foreach ($spec in $nightTasks) {
     -RepetitionInterval (New-TimeSpan -Minutes 30) `
     -RepetitionDuration (New-TimeSpan -Hours 9 -Minutes 30)
   $daily.Repetition = $helper.Repetition
+  Set-LocalBoundary -Trigger $daily -At $spec.At
+
+  $weekendTrigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Saturday, Sunday -At $spec.WeekendAt
+  $weekendHelper = New-ScheduledTaskTrigger -Once -At $spec.WeekendAt `
+    -RepetitionInterval (New-TimeSpan -Minutes 30) `
+    -RepetitionDuration (New-TimeSpan -Hours 14)
+  $weekendTrigger.Repetition = $weekendHelper.Repetition
+  Set-LocalBoundary -Trigger $weekendTrigger -At $spec.WeekendAt
 
   $boot = New-ScheduledTaskTrigger -AtStartup
   $boot.Delay = $spec.BootDelay
@@ -90,9 +115,12 @@ foreach ($spec in $nightTasks) {
   $settings.StopIfGoingOnBatteries = $false
   # Úloha nesmí skončit jen proto, že si stroj myslí, že přestal zahálet.
   $settings.IdleSettings.StopOnIdleEnd = $false
+  # Víkendový běh trvá až 46 h; runner končí podle vlastního `--until`, tohle je
+  # jen záchranná síť proti zaseknutému procesu.
+  $settings.ExecutionTimeLimit = "PT48H"
 
-  Set-ScheduledTask -TaskName $name -Trigger @($daily, $boot) -Principal $principal -Settings $settings | Out-Null
-  Write-Host "  principal S4U, denni 30min opakovani 9h30m, boot +$($spec.BootDelay), WakeToRun"
+  Set-ScheduledTask -TaskName $name -Trigger @($daily, $weekendTrigger, $boot) -Principal $principal -Settings $settings | Out-Null
+  Write-Host "  principal S4U, denni 30min opakovani 9h30m, vikend od $($spec.WeekendAt) 30min opakovani 14h, strop 48h, boot +$($spec.BootDelay), WakeToRun"
 }
 
 # Ranní obnova: S4U a WakeToRun ano, boot spouštěč ne - ta má běžet po noci,
@@ -104,8 +132,13 @@ $settings = (Get-ScheduledTask -TaskName $after).Settings
 $settings.WakeToRun = $true
 $settings.StartWhenAvailable = $true
 $settings.IdleSettings.StopOnIdleEnd = $false
-Set-ScheduledTask -TaskName $after -Principal $principal -Settings $settings | Out-Null
-Write-Host "  principal S4U, WakeToRun, bez boot spoustece"
+# Sobotní plný cyklus (pack-cycle.ps1) při prvním běhu přestaví všechno.
+$settings.ExecutionTimeLimit = "PT12H"
+# Spouštěč znovu, jen kvůli místnímu času (viz `Set-LocalBoundary`).
+$morning = New-ScheduledTaskTrigger -Daily -At "07:05"
+Set-LocalBoundary -Trigger $morning -At "07:05"
+Set-ScheduledTask -TaskName $after -Trigger @($morning) -Principal $principal -Settings $settings | Out-Null
+Write-Host "  principal S4U, WakeToRun, denne 07:05 mistniho casu, strop 12h, bez boot spoustece"
 
 # ---- 4: víko ---------------------------------------------------------------
 

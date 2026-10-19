@@ -31,10 +31,18 @@ import { cpus, freemem, totalmem } from "node:os";
  * horší než běh, který si vezme víc jader.
  */
 
-export type MachineWindow = "DEN" | "NOC";
+export type MachineWindow = "DEN" | "NOC" | "VÍKEND";
 
-/** Denní okno je 07:00-21:00; noční je jeho doplněk. */
+/**
+ * Denní okno je 07:00-21:00 ve všední den; noc a celý víkend jsou plné.
+ *
+ * Víkend platí od 15. 10. 2026, slovy majitele: „stroj na vývoj a solvení na
+ * 100 % můžeš využít v těchto termínech: pondělí až pátek 21 - 7, kdykoli
+ * o víkendu. Přes den zde asi na 50 % částečně používáme HW."
+ */
 export function machineWindow(now = new Date()): MachineWindow {
+  const day = now.getDay();
+  if (day === 0 || day === 6) return "VÍKEND";
   const hour = now.getHours();
   return hour >= 7 && hour < 21 ? "DEN" : "NOC";
 }

@@ -169,12 +169,32 @@ function powershell(script: string): string {
   }
 }
 
+/*
+ * Rozvrh stroje (od 15. 10. 2026): víkend a místní čas spouštěčů.
+ *
+ * Majitel: stroj je na 100 % po-pá 21-7 a celý víkend. Víkend vyžaduje týdenní
+ * spouštěč a strop běhu přes dva dny, sobotní plný cyklus strop ranní úlohy aspoň
+ * 8 h - a obojí nastaví jen instalátor pod správcem. Spouštěč se zónou (`+02:00`)
+ * Plánovač drží v UTC, takže po konci letního času jede o hodinu dřív.
+ * Informativní: dnešní noc to neohrožuje, ale bez toho se víkend nevyužije.
+ */
+const schedule: { task: string; night: boolean; weekly: boolean; limit: string; zoned: string[] }[] = [];
+
 for (const task of TASKS) {
   const xml = powershell(`[xml]$x = Export-ScheduledTask -TaskName '${task.name}'; $x.OuterXml`);
   if (xml === "") {
     add(`${task.name}: úloha existuje`, false, "nenalezena", "existuje");
     continue;
   }
+  schedule.push({
+    task: task.name,
+    night: task.night,
+    weekly: /<ScheduleByWeek>/.test(xml),
+    limit: /<ExecutionTimeLimit>([^<]+)<\/ExecutionTimeLimit>/.exec(xml)?.[1] ?? "bez stropu",
+    zoned: [...xml.matchAll(/<StartBoundary>([^<]+)<\/StartBoundary>/g)]
+      .map((match) => match[1])
+      .filter((boundary) => /(Z|[+-]\d\d:\d\d)$/.test(boundary)),
+  });
   const logon = /<LogonType>([^<]+)<\/LogonType>/.exec(xml)?.[1] ?? "chybí";
   add(`${task.name}: běží i bez přihlášení`, logon === "S4U", logon, "S4U");
 
@@ -544,6 +564,31 @@ if (retrying.length > 0) {
   }
   console.log("");
 }
+/** `PT48H`, `PT10H30M`, `P2D` na hodiny; bez stropu je nekonečno. */
+const limitHours = (limit: string): number => {
+  const match = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?)?$/.exec(limit);
+  if (match === null) return Number.POSITIVE_INFINITY;
+  const [, days, hours, minutes] = match;
+  const total = Number(days ?? 0) * 24 + Number(hours ?? 0) + Number(minutes ?? 0) / 60;
+  return total === 0 ? Number.POSITIVE_INFINITY : total;
+};
+console.log("rozvrh stroje (nastavuje instalátor pod správcem; dnešní noc neohrožuje):");
+let scheduleOk = true;
+for (const row of schedule) {
+  const weekendOk = row.night ? row.weekly && limitHours(row.limit) >= 46 : limitHours(row.limit) >= 8;
+  const clockOk = row.zoned.length === 0;
+  scheduleOk = scheduleOk && weekendOk && clockOk;
+  const weekend = row.night
+    ? (weekendOk ? "víkend ano" : "víkend NE")
+    : (weekendOk ? "unese sobotní plný cyklus" : "sobotní plný cyklus NEunese");
+  const clock = clockOk ? "místní čas" : `čas se zónou (${row.zoned[0]}), po konci letního času o hodinu dřív`;
+  console.log(`  ${row.task}: ${weekend}, strop ${row.limit}, ${clock}`);
+}
+if (!scheduleOk) {
+  console.log("  spustit jako správce: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/scheduled/install-night-tasks.ps1");
+}
+console.log("");
+
 const failed = checks.filter((check) => !check.ok);
 if (failed.length === 0) {
   console.log(`${checks.length} z ${checks.length} sedí; noc poběží i bez přihlášení, přes zavřené víko a po restartu.`);

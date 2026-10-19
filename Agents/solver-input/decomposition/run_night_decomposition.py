@@ -56,6 +56,33 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # která dá okno dvacet dva hodin - a na to ta rezerva stačí.
 MAX_WINDOW_HOURS = 11
 
+# Nejdelší okno zadané **absolutně** (`--until=YYYY-MM-DDTHH:MM`), v hodinách.
+#
+# Od 15. 10. 2026 je stroj celý k dispozici i o víkendu (majitel: „pondělí až
+# pátek 21 - 7, kdykoli o víkendu"). Okno pak přesahuje den - od soboty po
+# ranním cyklu až do pondělní sedmé, a od pátečních 21:00 je to 58 h. To
+# `HH:MM` vyjádřit neumí, proto ho wrapper předává jako datum. Strop chytá
+# překlep v datu, ne víkend.
+MAX_ABSOLUTE_WINDOW_HOURS = 62
+
+
+def parse_until(value, now=None):
+    """Konec okna z `--until`: `(deadline, absolutní)`.
+
+    `HH:MM` je nejbližší takový čas (dosavadní tvar, ruční spuštění);
+    `YYYY-MM-DDTHH:MM` je přesný okamžik, jak ho od 15. 10. 2026 spočítá
+    wrapper (`Get-NightDeadline` v `lib-night-window.ps1`) - víkendové okno
+    jinak zapsat nejde.
+    """
+    now = now or datetime.now()
+    if "T" in value:
+        return datetime.strptime(value, "%Y-%m-%dT%H:%M"), True
+    hour, minute = (int(x) for x in value.split(":"))
+    deadline = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    if deadline <= now:
+        deadline += timedelta(days=1)
+    return deadline, False
+
 # Kolik místa na disku musí zbývat, aby se pustila další deska, v gigabajtech.
 #
 # Solver na plný disk nereaguje chybou, kterou by šlo přečíst: zapíše, co se
@@ -781,10 +808,7 @@ def main():
     # spolkla celé okno turnové fázi, a nedokončený turn blokuje review bránu.
     river_budget = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--river-budget=")), "0"))
 
-    hour, minute = (int(x) for x in until.split(":"))
-    deadline = datetime.now().replace(hour=hour, minute=minute, second=0, microsecond=0)
-    if deadline <= datetime.now():
-        deadline += timedelta(days=1)
+    deadline, absolute = parse_until(until)
 
     # Okno se nesmí natáhnout na celý den.
     #
@@ -794,10 +818,16 @@ def main():
     # kontrola deadlinu u každé desky proti tomu nepomůže, protože deadline sám
     # byl špatně. Solvení patří do noci; spuštění mimo ni je skoro vždy omyl.
     window_hours = (deadline - datetime.now()).total_seconds() / 3600
-    if window_hours > MAX_WINDOW_HOURS and "--force" not in sys.argv:
+    # Absolutní konec počítá wrapper z rozvrhu stroje (víkend až 58 h), takže
+    # strop je jiný; `HH:MM` zůstává pojistkou proti spuštění mimo noc.
+    limit_hours = MAX_ABSOLUTE_WINDOW_HOURS if absolute else MAX_WINDOW_HOURS
+    if window_hours <= 0:
+        log(f"konec okna {deadline:%d.%m. %H:%M} už minul; končím bez práce")
+        return
+    if window_hours > limit_hours and "--force" not in sys.argv:
         log(
             f"okno by trvalo {window_hours:.1f} h (do {deadline:%d.%m. %H:%M}), což je víc než "
-            f"{MAX_WINDOW_HOURS} h - běh se pravděpodobně spouští mimo noční okno. "
+            f"{limit_hours} h - běh se pravděpodobně spouští mimo noční okno. "
             "Buď spusť po 21:00, nebo přidej --force."
         )
         return

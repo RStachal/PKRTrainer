@@ -447,20 +447,25 @@ def main():
     until = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--until=")), "07:00")
     limit = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--limit=")), "0"))
 
-    hour, minute = (int(x) for x in until.split(":"))
-    deadline = datetime.now().replace(hour=hour, minute=minute, second=0, microsecond=0)
-    if deadline <= datetime.now():
-        deadline += timedelta(days=1)
+    # Tentýž výklad `--until` jako v rozkladu, ze stejného místa: `HH:MM`, nebo
+    # od 15. 10. 2026 absolutní datum, které wrapper spočítá z rozvrhu stroje
+    # (o víkendu okno přesahuje den).
+    from run_night_decomposition import MAX_ABSOLUTE_WINDOW_HOURS, parse_until
+    deadline, absolute = parse_until(until)
     window = (deadline - datetime.now()).total_seconds() / 3600
-    if window > MAX_WINDOW_HOURS and "--force" not in sys.argv:
+    limit_hours = MAX_ABSOLUTE_WINDOW_HOURS if absolute else MAX_WINDOW_HOURS
+    if window <= 0:
+        log(f"konec okna {deadline:%d.%m. %H:%M} už minul; končím bez práce")
+        return
+    if window > limit_hours and "--force" not in sys.argv:
         log(
-            f"okno by trvalo {window:.1f} h, což je víc než {MAX_WINDOW_HOURS} - "
+            f"okno by trvalo {window:.1f} h, což je víc než {limit_hours} - "
             "běh se pravděpodobně spouští mimo noc. Spusť po 21:00, nebo přidej --force."
         )
         return
 
     todo = pending_boards()
-    log(f"nastagováno {len(todo)} desek bez checkpointu; deadline {until}")
+    log(f"nastagováno {len(todo)} desek bez checkpointu; deadline {deadline:%a %d.%m. %H:%M}")
     log(f"na disku volno {free_gb():.1f} GB (hranice {MIN_FREE_GB} GB)")
     if not todo:
         log("není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write")
@@ -649,7 +654,8 @@ def hand_back(deadline) -> None:
     forwarded = [a for a in sys.argv if a.startswith(("--workers=", "--river-workers=", "--river-threads="))]
     subprocess.run(
         [sys.executable, os.path.join(HERE, "run_night_decomposition.py"),
-         f"--until={deadline:%H:%M}", *forwarded],
+         # Absolutně: o víkendu je konec okna jiný den než zítřejší 07:00.
+         f"--until={deadline:%Y-%m-%dT%H:%M}", *forwarded],
         cwd=REPO,
     )
 
