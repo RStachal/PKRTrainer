@@ -336,8 +336,23 @@ podobě a noční rozklad podle ní ustoupí monolitické expanzi - ale jen kdy�
 osm, a je nainstalovaná úloha, která okno převezme. Ta poslední je ta podstatná:
 ustoupit do prázdna je nejdražší možný výsledek, protože noc neodvede nic.
 
-**Sám nezakládá práci.** Vygenerovat parametry pro nové rodiny je krok, který
-spustí člověk: je to rozhodnutí o tom, co se bude solvit další tři noci.
+**Od 19. 10. 2026 noci střídá mezi šířkou a prvním rozkladem** (deník 319,
+`scripts/lib/nightAlternation.mts`). Priorita `NEW_FAMILIES` posílala celou noc
+expanzi, kdykoli byla nastagovaná práce - a tak 523 vyřešených desek čekalo na
+první rozklad (bez turnu, riveru i EV), zatímco fronta expanze měla ~17 nocí.
+Teď po noci šířky přijde noc rozkladu a naopak; bez desek k rozkladu má šířka
+všechny noci, bez nastagované práce rozklad. Expanze v noci rozkladu ustoupí
+(do 19. 10. prioritu nečetla vůbec).
+
+**Plný cyklus packů má vlastní okno a zámek** (`scripts/scheduled/pack-cycle.ps1`,
+deník 318): s víkendovým rozvrhem v sobotu ráno, jinak na pokyn v plném okně
+stroje; noční solver i lehký ranní cyklus mu ustoupí.
+
+~~**Sám nezakládá práci.** Vygenerovat parametry pro nové rodiny je krok, který
+spustí člověk: je to rozhodnutí o tom, co se bude solvit další tři noci.~~
+**Od 15. 10. 2026 zakládá sám**, ale jen na hloubkách se změřenou cenou desky,
+a to když výhled fronty klesne pod dvě noci. Jinou osu (100 bb, další desky,
+3BP) nezaloží a nahlásí ji jako rozhodnutí.
 
 **Necommituje.** Co se změnilo a jestli je to v pořádku, je úsudek.
 

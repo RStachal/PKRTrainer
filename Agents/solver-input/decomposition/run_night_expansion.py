@@ -464,6 +464,19 @@ def main():
         )
         return
 
+    # Porada (`mtt:daily`) běží na začátku rozkladu ve 21:00 a trvá kolem dvou
+    # minut; expanze startuje o minutu později. Chvíli se na ni počká, ať se noc
+    # nerozjede podle včerejšího rozhodnutí. Když porada neproběhne (rozklad se
+    # nespustil), jede se jako dosud.
+    from run_night_decomposition import _priority_is_fresh
+    waited = 0
+    while not _priority_is_fresh() and waited < 6 * 60 and datetime.now() < deadline:
+        time.sleep(30)
+        waited += 30
+    if decomposition_has_the_night():
+        log("ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)")
+        return
+
     todo = pending_boards()
     log(f"nastagováno {len(todo)} desek bez checkpointu; deadline {deadline:%a %d.%m. %H:%M}")
     log(f"na disku volno {free_gb():.1f} GB (hranice {MIN_FREE_GB} GB)")
@@ -494,6 +507,11 @@ def main():
     done = failed = 0
     slept_minutes = 0.0
     for param, family, board, checkpoint, level in (todo[:limit] if limit else todo):
+        # Porada mohla rozhodnout až po startu (viz čekání výš): noc rozkladu
+        # se pozná i mezi deskami a deska rozdělaná se dodělá.
+        if decomposition_has_the_night():
+            log("ustupuji mezi deskami: porada dala tuhle noc prvnímu rozkladu")
+            break
         cap_minutes, accuracy = caps_for(family, level)
         remaining = (deadline - datetime.now()).total_seconds() / 60
         if remaining <= 0:
@@ -631,6 +649,26 @@ def main():
     # Pustit, než okno převezme rozklad: ten si drží vzhůru sám.
     keep_system_awake(False)
     hand_back(deadline)
+
+
+def decomposition_has_the_night() -> bool:
+    """Patří tahle noc rozkladu (čerstvá priorita DECOMPOSITION)?
+
+    Od 19. 10. 2026 se noci střídají mezi šířkou a prvním rozkladem
+    (`nightAlternation.mts` v orchestrátoru). Rozklad ustupuje expanzi při
+    NEW_FAMILIES odjakživa, expanze rozkladu nikdy - při DECOMPOSITION by tedy
+    jely obě naráz, monolit s dvanácti vlákny vedle šestnácti procesů rozkladu,
+    a každá na půl stroje. Platí jen rozhodnutí z téhle noci: staré by noc
+    poslalo podle včerejška.
+    """
+    from run_night_decomposition import NIGHT_PRIORITY, _priority_is_fresh
+    if not _priority_is_fresh():
+        return False
+    try:
+        with open(NIGHT_PRIORITY, encoding="utf8") as handle:
+            return json.load(handle).get("priority") == "DECOMPOSITION"
+    except Exception:
+        return False
 
 
 def hand_back(deadline) -> None:

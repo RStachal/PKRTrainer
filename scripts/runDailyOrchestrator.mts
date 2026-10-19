@@ -10,6 +10,7 @@ import {
   RUNWAY_NIGHTS_MIN,
 } from "./lib/expansionQueue.mts";
 import { shouldYield, yieldThresholds } from "./lib/nightYield.mts";
+import { alternateNight, nightKey, previousDecision, undecomposedBoards } from "./lib/nightAlternation.mts";
 import { nightFamilyRows, riverPhaseRate } from "./lib/nightLog.mts";
 import { MODULE_BUDGET_BYTES } from "./lib/solvedPackBuilding.mts";
 
@@ -661,6 +662,25 @@ if (asked === null || held === null) {
   say("  DOPORUČENÍ: pokračovat v hloubce - šířka vzorů je pokrytá.");
 }
 
+/*
+ * Střídání nocí mezi šířkou a prvním rozkladem (od 19. 10. 2026, viz
+ * `nightAlternation.mts`). Rozhoduje se až po všech pravidlech výš a mění jen
+ * šířku za první rozklad, nikdy naopak: expanze rozkladu ustoupí v noci, která
+ * mu patří (`decomposition_has_the_night` v runneru expanze).
+ */
+const undecomposed = undecomposedBoards(CHECKPOINT_ROOT, "artifacts/decomposition");
+const alternation = alternateNight({
+  wanted: priority,
+  previous: previousDecision(join(REPORT_DIR, "tonight.json")),
+  night: nightKey(new Date()),
+  undecomposedBoards: undecomposed,
+});
+if (alternation.alternated) {
+  priority = alternation.priority;
+  priorityReason = alternation.reason ?? priorityReason;
+}
+say(`  první rozklad čeká: ${undecomposed} vyřešených desek bez turnových vrstev`);
+
 say("");
 say(`  priorita pro noc: ${priority} (${priorityReason})`);
 
@@ -685,6 +705,8 @@ if (write) {
     reason: priorityReason,
     stagedBoards,
     stagedFamilies,
+    // Práce pro noc rozkladu - podle ní se střídá (viz výš).
+    undecomposedBoards: undecomposed,
     // Minuty i desky: minuty rozhodují, desky zůstávají, aby starší čtenář
     // souboru (a hlídač po návratu k záloze) pořád našel, co zná.
     stagedMinutes: stagedMinutes === undefined ? null : Math.round(stagedMinutes),

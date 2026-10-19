@@ -410,13 +410,21 @@ if (!existsSync(TONIGHT)) {
     priority: String(tonight.priority),
     thresholds: limits,
   });
-  add("rozklad monolitu ustoupí", yields,
-    minutesHave === undefined
-      ? `${boardsHave} desek (cena desky není), priorita ${String(tonight.priority)}`
-      : `${Math.round(minutesHave / 60)} h práce (${boardsHave} desek), priorita ${String(tonight.priority)}`,
-    minutesHave === undefined
-      ? `aspoň ${limits.boards} desek a NEW_FAMILIES`
-      : `aspoň ${limits.minutes} min a NEW_FAMILIES`);
+  // Noc rozkladu (střídání od 19. 10. 2026, `nightAlternation.mts`): rozklad
+  // neustupuje a expanze ustoupí jemu - to je správný stav, ne vada.
+  const decompositionNight = String(tonight.priority) === "DECOMPOSITION";
+  add(decompositionNight ? "noc patří prvnímu rozkladu" : "rozklad monolitu ustoupí",
+    decompositionNight || yields,
+    decompositionNight
+      ? `priorita DECOMPOSITION, ${Number(tonight.undecomposedBoards ?? 0)} desek čeká na rozklad`
+      : minutesHave === undefined
+        ? `${boardsHave} desek (cena desky není), priorita ${String(tonight.priority)}`
+        : `${Math.round(minutesHave / 60)} h práce (${boardsHave} desek), priorita ${String(tonight.priority)}`,
+    decompositionNight
+      ? "rozklad jede, expanze ustoupí"
+      : minutesHave === undefined
+        ? `aspoň ${limits.boards} desek a NEW_FAMILIES`
+        : `aspoň ${limits.minutes} min a NEW_FAMILIES`);
   // Práh přečtený ze runneru je sám předpoklad: kdyby se literál přejmenoval,
   // hlídač by tiše hlásil podle zálohy a noc by se rozhodovala podle něčeho
   // jiného. Tentýž řádek má žebřík pokusů.
