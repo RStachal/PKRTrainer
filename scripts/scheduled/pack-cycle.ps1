@@ -29,7 +29,10 @@ Set-Content -Path $lock -Value $PID -Encoding ascii
 $code = 1
 try {
   Write-NightLog -Log $log -Message "plny cyklus: start (PID $PID)"
-  $command = "/c cd /d `"$repo`" && `"$node`" scripts\run-cli.mjs scripts\runAfterNight.mts --write --turn-ev-minutes=210 >> `"$log`" 2>&1"
+  # Turnova EV jen 120 min (ranni cyklus ma 210): plny cyklus nema konec okna a
+  # nesmi se protahnout do vsedniho dne. Co nestihne, dozene ranni cyklus - ten
+  # obnovuje zastarale turnove tabulky sam.
+  $command = "/c cd /d `"$repo`" && `"$node`" scripts\run-cli.mjs scripts\runAfterNight.mts --write --turn-ev-minutes=120 >> `"$log`" 2>&1"
   $process = Start-Process -FilePath "cmd.exe" -ArgumentList $command -WindowStyle Hidden -Wait -PassThru
   $code = $process.ExitCode
   Write-NightLog -Log $log -Message "plny cyklus: konec rc=$code"
