@@ -3038,3 +3038,155 @@ UnicodeDecodeError: 'charmap' codec can't decode byte 0x88 in position 1122: cha
 [06:33:19] končím 27 min před deadline: deska potřebuje asi 37
 [06:33:19] expansion: hotovo 13, selhalo 1, zbývá 101
 [06:33:19] fronta není prázdná, rozkladu okno nepředávám
+[21:01:02] napajeni: sit
+[21:01:02] viko na siti: nedelat nic (overeno v registru)
+[21:01:02] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:01:03] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[21:01:03] nastagováno 219 desek bez checkpointu; deadline Fri 16.10. 07:00
+[21:01:03] na disku volno 625.0 GB (hranice 8 GB)
+[21:01:03] stroj se drží vzhůru po dobu běhu
+[21:01:03] napájení: síť
+[21:01:03] cena desky změřena 2026-10-15 04:33 na 885 deskách: 25 bb 6.4 min, 40 bb 22.3 min, 50 bb 23.9 min
+[21:01:03] solving MTT9_40BB_HJ_BTN_SRP 986tt
+[21:43:03]   hotovo za 42.0 min, checkpoint 60 MB
+[21:43:03] solving MTT9_40BB_HJ_BTN_SRP AT4mono
+[21:43:23]   spadlo po 0.3 min (rc=3221225477); zkouším znovu
+[21:55:12]   hotovo za 11.8 min, checkpoint 43 MB (napodruhé)
+[21:55:12] solving MTT9_40BB_HJ_BTN_SRP 742r
+[22:47:50]   hotovo za 52.6 min, checkpoint 63 MB
+[22:47:50] solving MTT9_40BB_HJ_BTN_SRP K98tt
+[23:18:20]   hotovo za 30.5 min, checkpoint 58 MB
+[23:18:20] solving MTT9_40BB_UTG_1_BB_SRP A72r
+[00:43:54]   hotovo za 85.6 min, checkpoint 110 MB
+[00:43:54] solving MTT9_40BB_UTG_1_BB_SRP 883r
+[01:47:37]   hotovo za 63.7 min, checkpoint 118 MB
+[01:47:37] solving MTT9_40BB_UTG_1_BB_SRP 986tt
+[02:42:44]   hotovo za 55.1 min, checkpoint 118 MB
+[02:42:44] solving MTT9_40BB_UTG_1_BB_SRP AT4mono
+[03:03:44]   hotovo za 21.0 min, checkpoint 83 MB
+[03:03:44] solving MTT9_40BB_UTG_1_BB_SRP 742r
+[04:04:22]   hotovo za 60.6 min, checkpoint 119 MB
+[04:04:22] solving MTT9_40BB_UTG_1_BB_SRP K98tt
+[04:40:13]   hotovo za 35.8 min, checkpoint 112 MB
+[04:40:13] solving MTT9_40BB_LJ_BB_SRP A72r
+[05:39:57]   hotovo za 59.7 min, checkpoint 122 MB
+[05:39:57] solving MTT9_40BB_LJ_BB_SRP 883r
+[06:43:38]   hotovo za 63.7 min, checkpoint 126 MB
+[06:43:38] končím 16 min před deadline: deska potřebuje asi 41
+[06:43:38] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[06:43:38] expansion: hotovo 12, selhalo 0, zbývá 207
+[06:43:39] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[06:43:39] fronta není prázdná, rozkladu okno nepředávám
+[21:01:02] napajeni: sit
+[21:01:02] viko na siti: nedelat nic (overeno v registru)
+[21:01:02] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:01:03] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[21:01:03] nastagováno 207 desek bez checkpointu; deadline Sat 17.10. 07:00
+[21:01:03] na disku volno 615.3 GB (hranice 8 GB)
+[21:01:03] stroj se drží vzhůru po dobu běhu
+[21:01:03] napájení: síť
+[21:01:03] cena desky změřena 2026-10-16 04:43 na 897 deskách: 25 bb 6.4 min, 40 bb 23.8 min, 50 bb 23.9 min
+[21:01:03] solving MTT9_40BB_LJ_BB_SRP 986tt
+[21:59:11]   hotovo za 58.1 min, checkpoint 127 MB
+[21:59:11] solving MTT9_40BB_LJ_BB_SRP AT4mono
+[22:20:42]   hotovo za 21.5 min, checkpoint 91 MB
+[22:20:42] solving MTT9_40BB_LJ_BB_SRP 742r
+[23:50:44]   (stupeň 1 by dal týž strop i přesnost, přeskakuje se)
+[23:50:44]   SELHALO po 90.0 min (rc=timeout); příští noc stupeň 2 - strop 90 min, přesnost 1.0 %
+[23:50:44] solving MTT9_40BB_LJ_BB_SRP K98tt
+[00:46:10]   hotovo za 55.4 min, checkpoint 122 MB
+[00:46:10] solving MTT9_40BB_CO_BTN_SRP A72r
+[01:37:17]   hotovo za 51.1 min, checkpoint 64 MB
+[01:37:17] solving MTT9_40BB_CO_BTN_SRP 883r
+[02:27:08]   hotovo za 49.9 min, checkpoint 71 MB
+[02:27:08] solving MTT9_40BB_CO_BTN_SRP 986tt
+[03:10:37]   hotovo za 43.5 min, checkpoint 67 MB
+[03:10:37] solving MTT9_40BB_CO_BTN_SRP AT4mono
+[03:23:02]   hotovo za 12.4 min, checkpoint 48 MB
+[03:23:02] solving MTT9_40BB_CO_BTN_SRP 742r
+[04:36:37]   hotovo za 73.6 min, checkpoint 70 MB
+[04:36:37] solving MTT9_40BB_CO_BTN_SRP K98tt
+[04:57:54]   hotovo za 21.3 min, checkpoint 67 MB
+[04:57:54] solving MTT9_40BB_CO_BB_SRP A72r
+[06:05:55]   hotovo za 68.0 min, checkpoint 139 MB
+[06:05:55] solving MTT9_40BB_CO_BB_SRP 883r
+[07:19:07]   hotovo za 73.2 min, checkpoint 152 MB
+[07:19:07] deadline; končím mezi deskami
+[07:19:07] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[07:19:07] expansion: hotovo 11, selhalo 1, zbývá 196
+[07:19:07] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[07:19:07] fronta není prázdná, rozkladu okno nepředávám
+[21:01:01] napajeni: sit
+[21:01:02] viko na siti: nedelat nic (overeno v registru)
+[21:01:02] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:01:02] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[21:01:02] nastagováno 196 desek bez checkpointu; deadline Sun 18.10. 07:00
+[21:01:02] na disku volno 617.9 GB (hranice 8 GB)
+[21:01:02] stroj se drží vzhůru po dobu běhu
+[21:01:02] napájení: síť
+[21:01:02] cena desky změřena 2026-10-17 04:05 na 907 deskách: 25 bb 6.4 min, 40 bb 24.3 min, 50 bb 23.9 min
+[21:01:02] solving MTT9_40BB_CO_BB_SRP 986tt
+[21:44:01]   hotovo za 43.0 min, checkpoint 147 MB
+[21:44:01] solving MTT9_40BB_CO_BB_SRP AT4mono
+[22:09:20]   hotovo za 25.3 min, checkpoint 106 MB
+[22:09:20] solving MTT9_40BB_CO_BB_SRP 742r
+[23:39:23]   (stupeň 1 by dal týž strop i přesnost, přeskakuje se)
+[23:39:23]   SELHALO po 90.0 min (rc=timeout); příští noc stupeň 2 - strop 90 min, přesnost 1.0 %
+[23:39:23] solving MTT9_40BB_CO_BB_SRP K98tt
+[00:41:10]   hotovo za 61.8 min, checkpoint 139 MB
+[00:41:10] solving MTT9_40BB_HJ_CO_SRP A72r
+[01:10:20]   hotovo za 29.2 min, checkpoint 52 MB
+[01:10:20] solving MTT9_40BB_HJ_CO_SRP 883r
+[01:41:56]   hotovo za 31.6 min, checkpoint 55 MB
+[01:41:56] solving MTT9_40BB_HJ_CO_SRP 986tt
+[02:00:00]   hotovo za 18.1 min, checkpoint 56 MB
+[02:00:00] solving MTT9_40BB_HJ_CO_SRP AT4mono
+[02:10:10]   hotovo za 10.2 min, checkpoint 38 MB
+[02:10:10] solving MTT9_40BB_HJ_CO_SRP 742r
+[02:56:40]   hotovo za 46.5 min, checkpoint 58 MB
+[02:56:40] solving MTT9_40BB_HJ_CO_SRP K98tt
+[03:22:59]   hotovo za 26.3 min, checkpoint 52 MB
+[03:22:59] solving MTT9_40BB_SB_BB_SRP A72r
+[04:41:13]   hotovo za 78.2 min, checkpoint 168 MB
+[04:41:13] solving MTT9_40BB_SB_BB_SRP 883r
+[06:11:15]   (stupeň 1 by dal týž strop i přesnost, přeskakuje se)
+[06:11:15]   SELHALO po 90.0 min (rc=timeout); příští noc stupeň 2 - strop 90 min, přesnost 1.0 %
+[06:11:15] končím 49 min před deadline: deska potřebuje asi 56
+[06:11:15] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[06:11:15] expansion: hotovo 10, selhalo 2, zbývá 186
+[06:11:15] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[06:11:15] fronta není prázdná, rozkladu okno nepředávám
+[06:31:02] napajeni: sit
+[06:31:02] viko na siti: nedelat nic (overeno v registru)
+[06:31:02] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[06:31:03] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[06:31:03] nastagováno 186 desek bez checkpointu; deadline Sun 18.10. 07:00
+[06:31:03] na disku volno 613.9 GB (hranice 8 GB)
+[06:31:03] stroj se drží vzhůru po dobu běhu
+[06:31:03] napájení: síť
+[06:31:03] cena desky změřena 2026-10-17 04:05 na 907 deskách: 25 bb 6.4 min, 40 bb 24.3 min, 50 bb 23.9 min
+[06:31:03] končím 29 min před deadline: deska potřebuje asi 56
+[06:31:03] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[06:31:03] expansion: hotovo 0, selhalo 0, zbývá 186
+[06:31:03] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[06:31:03] fronta není prázdná, rozkladu okno nepředávám
+[08:14:44] spusteni mimo okno 20:45-06:45, koncim bez prace
+[08:16:53] spusteni mimo okno 20:45-06:45, koncim bez prace
+[08:46:54] spusteni mimo okno 20:45-06:45, koncim bez prace
+[09:16:53] spusteni mimo okno 20:45-06:45, koncim bez prace
+[09:46:54] spusteni mimo okno 20:45-06:45, koncim bez prace
+[10:16:54] spusteni mimo okno 20:45-06:45, koncim bez prace
+[10:46:53] spusteni mimo okno 20:45-06:45, koncim bez prace
+[11:16:54] spusteni mimo okno 20:45-06:45, koncim bez prace
+[11:46:54] spusteni mimo okno 20:45-06:45, koncim bez prace
+[12:16:54] spusteni mimo okno 20:45-06:45, koncim bez prace
+[12:46:53] spusteni mimo okno 20:45-06:45, koncim bez prace
+[13:16:54] spusteni mimo okno 20:45-06:45, koncim bez prace
+[13:46:54] spusteni mimo okno 20:45-06:45, koncim bez prace
+[14:16:54] spusteni mimo okno 20:45-06:45, koncim bez prace
+[14:46:55] spusteni mimo okno 20:45-06:45, koncim bez prace
+[15:16:54] spusteni mimo okno 20:45-06:45, koncim bez prace
+[15:46:53] spusteni mimo okno 20:45-06:45, koncim bez prace
+[16:16:55] spusteni mimo okno 20:45-06:45, koncim bez prace
+[16:46:54] spusteni mimo okno 20:45-06:45, koncim bez prace
+[17:16:55] spusteni mimo okno 20:45-06:45, koncim bez prace

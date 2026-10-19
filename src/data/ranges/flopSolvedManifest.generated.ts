@@ -246,6 +246,24 @@ export const solvedFlopManifest: readonly SolvedFlopManifestEntry[] = [
     load: () => import("./flop/mtt9-35bb-co-btn-3bp-repair.generated.json?raw").then((module) => JSON.parse(module.default) as FlopSolvedStrategyPack),
   },
   {
+    familyId: "MTT9_40BB_CO_BTN_SRP",
+    packId: "mtt-full-ring-9-flop-solved-mtt9-40bb-co-btn-srp-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|FLOP",
+    load: () => import("./flop/mtt9-40bb-co-btn-srp.generated.json?raw").then((module) => JSON.parse(module.default) as FlopSolvedStrategyPack),
+  },
+  {
+    familyId: "MTT9_40BB_HJ_BTN_SRP",
+    packId: "mtt-full-ring-9-flop-solved-mtt9-40bb-hj-btn-srp-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|FLOP",
+    load: () => import("./flop/mtt9-40bb-hj-btn-srp.generated.json?raw").then((module) => JSON.parse(module.default) as FlopSolvedStrategyPack),
+  },
+  {
+    familyId: "MTT9_40BB_HJ_CO_SRP",
+    packId: "mtt-full-ring-9-flop-solved-mtt9-40bb-hj-co-srp-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|FLOP",
+    load: () => import("./flop/mtt9-40bb-hj-co-srp.generated.json?raw").then((module) => JSON.parse(module.default) as FlopSolvedStrategyPack),
+  },
+  {
     familyId: "MTT9_40BB_LJ_HJ_SRP",
     packId: "mtt-full-ring-9-flop-solved-mtt9-40bb-lj-hj-srp-v1",
     profileKey: "FULL_RING_9|REGULAR|CHIP_EV|FLOP",
@@ -256,6 +274,12 @@ export const solvedFlopManifest: readonly SolvedFlopManifestEntry[] = [
     packId: "mtt-full-ring-9-flop-solved-mtt9-40bb-lj-sb-srp-v1",
     profileKey: "FULL_RING_9|REGULAR|CHIP_EV|FLOP",
     load: () => import("./flop/mtt9-40bb-lj-sb-srp.generated.json?raw").then((module) => JSON.parse(module.default) as FlopSolvedStrategyPack),
+  },
+  {
+    familyId: "MTT9_40BB_UTG_1_BB_SRP",
+    packId: "mtt-full-ring-9-flop-solved-mtt9-40bb-utg-1-bb-srp-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|FLOP",
+    load: () => import("./flop/mtt9-40bb-utg-1-bb-srp.generated.json?raw").then((module) => JSON.parse(module.default) as FlopSolvedStrategyPack),
   },
   {
     familyId: "MTT9_40BB_UTG_1_CO_SRP",
