@@ -3190,3 +3190,83 @@ UnicodeDecodeError: 'charmap' codec can't decode byte 0x88 in position 1122: cha
 [16:16:55] spusteni mimo okno 20:45-06:45, koncim bez prace
 [16:46:54] spusteni mimo okno 20:45-06:45, koncim bez prace
 [17:16:55] spusteni mimo okno 20:45-06:45, koncim bez prace
+[21:01:05] bezi plny cyklus packu, solver pocka na dalsi tik
+[21:31:06] bezi plny cyklus packu, solver pocka na dalsi tik
+[22:01:06] bezi plny cyklus packu, solver pocka na dalsi tik
+[22:31:06] bezi plny cyklus packu, solver pocka na dalsi tik
+[23:01:06] bezi plny cyklus packu, solver pocka na dalsi tik
+[23:31:07] napajeni: sit
+[23:31:08] viko na siti: nedelat nic (overeno v registru)
+[23:31:08] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[23:31:08] konec okna 2026-10-20T07:00 (vikendovy rozvrh: False)
+[23:31:39] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[00:01:10] napajeni: sit
+[00:01:10] viko na siti: nedelat nic (overeno v registru)
+[00:01:10] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[00:01:10] konec okna 2026-10-20T07:00 (vikendovy rozvrh: False)
+[00:01:12] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[00:31:16] napajeni: sit
+[00:31:17] viko na siti: nedelat nic (overeno v registru)
+[00:31:17] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[00:31:17] konec okna 2026-10-20T07:00 (vikendovy rozvrh: False)
+[00:31:20] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[01:01:18] napajeni: sit
+[01:01:18] viko na siti: nedelat nic (overeno v registru)
+[01:01:19] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[01:01:19] konec okna 2026-10-20T07:00 (vikendovy rozvrh: False)
+[01:01:22] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[01:31:12] napajeni: sit
+[01:31:12] viko na siti: nedelat nic (overeno v registru)
+[01:31:13] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[01:31:13] konec okna 2026-10-20T07:00 (vikendovy rozvrh: False)
+[01:31:16] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[02:01:13] napajeni: sit
+[02:01:13] viko na siti: nedelat nic (overeno v registru)
+[02:01:13] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[02:01:14] konec okna 2026-10-20T07:00 (vikendovy rozvrh: False)
+[02:01:15] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[02:31:10] napajeni: sit
+[02:31:10] viko na siti: nedelat nic (overeno v registru)
+[02:31:11] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[02:31:11] konec okna 2026-10-20T07:00 (vikendovy rozvrh: False)
+[02:31:14] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[03:01:10] napajeni: sit
+[03:01:10] viko na siti: nedelat nic (overeno v registru)
+[03:01:10] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[03:01:11] konec okna 2026-10-20T07:00 (vikendovy rozvrh: False)
+[03:01:13] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[03:31:11] napajeni: sit
+[03:31:12] viko na siti: nedelat nic (overeno v registru)
+[03:31:12] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[03:31:12] konec okna 2026-10-20T07:00 (vikendovy rozvrh: False)
+[03:31:14] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[04:01:10] napajeni: sit
+[04:01:10] viko na siti: nedelat nic (overeno v registru)
+[04:01:10] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[04:01:10] konec okna 2026-10-20T07:00 (vikendovy rozvrh: False)
+[04:01:11] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[04:31:09] napajeni: sit
+[04:31:09] viko na siti: nedelat nic (overeno v registru)
+[04:31:10] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[04:31:10] konec okna 2026-10-20T07:00 (vikendovy rozvrh: False)
+[04:31:11] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[05:01:30] napajeni: sit
+[05:01:31] viko na siti: nedelat nic (overeno v registru)
+[05:01:31] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[05:01:32] konec okna 2026-10-20T07:00 (vikendovy rozvrh: False)
+[05:01:34] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[05:31:12] napajeni: sit
+[05:31:12] viko na siti: nedelat nic (overeno v registru)
+[05:31:13] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[05:31:13] konec okna 2026-10-20T07:00 (vikendovy rozvrh: False)
+[05:31:16] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[06:01:09] napajeni: sit
+[06:01:10] viko na siti: nedelat nic (overeno v registru)
+[06:01:10] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[06:01:10] konec okna 2026-10-20T07:00 (vikendovy rozvrh: False)
+[06:01:11] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[06:31:11] napajeni: sit
+[06:31:12] viko na siti: nedelat nic (overeno v registru)
+[06:31:12] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[06:31:12] konec okna 2026-10-20T07:00 (vikendovy rozvrh: False)
+[06:31:14] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
