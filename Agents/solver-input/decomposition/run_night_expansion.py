@@ -1,6 +1,6 @@
 """Odsolvit nastagované rodiny, dokud vydrží noční okno.
 
-  python run_night_expansion.py [--until=HH:MM] [--limit=N] [--workers=N] [--river-workers=N] [--river-threads=N]
+  python run_night_expansion.py [--until=HH:MM] [--limit=N] [--workers=N] [--river-workers=N] [--river-threads=N] [--turn-share=F]
 
 Sourozenec `run_night_decomposition.py`. Ten rozkládá existující checkpointy na
 turnové a riverové podhry; tenhle vyrábí checkpointy, které ještě neexistují.
@@ -689,7 +689,8 @@ def hand_back(deadline) -> None:
     # Tvar rozkladu se předává dál, ne vymýšlí tady: bez toho by předaná
     # půlka noci jela riverovou fázi 8 x 2 místo 16 x 1 z naplánované úlohy
     # rozkladu (bod 242), a obě půlky noci by měly jinou propustnost.
-    forwarded = [a for a in sys.argv if a.startswith(("--workers=", "--river-workers=", "--river-threads="))]
+    # Totéž dělení okna mezi turn a river (`--turn-share`, od 20. 10. 2026).
+    forwarded = [a for a in sys.argv if a.startswith(("--workers=", "--river-workers=", "--river-threads=", "--turn-share="))]
     subprocess.run(
         [sys.executable, os.path.join(HERE, "run_night_decomposition.py"),
          # Absolutně: o víkendu je konec okna jiný den než zítřejší 07:00.

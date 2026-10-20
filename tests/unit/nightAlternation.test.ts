@@ -14,8 +14,9 @@ import {
  * Střídání nocí mezi šířkou a prvním rozkladem (od 19. 10. 2026).
  *
  * Do té doby rozklad ustupoval expanzi celý, kdykoli byla nastagovaná práce -
- * a 19. 10. čekalo na první rozklad 523 desek, zatímco fronta expanze měla
- * kolem sedmnácti nocí. EV pro nové rodiny by po celou tu dobu nepřibylo.
+ * a 19. 10. čekalo na první rozklad 349 desek (hlášeno 523 i s deskami jen pro
+ * flop), zatímco fronta expanze měla kolem sedmnácti nocí. EV pro nové rodiny
+ * by po celou tu dobu nepřibylo.
  */
 describe("nightKey", () => {
   it("noc přes půlnoc je jedna noc - klíčem je večer, kterým začala", () => {
@@ -87,6 +88,9 @@ describe("undecomposedBoards", () => {
     mkdirSync(join(decomposition, `${family}__A72r`), { recursive: true });
     writeFileSync(join(decomposition, `${family}__A72r`, "plan.json"), "{}", "utf8");
     expect(undecomposedBoards(checkpoints, decomposition)).toBe(2);
+    // Deska jen pro flop (růst desek) se nepočítá: rozklad ji nikdy nevezme.
+    writeFileSync(join(decomposition, "flop-only-boards.txt"), `${family}__883r\n`, "utf8");
+    expect(undecomposedBoards(checkpoints, decomposition)).toBe(1);
   });
 });
 

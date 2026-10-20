@@ -807,6 +807,9 @@ def main():
     # Riverová vrstva je vypnutá, dokud se nezadá rozpočet. Zapnutá naslepo by
     # spolkla celé okno turnové fázi, a nedokončený turn blokuje review bránu.
     river_budget = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--river-budget=")), "0"))
+    # Podíl okna pro turnovou fázi; zbytek dostane river (viz `turn_phase_end`).
+    # Bez parametru 1, tedy jako dosud: river jen po vyčerpané turnové frontě.
+    turn_share = float(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--turn-share=")), "1"))
 
     deadline, absolute = parse_until(until)
 
@@ -917,11 +920,21 @@ def main():
     # zbytek noci: vyčerpaná fronta znamená volné okno pro river, zastavená
     # znamená, že turn má co dělat a přednost si drží.
     turn_exhausted = True
+    # Kdy turnová fáze předá okno riveru (od 20. 10. 2026, `--turn-share`).
+    turn_until = turn_phase_end(datetime.now(), deadline, turn_share)
+    split_reached = False
+    if turn_share < 1:
+        log(f"turnová fáze do {turn_until:%Y-%m-%d %H:%M} ({turn_share:.0%} okna), pak river podle seznamu turnové EV")
     for family, board in ordered:
         remaining = (deadline - datetime.now()).total_seconds() / 60
         if remaining <= 0:
             log("deadline reached; stopping between boards")
             turn_exhausted = False
+            break
+        if datetime.now() >= turn_until:
+            log(f"turnová fáze končí podle podílu okna ({turn_share:.0%}); zbytek patří riveru")
+            turn_exhausted = False
+            split_reached = True
             break
         available = free_gb()
         if available < MIN_FREE_GB:
@@ -1009,12 +1022,20 @@ def main():
         if "__" in name and os.path.exists(os.path.join(WORK, name, "plan.json"))
     ])
     turn_coverage = decomposed / len(boards) if boards else 0.0
-    budget = river_budget_for(river_budget, turn_exhausted, remaining, turn_coverage)
+    budget = river_budget_for(river_budget, turn_exhausted, remaining, turn_coverage, split_reached)
     if budget is None:
-        log(f"river phase: turnová fronta vyčerpaná, zbývá {remaining:.0f} min okna")
+        if split_reached:
+            why = "podíl okna"
+        elif turn_exhausted:
+            why = "turnová fronta vyčerpaná"
+        else:
+            why = f"turn rozložený na {turn_coverage * 100:.0f} % desek"
+        log(f"river phase: {why}, zbývá {remaining:.0f} min okna")
         run_river_phase(deadline, river_workers, coverage, None, river_threads)
     elif budget > 0:
         run_river_phase(deadline, river_workers, coverage, budget, river_threads)
+    elif split_reached:
+        log(f"river phase se nespouští: po turnové fázi zbývá jen {remaining:.0f} min okna")
     elif not turn_exhausted:
         log(
             "river phase se nespouští: turn není hotový "
@@ -1050,7 +1071,23 @@ RIVER_MIN_WINDOW_MIN = 10
 RIVER_TURN_COVERAGE_FLOOR = 0.9
 
 
-def river_budget_for(explicit, turn_exhausted, remaining_minutes, turn_coverage=0.0):
+def turn_phase_end(started, deadline, share):
+    """Kdy má turnová fáze předat okno riveru.
+
+    Od 20. 10. 2026. River se pouštěl jen po vyčerpané turnové frontě nebo od
+    devadesáti procent rozložených desek - jenže růst desek a nové rodiny
+    stáhly podíl z 87-88 % na 68 % (night.log, noc na 20. 10.), takže riverová
+    fáze neběžela vůbec. Přitom právě z ní je turnová EV: denní vyhodnocení
+    19. 10. našlo 3 344 dodávaných turnových pravidel ve 2 755 podhrách bez
+    riverové vrstvy, a šest rodin 25 bb přesolvených na nové range přišlo
+    o 38-57 % hodnot turnové EV. Podíl dělí okno od začátku turnové fáze do
+    konce okna; 1 znamená jako dosud.
+    """
+    share = max(0.0, min(1.0, share))
+    return started + (deadline - started) * share
+
+
+def river_budget_for(explicit, turn_exhausted, remaining_minutes, turn_coverage=0.0, split_reached=False):
     """Kolik turnových podher dostane riverovou vrstvu. `None` znamená kolik stihne.
 
     Pořadí „turn napřed" bylo správné, dokud turn chyběl po celých rodinách:
@@ -1072,6 +1109,10 @@ def river_budget_for(explicit, turn_exhausted, remaining_minutes, turn_coverage=
     """
     if explicit > 0:
         return explicit
+    # Turnová fáze předala okno podle podílu (`turn_phase_end`): river dostane
+    # zbytek, ať je turn rozložený jakkoli.
+    if split_reached:
+        return None if remaining_minutes >= RIVER_MIN_WINDOW_MIN else 0
     if not turn_exhausted and turn_coverage < RIVER_TURN_COVERAGE_FLOOR:
         return 0
     return None if remaining_minutes >= RIVER_MIN_WINDOW_MIN else 0

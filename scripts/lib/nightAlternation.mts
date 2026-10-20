@@ -6,14 +6,17 @@
  * Priorita `NEW_FAMILIES` vznikla v září, když rozklad prohluboval pět stejných
  * dvojic sedaček, „kde už odpověď je" - a byla správná. Rozklad jí ustoupí celý,
  * kdykoli je nastagovaná práce. Jenže 19. 10. 2026 čekalo na **první** rozklad
- * 523 vyřešených desek v 68 rodinách (25 bb 301, 40 bb 140, 50 bb 82): mají jen
- * flop, žádný turn, river ani EV. Fronta expanze přitom měla 186 desek, tedy
- * při skutečných ~55 min na desku kolem sedmnácti nocí - a celou tu dobu by
- * rozklad stál, takže by EV pro nové rodiny nepřibylo vůbec.
+ * 349 vyřešených desek: mají jen flop, žádný turn, river ani EV. (Ten den se
+ * psalo 523 - počítadlo bralo i 174 desek ze seznamu `flop-only-boards.txt`,
+ * které rozklad nikdy nevezme; opraveno 20. 10., viz `undecomposedBoards`.)
+ * Fronta expanze přitom měla 186 desek, tedy při skutečných ~55 min na desku
+ * kolem sedmnácti nocí - a celou tu dobu by rozklad stál, takže by EV pro nové
+ * rodiny nepřibylo vůbec.
  *
- * Obě fronty jsou co do hodin srovnatelné (expanze ~155 h, první rozklad
- * ~170-190 h turnové fáze), takže se noci střídají 1:1: po noci šířky noc
- * rozkladu a naopak. Dokud jedna z front práci nemá, druhá dostane všechny
+ * Obě fronty jsou co do hodin srovnatelné (expanze ~155 h; noc rozkladu má
+ * ~85 h turnové fáze - 349 desek po ~15 min, změřeno v noci na 20. 10. - a k
+ * tomu riverovou fázi, ze které je turnová EV, viz `--turn-share` v runneru),
+ * takže se noci střídají 1:1: po noci šířky noc rozkladu a naopak. Dokud jedna z front práci nemá, druhá dostane všechny
  * noci - o tom rozhoduje orchestrátor už teď (bez nastagované práce rozklad
  * neustoupí, bez desek k rozkladu se nestřídá).
  *
@@ -83,14 +86,23 @@ export function alternateNight(input: AlternationInput): AlternationDecision {
 }
 
 /**
- * Vyřešené desky (neprázdný checkpoint), které nemají ani jednu turnovou vrstvu.
+ * Vyřešené desky (neprázdný checkpoint), které nemají ani jednu turnovou vrstvu
+ * a rozklad je doopravdy vezme.
  *
  * Tatáž otázka jako „rozklad monolitu" v runneru rozkladu: deska bez vrstev je
- * práce, kterou noc rozkladu vezme jako první (nejhlubší napřed).
+ * práce, kterou noc rozkladu vezme jako první (nejhlubší napřed). Desky ze
+ * seznamu `flop-only-boards.txt` se nepočítají - růst desek je tam zapisuje
+ * schválně jen pro flop a runner je přeskočí. Do 20. 10. 2026 se počítaly, a
+ * „523 desek k rozkladu" tak obsahovalo 174 desek, které rozklad nikdy dělat
+ * nebude.
  */
 export function undecomposedBoards(checkpointRoot: string, decompositionRoot: string): number {
   if (!existsSync(checkpointRoot)) return 0;
   const decomposed = existsSync(decompositionRoot) ? new Set(readdirSync(decompositionRoot)) : new Set<string>();
+  const flopOnlyPath = join(decompositionRoot, "flop-only-boards.txt");
+  const flopOnly = new Set(existsSync(flopOnlyPath)
+    ? readFileSync(flopOnlyPath, "utf8").split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
+    : []);
   let count = 0;
   for (const family of readdirSync(checkpointRoot)) {
     const raw = join(checkpointRoot, family, "raw");
@@ -106,6 +118,7 @@ export function undecomposedBoards(checkpointRoot: string, decompositionRoot: st
       }
       if (size === 0) continue;
       const directory = `${match[1]}__${match[2]}`;
+      if (flopOnly.has(directory)) continue;
       const hasLayers = decomposed.has(directory)
         && readdirSync(join(decompositionRoot, directory))
           .some((file) => file.endsWith(".json") && file !== "plan.json");

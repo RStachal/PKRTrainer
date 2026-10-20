@@ -26,6 +26,9 @@ Set-NoIdleSleepOnAc -Log $log
 # Konec okna absolutne: o vikendu je to jiny den nez zitrejsi 07:00.
 $until = Get-NightDeadline -Weekend $weekend
 Write-NightLog -Log $log -Message "konec okna $until (vikendovy rozvrh: $weekend)"
-$command = "/c set PYTHONIOENCODING=utf-8 && `"$python`" `"$script`" --until=$until --workers=8 --river-workers=16 --river-threads=1 >> `"$log`" 2>&1"
+# Pulka okna turnu, pulka riveru (od 20. 10. 2026): river se jinak pousti az od
+# 90 % rozlozenych desek, k tomu se noci po rustu desek nedostaly, a turnova EV
+# vznika jen z riverovych vrstev (turn_phase_end v runneru).
+$command = "/c set PYTHONIOENCODING=utf-8 && `"$python`" `"$script`" --until=$until --workers=8 --river-workers=16 --river-threads=1 --turn-share=0.5 >> `"$log`" 2>&1"
 $process = Start-Process -FilePath "cmd.exe" -ArgumentList $command -WindowStyle Hidden -Wait -PassThru
 exit $process.ExitCode
