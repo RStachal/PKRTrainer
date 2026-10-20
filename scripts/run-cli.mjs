@@ -86,9 +86,14 @@ function walk(path) {
  * Size and modification time rather than content: hashing 1,300 files on every
  * invocation would give back the time this exists to save, and a file whose
  * content changes without either moving is not a case that arises from editing.
+ *
+ * The entry itself is part of the key too. Until 20. 10. 2026 it was only
+ * covered when it lived under a watched directory, so a script run from
+ * outside the repository (a one-off analysis in a scratch folder) kept running
+ * its first bundle after every edit - the edit silently did nothing.
  */
-function cacheKey() {
-  const parts = WATCHED.flatMap(walk).sort();
+function cacheKey(entryPath) {
+  const parts = [...WATCHED.flatMap(walk), ...walk(entryPath)].sort();
   return createHash("sha256").update(parts.join("\n")).digest("hex").slice(0, 16);
 }
 
@@ -105,7 +110,7 @@ if (!existsSync(entryPath)) {
 }
 
 const name = entryPath.split(/[\\/]/).pop().replace(/\.mts$/, "");
-const outfile = join(CACHE_DIR, `${name}-${cacheKey()}.mjs`);
+const outfile = join(CACHE_DIR, `${name}-${cacheKey(entryPath)}.mjs`);
 
 if (!existsSync(outfile)) {
   mkdirSync(dirname(outfile), { recursive: true });
