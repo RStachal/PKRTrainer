@@ -10,6 +10,7 @@ import { heroSideOfNode, seatsOfFamily,
   PACK_ENVELOPE_BYTES,
 } from "./lib/solvedPackBuilding.mts";
 import { subgameDecisions } from "./lib/subgameDecisions.mts";
+import { pickRiverRulesWithinBudget } from "./lib/riverRuleBudget.mts";
 import { riverActionEv } from "../src/core/riverActionEv";
 import { encodeComboMask, encodeEvDeltas } from "../src/core/evCodec";
 import { actionNodeForSolvedHero } from "../src/data/ranges/solvedHeroActionNode";
@@ -480,40 +481,24 @@ if (family === undefined) {
   // Jedna linka na desku a riverovou kartu už drží `collapseBoardTail` výš,
   // rovnou uvnitř smyčky.
 
-  // Po jednom z každé turnové podhry, uvnitř podhry podle dosahu. Řadit celou
-  // rodinu podle dosahu a uříznout by rozpočet utratilo na jedné podhře.
   // Rozpočet rovným dílem mezi rozhodnutí, uvnitř rozhodnutí střídavě po
-  // turnových podhrách. **Assumption:** poměr, ve kterém trenažér ty situace
-  // rozdává, změřený není; bez dělení by nejčastější situace zabrala všechno.
-  const byDecision = new Map<string, Map<string, typeof rules>>();
-  for (const rule of rules) {
-    const decision = decisionKey(rule);
-    const parents = byDecision.get(decision) ?? new Map<string, typeof rules>();
-    const bucket = parents.get(rule.sourceDirectory) ?? [];
-    bucket.push(rule);
-    parents.set(rule.sourceDirectory, bucket);
-    byDecision.set(decision, parents);
-  }
-  const kept: typeof rules = [];
-  const share = Math.max(1, Math.floor(RULE_BUDGET / Math.max(1, byDecision.size)));
-  for (const parents of byDecision.values()) {
-    for (const bucket of parents.values()) {
-      bucket.sort((left, right) => (right.spot?.reach ?? 0) - (left.spot?.reach ?? 0));
-    }
-    const queues = [...parents.values()];
-    let taken = 0;
-    for (let round = 0; taken < share && kept.length < RULE_BUDGET; round += 1) {
-      let placed = 0;
-      for (const queue of queues) {
-        if (round >= queue.length) continue;
-        if (taken >= share || kept.length >= RULE_BUDGET) break;
-        kept.push(queue[round]);
-        taken += 1;
-        placed += 1;
-      }
-      if (placed === 0) break;
-    }
-  }
+  // deskách, v desce po turnových podhrách, v podhře podle dosahu. Řadit celou
+  // rodinu podle dosahu a uříznout by rozpočet utratilo na jedné podhře;
+  // střídat jen podhry ho 19. 10. 2026 utratilo na deskách ze začátku abecedy
+  // (viz `pickRiverRulesWithinBudget`).
+  const boardOf = (rule: RiverStrategyRule): string => (
+    rule.board ?? rule.sourceDirectory.split(/[\\/]river[\\/]/)[0]
+  );
+  const boardsWithLayer = new Set(rules.map(boardOf)).size;
+  const kept = pickRiverRulesWithinBudget(rules, RULE_BUDGET, {
+    decision: decisionKey,
+    board: boardOf,
+    subgame: (rule) => rule.sourceDirectory,
+    reach: (rule) => rule.spot?.reach ?? 0,
+  });
+  // Desky, ne jen pravidla: ztrátu desek součet pravidel neukáže - pack jich
+  // má pořád tři sta, jen z poloviny desek.
+  console.log(`  desek v packu ${new Set(kept.map(boardOf)).size} z ${boardsWithLayer} s riverovou vrstvou`);
   const dropped = rules.length - kept.length;
   rules.length = 0;
   rules.push(...kept);

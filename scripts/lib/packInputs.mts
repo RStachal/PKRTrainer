@@ -75,6 +75,9 @@ export const SHARED_INPUTS: readonly string[] = [
   "scripts/buildFlopStrategyPacks.mts",
   "scripts/buildTurnStrategyPacks.mts",
   "scripts/buildRiverStrategyPacks.mts",
+  // Výběr riverových pravidel do rozpočtu; vytažený z generátoru 20. 10. 2026,
+  // a bez téhle řádky by jeho změna žádný pack nepřegenerovala.
+  "scripts/lib/riverRuleBudget.mts",
   "scripts/lib/solvedPackBuilding.mts",
   "scripts/lib/postflopBetActionMapping.mts",
 ];
