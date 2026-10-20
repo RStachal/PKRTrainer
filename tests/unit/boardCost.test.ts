@@ -10,10 +10,16 @@ import { describe, expect, it } from "vitest";
 
 import {
   capFromP90,
+  comboCount,
   costForDepth,
+  costForFamily,
   depthCostsFrom,
   depthOfFamily,
+  familyCostsFrom,
+  fitWidthModels,
   parseBoardSolves,
+  rangeWidthOf,
+  type BoardCostTable,
 } from "../../scripts/lib/boardCost.mts";
 
 const FRESH = [
@@ -193,5 +199,96 @@ describe("depthOfFamily", () => {
 
   it("vrátí nulu, když se hloubka přečíst nedá", () => {
     expect(depthOfFamily("MTT9_CO_BTN_SRP")).toBe(0);
+  });
+});
+/**
+ * Cena podle rodiny a šířky range (od 20. 10. 2026).
+ *
+ * Řádek hloubky je průměr přes rodiny, které noc zrovna solvila. Na 40 bb to
+ * byly rodiny s raným otvíračem, a nové dvojice s obranou blindů pak vycházely
+ * o polovinu levnější, než jsou (bod 311).
+ */
+describe("šířka range", () => {
+  it("počítá kombinace i s váhou: pár 6, suited 4, offsuit 12", () => {
+    expect(comboCount("AA:1,AKs:1,AKo:0.5")).toBe(16);
+    expect(comboCount("22:1,33:1")).toBe(12);
+  });
+
+  it("šířka rodiny je OOP plus IP z parametrů solveru", () => {
+    const params = [
+      "set_pot 550",
+      "set_effective_stack 4750",
+      "set_board Ks,9s,8d",
+      "set_range_oop 55:1,AJs:1,AQo:1",
+      "set_range_ip AA:1,KK:0.5",
+    ].join("\n");
+    expect(rangeWidthOf(params)).toBe(6 + 4 + 12 + 6 + 3);
+    expect(rangeWidthOf("set_pot 550")).toBeUndefined();
+  });
+});
+
+describe("fitWidthModels", () => {
+  it("najde sklon, kterým cena roste se šířkou", () => {
+    // minuty = 2 * šířka^0,6 přesně: sklon 0,6, a bez rozptylu smear 1.
+    const solves = Array.from({ length: 40 }, (_, at) => {
+      const width = 100 + at * 25;
+      return { family: `MTT9_40BB_F${at}_SRP`, board: "742r", depthBB: 40, level: 0, width, minutes: 2 * width ** 0.6 };
+    });
+    const [model] = fitWidthModels(solves);
+    expect(model.depthBB).toBe(40);
+    expect(model.slope).toBeCloseTo(0.6, 3);
+    expect(model.smear).toBeCloseTo(1, 3);
+    expect(model.minWidth).toBe(100);
+    expect(model.maxWidth).toBe(1075);
+  });
+
+  it("hloubku s málo deskami nebo jedinou šířkou nemodeluje - sklon by byl šum", () => {
+    const few = Array.from({ length: 10 }, (_, at) => (
+      { family: "MTT9_50BB_X_SRP", board: `b${at}`, depthBB: 50, level: 0, width: 100 + at, minutes: 20 }
+    ));
+    const flat = Array.from({ length: 40 }, (_, at) => (
+      { family: "MTT9_25BB_X_SRP", board: `b${at}`, depthBB: 25, level: 0, width: 300, minutes: 5 + at % 3 }
+    ));
+    expect(fitWidthModels([...few, ...flat])).toEqual([]);
+  });
+});
+
+describe("costForFamily", () => {
+  const table: BoardCostTable = {
+    measuredAt: "",
+    source: "",
+    solves: 0,
+    depths: depthCostsFrom(parseBoardSolves(FRESH)),
+    families: familyCostsFrom([
+      ...[30, 40, 50].map((minutes) => ({ family: "MTT9_40BB_CO_BB_SRP", board: "x", depthBB: 40, level: 0, minutes })),
+      ...[10, 12].map((minutes) => ({ family: "MTT9_40BB_UTG_LJ_SRP", board: "x", depthBB: 40, level: 0, minutes })),
+    ]),
+    widthModels: [{
+      depthBB: 40, boards: 100, intercept: Math.log(2), slope: 0.6, smear: 1.1, r2: 0.3, minWidth: 150, maxWidth: 1300,
+    }],
+  };
+
+  it("rodina se změřenými deskami má vlastní cenu: plán z mediánu, slib z průměru", () => {
+    expect(costForFamily(table, "MTT9_40BB_CO_BB_SRP", 1096)).toEqual({
+      planMinutes: 40, promiseMinutes: 40, basis: "rodina",
+    });
+  });
+
+  it("rodina s méně než třemi deskami a rodina bez měření jdou podle šířky range", () => {
+    const estimate = costForFamily(table, "MTT9_40BB_UTG_LJ_SRP", 500);
+    expect(estimate?.basis).toBe("šířka range");
+    expect(estimate?.planMinutes).toBeCloseTo(2 * 500 ** 0.6, 0);
+    expect(estimate?.promiseMinutes).toBeCloseTo(2 * 500 ** 0.6 * 1.1, 0);
+    expect(costForFamily(table, "MTT9_40BB_HJ_SB_SRP", 400)?.basis).toBe("šířka range");
+  });
+
+  it("šířka mimo změřený rozsah se hlásí jako extrapolace", () => {
+    expect(costForFamily(table, "MTT9_40BB_SB_BB_SRP", 2000)?.basis).toBe("šířka range, mimo změřené");
+  });
+
+  it("bez šířky nebo bez modelu hloubky zbývá hloubka, a neznámá hloubka cenu nemá", () => {
+    expect(costForFamily(table, "MTT9_40BB_HJ_SB_SRP")?.basis).toBe("hloubka");
+    expect(costForFamily(table, "MTT9_40BB_HJ_SB_SRP")?.planMinutes).toBe(22.1);
+    expect(costForFamily(table, "MTT9_100BB_BTN_BB_SRP", 500)).toBeUndefined();
   });
 });

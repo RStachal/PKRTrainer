@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, statSync } from "node:fs";
-import { costForDepth, depthOfFamily, readBoardCostTable } from "./lib/boardCost.mts";
+import { costForFamily, readBoardCostTable, readRangeWidths } from "./lib/boardCost.mts";
 import { join } from "node:path";
 
 /**
@@ -69,6 +69,7 @@ function runningHeavy(): { name: string; count: number }[] {
 function countStagedPending(): { total: number; pending: number; minutes: number; unpriced: number } {
   if (!existsSync(STAGED)) return { total: 0, pending: 0, minutes: 0, unpriced: 0 };
   const cost = readBoardCostTable();
+  const widths = readRangeWidths().byFamily;
   let total = 0;
   let pending = 0;
   let minutes = 0;
@@ -88,9 +89,11 @@ function countStagedPending(): { total: number; pending: number; minutes: number
     // `pending * 715 / 3600` s komentářem „měřeno 715 s na desku" - jenže 715 s
     // bylo z jediné desky z 20. 8. a od té doby se přeměřilo dvakrát. Jiné
     // kopie téhož čísla už mezitím hlásily 12 min a 9 min.
-    const row = costForDepth(cost, depthOfFamily(match[1]));
-    if (row === undefined) unpriced += 1;
-    else minutes += row.planMinutes;
+    // Od 20. 10. 2026 podle rodiny a šířky range, ne jen hloubky
+    // (`costForFamily`): nové dvojice s obranou blindů stojí dvakrát víc.
+    const estimate = costForFamily(cost, match[1], widths.get(match[1]));
+    if (estimate === undefined) unpriced += 1;
+    else minutes += estimate.planMinutes;
   }
   return { total, pending, minutes, unpriced };
 }

@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { costForDepth, depthOfFamily, readBoardCostTable } from "./lib/boardCost.mts";
+import { costForFamily, readBoardCostTable, readRangeWidths } from "./lib/boardCost.mts";
 import {
   NIGHT_WINDOW_MINUTES,
   queueRunway,
@@ -13,6 +13,26 @@ import { shouldYield, yieldThresholds } from "./lib/nightYield.mts";
 import { alternateNight, nightKey, previousDecision, undecomposedBoards } from "./lib/nightAlternation.mts";
 import { nightFamilyRows, riverPhaseRate } from "./lib/nightLog.mts";
 import { MODULE_BUDGET_BYTES } from "./lib/solvedPackBuilding.mts";
+
+/**
+ * Šířka range rodiny pro cenu desky (`costForFamily`), načtená jednou a až
+ * když je potřeba.
+ *
+ * Od 20. 10. 2026: cena se do té doby brala jen z hloubky, a nové dvojice
+ * s obranou blindů vycházely o polovinu levnější, než jsou - výhled fronty
+ * 186 desek hlásil 6,8 noci.
+ */
+let rangeWidths: Map<string, number> | undefined;
+function rangeWidthOf(family: string): number | undefined {
+  if (rangeWidths === undefined) {
+    try {
+      rangeWidths = readRangeWidths().byFamily;
+    } catch {
+      rangeWidths = new Map<string, number>();
+    }
+  }
+  return rangeWidths.get(family);
+}
 
 /**
  * Denní vyhodnocení a rozvrh noční práce.
@@ -428,9 +448,9 @@ function stagedMinutesWithoutCheckpoint(): number | undefined {
   }
   let minutes = 0;
   for (const board of freshStagedBoards()) {
-    const row = costForDepth(cost, depthOfFamily(board.familyId));
-    if (row === undefined) return undefined;
-    minutes += row.planMinutes;
+    const estimate = costForFamily(cost, board.familyId, rangeWidthOf(board.familyId));
+    if (estimate === undefined) return undefined;
+    minutes += estimate.planMinutes;
   }
   return minutes;
 }
@@ -483,7 +503,7 @@ const MEASURED_DEPTHS = (COST_TABLE?.depths ?? [])
   .map((row) => row.depthBB)
   .sort((a, b) => a - b);
 const planMinutesFor = (family: string): number | undefined => (
-  COST_TABLE === undefined ? undefined : costForDepth(COST_TABLE, depthOfFamily(family))?.planMinutes
+  COST_TABLE === undefined ? undefined : costForFamily(COST_TABLE, family, rangeWidthOf(family))?.planMinutes
 );
 const runwayBefore = queueRunway(readExpansionQueue({ checkpointBase: CHECKPOINT_ROOT }), planMinutesFor);
 const nightsBefore = runwayBefore.minutes / NIGHT_WINDOW_MINUTES;

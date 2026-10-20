@@ -36,13 +36,14 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 
-import { costForDepth, depthOfFamily, readBoardCostTable } from "./lib/boardCost.mts";
+import { costForFamily, depthOfFamily, readBoardCostTable, readRangeWidths } from "./lib/boardCost.mts";
 import { escalationSteps } from "./lib/nightEscalation.mts";
 import {
   familiesFinishingWithin,
   NIGHT_WINDOW_MINUTES,
   queueRunway,
   readExpansionQueue,
+  runnerOrder,
   RUNWAY_NIGHTS_MIN,
   type ExpansionQueue,
 } from "./lib/expansionQueue.mts";
@@ -127,8 +128,22 @@ const BOARD_COST = (() => {
  * nezměřil - a hlídač má o takové hloubce **zčervenat**, ne ji ocenit.
  */
 function minutesPerBoard(family: string): number | undefined {
-  return costForDepth(BOARD_COST, depthOfFamily(family))?.planMinutes;
+  return costForFamily(BOARD_COST, family, RANGE_WIDTHS.get(family))?.planMinutes;
 }
+
+/**
+ * Šířka range podle rodiny, pro cenu rodiny, kterou noc ještě nesolvila.
+ *
+ * Od 20. 10. 2026 (`costForFamily`): do té doby se cena brala jen z hloubky a
+ * nové dvojice s obranou blindů vycházely o polovinu levnější, než jsou.
+ */
+const RANGE_WIDTHS = (() => {
+  try {
+    return readRangeWidths().byFamily;
+  } catch {
+    return new Map<string, number>();
+  }
+})();
 
 /**
  * Minuty pro **slib**, tedy pro „dokončí noc tuhle rodinu".
@@ -143,9 +158,9 @@ function minutesPerBoard(family: string): number | undefined {
  * stejně jako u hloubky, kterou nikdo nezměřil.
  */
 function promiseMinutesPerBoard(family: string): number | undefined {
-  const row = costForDepth(BOARD_COST, depthOfFamily(family));
-  if (row === undefined) return undefined;
-  const promise = (row as { promiseMinutes?: number }).promiseMinutes;
+  const estimate = costForFamily(BOARD_COST, family, RANGE_WIDTHS.get(family));
+  if (estimate === undefined) return undefined;
+  const promise = (estimate as { promiseMinutes?: number }).promiseMinutes;
   return typeof promise === "number" && promise > 0 ? promise : undefined;
 }
 
@@ -468,8 +483,18 @@ add("noc dokončí aspoň jednu rodinu", willFinish.families.length > 0,
 const NIGHTS_AHEAD_MIN = RUNWAY_NIGHTS_MIN;
 const queue = queueRunway(expansionQueue, minutesPerBoard);
 const nightsAhead = queue.minutes / WINDOW_MINUTES;
+// Odkud je cena desek ve frontě: změřená rodina je měření, šířka range model,
+// a „mimo změřené" extrapolace (u nových dvojic spíš podstřelená, viz
+// `costForFamily`). Bez toho by výhled vypadal stejně jistě ve všech třech.
+const bases = new Map<string, number>();
+for (const board of runnerOrder(expansionQueue)) {
+  const basis = costForFamily(BOARD_COST, board.familyId, RANGE_WIDTHS.get(board.familyId))?.basis ?? "bez ceny";
+  bases.set(basis, (bases.get(basis) ?? 0) + 1);
+}
+const basisText = [...bases].map(([basis, count]) => `${count} ${basis}`).join(", ");
 add("fronta vydrží aspoň dvě noci", nightsAhead >= NIGHTS_AHEAD_MIN,
-  `${queue.boards} desek za ~${Math.round(queue.minutes / 60)} h, tedy ${nightsAhead.toFixed(1)} noci`,
+  `${queue.boards} desek za ~${Math.round(queue.minutes / 60)} h, tedy ${nightsAhead.toFixed(1)} noci`
+    + (basisText === "" ? "" : ` (cena: ${basisText})`),
   `aspoň ${NIGHTS_AHEAD_MIN} noci (${Math.round(NIGHTS_AHEAD_MIN * WINDOW_MINUTES / 60)} h práce)`);
 
 /*

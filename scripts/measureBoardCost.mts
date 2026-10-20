@@ -30,7 +30,10 @@ import {
   EXPANSION_LOG_PATH,
   capFromP90,
   depthCostsFrom,
+  familyCostsFrom,
+  fitWidthModels,
   parseBoardSolves,
+  readRangeWidths,
   type BoardCostTable,
   type DepthCost,
 } from "./lib/boardCost.mts";
@@ -150,6 +153,25 @@ function main(): void {
     return;
   }
 
+  // Cena podle rodiny a podle šířky range (od 20. 10. 2026, `costForFamily`).
+  // Deska bez parametrů do modelu nejde - šířku by bylo nutné hádat.
+  const widths = readRangeWidths();
+  const withWidth = solves.flatMap((solve) => {
+    const width = widths.byBoard.get(`${solve.family}|${solve.board}`);
+    return width === undefined ? [] : [{ ...solve, width }];
+  });
+  const families = familyCostsFrom(solves);
+  const widthModels = fitWidthModels(withWidth);
+  console.log("");
+  console.log(`cena podle šířky range (kombinací OOP + IP), ${withWidth.length} z ${solves.length} desek s parametry:`);
+  for (const model of widthModels) {
+    const at = (width: number) => Math.exp(model.intercept + model.slope * Math.log(width)).toFixed(1);
+    console.log(`  ${String(model.depthBB).padStart(3)} bb: sklon ${model.slope.toFixed(2)}, R2 ${model.r2.toFixed(2)},`
+      + ` šířky ${model.minWidth}-${model.maxWidth} z ${model.boards} desek;`
+      + ` medián při šířce 200 / 500 / 1000: ${at(200)} / ${at(500)} / ${at(1000)} min`);
+  }
+  console.log(`  rodin se změřenou cenou (aspoň 3 desky): ${families.filter((row) => row.boards >= 3).length}`);
+
   // Čas se bere z logu, ne z hodin: tabulka má říkat, **ke kterému měření**
   // patří. Runner do řádků píše jen hodiny bez data, takže datum dává čas
   // poslední změny logu - tedy konec poslední noci, která do něj psala.
@@ -158,6 +180,8 @@ function main(): void {
     source: EXPANSION_LOG_PATH,
     solves: solves.length,
     depths,
+    families,
+    widthModels,
   };
 
   if (!write) {

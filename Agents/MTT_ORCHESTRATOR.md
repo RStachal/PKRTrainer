@@ -581,6 +581,20 @@ níž, se hlásí jako ztrátová, i když všechny ostatní brány svítí zele
      měřit: runner by solve zabil, takže delší čas na hodinách znamená pohyb
      hodin bez procesu.
 
+   ### 20. 10.: cena podle rodiny a šířky range, ne jen hloubky (deník 321)
+
+   Řádek hloubky je průměr přes rodiny, které noc zrovna solvila - a na 40 bb
+   to byly rodiny s raným otvíračem. Nové dvojice s obranou blindů stojí
+   dvakrát tolik, takže fronta 186 desek se hlásila jako 6,8 noci a slib „noc
+   dokončí čtyři rodiny" dopadl na jednu (bod 311). Plán a slib se teď berou
+   z `costForFamily`: rodina s aspoň třemi změřenými deskami má vlastní medián
+   a průměr; jinak regrese `log(minuty)` na `log(kombinací OOP + IP)`
+   z parametrů solveru, po hloubkách (sklon 0,63 na 40 bb, 0,65 na 50 bb, na
+   25 bb nula); až pak hloubka. Na vynechané rodině chyba 39 % → 15 % na 40 bb.
+   Strop a rezerva zůstávají po hloubkách - tam je bezpečné přestřelit. Hlídač
+   u výdrže fronty píše, z čeho cena je: změřená rodina, šířka range, nebo
+   šířka mimo změřený rozsah (extrapolace, spíš podstřelená).
+
    ### Co z toho plyne pro plán
 
    - ~~**Nejdřív zastavit opakované pálení.**~~ Hotovo 6. 10.: fáze EV má tři
