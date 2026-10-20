@@ -1,6 +1,6 @@
 """Odsolvit nastagované rodiny, dokud vydrží noční okno.
 
-  python run_night_expansion.py [--until=HH:MM] [--limit=N] [--workers=N] [--river-workers=N] [--river-threads=N] [--turn-share=F]
+  python run_night_expansion.py [--until=HH:MM] [--limit=N] [--workers=N] [--river-workers=N] [--river-threads=N] [--turn-share=F] [--thread-trial=N]
 
 Sourozenec `run_night_decomposition.py`. Ten rozkládá existující checkpointy na
 turnové a riverové podhry; tenhle vyrábí checkpointy, které ještě neexistují.
@@ -38,6 +38,7 @@ Spadlou desku zkusí podruhé a po druhém pádu ji odloží značkou `.failed`,
 fronta přestala nabízet. A když frontu vyprázdní dřív, než skončí okno, **předá
 zbytek noci rozkladu** - jinak by noc s krátkou frontou prostála.
 """
+import hashlib
 import json
 import os
 import re
@@ -299,7 +300,7 @@ def failure_level(checkpoint: str) -> int:
         return 1
 
 
-def param_for_level(param: str, family: str, level: int, checkpoint: str) -> str:
+def param_for_level(param: str, family: str, level: int, checkpoint: str, threads=None) -> str:
     """Parametry pro daný stupeň; jiná přesnost znamená kopii vedle checkpointu.
 
     Původní soubor se nepřepisuje: přesnost je vlastnost **pokusu**, ne desky,
@@ -323,15 +324,54 @@ def param_for_level(param: str, family: str, level: int, checkpoint: str) -> str
     jeden: `caps_for`.
     """
     _, accuracy = caps_for(family, level)
-    if accuracy == DEFAULT_ACCURACY:
+    if accuracy == DEFAULT_ACCURACY and threads is None:
         return param
     with open(param, encoding="utf-8") as handle:
         text = handle.read()
-    swapped = re.sub(r"^set_accuracy .*$", f"set_accuracy {accuracy}", text, flags=re.M)
+    swapped = adjusted_params(text, accuracy, threads)
+    if swapped == text:
+        return param
     copy = f"{checkpoint}.stupen{level}.params.txt"
     with open(copy, "w", encoding="utf-8") as handle:
         handle.write(swapped)
     return copy
+
+
+def adjusted_params(text: str, accuracy, threads=None) -> str:
+    """Parametry pokusu: přesnost vždy, počet vláken jen v pokusu o vláknech."""
+    swapped = re.sub(r"^set_accuracy .*$", f"set_accuracy {accuracy}", text, flags=re.M)
+    if threads is not None:
+        if re.search(r"^set_thread_num ", swapped, flags=re.M):
+            swapped = re.sub(r"^set_thread_num .*$", f"set_thread_num {threads}", swapped, flags=re.M)
+        else:
+            # Bez řádku by náhrada nic neudělala a log by přesto tvrdil počet
+            # vláken pokusu; solver příkazy čte popořadě, takže patří na začátek.
+            swapped = f"set_thread_num {threads}\n" + swapped
+    return swapped
+
+
+# Pokus 12 vs. 16 vláken monolitu (od 20. 10. 2026, deník 322).
+#
+# Staging píše `set_thread_num 12` a nikdo to nezměřil proti šestnácti: i7-1360P
+# má 4 P-jádra s HT a 8 E-jader, tedy 16 logických procesorů. Víc vláken může
+# přidat propustnost, nebo ji ubrat, když synchronizace čeká na pomalejší
+# E-jádra - z teorie se to rozhodnout nedá. Ruční sonda přes den cenu noci
+# neříká (`boardCost.mts`), a samostatný párový běh by stál noc navíc. Pokus
+# proto běží uvnitř noci: `--thread-trial=16` dá polovině desek šestnáct vláken
+# a druhé polovině dvanáct, obojí zapsané v řádku `solving` (`vlákna N`).
+# Vyhodnocuje `npm run mtt:thread-trial` proti ceně rodiny.
+CONTROL_THREADS = 12
+
+
+def trial_threads(family: str, board: str, trial: int) -> int:
+    """Kolik vláken dostane deska v pokusu; deterministicky podle rodiny a desky.
+
+    Podle dvojice, ne jen podle desky: táž textura je ve všech rodinách a je
+    různě drahá (`A72r` na 40 bb je nejdražší), takže rozdělení jen podle desky
+    by cenu textury slilo s počtem vláken.
+    """
+    digest = hashlib.sha1(f"{family}|{board}".encode("utf-8")).digest()
+    return trial if digest[0] % 2 else CONTROL_THREADS
 
 
 def log(message: str) -> None:
@@ -446,6 +486,8 @@ def main():
     # Výchozí konec je konec okna. Od 10. 9. 2026 je to sedmá, ne osmá.
     until = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--until=")), "07:00")
     limit = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--limit=")), "0"))
+    # Pokus o vlákna (viz `trial_threads`); bez parametru jede staging beze změny.
+    thread_trial = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--thread-trial=")), "0"))
 
     # Tentýž výklad `--until` jako v rozkladu, ze stejného místa: `HH:MM`, nebo
     # od 15. 10. 2026 absolutní datum, které wrapper spočítá z rozvrhu stroje
@@ -541,12 +583,18 @@ def main():
         # přesnost celá hloubka, ne jen opakovaný pokus. Do 9. 10. 2026 se tenhle
         # řádek volal jen pro `level > 0`, takže by čerstvá deska na 50 bb běžela
         # na 0,5 % a log by u ní tvrdil 1 % - změna by se nikde neprojevila.
-        param = param_for_level(param, family, level, checkpoint)
+        threads = trial_threads(family, board, thread_trial) if thread_trial else None
+        param = param_for_level(param, family, level, checkpoint, threads)
+        # Vlákna se píšou u obou skupin pokusu, i u kontrolních dvanácti:
+        # vyhodnocení podle nich pozná, které desky v pokusu byly.
+        note = "" if threads is None else f", vlákna {threads}"
         if level > 0:
             log(f"solving {family} {board} (stupeň {level}: strop {cap_minutes} min, "
-                f"přesnost {accuracy} %)")
+                f"přesnost {accuracy} %{note})")
         elif accuracy != DEFAULT_ACCURACY:
-            log(f"solving {family} {board} (přesnost {accuracy} %, strop {cap_minutes} min)")
+            log(f"solving {family} {board} (přesnost {accuracy} %, strop {cap_minutes} min{note})")
+        elif threads is not None:
+            log(f"solving {family} {board} (vlákna {threads})")
         else:
             log(f"solving {family} {board}")
         for attempt in range(1, BOARD_ATTEMPTS + 1):

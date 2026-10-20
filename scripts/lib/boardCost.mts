@@ -98,6 +98,8 @@ const CLOCK_MOVED_MINUTES = 92;
  */
 const SOLVING = /^\[\d{2}:\d{2}:\d{2}\] solving (MTT9_\S+) (\S+?)(?: \(.*)?\s*$/;
 const SOLVING_LEVEL = /\(stupeň (\d+):/;
+/** Počet vláken; runner ho píše jen v pokusu o vlákna (od 20. 10. 2026). */
+const SOLVING_THREADS = /vlákna (\d+)/;
 const DONE = /^\[\d{2}:\d{2}:\d{2}\]\s+hotovo za ([\d.]+) min/;
 const DEPTH = /_(\d+)BB_/;
 
@@ -108,6 +110,8 @@ export interface BoardSolve {
   minutes: number;
   /** Stupeň žebříku, na kterém deska doběhla; 0 je první pokus. */
   level: number;
+  /** Vlákna solveru, když je runner zapsal - jen v pokusu o vlákna. */
+  threads?: number;
 }
 
 /**
@@ -124,14 +128,16 @@ export interface BoardSolve {
  */
 export function parseBoardSolves(lines: readonly string[]): BoardSolve[] {
   const solves: BoardSolve[] = [];
-  let open: { family: string; board: string; level: number } | undefined;
+  let open: { family: string; board: string; level: number; threads?: number } | undefined;
   for (const line of lines) {
     const start = SOLVING.exec(line);
     if (start !== null) {
+      const threads = SOLVING_THREADS.exec(line)?.[1];
       open = {
         family: start[1].trim(),
         board: start[2].trim(),
         level: Number(SOLVING_LEVEL.exec(line)?.[1] ?? 0),
+        ...(threads === undefined ? {} : { threads: Number(threads) }),
       };
       continue;
     }

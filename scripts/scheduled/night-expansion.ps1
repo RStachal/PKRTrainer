@@ -27,6 +27,8 @@ $until = Get-NightDeadline -Weekend $weekend
 Write-NightLog -Log $log -Message "konec okna $until (vikendovy rozvrh: $weekend)"
 # --turn-share jen predava dal: kdyz fronta dojde, zbytek okna dostane rozklad
 # se stejnym delenim turn/river jako jeho vlastni uloha.
-$command = "/c set PYTHONIOENCODING=utf-8 && `"$python`" `"$script`" --until=$until --workers=8 --river-workers=16 --river-threads=1 --turn-share=0.5 >> `"$log`" 2>&1"
+# --thread-trial=16: pokus 12 vs. 16 vlaken monolitu (od 20. 10. 2026, denik
+# 322); vyhodnoceni `npm run mtt:thread-trial`, po rozhodnuti parametr pryc.
+$command = "/c set PYTHONIOENCODING=utf-8 && `"$python`" `"$script`" --until=$until --workers=8 --river-workers=16 --river-threads=1 --turn-share=0.5 --thread-trial=16 >> `"$log`" 2>&1"
 $process = Start-Process -FilePath "cmd.exe" -ArgumentList $command -WindowStyle Hidden -Wait -PassThru
 exit $process.ExitCode

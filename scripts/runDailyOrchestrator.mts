@@ -1,7 +1,10 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { costForFamily, readBoardCostTable, readRangeWidths } from "./lib/boardCost.mts";
+import {
+  costForFamily, parseBoardSolves, readBoardCostTable, readRangeWidths,
+} from "./lib/boardCost.mts";
+import { formatThreadTrial, threadTrialResult } from "./lib/threadTrial.mts";
 import {
   NIGHT_WINDOW_MINUTES,
   queueRunway,
@@ -257,8 +260,12 @@ function lastNight(): { lines: string[]; riverLayers: number; overrunMinutes: nu
     if (all[index].includes("na disku volno")) { start = index; break; }
   }
   const run = all.slice(start).filter((line) => line.trim() !== "");
+  // „turnová fáze" od 20. 10. 2026: noc rozkladu dělí okno podílem
+  // (`--turn-share`) a podíl se má přeměřit podle toho, co obě půlky daly -
+  // bez těch řádků by zpráva ukázala river, ale ne kdy a s kolika deskami
+  // turn skončil.
   const summary = run.filter((line) => (
-    /boards worked|river phase|deadline|stopping|volno/.test(line)
+    /boards worked|river phase|turnová fáze|deadline|stopping|volno/.test(line)
   ));
   const layers = run.filter((line) => /solving river/.test(line)).length;
 
@@ -361,12 +368,20 @@ if (nightAge === null) {
   say("    Kernel-Power 42/107 v žurnálu System                 (spal stroj ve 21:00?)");
   say("  Následuje poslední běh, který doopravdy proběhl:");
 }
-for (const line of night.lines.slice(-8)) say(`  ${line.trim()}`);
+// Dvanáct, ne osm (20. 10. 2026): noc s dělením turn/river přidala dva řádky
+// turnové fáze na začátek souhrnu a při osmi by vypadly právě ty.
+for (const line of night.lines.slice(-12)) say(`  ${line.trim()}`);
 say(`  riverových vrstev: ${night.riverLayers}`);
 say(night.overrunMinutes === null
   ? "  přetažení okna: nezjištěno z logu"
   : `  přetažení okna: ${night.overrunMinutes} min`);
 for (const line of turnEvAfterNight(night.startLine)) say(line);
+// Pokus o vlákna (deník 322) se vyhodnocuje tady, ne jen na vyžádání: zpráva,
+// která se píše každý den sama, je jediné místo, kde se rozhodnutí nezapomene.
+if (existsSync(EXPANSION_LOG)) {
+  const trial = threadTrialResult(parseBoardSolves(readFileSync(EXPANSION_LOG, "utf8").split(/\r?\n/)));
+  if (trial.boardsTrial + trial.boardsControl > 0) say(`  ${formatThreadTrial(trial)}`);
+}
 
 section("den vývoje");
 out.push("", "## Den vývoje", "");

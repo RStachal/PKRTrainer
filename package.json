@@ -202,6 +202,7 @@
     "mtt:solver-range-drift": "node scripts/run-cli.mjs scripts/measureSolverInputRangeDrift.mts",
     "mtt:processes": "node scripts/run-cli.mjs scripts/checkProcessRegistry.mts",
     "mtt:board-cost": "node scripts/run-cli.mjs scripts/measureBoardCost.mts",
+    "mtt:thread-trial": "node scripts/run-cli.mjs scripts/measureThreadTrial.mts",
     "mtt:pack-inputs-seed": "node scripts/run-cli.mjs scripts/seedPackInputs.mts"
   },
   "devDependencies": {
