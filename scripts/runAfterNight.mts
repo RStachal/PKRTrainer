@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 
 import { escalationSteps } from "./lib/nightEscalation.mts";
+import { describeInterruptions, machineInterruptions } from "./lib/machineInterruptions.mts";
 import { readExpansionQueue } from "./lib/expansionQueue.mts";
 import { judgeCycleCost, readCycleCost, recordCycleCost } from "./lib/cycleCost.mts";
 import {
@@ -771,17 +772,27 @@ async function generateAll(list: readonly string[], label: string): Promise<void
     history: readCycleCost(),
   });
   console.log(`[${label}] ${verdict.line}`);
-  if (verdict.alarming) {
-    console.log(`[${label}] POZOR: ${verdict.ratio?.toFixed(1)}x dražší než obvykle.`
-      + " Změřeno, že to nebývá vada obsahu ani haldy - nejspíš stroj dělá něco vedle.");
+  // Spal stroj? Pak čas fáze o ceně nic neříká a do historie nepatří
+  // (od 21. 10. 2026, `machineInterruptions`): to ráno fáze hlásila 3,2x dražší
+  // a příčina nebyla v cyklu, notebook šel ze zásuvky a 72 minut spal.
+  const interruptions = machineInterruptions(new Date(startedAll), new Date());
+  const interrupted = interruptions === undefined ? undefined : describeInterruptions(interruptions);
+  if (interrupted !== undefined) {
+    console.log(`[${label}] POZOR: ${interrupted} - čas fáze neříká nic o ceně a do historie se nezapisuje.`);
+  } else {
+    if (verdict.alarming) {
+      console.log(`[${label}] POZOR: ${verdict.ratio?.toFixed(1)}x dražší než obvykle.`
+        + " Změřeno, že to nebývá vada obsahu ani haldy a stroj podle systémového logu nespal"
+        + " - nejspíš na něm běží něco vedle.");
+    }
+    recordCycleCost({
+      at: new Date().toISOString().slice(0, 16),
+      label,
+      families: list.length,
+      perFamily: verdict.perFamily,
+      freeGb,
+    });
   }
-  recordCycleCost({
-    at: new Date().toISOString().slice(0, 16),
-    label,
-    families: list.length,
-    perFamily: verdict.perFamily,
-    freeGb,
-  });
 
   // Tři nejdražší rodiny, ať je koncentrace vidět v logu a ne až z časů souborů.
   const worst = [...slowest].sort((left, right) => right.seconds - left.seconds).slice(0, 3);
