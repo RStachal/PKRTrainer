@@ -5,7 +5,6 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 
 import { escalationSteps } from "./lib/nightEscalation.mts";
-import { planLanes } from "./lib/laneBudget.mts";
 import { readExpansionQueue } from "./lib/expansionQueue.mts";
 import { judgeCycleCost, readCycleCost, recordCycleCost } from "./lib/cycleCost.mts";
 import {
@@ -530,17 +529,23 @@ const BY_NEED = [...STREETS].sort(
  */
 function laneBudget(): { lanes: number; heapMb: Map<string, number>; freeGb: number } {
   const freeGb = freemem() / 1024 ** 3;
-  // Jen přes ulice, které se generují (od 21. 10. 2026, `planLanes`): ranní
-  // cyklus jede jen flop, a rozpočet přes všechny tři mu dal 4,9 GB místo
-  // šestnácti, protože dvanáct držel riverovému pruhu, který nepoběžel.
-  const { lanes, heapMb } = planLanes({
-    freeGb,
-    reserveGb: SYSTEM_RESERVE_GB,
-    floorsMb: LANE_HEAP_FLOOR_MB,
-    ceilingMb: LANE_HEAP_CEILING_MB,
-    wanted: STREETS.filter((street) => streetsWanted.has(street)),
-    lanesOverride,
-  });
+  const usableMb = Math.max(0, freeGb - SYSTEM_RESERVE_GB) * 1024;
+  let remainingMb = usableMb;
+  let lanes = 0;
+  for (const street of BY_NEED) {
+    if (lanesOverride > 0) {
+      if (lanes >= lanesOverride) break;
+    } else if (LANE_HEAP_FLOOR_MB[street] > remainingMb && lanes > 0) break;
+    remainingMb -= LANE_HEAP_FLOOR_MB[street];
+    lanes += 1;
+  }
+  const shareMb = Math.max(0, remainingMb) / lanes;
+  const heapMb = new Map<string, number>(
+    STREETS.map((street) => [
+      street,
+      Math.min(LANE_HEAP_CEILING_MB, Math.floor(LANE_HEAP_FLOOR_MB[street] + shareMb)),
+    ]),
+  );
   return { lanes, heapMb, freeGb };
 }
 
@@ -604,8 +609,7 @@ async function generateAll(list: readonly string[], label: string): Promise<void
   console.log(
     `[${label}] generuji packy pro ${list.length} rodin:`
     + ` ${lanes} ${lanes === 1 ? "pruh" : "pruhy"}`
-    + ` (${BY_NEED.filter((street) => streetsWanted.has(street))
-      .map((street) => `${street} ${heapFor(street)} MB`).join(", ")}),`
+    + ` (${BY_NEED.map((street) => `${street} ${heapFor(street)} MB`).join(", ")}),`
     + ` volno ${freeGb.toFixed(1)} GB`,
   );
   let failed = 0;
