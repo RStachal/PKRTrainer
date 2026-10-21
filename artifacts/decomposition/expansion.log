@@ -3270,3 +3270,41 @@ UnicodeDecodeError: 'charmap' codec can't decode byte 0x88 in position 1122: cha
 [06:31:12] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
 [06:31:12] konec okna 2026-10-20T07:00 (vikendovy rozvrh: False)
 [06:31:14] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[21:01:09] napajeni: sit
+[21:01:10] viko na siti: nedelat nic (overeno v registru)
+[21:01:10] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:01:10] konec okna 2026-10-21T07:00 (vikendovy rozvrh: True)
+[21:01:41] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[21:01:41] nastagováno 186 desek bez checkpointu; deadline Wed 21.10. 07:00
+[21:01:41] na disku volno 624.1 GB (hranice 8 GB)
+[21:01:41] stroj se drží vzhůru po dobu běhu
+[21:01:41] napájení: síť
+[21:01:41] cena desky změřena 2026-10-20 04:31 na 918 deskách: 25 bb 6.4 min, 40 bb 25.3 min, 50 bb 23.9 min
+[21:01:41] solving MTT9_40BB_SB_BB_SRP 986tt (vlákna 16)
+[21:55:09]   hotovo za 53.5 min, checkpoint 171 MB
+[21:55:09] solving MTT9_40BB_SB_BB_SRP AT4mono (vlákna 16)
+[22:23:13]   hotovo za 28.1 min, checkpoint 120 MB
+[22:23:14] solving MTT9_40BB_SB_BB_SRP 742r (vlákna 12)
+[23:53:17]   (stupeň 1 by dal týž strop i přesnost, přeskakuje se)
+[23:53:17]   SELHALO po 90.1 min (rc=timeout); příští noc stupeň 2 - strop 90 min, přesnost 1.0 %
+[23:53:17] solving MTT9_40BB_SB_BB_SRP K98tt (vlákna 12)
+[00:40:28]   hotovo za 47.2 min, checkpoint 159 MB
+[00:40:28] solving MTT9_40BB_UTG_2_BB_SRP A72r (vlákna 12)
+[01:34:03]   hotovo za 53.6 min, checkpoint 116 MB
+[01:34:03] solving MTT9_40BB_UTG_2_BB_SRP 883r (vlákna 12)
+[02:13:42]   hotovo za 39.7 min, checkpoint 124 MB
+[02:13:42] solving MTT9_40BB_UTG_2_BB_SRP 986tt (vlákna 16)
+[03:08:34]   hotovo za 54.9 min, checkpoint 123 MB
+[03:08:34] solving MTT9_40BB_UTG_2_BB_SRP AT4mono (vlákna 12)
+[03:28:00]   hotovo za 19.4 min, checkpoint 89 MB
+[03:28:00] solving MTT9_40BB_UTG_2_BB_SRP 742r (vlákna 12)
+[04:51:52]   hotovo za 83.9 min, checkpoint 123 MB
+[04:51:52] solving MTT9_40BB_UTG_2_BB_SRP K98tt (vlákna 12)
+[05:42:27]   hotovo za 50.6 min, checkpoint 118 MB
+[05:42:27] solving MTT9_40BB_BTN_BB_SRP A72r (vlákna 16)
+[06:56:02]   hotovo za 73.6 min, checkpoint 161 MB
+[06:56:02] končím 4 min před deadline: deska potřebuje asi 57
+[06:56:02] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[06:56:02] expansion: hotovo 10, selhalo 1, zbývá 176
+[06:56:03] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[06:56:03] fronta není prázdná, rozkladu okno nepředávám
