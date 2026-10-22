@@ -15,6 +15,17 @@ interface CdpMessage {
   error?: { message?: string };
 }
 
+/**
+ * Jak dlouho smí jeden příkaz čekat na odpověď prohlížeče.
+ *
+ * Bez stropu čekal klient věčně: 22. 10. 2026 Chrome uprostřed prohlídky UI
+ * skončil (souběžné těžké testy, málo paměti) a běh visel, dokud ho někdo
+ * neukončil. V ranní bráně by takhle zamrzlo celé E2E. Nejdelší legitimní
+ * příkaz v E2E čeká ve stránce na service worker 2 x 15 s, takže dvě minuty
+ * jsou s rezervou.
+ */
+const COMMAND_TIMEOUT_MS = 120_000;
+
 export class CdpClient {
   private socket: WebSocket | null = null;
   private nextId = 1;
@@ -44,6 +55,13 @@ export class CdpClient {
         }
       }
     });
+    // Spadlý prohlížeč na čekající příkazy už neodpoví; ať se to dozví hned.
+    this.socket.addEventListener("close", () => {
+      for (const pending of this.pending.values()) {
+        pending.reject(new Error("Chrome CDP connection closed"));
+      }
+      this.pending.clear();
+    });
     await new Promise<void>((resolvePromise, reject) => {
       this.socket?.addEventListener("open", () => resolvePromise(), { once: true });
       this.socket?.addEventListener("error", () => reject(new Error("Chrome CDP connection failed")), {
@@ -58,7 +76,20 @@ export class CdpClient {
     }
     const id = this.nextId++;
     return new Promise((resolvePromise, reject) => {
-      this.pending.set(id, { resolve: resolvePromise, reject });
+      const timer = setTimeout(() => {
+        if (!this.pending.delete(id)) return;
+        reject(new Error(`Chrome CDP ${method} did not answer within ${COMMAND_TIMEOUT_MS / 1000} s`));
+      }, COMMAND_TIMEOUT_MS);
+      this.pending.set(id, {
+        resolve: (value) => {
+          clearTimeout(timer);
+          resolvePromise(value);
+        },
+        reject: (error) => {
+          clearTimeout(timer);
+          reject(error);
+        },
+      });
       this.socket?.send(JSON.stringify({ id, method, params }));
     });
   }
