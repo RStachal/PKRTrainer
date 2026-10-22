@@ -388,6 +388,19 @@ out.push("", "## Den vývoje", "");
 const commits = git(["log", "--oneline", "--since=24 hours ago"]).split("\n").filter(Boolean);
 say(`  commitů za 24 h: ${commits.length}`);
 for (const line of commits.slice(0, 6)) say(`    ${line}`);
+// Ranní brána (od 22. 10. 2026, `after-night.ps1`): celá `verify:block` hned po
+// cyklu, protože přes den se build do paměti nevejde a vývoj jede na verify:day.
+try {
+  const gate = JSON.parse(readFileSync("artifacts/verify-morning.json", "utf8")) as {
+    date?: string; ran?: boolean; rc?: number; failedStep?: string; minutes?: number; reason?: string;
+  };
+  say(gate.ran
+    ? `  ranní brána ${gate.date}: ${gate.rc === 0 ? "zelená" : `ČERVENÁ, spadl krok ${gate.failedStep || "?"}`}`
+      + ` (${gate.minutes} min)`
+    : `  ranní brána ${gate.date}: odložena - ${gate.reason ?? "bez důvodu"}`);
+} catch {
+  say("  ranní brána: zatím neběžela");
+}
 
 section("pokrytí rozdávaných spotů");
 out.push("", "## Pokrytí rozdávaných spotů", "");
