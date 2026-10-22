@@ -231,6 +231,23 @@ používat první.
 5. **E2E pro nové GUI za přepínačem**, včetně měření času od kliknutí na akci
    po vyhodnocení.
 
+   **Pro preflop hotové 22. 10.** (`runNextUiScenario`
+   v `scripts/runChromeE2e.mts`). Na všech čtyřech šířkách projde otázku,
+   odpověď skutečným vstupem (klávesnice, dotyk), vyhodnocení, další spot
+   a znovu odpověď. Kontroluje kontrast a vodorovné přetečení. Čas od
+   kliknutí po prvním snímku s vyhodnocením jde do reportu (`nextUi`
+   v `artifacts/e2e-chrome/report.json`).
+
+   | Šířka | Čas do vyhodnocení (první běh) |
+   |---|---|
+   | desktop 1280 | 13,7 ms |
+   | mobil 360 | 4,3 ms |
+   | mobil 390 | 10,2 ms |
+   | mobil 412 | 6,8 ms |
+
+   Strop 1 s je jen pojistka proti patologii, ne cíl. Kontrol kontrastu
+   přibylo ze 48 na 80.
+
 Verdikty v čipu musí pokrýt všechno, co dnes doména vrací:
 
 - čtyři výsledky EV,

@@ -21,7 +21,7 @@ import {
   waitForDevToolsPort,
   waitForSelector,
 } from "./lib/chromeCdp.mts";
-import { QA_VIEWPORTS as VIEWPORTS } from "./lib/viewports.mts";
+import { QA_VIEWPORTS as VIEWPORTS, type Viewport } from "./lib/viewports.mts";
 
 interface ContrastAuditEntry {
   selector: string;
@@ -644,6 +644,19 @@ try {
     });
   }
 
+  // Nové GUI tréninku za přepínačem (Agents/ui-redesign-plan.md, fáze 1,
+  // krok 5). Běží na všech šířkách a stejnými vstupy jako zbytek E2E, aby se
+  // přepínač dal otočit na výchozí s důkazem, ne s odhadem.
+  const nextUiResults: Array<{ viewport: string; feedbackMs: number }> = [];
+  if (expectedPreflop !== "blocked") {
+    for (const viewport of activeViewports) {
+      nextUiResults.push(await runNextUiScenario(cdp, viewport, browserErrors, contrastAudits));
+    }
+    // Zpět na dnešní GUI, ať zbytek běhu zkouší výchozí stav.
+    await navigate(cdp, withUi(targetUrl, "classic"));
+    await waitForSelector(cdp, ".filter-start");
+  }
+
   browserErrors.length = 0;
   await cdp.send("Network.emulateNetworkConditions", {
     offline: false,
@@ -740,6 +753,7 @@ try {
     contrastAudits,
     resilience,
     serviceWorkerUpgrade,
+    nextUi: nextUiResults,
   };
   writeFileSync(join(artifactDirectory, "report.json"), JSON.stringify(report, null, 2));
   console.log("MTT Chrome E2E");
@@ -754,6 +768,9 @@ try {
   console.log("- resilience: zoom 200% / corrupt storage / quota failure passed");
   console.log(`- contrast: ${contrastAudits.flatMap((audit) => audit.entries).length} checks passed`);
   console.log("- service worker: real upgrade and previous-build chunk rollback passed");
+  for (const result of nextUiResults) {
+    console.log(`- next UI ${result.viewport}: question/feedback/next passed, feedback ${result.feedbackMs} ms`);
+  }
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
@@ -908,6 +925,17 @@ async function auditContrast(
   const entries = await evaluate<ContrastAuditEntry[]>(client, `(() => {
     const selectors = ${JSON.stringify(selectors)};
     const parseColor = (value) => {
+      // color-mix() vrací Chrome jako color(srgb r g b / a) se složkami 0..1.
+      const srgb = value.match(/color\\(srgb\\s+([^)]+)\\)/i);
+      if (srgb) {
+        const parts = srgb[1].split(/[ /]+/).filter(Boolean).map(Number);
+        return {
+          r: parts[0] * 255,
+          g: parts[1] * 255,
+          b: parts[2] * 255,
+          a: Number.isFinite(parts[3]) ? parts[3] : 1
+        };
+      }
       const match = value.match(/rgba?\\(([^)]+)\\)/i);
       if (!match) throw new Error("Unsupported computed color: " + value);
       const parts = match[1].split(/[ ,/]+/).filter(Boolean).map(Number);
@@ -991,6 +1019,108 @@ async function auditContrast(
     )).join(", ")}`,
   );
   return entries;
+}
+
+function withUi(url: string, ui: "next" | "classic"): string {
+  const parsed = new URL(url);
+  parsed.searchParams.set("ui", ui);
+  return parsed.toString();
+}
+
+/**
+ * Nová obrazovka preflopového tréninku: otázka, odpověď, vyhodnocení, další
+ * spot a znovu odpověď - skutečným vstupem (klávesnice, dotyk). Čas od
+ * kliknutí po prvním snímku s vyhodnocením se měří ve stránce, bez latence
+ * protokolu, a jde do reportu, ať je vidět, kdyby rostl.
+ */
+async function runNextUiScenario(
+  client: CdpClient,
+  viewport: Viewport,
+  browserErrors: string[],
+  contrastAudits: Array<{ viewport: string; surface: string; entries: ContrastAuditEntry[] }>,
+): Promise<{ viewport: string; feedbackMs: number }> {
+  const input = viewport.mobile ? "touch" : "keyboard";
+  browserErrors.length = 0;
+  await client.send("Emulation.setDeviceMetricsOverride", {
+    width: viewport.width,
+    height: viewport.height,
+    deviceScaleFactor: 1,
+    mobile: viewport.mobile,
+  });
+  await client.send("Emulation.setTouchEmulationEnabled", {
+    enabled: viewport.mobile,
+    maxTouchPoints: viewport.mobile ? 5 : 1,
+  });
+  await navigate(client, withUi(targetUrl, "next"));
+  await waitForSelector(client, ".filter-start");
+  await activate(client, ".filter-start", input);
+  await waitForSelector(client, ".dx-trainer__actions button");
+
+  const question = await evaluate<{
+    actions: number;
+    cards: number;
+    feedbackHidden: boolean;
+    overflow: number;
+  }>(client, `(() => ({
+    actions: document.querySelectorAll(".dx-trainer__actions button").length,
+    cards: document.querySelectorAll(".dx-trainer__prompt .dx-card").length,
+    feedbackHidden: document.querySelector(".dx-trainer__feedback")?.hidden === true,
+    overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
+  }))()`);
+  assert(question.actions >= 2, `${viewport.name} next UI: only ${question.actions} actions`);
+  assert(question.cards === 2, `${viewport.name} next UI: hero cards missing beside the actions`);
+  assert(question.feedbackHidden, `${viewport.name} next UI: feedback visible before an answer`);
+  assert(question.overflow <= 1, `${viewport.name} next UI: page overflow ${question.overflow}px`);
+  contrastAudits.push({
+    viewport: viewport.name,
+    surface: "next-ui-question",
+    entries: await auditContrast(client, viewport.name, "next UI question", [
+      ".dx-trainer__title",
+      ".dx-trainer__meta",
+      ".dx-trainer__prompt",
+      ".dx-btn--action",
+    ]),
+  });
+
+  const feedbackMs = await evaluate<number>(client, `new Promise((resolve) => {
+    const action = document.querySelector(".dx-trainer__actions button");
+    const feedback = document.querySelector(".dx-trainer__feedback");
+    const started = performance.now();
+    action.click();
+    requestAnimationFrame(() => resolve(feedback && !feedback.hidden ? performance.now() - started : -1));
+  })`);
+  assert(feedbackMs >= 0, `${viewport.name} next UI: feedback did not render after an answer`);
+  // Pojistka proti patologii, ne cíl: běžně jde o jeden snímek.
+  assert(feedbackMs < 1000, `${viewport.name} next UI: feedback took ${Math.round(feedbackMs)} ms`);
+
+  const answered = await evaluate<{ outcome: string; locked: boolean; nextFocused: boolean }>(
+    client,
+    `(() => ({
+      outcome: document.querySelector(".dx-trainer__feedback .dx-chip")?.getAttribute("data-outcome") ?? "",
+      locked: [...document.querySelectorAll(".dx-trainer__actions button")].every((button) => button.disabled),
+      nextFocused: document.activeElement?.classList.contains("dx-trainer__next") ?? false
+    }))()`,
+  );
+  assert(answered.outcome !== "", `${viewport.name} next UI: verdict chip missing`);
+  assert(answered.locked, `${viewport.name} next UI: actions still enabled after an answer`);
+  assert(answered.nextFocused, `${viewport.name} next UI: focus did not move to the next spot`);
+  contrastAudits.push({
+    viewport: viewport.name,
+    surface: "next-ui-feedback",
+    entries: await auditContrast(client, viewport.name, "next UI feedback", [
+      ".dx-trainer__feedback .dx-chip",
+      ".dx-trainer__choice",
+      ".dx-trainer__plan",
+      ".dx-trainer__next",
+    ]),
+  });
+
+  await activate(client, ".dx-trainer__next", input);
+  await waitForSelector(client, ".dx-trainer__feedback[hidden]");
+  await activate(client, ".dx-trainer__actions button", input);
+  await waitForSelector(client, ".dx-trainer__feedback:not([hidden])");
+  assert(browserErrors.length === 0, `${viewport.name} next UI: ${browserErrors.join(" | ")}`);
+  return { viewport: viewport.name, feedbackMs: Math.round(feedbackMs * 10) / 10 };
 }
 
 async function runServiceWorkerUpgradeScenario(
