@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { stylesheet } from "../stylesheets";
 import { renderRangeModalButton } from "../../src/ui/rangeModal";
 import type { RangeStore } from "../../src/data/rangeStore";
 import type { Card, Spot, TableState } from "../../src/core/types";
@@ -94,10 +95,9 @@ describe("rangeModal - DOM", () => {
     expect(model?.textContent).not.toContain("RangePack");
     expect(model?.textContent).not.toContain("mtt-full-ring");
     expect(document.querySelectorAll(".range-modal__evidence a")).toHaveLength(0);
-    expect(document.querySelector(".range-modal style")?.textContent)
-      .toContain("prefers-reduced-motion");
-    expect(document.querySelector(".range-modal style")?.textContent)
-      .toContain("transform:none");
+    // Styl dialogu je od 22. 10. 2026 v CSS souboru, ne vložený v dialogu.
+    expect(stylesheet("legacy/range-modal.css")).toContain("prefers-reduced-motion");
+    expect(stylesheet("legacy/range-modal.css")).toContain("transform:none");
 
     document.querySelector<HTMLButtonElement>(".range-modal__close")?.click();
     expect(document.querySelector(".range-modal")).toBeNull();
