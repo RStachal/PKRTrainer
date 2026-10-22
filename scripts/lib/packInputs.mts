@@ -129,6 +129,33 @@ export function newestTurnLayerMs(decompositionRoot: string, family: string): nu
 }
 
 /**
+ * Kdy naposled noc rozkládala na turn - přes všechny desky, ze složek desek.
+ *
+ * Od 22. 10. 2026 pro ranní cyklus (`--streets-if-new=turn`): turnový pack se
+ * staví z rozkladu, ne z monolitických checkpointů, takže spouštěč podle
+ * checkpointů by noc rozkladu nikdy nepoznal. Složka desky dostane nový čas,
+ * když do ní přibude turnová podhra nebo plán; riverové vrstvy leží o dvě
+ * úrovně níž (`river/<podhra>/`) a čas složky desky po prvním `river/`
+ * nehýbou, takže noc jen s riverem turn nespustí. Tisíc `stat` místo statisíců
+ * souborů - a přesné rozhodnutí po rodinách pak dělá `familiesToGenerate`.
+ */
+export function newestDecompositionMs(decompositionRoot: string): number {
+  if (!existsSync(decompositionRoot)) return 0;
+  let newest = 0;
+  for (const board of readdirSync(decompositionRoot)) {
+    if (!board.includes("__")) continue;
+    const directory = join(decompositionRoot, board);
+    try {
+      const info = statSync(directory);
+      if (info.isDirectory()) newest = Math.max(newest, info.mtimeMs);
+    } catch {
+      // Složka mohla zmizet mezi výpisem a statem; přeskočit je správně.
+    }
+  }
+  return newest;
+}
+
+/**
  * Čas nejnovější riverové vrstvy rodiny; 0, když žádná není.
  *
  * Čte se z adresářů podher, ne ze souborů: riverových vrstev je přes 660 tisíc

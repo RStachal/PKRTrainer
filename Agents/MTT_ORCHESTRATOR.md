@@ -355,6 +355,17 @@ turnovými pravidly bez vrstvy (`turn-ev-priority.json`). Podíl je první odhad
 z hodin obou front (turn ~80 h, river pod dodávanými pravidly ~100 h), ne
 změřené optimum; přeměřit po několika nocích.
 
+**Od 22. 10. 2026 jdou v noci rozkladu desky dodávaných packů hned po
+rozdělaných** (deník 326, na vlastníkův souhlas; `board_priority` a
+`shipped_pack_boards` v runneru). Rodiny 25 bb přesolvené na nové range
+dodávaly flop z nového řešení a turn s riverem ze zářijového; při řazení od
+nejhlubších by na ně došlo až za týdny. Bylo to 96 desek, kolem 11 h turnové
+fáze. Ranní cyklus od téhož dne staví i turn, když noc rozkládala
+(`--streets-if-new=flop,turn`, spouštěč `newestDecompositionMs`), takže nový
+turnový pack jde k hráči druhý den ráno, ne až v sobotu. River dál jen sobotní
+plný cyklus (halda 16 GB); do té doby má přegenerovaná rodina nový turn a
+starý river.
+
 **Plný cyklus packů má vlastní okno a zámek** (`scripts/scheduled/pack-cycle.ps1`,
 deník 318): s víkendovým rozvrhem v sobotu ráno, jinak na pokyn v plném okně
 stroje; noční solver i lehký ranní cyklus mu ustoupí. `-Streets river` ho omezí

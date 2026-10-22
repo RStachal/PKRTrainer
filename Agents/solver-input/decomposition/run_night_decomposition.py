@@ -860,6 +860,9 @@ def main():
         return
     log(why_not_yielded())
     boards = board_parameter_files()
+    # Desky dodávaných packů jdou hned po rozdělaných (od 22. 10. 2026,
+    # `shipped_pack_boards`).
+    shipped = shipped_pack_boards()
 
     def depth(key):
         match = re.search(r"MTT9_(\d+)BB", key[0])
@@ -898,15 +901,17 @@ def main():
         return solved / planned
 
     def priority(key):
-        progress = partially_done(key)
-        # Started but unfinished goes first, least-finished within that, then the
-        # deepest untouched boards as before. A finished board sorts with the
-        # untouched ones and is skipped seconds later either way.
-        started = 0 < progress < 1
-        return (0 if started else 1, progress if started else 0, -depth(key), key[0], key[1])
+        # Started but unfinished goes first, least-finished within that, then
+        # untouched boards of shipped packs, then the deepest untouched boards
+        # as before. A finished board sorts with the untouched ones and is
+        # skipped seconds later either way.
+        return board_priority(key, partially_done(key), depth(key), shipped)
 
     ordered = sorted(boards, key=priority)
     log(f"{len(ordered)} boards have a monolithic checkpoint; deadline {deadline:%H:%M}")
+    waiting = [key for key in ordered if board_priority(key, partially_done(key), depth(key), shipped)[0] == 1]
+    if waiting:
+        log(f"{len(waiting)} nerozložených desek tvoří dodávané turnové packy - jdou hned po rozdělaných")
 
     done = skipped = failed = 0
     # How long a board has been taking, so the deadline can mean what it says.
@@ -1069,6 +1074,56 @@ RIVER_MIN_WINDOW_MIN = 10
 # Podíl rozložených turnových desek, od kterého se river pouští i s nedodělaným
 # turnem. Zdůvodnění je v `river_budget_for`.
 RIVER_TURN_COVERAGE_FLOOR = 0.9
+
+
+TURN_PACK_DIR = os.path.join(REPO, "src", "data", "ranges", "turn")
+
+
+def shipped_pack_boards(pack_dir=TURN_PACK_DIR):
+    """Desky (`RODINA__deska`), ze kterých jsou dodávané turnové packy.
+
+    Od 22. 10. 2026, na vlastníkovo „souhlasím“ (deník 325). Rodina přesolvená na
+    nové range dodává flop z nového řešení, ale turn a river ze starého, dokud
+    se nové desky nerozloží - a rozklad je bere od nejhlubších, takže 25 bb až
+    úplně na konci. 22. 10. tak bylo 16 turnových a 27 riverových packů 25 bb
+    ze září. Desky, které tvoří dodávaný pack a rozklad nemají, proto jdou hned
+    po rozdělaných: rozklad desky 25 bb stojí v mediánu 5,8 min (z 401 desek),
+    takže 96 desek je kolem 11 h turnové fáze.
+    """
+    boards = set()
+    if not os.path.isdir(pack_dir):
+        return boards
+    for name in os.listdir(pack_dir):
+        if not name.endswith(".generated.json"):
+            continue
+        try:
+            with open(os.path.join(pack_dir, name), encoding="utf8") as handle:
+                pack = json.load(handle)
+        except Exception:
+            continue
+        for rule in pack.get("rules", []):
+            source = (rule or {}).get("sourceDirectory")
+            if source:
+                boards.add(source)
+    return boards
+
+
+def board_priority(key, progress, depth, shipped):
+    """Pořadí desky v turnové fázi; menší napřed.
+
+    1. rozdělané, nejméně hotové napřed (dokončit je je levnější než začít novou);
+    2. nerozložené desky dodávaných turnových packů (`shipped_pack_boards`);
+    3. ostatní od nejhlubších (mělké desky mají v turnu skoro jen check nebo
+       all-in, viz komentář u řazení v `main`).
+    """
+    started = 0 < progress < 1
+    if started:
+        tier = 0
+    elif progress == 0 and f"{key[0]}__{key[1]}" in shipped:
+        tier = 1
+    else:
+        tier = 2
+    return (tier, progress if started else 0, -depth, key[0], key[1])
 
 
 def turn_phase_end(started, deadline, share):

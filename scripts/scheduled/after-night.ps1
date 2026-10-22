@@ -34,6 +34,6 @@ if ($weekend -and $day -eq [DayOfWeek]::Sunday) {
   Write-NightLog -Log $log -Message "nedele: ranni cyklus se vynechava, stroj patri solveru"
   exit 0
 }
-$command = "/c cd /d `"$repo`" && `"$node`" scripts\run-cli.mjs scripts\runAfterNight.mts --write --streets-if-new=flop --turn-ev-minutes=210 >> `"$log`" 2>&1"
+$command = "/c cd /d `"$repo`" && `"$node`" scripts\run-cli.mjs scripts\runAfterNight.mts --write --streets-if-new=flop,turn --turn-ev-minutes=210 >> `"$log`" 2>&1"
 $process = Start-Process -FilePath "cmd.exe" -ArgumentList $command -WindowStyle Hidden -Wait -PassThru
 exit $process.ExitCode

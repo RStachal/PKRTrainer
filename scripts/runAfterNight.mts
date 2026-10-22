@@ -12,6 +12,7 @@ import {
   PACK_INPUTS_PATH,
   familiesToGenerate,
   newestCheckpointMs,
+  newestDecompositionMs,
   newestRiverLayerMs,
   newestTurnLayerMs,
   sharedInputsHash,
@@ -116,12 +117,17 @@ function newestMtime(directory: string, filter: (name: string) => boolean): numb
 for (const street of (process.argv.find((arg) => arg.startsWith("--streets-if-new="))?.split("=")[1] ?? "")
   .split(",").map((value) => value.trim().toLowerCase()).filter((value) => value.length > 0)) {
   const packs = newestMtime(STREET_PACK_DIR[street] ?? "", (name) => name.endsWith(".generated.json"));
-  const checkpoints = newestMtime(CHECKPOINT_ROOT, (name) => name.startsWith("pkrtrainer_") && name.endsWith(".json"));
-  if (checkpoints > packs) {
+  // Turn se staví z rozkladu, ne z checkpointů (od 22. 10. 2026,
+  // `newestDecompositionMs`): noc rozkladu by jinak čekala na sobotní cyklus.
+  const source = street === "turn" ? "rozklad" : "checkpoint";
+  const inputs = street === "turn"
+    ? newestDecompositionMs("artifacts/decomposition")
+    : newestMtime(CHECKPOINT_ROOT, (name) => name.startsWith("pkrtrainer_") && name.endsWith(".json"));
+  if (inputs > packs) {
     streetsWanted.add(street);
-    console.log(`--streets-if-new: ${street} - checkpoint novější než pack, ulice se generuje`);
+    console.log(`--streets-if-new: ${street} - ${source} novější než pack, ulice se generuje`);
   } else {
-    console.log(`--streets-if-new: ${street} - žádný checkpoint novější než pack, ulice se přeskočí`);
+    console.log(`--streets-if-new: ${street} - žádný ${source} novější než pack, ulice se přeskočí`);
   }
 }
 const WORK = "artifacts/decomposition";
