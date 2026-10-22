@@ -614,6 +614,8 @@ async function generateAll(list: readonly string[], label: string): Promise<void
     + ` volno ${freeGb.toFixed(1)} GB`,
   );
   let failed = 0;
+  /** Co generátor odmítl a proč - první neprázdný řádek jeho stderr. */
+  const refusals: { street: string; family: string; reason: string }[] = [];
   // Pád na haldě **není odmítnutí**.
   //
   // Generátor odmítá neúplné rodiny schválně a hlásí proč; to je v pořádku a
@@ -731,6 +733,12 @@ async function generateAll(list: readonly string[], label: string): Promise<void
             process.exitCode = 1;
           } else {
             failed += 1;
+            // Důvod, ne jen počet (od 22. 10. 2026). „111 kombinací generátor
+            // odmítl" skrývalo, že turnový pack MTT9_25BB_LJ_BTN_SRP z 12. 9.
+            // se po přesolvení nepřegeneroval, a nikdo nevěděl proč.
+            const said = `${detail.stderr ?? ""}`.split(/\r?\n/).find((line) => line.trim() !== "")
+              ?? `kód ${detail.code ?? "?"}, bez hlášky`;
+            refusals.push({ street, family, reason: said.trim() });
           }
         }
       }
@@ -744,6 +752,17 @@ async function generateAll(list: readonly string[], label: string): Promise<void
     + (crashed > 0 ? `, ${crashed} SPADLO NA HALDĚ` : "")
     + `; ${STREETS.map((street) => `${street} ${spent.get(street) ?? 0} s`).join(", ")}`,
   );
+  // Odmítnutí po důvodech: jméno rodiny se z hlášky vyjme, ať se stejné důvody
+  // sečtou, a pod každým důvodem pár rodin pro dohledání.
+  const byReason = new Map<string, { street: string; family: string }[]>();
+  for (const refusal of refusals) {
+    const reason = `${refusal.street}: ${refusal.reason.replace(/MTT9_[A-Z0-9_]+/g, "<rodina>")}`;
+    byReason.set(reason, [...(byReason.get(reason) ?? []), refusal]);
+  }
+  for (const [reason, rows] of [...byReason].sort((left, right) => right[1].length - left[1].length)) {
+    const shown = rows.slice(0, 4).map((row) => row.family).join(", ");
+    console.log(`[${label}]   ${rows.length}x ${reason} - ${shown}${rows.length > 4 ? ", ..." : ""}`);
+  }
   /*
    * Kolik ta fáze stála na rodinu, proti tomu, co už je naměřené.
    *

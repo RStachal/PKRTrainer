@@ -30,9 +30,11 @@
  * proti 3,6 % u riverových dat (bod 209). Pod prahem se zapíše `null`, ne
  * odhad: nula i zaokrouhlené číslo by u akce vypadaly jako spočítaná EV.
  */
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { join } from "node:path";
+
+import { boardsDecomposedAfterPack, type PackForAge } from "./lib/packDecompositionAge.mts";
 
 import { windowNotice } from "./lib/machineWindow.mts";
 import { loadAllSolvedTurnPacks } from "../src/data/ranges/turnSolvedStrategyPacks";
@@ -773,6 +775,19 @@ for (const name of chosen) {
   if (budgetGzipKib > 0 && (gzipTotal + AVERAGE_TABLE_GZIP_BYTES) / 1024 > budgetGzipKib) {
     console.log(`rozpočet ${budgetGzipKib} KiB gzip je plný, končím na ${stoppedAt} rodinách`);
     break;
+  }
+  // Pack starší než rozklad svých desek: EV by se spočítala z jiného řešení,
+  // než ze kterého je strategie (`boardsDecomposedAfterPack`, 22. 10. 2026).
+  const packForAge = JSON.parse(readFileSync(join(PACK_DIR, name), "utf8")) as PackForAge;
+  const redone = boardsDecomposedAfterPack(packForAge, (board) => {
+    const plan = join(ROOT, board, "plan.json");
+    return existsSync(plan) ? statSync(plan).mtimeMs : undefined;
+  });
+  if (redone.length > 0) {
+    console.log(`${name}: pack z ${packForAge.createdAt} je starší než rozklad ${redone.length} svých desek`
+      + ` (${redone.map((board) => board.split("__")[1] ?? board).join(", ")}) - tabulka zůstává,`
+      + " nejdřív je potřeba přegenerovat turnový pack");
+    continue;
   }
   const started = Date.now();
   const result = buildPack(join(PACK_DIR, name));
