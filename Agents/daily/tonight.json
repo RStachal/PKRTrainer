@@ -1,13 +1,13 @@
 {
   "schemaVersion": "PKRTRAINER_NIGHT_PRIORITY_V2",
-  "decidedAt": "2026-10-20",
-  "priority": "NEW_FAMILIES",
-  "reason": "river je nasycený: 48/48 packů na stropu (41 na pravidlech, 7 bajtově)",
-  "stagedBoards": 180,
-  "stagedFamilies": 29,
-  "undecomposedBoards": 322,
-  "stagedMinutes": 6213,
+  "decidedAt": "2026-10-21",
+  "priority": "DECOMPOSITION",
+  "reason": "střídání nocí: minulá patřila šířce, tahle prvnímu rozkladu (332 vyřešených desek bez rozkladu)",
+  "stagedBoards": 169,
+  "stagedFamilies": 27,
+  "undecomposedBoards": 332,
+  "stagedMinutes": 5625,
   "yieldMinMinutes": 30,
   "yieldMinBoards": 8,
-  "willYield": true
+  "willYield": false
 }
