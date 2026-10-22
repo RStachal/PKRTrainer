@@ -34,6 +34,10 @@
  * _Requirements: 4.6, 12.3, 12.4, 13.4, 14.6_
  */
 
+// Tokeny a prvky nového GUI (Agents/ui-redesign-plan.md). Vite je vytáhne do
+// samostatného hashovaného CSS, které prohlížeč cachuje.
+import "./ui/styles/tokens.css";
+import "./ui/styles/components.css";
 import type {
   ActionKey,
   ActionContext,

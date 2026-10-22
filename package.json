@@ -133,6 +133,7 @@
     "bundle:budget": "node scripts/run-cli.mjs scripts/checkBundleBudget.mts",
     "verify:precache": "node scripts/run-cli.mjs scripts/checkDistPrecache.mts",
     "profile:render": "node scripts/run-cli.mjs scripts/profileRenderPerformance.mts",
+    "ui:tour": "node scripts/run-cli.mjs scripts/uiTour.mts",
     "e2e:chrome": "node scripts/run-cli.mjs scripts/runChromeE2e.mts",
     "e2e:chrome:preview": "node scripts/run-cli.mjs scripts/runChromePreviewE2e.mts",
     "e2e:chrome:production-fixture": "node scripts/run-cli.mjs scripts/runChromeProductionFixtureE2e.mts",

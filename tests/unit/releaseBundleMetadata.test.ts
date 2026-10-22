@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 
+import { QA_VIEWPORTS } from "../../scripts/lib/viewports.mts";
 import { DEFAULT_TRAINING_PROFILE, profileWith } from "../../src/core/trainingProfile";
 import { postflopPublicHeuristicStrategyPacks } from "../../src/data/ranges/postflopStrategyPack";
 import { validateRangePack } from "../../src/data/ranges/rangePack";
@@ -62,6 +63,9 @@ describe("release bundle metadata", () => {
     const viteConfig = readFileSync("vite.config.ts", "utf8");
     const chromeE2eScript = readFileSync("scripts/runChromeE2e.mts", "utf8");
     const chromePreviewE2eScript = readFileSync("scripts/runChromePreviewE2e.mts", "utf8");
+    // Build a náhled pro prohlížečové běhy jsou od 22. 10. 2026 jednou,
+    // v knihovně sdílené E2E i prohlídkou UI; vlastnosti se hlídají tam.
+    const previewServerLib = readFileSync("scripts/lib/previewServer.mts", "utf8");
     const ftpPackageScript = readFileSync("scripts/packageMttPlayableBeta.mts", "utf8");
     const productionFixtureE2eScript = readFileSync(
       "scripts/runChromeProductionFixtureE2e.mts",
@@ -110,23 +114,26 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:texas-solver-accuracy-handoff"])
       .toContain("finalize-texas-solver-accuracy-recovery.ps1");
     expect(chromePreviewE2eScript).toContain('NODE_ENV: "production"');
-    expect(chromePreviewE2eScript).toContain('"--strictPort"');
+    expect(chromePreviewE2eScript).toContain("buildProduction()");
+    expect(chromePreviewE2eScript).toContain("startVitePreview(");
+    expect(previewServerLib).toContain('NODE_ENV: "production"');
+    expect(previewServerLib).toContain('"--strictPort"');
     // Halda pro build smí být napsaná **jen jednou**, ve skriptu `build`.
     // E2E si staví vlastní balík a mělo to číslo opsané; 10. 9. 2026 se halda
     // kvůli turnové EV zvedla na 12 GB v `package.json` a tady zůstalo osm,
     // takže `npm run build` prošel a brána spadla o krok dál na tomtéž.
     expect(
-      /BUILD_HEAP_FLAG\s*=\s*"--max-old-space-size=\d+"/.test(chromePreviewE2eScript),
+      /"--max-old-space-size=\d+"/.test(previewServerLib + chromePreviewE2eScript),
       "halda v E2E nesmí být napsaná číslem, čte se ze skriptu build",
     ).toBe(false);
-    expect(chromePreviewE2eScript).toContain("pkg.scripts.build");
+    expect(previewServerLib).toContain("pkg.scripts.build");
     expect(ftpPackageScript).toContain('!source.path.endsWith(".map")');
     expect(ftpPackageScript).toContain("Source map must not enter the FTP package");
     expect(pkg.scripts["release:mtt-core"])
       .toBe("npm run typecheck && npm test && npm run mtt:refresh-registry -- --check && npm run mtt:core-release && npm run verify:ranges && npm run build && npm run verify:precache && npm run bundle:budget");
-    expect(chromeE2eScript).toContain('"mobile-360"');
-    expect(chromeE2eScript).toContain('"mobile-390"');
-    expect(chromeE2eScript).toContain('"mobile-412"');
+    expect(chromeE2eScript).toContain("QA_VIEWPORTS");
+    expect(QA_VIEWPORTS.map((viewport) => viewport.name))
+      .toEqual(expect.arrayContaining(["mobile-360", "mobile-390", "mobile-412"]));
     expect(chromeE2eScript).toContain("Input.dispatchTouchEvent");
     expect(chromeE2eScript).toContain("Input.dispatchKeyEvent");
     expect(chromeE2eScript).toContain(".hh-analysis .matrix-cell");

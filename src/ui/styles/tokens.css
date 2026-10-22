@@ -1,0 +1,115 @@
+/*
+ * Tokeny vzhledu DrillEV - jediné místo, kde nové GUI bere barvy, písmo,
+ * rozměry a pohyb. Plán a návrh: Agents/ui-redesign-plan.md.
+ *
+ * Barvy akcí tu nejsou záměrně. Jejich zdrojem zůstává `colorForActionKey`
+ * v TypeScriptu, protože je hlídá podmínka vlastníka z 24. 9. 2026 (odstup
+ * od palety RYE, tests/unit/rangeMatrixPalette.test.ts). Prvky si barvu akce
+ * berou z vlastnosti `--action-accent`, kterou nastaví kód.
+ *
+ * Každou dvojici text/pozadí hlídá tests/unit/designTokens.test.ts
+ * (kontrast aspoň 4,5:1), takže se tu barva nemění bez spuštění testu.
+ */
+:root {
+  color-scheme: dark;
+
+  /* Plochy, od nejnižší po nejvyšší. */
+  --dx-bg: #0d1117;
+  --dx-surface-sunken: #10151d;
+  --dx-surface: #151b23;
+  --dx-surface-raised: #1b2330;
+  --dx-border: #222b38;
+  --dx-border-strong: #2a3444;
+
+  /* Text. Tlumené úrovně projdou kontrastem na všech plochách výše. */
+  --dx-text: #e8edf3;
+  --dx-text-secondary: #cbd3de;
+  --dx-text-muted: #a3aebd;
+  --dx-text-subtle: #8a95a6;
+  --dx-link: #93c5fd;
+
+  /* Akcent: hlavní tlačítko, výběr, zaměření. */
+  --dx-accent: #34d399;
+  --dx-on-accent: #052e21;
+
+  /*
+   * Verdikty odpovídají výsledkům domény (core/actionEv.ts), nic navíc.
+   * Barvou se verdikt nepozná sám - čip nese i ikonu a text.
+   */
+  --dx-outcome-best: #34d399;
+  --dx-on-outcome-best: #052e21;
+  --dx-outcome-equivalent: #2dd4bf;
+  --dx-on-outcome-equivalent: #042f2c;
+  --dx-outcome-acceptable: #f5b544;
+  --dx-on-outcome-acceptable: #1c1405;
+  --dx-outcome-mistake: #e5484d;
+  --dx-on-outcome-mistake: #1f0505;
+  --dx-outcome-unsolved: #3b4658;
+  --dx-on-outcome-unsolved: #e8edf3;
+
+  /*
+   * Karty: čtyřbarevný balíček ve stejných odstínech jako dnes, jen tmavší,
+   * aby i malá barva na desce na mobilu měla kontrast 4,5:1.
+   */
+  --dx-card-face: #f8fafc;
+  --dx-suit-clubs: #15803d;
+  --dx-suit-diamonds: #1d4ed8;
+  --dx-suit-hearts: #c81e1e;
+  --dx-suit-spades: #111827;
+
+  /* Stůl. */
+  --dx-felt: #0f4d3a;
+  --dx-felt-rail: #1a222e;
+
+  /*
+   * Písmo systémové: aplikace je offline-first, takže nic ze sítě
+   * (zásada 4 v Agents/design.md). Čísla mají stejnou šířku, aby sloupce EV
+   * neposkakovaly.
+   */
+  --dx-font: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system,
+    BlinkMacSystemFont, "SF Pro Text", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --dx-numeric: tabular-nums;
+  --dx-text-xs: 12px;
+  --dx-text-sm: 13px;
+  --dx-text-md: 15px;
+  --dx-text-lg: 17px;
+  --dx-text-xl: 22px;
+  --dx-text-2xl: 28px;
+  --dx-leading: 1.45;
+  --dx-weight-regular: 400;
+  --dx-weight-medium: 600;
+  --dx-weight-bold: 700;
+
+  /* Rozestupy po čtyřech pixelech. */
+  --dx-space-1: 4px;
+  --dx-space-2: 8px;
+  --dx-space-3: 12px;
+  --dx-space-4: 16px;
+  --dx-space-5: 20px;
+  --dx-space-6: 24px;
+  --dx-space-8: 32px;
+
+  --dx-radius-sm: 8px;
+  --dx-radius-md: 12px;
+  --dx-radius-lg: 16px;
+  --dx-radius-pill: 999px;
+
+  /* Nejmenší dotykový cíl. */
+  --dx-touch: 44px;
+
+  --dx-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --dx-shadow-2: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --dx-focus-ring: 0 0 0 2px var(--dx-bg), 0 0 0 4px var(--dx-accent);
+
+  /* Pohyb jen přes transform a opacity, viz Agents/ui-redesign-plan.md. */
+  --dx-duration-fast: 120ms;
+  --dx-duration: 180ms;
+  --dx-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dx-duration-fast: 0ms;
+    --dx-duration: 0ms;
+  }
+}

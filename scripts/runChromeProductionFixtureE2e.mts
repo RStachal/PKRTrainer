@@ -5,8 +5,9 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { createServer } from "node:net";
 import { resolve, sep } from "node:path";
+
+import { findAvailablePort, stopProcessTree, waitForUrl } from "./lib/previewServer.mts";
 
 const root = resolve(".");
 // The current Core preflop pack is deliberately real. This fixture supplements
@@ -433,27 +434,6 @@ function renderFixtureValidationModule(
   ].join("\n");
 }
 
-async function findAvailablePort(): Promise<number> {
-  return await new Promise<number>((resolvePort, reject) => {
-    const server = createServer();
-    server.unref();
-    server.once("error", reject);
-    server.listen(0, "127.0.0.1", () => {
-      const address = server.address();
-      if (address === null || typeof address === "string") {
-        server.close();
-        reject(new Error("Could not allocate a fixture preview port."));
-        return;
-      }
-      const port = address.port;
-      server.close((error) => {
-        if (error) reject(error);
-        else resolvePort(port);
-      });
-    });
-  });
-}
-
 function runNode(
   args: readonly string[],
   env: Record<string, string> = {},
@@ -469,32 +449,6 @@ function runNode(
   if (result.status !== 0) {
     throw new Error(`Command failed (${result.status}): node ${args.join(" ")}`);
   }
-}
-
-async function waitForUrl(url: string): Promise<void> {
-  const deadline = Date.now() + 20_000;
-  while (Date.now() < deadline) {
-    try {
-      const response = await fetch(url);
-      if (response.ok) return;
-    } catch {
-      // Preview is still starting.
-    }
-    await new Promise((resolvePromise) => setTimeout(resolvePromise, 250));
-  }
-  throw new Error(`Preview did not start: ${url}`);
-}
-
-function stopProcessTree(processToStop: ChildProcess | null): void {
-  if (!processToStop?.pid) return;
-  if (process.platform === "win32") {
-    spawnSync("taskkill", ["/PID", String(processToStop.pid), "/T", "/F"], {
-      stdio: "ignore",
-      windowsHide: true,
-    });
-    return;
-  }
-  processToStop.kill("SIGTERM");
 }
 
 function assertInsideWorkspace(path: string): void {

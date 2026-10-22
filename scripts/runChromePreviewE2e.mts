@@ -1,58 +1,27 @@
-import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { createServer } from "node:net";
+import { spawnSync, type ChildProcess } from "node:child_process";
 import { resolve } from "node:path";
+
+import {
+  buildProduction,
+  findAvailablePort,
+  startVitePreview,
+  stopProcessTree,
+  waitForUrl,
+} from "./lib/previewServer.mts";
 
 const root = resolve(".");
 const nodeExecutable = process.execPath;
-/**
- * Halda pro produkční build, **přečtená ze skriptu `build`**, ne opsaná.
- *
- * Číslo tu bylo napsané dvakrát a komentář níž varoval přesně před tím, co se
- * pak stalo: 10. 9. 2026 se halda kvůli turnové EV zvedla na 12 GB v
- * `package.json` a **tady zůstalo osm**, takže `npm run build` prošel a brána
- * spadla o krok dál na tomtéž - `Ineffective mark-compacts near heap limit`
- * uvnitř E2E. Dvě kopie téhož čísla se rozejdou vždycky; jedna se rozejít
- * nemůže.
- */
-const BUILD_HEAP_FLAG = (() => {
-  const pkg = JSON.parse(readFileSync(resolve("package.json"), "utf8")) as {
-    scripts: Record<string, string>;
-  };
-  const flag = /--max-old-space-size=\d+(?=[^&]*vite)/.exec(pkg.scripts.build ?? "")?.[0];
-  if (flag === undefined) {
-    throw new Error("ve skriptu `build` není halda pro vite; E2E si ji nemá odkud vzít");
-  }
-  return flag;
-})();
-const viteCli = resolve("node_modules/vite/bin/vite.js");
 const viteNodeCli = resolve("scripts/run-cli.mjs");
 const previewPort = await findAvailablePort();
 let preview: ChildProcess | null = null;
 
 try {
-  // `--max-old-space-size` musí být i tady, ne jen v npm skriptu `build`.
-  //
-  // Tenhle běh si staví vlastní produkční balík, takže výchozí čtyřgigabajtová
-  // halda ho potká stejně: naměřeno 25. 8. 2026, `vite build` spadl na
+  // Tenhle běh si staví vlastní produkční balík, a to se stejnou haldou jako
+  // `npm run build` (`buildHeapFlag` v lib/previewServer.mts). Naměřeno
+  // 25. 8. 2026: s výchozí čtyřgigabajtovou haldou `vite build` spadl na
   // „Ineffective mark-compacts near heap limit" a E2E se ani nespustilo.
-  // Opravit to jen v `package.json` by znamenalo, že brána projde jedním
-  // příkazem a spadne druhým na tomtéž.
-  runNode([BUILD_HEAP_FLAG, viteCli, "build"], { NODE_ENV: "production" });
-  preview = spawn(nodeExecutable, [
-    viteCli,
-    "preview",
-    "--host",
-    "127.0.0.1",
-    "--port",
-    String(previewPort),
-    "--strictPort",
-  ], {
-    cwd: root,
-    env: { ...process.env, NODE_ENV: "production" },
-    stdio: ["ignore", "ignore", "pipe"],
-    windowsHide: true,
-  });
+  buildProduction();
+  preview = startVitePreview(previewPort);
   await waitForUrl(`http://127.0.0.1:${previewPort}/`);
   runNode([viteNodeCli, "scripts/runChromeE2e.mts"], {
     MTT_E2E_URL: `http://127.0.0.1:${previewPort}/`,
@@ -73,48 +42,4 @@ function runNode(args: readonly string[], env: Record<string, string> = {}): voi
   });
   if (result.error) throw result.error;
   if (result.status !== 0) throw new Error(`Command failed (${result.status}): node ${args.join(" ")}`);
-}
-
-async function findAvailablePort(): Promise<number> {
-  return await new Promise<number>((resolvePort, reject) => {
-    const server = createServer();
-    server.unref();
-    server.once("error", reject);
-    server.listen(0, "127.0.0.1", () => {
-      const address = server.address();
-      if (address === null || typeof address === "string") {
-        server.close();
-        reject(new Error("Could not allocate a preview port."));
-        return;
-      }
-      const port = address.port;
-      server.close((error) => error ? reject(error) : resolvePort(port));
-    });
-  });
-}
-
-async function waitForUrl(url: string): Promise<void> {
-  const deadline = Date.now() + 20_000;
-  while (Date.now() < deadline) {
-    try {
-      const response = await fetch(url);
-      if (response.ok) return;
-    } catch {
-      // Preview is still starting.
-    }
-    await new Promise((resolvePromise) => setTimeout(resolvePromise, 250));
-  }
-  throw new Error(`Preview did not start: ${url}`);
-}
-
-function stopProcessTree(processToStop: ChildProcess | null): void {
-  if (!processToStop?.pid) return;
-  if (process.platform === "win32") {
-    spawnSync("taskkill", ["/PID", String(processToStop.pid), "/T", "/F"], {
-      stdio: "ignore",
-      windowsHide: true,
-    });
-    return;
-  }
-  processToStop.kill("SIGTERM");
 }

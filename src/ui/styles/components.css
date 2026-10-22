@@ -1,0 +1,299 @@
+/*
+ * Základní prvky nového GUI (třídy `dx-`). Hodnoty berou jen z tokens.css,
+ * takže změna vzhledu je změna tokenu, ne hledání po souborech. Vlastní
+ * barvy tu nesmějí být - hlídá to tests/unit/designTokens.test.ts.
+ *
+ * Přechody používají jen transform, barvy se mění okamžitě
+ * (Agents/ui-redesign-plan.md, mantinely rychlosti).
+ */
+
+.dx-root {
+  font-family: var(--dx-font);
+  font-size: var(--dx-text-md);
+  line-height: var(--dx-leading);
+  color: var(--dx-text);
+  background: var(--dx-bg);
+}
+
+.dx-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Tlačítko */
+
+.dx-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--dx-space-2);
+  min-height: var(--dx-touch);
+  padding: 0 var(--dx-space-4);
+  border: 1px solid transparent;
+  border-radius: var(--dx-radius-md);
+  background: transparent;
+  color: var(--dx-text);
+  font: inherit;
+  font-weight: var(--dx-weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform var(--dx-duration-fast) var(--dx-ease);
+}
+
+.dx-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--dx-focus-ring);
+}
+
+.dx-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.dx-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.dx-btn--primary {
+  background: var(--dx-accent);
+  color: var(--dx-on-accent);
+  font-weight: var(--dx-weight-bold);
+}
+
+.dx-btn--primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.dx-btn--secondary {
+  border-color: var(--dx-border-strong);
+}
+
+.dx-btn--secondary:hover:not(:disabled) {
+  background: var(--dx-surface-raised);
+}
+
+.dx-btn--ghost {
+  color: var(--dx-text-muted);
+}
+
+.dx-btn--ghost:hover:not(:disabled) {
+  color: var(--dx-text);
+}
+
+/* Pokerová akce. Barvu nese `--action-accent` z jediného zdroje barev akcí. */
+.dx-btn--action {
+  flex-direction: column;
+  gap: 2px;
+  min-height: 60px;
+  border-color: color-mix(in srgb, var(--action-accent, var(--dx-text-subtle)) 55%, transparent);
+  background: color-mix(in srgb, var(--action-accent, var(--dx-text-subtle)) 16%, var(--dx-surface));
+}
+
+.dx-btn--action:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--action-accent, var(--dx-text-subtle)) 24%, var(--dx-surface));
+}
+
+.dx-btn--action[aria-pressed="true"] {
+  border-color: var(--action-accent, var(--dx-text-subtle));
+  box-shadow: inset 0 0 0 1px var(--action-accent, var(--dx-text-subtle));
+}
+
+.dx-btn__hint {
+  font-size: var(--dx-text-xs);
+  font-weight: var(--dx-weight-regular);
+  color: var(--dx-text-muted);
+  font-variant-numeric: var(--dx-numeric);
+}
+
+.dx-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 var(--dx-space-1);
+  border: 1px solid var(--dx-border-strong);
+  border-radius: var(--dx-radius-sm);
+  color: var(--dx-text-muted);
+  font-size: var(--dx-text-xs);
+  font-weight: var(--dx-weight-medium);
+}
+
+/* Čip: verdikt nebo štítek. Verdikt nese ikonu, nejen barvu. */
+
+.dx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border: 1px solid var(--dx-border-strong);
+  border-radius: var(--dx-radius-pill);
+  background: var(--dx-surface-raised);
+  color: var(--dx-text);
+  font-size: var(--dx-text-sm);
+  font-weight: var(--dx-weight-bold);
+  line-height: 1.4;
+}
+
+.dx-chip__icon {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+}
+
+.dx-chip--best {
+  border-color: transparent;
+  background: var(--dx-outcome-best);
+  color: var(--dx-on-outcome-best);
+}
+
+.dx-chip--equivalent {
+  border-color: transparent;
+  background: var(--dx-outcome-equivalent);
+  color: var(--dx-on-outcome-equivalent);
+}
+
+.dx-chip--acceptable {
+  border-color: transparent;
+  background: var(--dx-outcome-acceptable);
+  color: var(--dx-on-outcome-acceptable);
+}
+
+.dx-chip--mistake {
+  border-color: transparent;
+  background: var(--dx-outcome-mistake);
+  color: var(--dx-on-outcome-mistake);
+}
+
+.dx-chip--unsolved {
+  border-color: transparent;
+  background: var(--dx-outcome-unsolved);
+  color: var(--dx-on-outcome-unsolved);
+}
+
+/* Panel */
+
+.dx-panel {
+  padding: var(--dx-space-5);
+  border: 1px solid var(--dx-border);
+  border-radius: var(--dx-radius-lg);
+  background: var(--dx-surface);
+}
+
+/* Přepínač: jedna volba z několika, bez rozbalovacího pole. */
+
+.dx-seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--dx-border);
+  border-radius: var(--dx-radius-md);
+  background: var(--dx-surface-sunken);
+}
+
+.dx-seg__option {
+  appearance: none;
+  min-height: var(--dx-touch);
+  padding: 0 var(--dx-space-4);
+  border: 0;
+  border-radius: var(--dx-radius-sm);
+  background: transparent;
+  color: var(--dx-text-muted);
+  font: inherit;
+  font-weight: var(--dx-weight-medium);
+  cursor: pointer;
+}
+
+.dx-seg__option:hover {
+  color: var(--dx-text);
+}
+
+.dx-seg__option[aria-checked="true"] {
+  background: var(--dx-surface-raised);
+  color: var(--dx-text);
+  box-shadow: var(--dx-shadow-1);
+}
+
+.dx-seg__option:focus-visible {
+  outline: none;
+  box-shadow: var(--dx-focus-ring);
+}
+
+/* Pruh strategie: podíly akcí v barvách akcí. */
+
+.dx-strategy-bar {
+  display: flex;
+  height: 12px;
+  overflow: hidden;
+  border-radius: var(--dx-radius-pill);
+  background: var(--dx-border);
+}
+
+.dx-strategy-bar__segment {
+  height: 100%;
+  background: var(--action-accent, var(--dx-text-subtle));
+}
+
+/* Tenká mezera, aby se dvě podobné barvy vedle sebe neslily. */
+.dx-strategy-bar__segment + .dx-strategy-bar__segment {
+  box-shadow: inset 1px 0 0 var(--dx-bg);
+}
+
+/* Hrací karta. Velikost řídí jedna šířka, zbytek se z ní odvodí. */
+
+.dx-card {
+  --dx-card-w: 44px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: var(--dx-card-w);
+  aspect-ratio: 5 / 7;
+  border-radius: calc(var(--dx-card-w) * 0.16);
+  background: var(--dx-card-face);
+  box-shadow: var(--dx-shadow-1);
+  font-weight: var(--dx-weight-bold);
+  line-height: 1;
+  user-select: none;
+}
+
+.dx-card--sm {
+  --dx-card-w: 36px;
+}
+
+.dx-card--lg {
+  --dx-card-w: 60px;
+}
+
+.dx-card__rank {
+  font-size: calc(var(--dx-card-w) * 0.45);
+}
+
+.dx-card__suit {
+  font-size: calc(var(--dx-card-w) * 0.36);
+}
+
+.dx-card--c {
+  color: var(--dx-suit-clubs);
+}
+
+.dx-card--d {
+  color: var(--dx-suit-diamonds);
+}
+
+.dx-card--h {
+  color: var(--dx-suit-hearts);
+}
+
+.dx-card--s {
+  color: var(--dx-suit-spades);
+}
