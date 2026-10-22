@@ -47,6 +47,7 @@ import "./ui/styles/legacy/range-modal.css";
 // samostatného hashovaného CSS, které prohlížeč cachuje.
 import "./ui/styles/tokens.css";
 import "./ui/styles/components.css";
+import "./ui/styles/trainer.css";
 import type {
   ActionKey,
   ActionContext,
@@ -117,6 +118,8 @@ import { loadPreflopEquity } from "./core/preflopEquity";
 import { renderDecisionPrice } from "./ui/decisionPricePanel";
 import { isHotStreak } from "./core/sessionScore";
 import { createPreflopSession } from "./training/preflopSession";
+import { createPreflopTrainerView } from "./ui/trainer/preflopTrainerView";
+import { isNextUiEnabled } from "./ui/trainer/uiFlag";
 import { colorForActionKey } from "./ui/rangeMatrixView";
 import { renderMatrix } from "./ui/rangeMatrixView";
 import { renderRangeModalButton } from "./ui/rangeModal";
@@ -706,6 +709,8 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   renderPostflopPanel();
 
   // --- Krok 3: filtry + tréninková smyčka (Req 13.4) ---
+  // Nové GUI tréninku je za přepínačem, dokud neprojde E2E (fáze 1 redesignu).
+  const nextUi = isNextUiEnabled(typeof location === "undefined" ? "" : location.search, storage);
   const trainingController = setupTraining(shell, statsStore, {
     onAnswered: () => {
       sessionCount += 1;
@@ -726,7 +731,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       refreshDashboard();
       shell.selectTab("postflop");
     },
-  });
+  }, nextUi);
   startPreflopFocusSession = trainingController.startPreflopFocusSession;
   getSelectedTrainingProfile = trainingController.getProfile;
 
@@ -1116,6 +1121,7 @@ function setupTraining(
   shell: AppShell,
   statsStore: StatsStore,
   hooks: TrainingHooks,
+  nextUi: boolean,
 ): TrainingController {
   const panel = shell.trainingPanel;
   panel.innerHTML = "";
@@ -1185,6 +1191,24 @@ function setupTraining(
   gameBox.appendChild(actionsContainer);
   gameBox.appendChild(resultContainer);
   gameBox.appendChild(matrixContainer);
+
+  // Nová obrazovka tréninku za přepínačem (Agents/ui-redesign-plan.md, fáze 1).
+  // Bere tutéž relaci jako starý pohled; ten zůstává, dokud nové GUI neprojde E2E.
+  const trainerView = nextUi
+    ? createPreflopTrainerView(document, {
+      session,
+      title: spotTitle,
+      onAnswered: () => {
+        hooks.onAnswered();
+        hooks.refreshDashboard();
+      },
+      onChangeSituation: () => changeSituation(),
+      onSessionEnded: () => {
+        gameBox.hidden = true;
+      },
+    })
+    : null;
+  if (trainerView) gameBox.replaceChildren(trainerView.element);
 
   // The equity table prices the action buttons. It is fetched rather than bundled
   // - 115 KB has no business on the install path - and the fetch starts here, at
@@ -1256,13 +1280,15 @@ function setupTraining(
     },
   });
 
-  changeSituationBtn.addEventListener("click", () => {
+  function changeSituation(): void {
     session.stop();
     clearActiveQuestion();
     gameBox.hidden = true;
     filtersBox.hidden = false;
     focusElement(filtersBox.querySelector<HTMLElement>(".profile-variant"));
-  });
+  }
+
+  changeSituationBtn.addEventListener("click", () => changeSituation());
 
   function startPostflopSession(
     filters: Filters,
@@ -1329,7 +1355,8 @@ function setupTraining(
 
     filtersBox.hidden = true;
     gameBox.hidden = false;
-    showSpot(started.spot, filters);
+    if (trainerView) trainerView.show(started.spot);
+    else showSpot(started.spot, filters);
   }
 
   function startPreflopFocusSession(filters: Filters): void {
@@ -1359,6 +1386,7 @@ function setupTraining(
     actionsContainer.innerHTML = "";
     resultContainer.innerHTML = "";
     matrixContainer.innerHTML = "";
+    trainerView?.clear();
   }
 
   function showSpot(spot: Spot, filters: Filters): void {

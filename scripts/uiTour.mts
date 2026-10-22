@@ -33,6 +33,7 @@ import { QA_VIEWPORTS, type Viewport } from "./lib/viewports.mts";
  *   npm run ui:tour                                 postaví dist/ a projde všechny šířky
  *   npm run ui:tour -- --no-build                   použije existující dist/
  *   npm run ui:tour -- --viewports=desktop-1280,mobile-390
+ *   npm run ui:tour -- --ui=next                    nové GUI tréninku (za přepínačem)
  *
  * Není to brána, o obsahu nic netvrdí. Selže jen tehdy, když se nedostane na
  * obrazovku, kterou má vyfotit, protože pak je prohlídka neúplná a má to říct.
@@ -41,9 +42,26 @@ import { QA_VIEWPORTS, type Viewport } from "./lib/viewports.mts";
 const TOUR_SEED = "20261022";
 const STEP_TIMEOUT_MS = 60_000;
 
+type TourUi = "classic" | "next";
+
+/** Prvky preflopového tréninku, které se v novém GUI jmenují jinak. */
+const PREFLOP_SELECTORS: Record<TourUi, { action: string; result: string; change: string }> = {
+  classic: {
+    action: ".action-btn",
+    result: ".result__next",
+    change: ".training__change-situation",
+  },
+  next: {
+    action: ".dx-trainer__actions button",
+    result: ".dx-trainer__feedback:not([hidden])",
+    change: ".dx-trainer__change",
+  },
+};
+
 interface TourArgs {
   build: boolean;
   viewports: readonly Viewport[];
+  ui: TourUi;
 }
 
 interface Shot {
@@ -62,9 +80,12 @@ interface MissingStep {
 function parseArgs(argv: readonly string[]): TourArgs {
   let build = true;
   let viewports: readonly Viewport[] = QA_VIEWPORTS;
+  let ui: TourUi = "classic";
   for (const arg of argv) {
     if (arg === "--no-build") {
       build = false;
+    } else if (arg === "--ui=next" || arg === "--ui=classic") {
+      ui = arg === "--ui=next" ? "next" : "classic";
     } else if (arg.startsWith("--viewports=")) {
       const names = arg.slice("--viewports=".length).split(",").map((name) => name.trim());
       const unknown = names.filter((name) => !QA_VIEWPORTS.some((viewport) => viewport.name === name));
@@ -75,10 +96,10 @@ function parseArgs(argv: readonly string[]): TourArgs {
       }
       viewports = QA_VIEWPORTS.filter((viewport) => names.includes(viewport.name));
     } else {
-      throw new Error(`neznámý přepínač ${arg}; známé: --no-build, --viewports=a,b`);
+      throw new Error(`neznámý přepínač ${arg}; známé: --no-build, --viewports=a,b, --ui=next|classic`);
     }
   }
-  return { build, viewports };
+  return { build, viewports, ui };
 }
 
 function timestamp(date: Date): string {
@@ -159,7 +180,9 @@ async function capture(
  * Kroky prohlídky. Každý staví na předchozím, takže první, který selže,
  * ukončí prohlídku na téhle šířce a zbytek se zapíše jako chybějící.
  */
-const STEPS: ReadonlyArray<{ step: string; run: (client: CdpClient) => Promise<void> }> = [
+function tourSteps(ui: TourUi): ReadonlyArray<{ step: string; run: (client: CdpClient) => Promise<void> }> {
+  const preflop = PREFLOP_SELECTORS[ui];
+  return [
   {
     step: "01-start",
     run: async (client) => {
@@ -171,20 +194,20 @@ const STEPS: ReadonlyArray<{ step: string; run: (client: CdpClient) => Promise<v
     step: "02-preflop-question",
     run: async (client) => {
       await click(client, ".filter-start");
-      await waitForSelector(client, ".action-btn", STEP_TIMEOUT_MS);
+      await waitForSelector(client, preflop.action, STEP_TIMEOUT_MS);
     },
   },
   {
     step: "03-preflop-result",
     run: async (client) => {
-      await click(client, ".action-btn");
-      await waitForSelector(client, ".result__next", STEP_TIMEOUT_MS);
+      await click(client, preflop.action);
+      await waitForSelector(client, preflop.result, STEP_TIMEOUT_MS);
     },
   },
   {
     step: "04-flop-question",
     run: async (client) => {
-      await click(client, ".training__change-situation");
+      await click(client, preflop.change);
       await waitForSelector(client, ".filter-start", STEP_TIMEOUT_MS);
       await setSeedAndStreet(client, "FLOP");
       await click(client, ".filter-start");
@@ -198,13 +221,20 @@ const STEPS: ReadonlyArray<{ step: string; run: (client: CdpClient) => Promise<v
       await waitForSelector(client, ".postflop-result", STEP_TIMEOUT_MS);
     },
   },
-];
+  ];
+}
 
 const args = parseArgs(process.argv.slice(2));
-const outDirectory = resolve("artifacts/ui-tour", timestamp(new Date()));
+const STEPS = tourSteps(args.ui);
+const outDirectory = resolve(
+  "artifacts/ui-tour",
+  `${timestamp(new Date())}${args.ui === "next" ? "-next" : ""}`,
+);
 const profileDirectory = mkdtempSync(join(tmpdir(), "pkrtrainer-ui-tour-"));
 const shots: Shot[] = [];
 const missing: MissingStep[] = [];
+/** Chyby stránky a pády vykreslování; bez nich je „spojení zavřeno“ slepá ulička. */
+const pageErrors: string[] = [];
 let preview: ChildProcess | null = null;
 let chrome: ChildProcess | null = null;
 let cdp: CdpClient | null = null;
@@ -221,7 +251,15 @@ try {
   const target = await createTarget(await waitForDevToolsPort(profileDirectory), "about:blank");
   cdp = new CdpClient(target.webSocketDebuggerUrl);
   await cdp.connect();
-  await Promise.all([cdp.send("Page.enable"), cdp.send("Runtime.enable")]);
+  await Promise.all([cdp.send("Page.enable"), cdp.send("Runtime.enable"), cdp.send("Inspector.enable")]);
+  cdp.on("Runtime.exceptionThrown", (params) => {
+    const details = (params as { exceptionDetails?: { text?: string; exception?: { description?: string } } })
+      .exceptionDetails;
+    pageErrors.push(details?.exception?.description ?? details?.text ?? "neznámá výjimka");
+  });
+  cdp.on("Inspector.targetCrashed", () => {
+    pageErrors.push("vykreslovací proces stránky spadl (Inspector.targetCrashed)");
+  });
 
   for (const viewport of args.viewports) {
     await cdp.send("Emulation.setDeviceMetricsOverride", {
@@ -234,7 +272,8 @@ try {
       enabled: viewport.mobile,
       maxTouchPoints: viewport.mobile ? 5 : 1,
     });
-    await navigate(cdp, url);
+    // Parametr přežije vyčištění úložiště i reload, takže GUI zůstane zvolené.
+    await navigate(cdp, `${url}?ui=${args.ui}`);
     await waitForSelector(cdp, ".filter-start", STEP_TIMEOUT_MS);
     // Čistý stav: bez uložených filtrů a statistik z předchozí šířky.
     await evaluate(cdp, "localStorage.clear()");
@@ -272,12 +311,15 @@ writeFileSync(join(outDirectory, "index.json"), `${JSON.stringify({
   createdAt: new Date().toISOString(),
   commit: gitCommit(),
   seed: TOUR_SEED,
+  ui: args.ui,
   built: args.build,
   shots,
   missing,
+  pageErrors,
 }, null, 2)}\n`);
 
 console.log(`ui-tour: ${shots.length} snímků v ${relative(resolve("."), outDirectory)}`);
+for (const error of pageErrors) console.error(`  chyba stránky: ${error.split("\n")[0]}`);
 if (missing.length > 0) {
   for (const item of missing) console.error(`  chybí ${item.viewport} ${item.step}: ${item.error}`);
   process.exitCode = 1;

@@ -11,7 +11,8 @@ import { stylesheet } from "../stylesheets";
  */
 
 const tokensCss = stylesheet("tokens.css");
-const componentsCss = stylesheet("components.css");
+// Všechno CSS nového GUI kromě tokenů; staré styly (legacy/) pravidla nemají.
+const componentsCss = ["components.css", "trainer.css"].map(stylesheet).join("\n");
 
 function withoutComments(css: string): string {
   return css.replace(/\/\*[\s\S]*?\*\//g, "");

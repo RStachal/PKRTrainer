@@ -15,6 +15,15 @@
   background: var(--dx-bg);
 }
 
+/*
+ * Atribut hidden musí skrýt i prvek, kterému pravidlo dává display:flex nebo
+ * grid - jinak by skrytý panel vyhodnocení zůstal vidět jako prázdný rámeček.
+ */
+.dx-root [hidden],
+.dx-root[hidden] {
+  display: none !important;
+}
+
 .dx-visually-hidden {
   position: absolute;
   width: 1px;
@@ -127,6 +136,12 @@
   font-weight: var(--dx-weight-medium);
 }
 
+/* Na hlavním tlačítku v barvě jeho textu, jinak by zkratka na akcentu zanikla. */
+.dx-btn--primary .dx-kbd {
+  border-color: currentColor;
+  color: inherit;
+}
+
 /* Čip: verdikt nebo štítek. Verdikt nese ikonu, nejen barvu. */
 
 .dx-chip {
@@ -149,7 +164,8 @@
   height: 14px;
 }
 
-.dx-chip--best {
+.dx-chip--best,
+.dx-chip--correct {
   border-color: transparent;
   background: var(--dx-outcome-best);
   color: var(--dx-on-outcome-best);

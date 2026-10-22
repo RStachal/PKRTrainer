@@ -13,7 +13,7 @@ afterEach(() => {
 });
 
 describe("čip verdiktu", () => {
-  const kinds: OutcomeChipKind[] = ["BEST", "EQUIVALENT", "ACCEPTABLE", "MISTAKE", "UNSOLVED"];
+  const kinds: OutcomeChipKind[] = ["BEST", "CORRECT", "EQUIVALENT", "ACCEPTABLE", "MISTAKE", "UNSOLVED"];
 
   it("má pro každý verdikt vlastní třídu, ikonu a text", () => {
     const chips = kinds.map((kind) => outcomeChip(document, kind));

@@ -21,7 +21,8 @@ export function renderRangeModalButton(
   root.appendChild(button);
 }
 
-function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
+/** Otevře dialog s maticí range; nové GUI ho volá z vlastního tlačítka. */
+export function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
   const previousOverflow = doc.body.style.overflow;
   const overlay = doc.createElement("div");
   overlay.className = "range-modal";

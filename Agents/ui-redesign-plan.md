@@ -207,6 +207,23 @@ používat první.
    spotu, stůl a panel akcí (na mobilu dole, na desktopu klávesy 1–4 a Enter).
    Vyhodnocení ukazuje čip verdiktu, ztrátu EV, EV akcí, pruh strategie, dvě
    věty a tlačítko „Další spot“. Obrazovka je za přepínačem.
+
+   **Preflop hotový 22. 10.** (`src/ui/trainer/preflopTrainerView.ts`,
+   `src/ui/styles/trainer.css`). Zapíná se `?ui=next`, vypíná `?ui=classic`
+   a volba se pamatuje (`src/ui/trainer/uiFlag.ts`). Stav:
+   - Desktop má stůl vlevo, akce a vyhodnocení vpravo. Mobil má akce
+     a vyhodnocení přilepené dole.
+   - Nad akcemi je otázka s kartami hráče („Jak zahraješ 9♠ 6♠?“), protože
+     panel na mobilu zakryje spodek stolu.
+   - Vyhodnocení ukazuje čip verdiktu, ztrátu EV, EV akcí od nejlepší a větu
+     „Plán:“. Celé vysvětlení a cena rozhodnutí jsou v „Podrobnostech“,
+     matice range za tlačítkem „Range“.
+   - Pruh strategie preflop nemá: range dává doporučené akce, ne frekvence.
+     Přijde s postflopem, kde frekvence solveru jsou.
+   - Stůl je zatím starý (`renderTable`). Nový stůl, který vyřeší i
+     překrývání sedadel na 360 px, je další krok.
+
+   Prohlídka: `npm run ui:tour -- --ui=next`.
 3. **Postflop stejně.** Nejdřív řadič vytažený z `postflopView.ts`, pak nová
    obrazovka.
 4. **Start zatím přes dnešní formulář.** Nové nastavení přijde ve fázi 3, do

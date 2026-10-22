@@ -83,6 +83,23 @@ export function buildPreflopExplanationForSpot(
 }
 
 /**
+ * Jen věta „Plán: …“ z vysvětlení - co s rukou dělat.
+ *
+ * Nové GUI ji ukazuje hned u verdiktu a celé vysvětlení schová do podrobností
+ * (Agents/ui-redesign-plan.md, směr bod 3). Je to tatáž věta jako ve
+ * `buildPreflopExplanationForSpot`, ne druhá formulace.
+ */
+export function preflopActionPlanForSpot(
+  spot: Pick<Spot, "context" | "strictCorrect" | "tableState" | "actionEvs">,
+  language: PreflopExplanationLanguage,
+): string {
+  const recommended = spot.actionEvs ? bestActionsForActionEv(spot.actionEvs) : spot.strictCorrect;
+  return language === "EN"
+    ? `Plan: ${actionPlanEn(recommended, spot.context, spot.tableState)}.`
+    : `Plán: ${actionPlan(recommended, spot.context, spot.tableState)}.`;
+}
+
+/**
  * The price of the decision, when the spot determines one.
  *
  * Only two contexts carry a price that follows from the spot alone. Facing an
