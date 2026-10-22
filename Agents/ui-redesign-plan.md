@@ -223,9 +223,10 @@ Verdikty v čipu musí pokrýt všechno, co dnes doména vrací:
   „herní klient, ne formulář se stolem“. Nové GUI ho plní tím, že trénink je
   stůl s akcemi bez formuláře před ním. Plátno, které vlastník schválil, má
   plsť jen na stole. Test se změní ve fázi 5 spolu se starým shellem.
-- **Komentáře v `main.ts` jsou poškozené kódováním.** 136 řádků je dvakrát
-  převedených z UTF-8 („sobÄ›staÄŤnĂ©“ místo „soběstačné“). Řetězce pro hráče
-  to nezasáhlo. Opravit to před fází 1, protože ta do `main.ts` sáhne nejvíc.
+- **Komentáře v `main.ts` byly poškozené kódováním (opraveno 22. 10.).**
+  137 řádků bylo dvakrát převedených z UTF-8 („sobÄ›staÄŤnĂ©“ místo
+  „soběstačné“). Oprava je vrátila zpět přes windows-1250. Kód zůstal bajtově
+  stejný, změnily se jen znaky mimo ASCII v komentářích.
 - **Na 360 px se překrývají sedadla.** Sedadlo protihráče na BB leží přes
   sedadlo hráče (snímek `mobile-360-05-flop-result-full`). Je to chyba
   starého stolu a nové rozvržení ji musí vyřešit.
