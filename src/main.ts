@@ -51,8 +51,6 @@ import type {
   ActionKey,
   ActionContext,
   Filters,
-  ScoringMode,
-  SessionConfig,
   Spot,
 } from "./core/types";
 import {
@@ -63,7 +61,7 @@ import {
   type TrainingProfile,
 } from "./core/trainingProfile";
 import { isFlowAllowed } from "./core/trainingCapability";
-import { bucketsWithSpots, resolveSeed, spotSequence } from "./core/drillEngine";
+import { resolveSeed } from "./core/drillEngine";
 import { postflopIntentFromFilters } from "./core/postflopIntent";
 import { grade } from "./core/scoring";
 import { buildPreflopExplanationForSpot } from "./core/preflopExplanation";
@@ -74,15 +72,10 @@ import {
 } from "./data/ranges/postflopSprCoverage";
 import { runtimeEntitlementGrants } from "./core/runtimeEntitlements";
 import { evaluateEntitlementAccess } from "./core/paymentEntitlements";
-import {
-  createRangeStoreFromRangePack,
-  rangeStore,
-  type RangeStore,
-} from "./data/rangeStore";
+import { createRangeStoreFromRangePack } from "./data/rangeStore";
 import { getRangeDataErrors, isRangeDataLoaded } from "./data/ranges";
 import { hasNewState, runMigration, type MigrationResult } from "./persistence/migration";
 import { createStatsStore, type StatsStore } from "./persistence/statsStore";
-import { buildProfileAwarePreflopResultRecord } from "./persistence/statsRecordV2";
 import { KEY_EVENTS, KEY_STATE, SCHEMA_VERSION } from "./persistence/keys";
 import { createHHReviewStore } from "./persistence/hhReviewStore";
 import {
@@ -122,12 +115,8 @@ import { renderFilters, type FiltersView } from "./ui/filters";
 import { renderTable } from "./ui/tableRenderer";
 import { loadPreflopEquity } from "./core/preflopEquity";
 import { renderDecisionPrice } from "./ui/decisionPricePanel";
-import {
-  emptySessionScore,
-  isHit,
-  isHotStreak,
-  recordAnswer,
-} from "./core/sessionScore";
+import { isHotStreak } from "./core/sessionScore";
+import { createPreflopSession } from "./training/preflopSession";
 import { colorForActionKey } from "./ui/rangeMatrixView";
 import { renderMatrix } from "./ui/rangeMatrixView";
 import { renderRangeModalButton } from "./ui/rangeModal";
@@ -224,19 +213,6 @@ function el(tag: string, className?: string, text?: string): HTMLElement {
   if (className) node.className = className;
   if (text !== undefined) node.textContent = text;
   return node;
-}
-
-function nowMs(): number {
-  if (typeof performance !== "undefined" && typeof performance.now === "function") {
-    return performance.now();
-  }
-  return Date.now();
-}
-
-function elapsedMs(startMs: number): number | undefined {
-  if (!Number.isFinite(startMs) || startMs <= 0) return undefined;
-  const value = Math.max(0, Math.round(nowMs() - startMs));
-  return Number.isFinite(value) ? value : undefined;
 }
 
 function focusElement(element: HTMLElement | null): void {
@@ -1180,25 +1156,20 @@ function setupTraining(
   const tallyChip = el("div", "training__tally");
   scoreboard.appendChild(streakChip);
   scoreboard.appendChild(tallyChip);
-  let sessionScore = emptySessionScore();
+
+  // Sekvence spotů, vyhodnocení, záznam do statistik i skóre relace jsou
+  // v řadiči, který používá i nové GUI (Agents/ui-redesign-plan.md, fáze 1).
+  // Tady zůstává jen vykreslení.
+  const session = createPreflopSession(statsStore);
 
   function renderScoreboard(): void {
+    const sessionScore = session.score;
     streakChip.dataset.streak = String(sessionScore.streak);
     streakChip.textContent = CS.training.streak(sessionScore.streak);
     streakChip.classList.toggle("training__streak--hot", isHotStreak(sessionScore));
     tallyChip.textContent = sessionScore.answered === 0
       ? CS.training.tallyEmpty
       : CS.training.tally(sessionScore.correct, sessionScore.answered, sessionScore.bestStreak);
-  }
-
-  function recordScore(hit: boolean): void {
-    sessionScore = recordAnswer(sessionScore, hit);
-    renderScoreboard();
-  }
-
-  function resetScore(): void {
-    sessionScore = emptySessionScore();
-    renderScoreboard();
   }
 
   renderScoreboard();
@@ -1227,18 +1198,6 @@ function setupTraining(
   // carries no EV and the rest carry it - spots are generated one at a time as
   // the player advances, so only the first can be early enough to miss.
   void loadPreflopEquity();
-
-  // Stav běžící relace (iterátor sekvence).
-  let iterator: Iterator<Spot> | null = null;
-  let activeRangeStore: RangeStore = rangeStore;
-  let activeTrainingProfile: TrainingProfile | null = null;
-  let activeRangePack: RangePack | null = null;
-  // The filters the running session was started with. Kept here beside the other
-  // session state rather than threaded through the click handlers, which is how
-  // this file already carries the range store and the profile.
-  let activeFilters: Filters | null = null;
-  let answered = false; // bylo už na aktuální spot odpovězeno?
-  let activeQuestionStartedAt = 0;
 
   const filtersView: FiltersView = renderFilters(filtersBox, {
     onStart: (filters: Filters, seed: number | null, profile) => {
@@ -1298,8 +1257,7 @@ function setupTraining(
   });
 
   changeSituationBtn.addEventListener("click", () => {
-    iterator = null;
-    answered = false;
+    session.stop();
     clearActiveQuestion();
     gameBox.hidden = true;
     filtersBox.hidden = false;
@@ -1316,6 +1274,7 @@ function setupTraining(
     filtersView.setSeed(resolvedSeed);
     hooks.resetSession();
     filtersView.clearWarning();
+    session.stop();
     clearActiveQuestion();
     gameBox.hidden = true;
     filtersBox.hidden = false;
@@ -1333,15 +1292,11 @@ function setupTraining(
     profile: TrainingProfile,
     pack: RangePack,
   ): void {
-    // Req 6.7: vyřeš a zpřístupni platný seed (aby šel zopakovat).
-    const resolvedSeed = resolveSeed(seed);
-    filtersView.setSeed(resolvedSeed);
+    // Req 6.7: řadič vyřeší platný seed; zpřístupni ho, aby šel zopakovat.
+    const started = session.start(filters, seed, profile, pack);
+    filtersView.setSeed(started.seed);
 
-    const cfg: SessionConfig = { seed: resolvedSeed, filters };
-
-    // Sestav sekvenci a zjisti, zda obsahuje alespoň jeden spot.
-    const profileRangeStore = createRangeStoreFromRangePack(pack);
-    if (!profileRangeStore.isLoaded()) {
+    if (started.kind === "RANGES_UNAVAILABLE") {
       clearActiveQuestion();
       gameBox.hidden = true;
       filtersView.showEmptyResult(
@@ -1349,39 +1304,32 @@ function setupTraining(
       );
       return;
     }
-    const seq = spotSequence(cfg, profileRangeStore);
-    const it = seq[Symbol.iterator]();
-    const first = it.next();
 
-    if (first.done) {
+    if (started.kind === "EMPTY") {
       // Říct, co funguje, ne jen že nic nefunguje.
       //
       // Nabídka je širší než obsah: push/fold se nabízí na 5 až 25 BB a knihovna
       // ho má na 5 a 10, takže relace „push/fold, 20 BB" rozdá nula spotů.
       // Obecná hláška to svádí číst jako chybu výběru, přitom je to naše mezera.
-      const workingDepths = bucketsWithSpots(filters.contexts, filters.ante, profileRangeStore);
       // Req 13.6: prázdný průnik filtrů ⇒ upozornění, relaci nespouštěj.
       clearActiveQuestion();
       gameBox.hidden = true;
       filtersView.showEmptyResult(
-        workingDepths.length > 0 ? CS.filters.emptyDepths(workingDepths) : undefined,
+        started.workingDepths.length > 0 ? CS.filters.emptyDepths(started.workingDepths) : undefined,
       );
       return;
     }
 
     // Nová relace: vynuluj počet spotů relace (Req 9.5) a vyčisti výsledek.
+    // Skóre relace vynuloval řadič při startu.
     hooks.resetSession();
-    resetScore();
+    renderScoreboard();
     hooks.refreshDashboard();
     filtersView.clearWarning();
 
-    activeRangeStore = profileRangeStore;
-    activeTrainingProfile = profile;
-    activeRangePack = pack;
-    iterator = it;
     filtersBox.hidden = true;
     gameBox.hidden = false;
-    showSpot(first.value, filters);
+    showSpot(started.spot, filters);
   }
 
   function startPreflopFocusSession(filters: Filters): void {
@@ -1411,14 +1359,9 @@ function setupTraining(
     actionsContainer.innerHTML = "";
     resultContainer.innerHTML = "";
     matrixContainer.innerHTML = "";
-    activeQuestionStartedAt = 0;
   }
 
   function showSpot(spot: Spot, filters: Filters): void {
-    answered = false;
-    activeFilters = filters;
-    activeQuestionStartedAt = nowMs();
-
     sessionTitle.textContent = spotTitle(spot);
     sessionMeta.textContent =
       `${spot.effStack} BB - ${filters.ante === "ON" ? "ante ON" : "ante OFF"} - ` +
@@ -1426,12 +1369,12 @@ function setupTraining(
     renderTable(spot, filters.ante, tableContainer);
     resultContainer.innerHTML = "";
     matrixContainer.innerHTML = "";
-    renderActions(spot, filters.scoringMode);
+    renderActions(spot);
     focusElement(actionsContainer.querySelector<HTMLButtonElement>(".action-btn"));
   }
 
   /** Vykreslí tlačítka nabízených akcí (Req 3.12 — 1 klíč na akci). */
-  function renderActions(spot: Spot, mode: ScoringMode): void {
+  function renderActions(spot: Spot): void {
     actionsContainer.innerHTML = "";
 
     const heading = el("div", "training__actions-title", CS.app.actionsTitle);
@@ -1450,7 +1393,7 @@ function setupTraining(
       const accent = colorForActionKey(answer.key);
       btn.style.setProperty("--action-accent", accent);
       setActionEvButtonContent(btn, answer.label);
-      btn.addEventListener("click", () => handleAnswer(spot, answer.key, mode));
+      btn.addEventListener("click", () => handleAnswer(answer.key));
       row.appendChild(btn);
     }
     actionsContainer.appendChild(row);
@@ -1461,10 +1404,13 @@ function setupTraining(
    * doporučené klíče, vykreslí range matici (Req 10), zaznamená výsledek do
    * Stats_Store PŘED dalším spotem (Req 9.1) a nabídne tlačítko „Další".
    */
-  function handleAnswer(spot: Spot, chosen: ActionKey, mode: ScoringMode): void {
-    if (answered) return; // jedna odpověď na spot.
-    answered = true;
-    const result = grade(spot, chosen, mode);
+  function handleAnswer(chosen: ActionKey): void {
+    // Řadič vyhodnotí odpověď a zapíše ji do statistik PŘED dalším spotem
+    // (Req 9.1); druhou odpověď na tentýž spot odmítne.
+    const outcome = session.answer(chosen);
+    const store = session.rangeStore;
+    if (!outcome || !store) return;
+    const { spot, grade: result } = outcome;
 
     // Zablokuj tlačítka akcí a zvýrazni zvolené.
     const buttons = actionsContainer.querySelectorAll<HTMLButtonElement>(".action-btn");
@@ -1479,45 +1425,26 @@ function setupTraining(
     // Cena vedle EV, ne místo ní. EV říká, co akce vynese; cena, kolik musí
     // vydělat, aby se zaplatila - a je jich víc: přesnou EV má 33,1 % spotů,
     // aspoň jednu cenu 100 %.
-    revealActionPriceLines(buttons, preflopDecisionPrices(spot, activeRangeStore));
-
-    // Vyhodnocení (čisté jádro).
-    const responseMs = elapsedMs(activeQuestionStartedAt);
-
-    // Záznam výsledku PŘED dalším spotem (Req 9.1); selhání ⇒ upozornění (Req 9.6).
-    if (!activeTrainingProfile || !activeRangePack) {
-      throw new Error("Active preflop profile identity is missing.");
-    }
-    const record = buildProfileAwarePreflopResultRecord({
-      spot,
-      chosen,
-      correct: result.correct,
-      profile: activeTrainingProfile,
-      rangePack: activeRangePack,
-      scoringMode: mode,
-      ts: Date.now(),
-      responseMs,
-    });
-    const save = statsStore.record(record);
+    revealActionPriceLines(buttons, preflopDecisionPrices(spot, store));
 
     // Inkrement počtu spotů relace + překreslení dashboardu (Req 9.5).
     hooks.onAnswered();
     hooks.refreshDashboard();
 
-    // The scoreboard counts what the grader decided, so an EQUIVALENT or
-    // ACCEPTABLE outcome is not punished as a mistake - the same distinction the
-    // verdict text makes.
-    recordScore(isHit(result.correct, result.actionEv?.outcome));
+    // Skóre počítá řadič podle toho, co rozhodl hodnotitel: EQUIVALENT
+    // a ACCEPTABLE se netrestají jako chyba, stejně jako to říká verdikt.
+    renderScoreboard();
 
-    // Zobrazení výsledku, zdůvodnění a doporučení.
-    renderResult(spot, result, save.ok, activeFilters);
+    // Zobrazení výsledku, zdůvodnění a doporučení; selhání záznamu ⇒
+    // upozornění (Req 9.6).
+    renderResult(spot, result, outcome.saved, session.filters);
 
     // Range matice pro daný spot (Req 10) + legacy parity modal.
     matrixContainer.innerHTML = "";
-    renderRangeModalButton(spot, activeRangeStore, matrixContainer);
+    renderRangeModalButton(spot, store, matrixContainer);
     const inlineMatrix = el("div", "training__matrix-inline");
     matrixContainer.appendChild(inlineMatrix);
-    renderMatrix(spot, activeRangeStore, inlineMatrix);
+    renderMatrix(spot, store, inlineMatrix);
   }
 
   /** Vykreslí indikaci správnosti, zdůvodnění a doporučené Akční_klíče (Req 7.4). */
@@ -1635,15 +1562,15 @@ function setupTraining(
   }
 
   function advance(): void {
-    if (!iterator) return;
-    const next = iterator.next();
-    if (next.done) {
+    if (!session.spot) return;
+    const next = session.next();
+    if (!next) {
       // Pojistka: neprázdná sekvence cyklí donekonečna, sem bychom se neměli
-      // dostat. Defenzivně relaci ukončíme.
+      // dostat. Řadič relaci ukončil, skryjeme ji i tady.
       gameBox.hidden = true;
       return;
     }
-    showSpot(next.value, filtersView.getFilters());
+    showSpot(next, filtersView.getFilters());
   }
 
   return {

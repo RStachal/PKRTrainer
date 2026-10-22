@@ -187,15 +187,22 @@ Logika tréninku má existovat jednou. Nové GUI ji proto nepíše znovu, ale be
 ji z řadiče, který vznikne vytažením z dnešního kódu. Starý pohled ho začne
 používat první.
 
-1. **Řadič preflopové relace** (`src/ui/trainer/`). Přebere ze `setupTraining`
-   v `main.ts` všechno kromě DOM:
+1. **Řadič preflopové relace** (`src/training/preflopSession.ts`, hotovo
+   22. 10.). Přebírá ze `setupTraining` v `main.ts` všechno kromě DOM:
    - start relace (sekvence spotů a prázdný průnik filtrů i s hloubkami, které
      fungují),
    - odpověď (`grade`, záznam do statistik, skóre relace),
    - další spot.
 
    Že se chování nezměnilo, hlídají dnešní testy toku (`bootstrapIntegration`,
-   `mobileWebViewSmoke`) a `e2e:chrome:preview`.
+   `mobileWebViewSmoke`, `sessionScoreboard`) a `e2e:chrome:preview`.
+   Vlastní testy řadiče (`preflopSession.test.ts`) ověřují hlavně záznam do
+   statistik: je stejný jako ten, který dřív skládal `main.ts`, včetně doby
+   odpovědi.
+
+   Jedna změna je záměrná: dobu odpovědi teď měří řadič hned po kliknutí.
+   Dřív se měřila až po vykreslení bublin s EV a cenových řádků, takže
+   v ní bylo i pár milisekund vykreslování.
 2. **Nová obrazovka tréninku** nad týmž řadičem, podle plátna. Má hlavičku
    spotu, stůl a panel akcí (na mobilu dole, na desktopu klávesy 1–4 a Enter).
    Vyhodnocení ukazuje čip verdiktu, ztrátu EV, EV akcí, pruh strategie, dvě
