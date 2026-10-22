@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { appStylesheet } from "../stylesheets";
+
 /**
  * Zvednuto z 30 s na 90 s dne 25. 8. 2026, a je to potřetí ze stejného důvodu:
  * **vyrostl obsah, ne pomalost kódu.**
@@ -138,9 +140,7 @@ describe("mobile / Android WebView smoke", () => {
     expect(exported).toContain("postflopRecords");
     expect(exported).not.toContain("https://");
 
-    const cssText = Array.from(document.querySelectorAll("style"))
-      .map((style) => style.textContent ?? "")
-      .join("\n");
+    const cssText = appStylesheet();
     expect(cssText.match(/prefers-reduced-motion/g)?.length ?? 0).toBeGreaterThanOrEqual(3);
     expect(cssText).toContain("transform:none");
   });

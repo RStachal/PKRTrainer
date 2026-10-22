@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest";
 
+import { stylesheet } from "../stylesheets";
 import { renderTable } from "../../src/ui/tableRenderer";
 import type { Card, Spot, TableState } from "../../src/core/types";
 
@@ -69,7 +70,7 @@ describe("tableRenderer - DOM vykresleni stolu", () => {
       .toMatch(/%$/);
     expect(root.querySelector<HTMLElement>(".seat--hero")?.style.getPropertyValue("--seat-mobile-left"))
       .toMatch(/%$/);
-    expect(root.querySelector("style")?.textContent).toContain("@media (max-width:640px)");
+    expect(stylesheet("legacy/table.css")).toContain("@media (max-width:640px)");
 
     const pot = root.querySelector<HTMLElement>(".pot");
     expect(pot?.textContent).toBe("Pot: 2.5 BB");

@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest";
+import { stylesheet } from "../stylesheets";
 
 import { renderHHView } from "../../src/ui/hhView";
 import type { PostflopStrategyResolver } from "../../src/core/postflopGenerator";
@@ -260,7 +261,7 @@ describe("hhView - DOM import", () => {
 
     const errors = root.querySelector<HTMLElement>(".hh-errors");
     const unreadable = root.querySelector<HTMLElement>(".hh-unreadable");
-    const css = root.querySelector("style")?.textContent ?? "";
+    const css = stylesheet("legacy/hh-view.css");
     expect(css).toContain("linear-gradient(180deg,rgba(18,25,38,.98)");
     expect(css).toContain("@media (max-width:640px)");
     expect(css).toContain(".hh-analysis__matrix");

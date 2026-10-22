@@ -1,5 +1,6 @@
 ﻿// @vitest-environment jsdom
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { stylesheet } from "../stylesheets";
 
 import { KEY_EVENTS, KEY_HH_REVIEWS, KEY_POSTFLOP_EVENTS } from "../../src/persistence/keys";
 import { APP_LANGUAGE_STORAGE_KEY } from "../../src/ui/cs";
@@ -119,8 +120,8 @@ describe("bootstrap - inicializacni tok", () => {
     bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
 
     expect(root.querySelector(".filters")).not.toBeNull();
-    expect(root.querySelector("style")?.textContent).toContain("@media (max-width:720px)");
-    expect(root.querySelector("style")?.textContent).toContain("profile-selector__note--production");
+    expect(stylesheet("legacy/app-shell.css")).toContain("@media (max-width:720px)");
+    expect(stylesheet("legacy/app-shell.css")).toContain("profile-selector__note--production");
     expect(root.textContent).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
     expect(root.querySelector('[data-tab="postflop"]')).toBeNull();
     expect(Array.from(root.querySelectorAll<HTMLElement>(".app__tab")).map((tab) => tab.textContent))

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
 
+import { stylesheet } from "../stylesheets";
 import { renderPostflopView } from "../../src/ui/postflopView";
 import { solvedStrategySource } from "../../src/data/ranges/solvedStrategySource";
 import { loadSolvedRiverPacks } from "../../src/data/ranges/riverSolvedStrategyPacks";
@@ -926,7 +927,7 @@ describe("postflopView - DOM", () => {
     const root = document.createElement("div");
     renderPostflopView(root);
 
-    const css = root.querySelector("style")?.textContent ?? "";
+    const css = stylesheet("legacy/postflop-view.css");
     expect(css).toContain(".postflop-flopzilla{border:1px solid rgba(123,211,255,.18)");
     expect(css).toContain("linear-gradient(180deg,rgba(12,20,32,.94)");
     expect(css).toContain(".postflop-flopzilla__legend-count");

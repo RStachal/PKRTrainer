@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs";
-
 import { describe, expect, it } from "vitest";
+
+import { stylesheet } from "../stylesheets";
 
 /**
  * Tokeny nového GUI (src/ui/styles/tokens.css) a prvky, které je používají.
@@ -10,8 +10,8 @@ import { describe, expect, it } from "vitest";
  * text) a zaměření aspoň 3:1 proti stránce. Plán: Agents/ui-redesign-plan.md.
  */
 
-const tokensCss = readFileSync(new URL("../../src/ui/styles/tokens.css", import.meta.url), "utf8");
-const componentsCss = readFileSync(new URL("../../src/ui/styles/components.css", import.meta.url), "utf8");
+const tokensCss = stylesheet("tokens.css");
+const componentsCss = stylesheet("components.css");
 
 function withoutComments(css: string): string {
   return css.replace(/\/\*[\s\S]*?\*\//g, "");

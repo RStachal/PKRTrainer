@@ -12,27 +12,6 @@ function decimalsFor(source: ActionEvSet<string>["source"]): number {
   return source === "SOLVED_TREE" ? 1 : 3;
 }
 
-export const ACTION_EV_BUTTON_STYLES = `
-.action-button__label{line-height:1.15;text-align:center;overflow-wrap:anywhere;}
-.action-ev-bubble{box-sizing:border-box;display:grid;grid-template-columns:auto minmax(32px,1fr);
-  align-items:center;gap:8px;width:100%;min-width:0;min-height:24px;padding:6px 1px 0;
-  border-top:1px solid rgba(255,255,255,.13);color:#ddecff;font-size:10px;font-weight:950;
-  font-variant-numeric:tabular-nums;line-height:1;white-space:nowrap;}
-.action-ev-bubble[hidden]{display:grid!important;visibility:hidden;}
-.action-ev-bubble__value{min-width:82px;text-align:left;}
-.action-ev-bubble__meter{display:block;position:relative;height:5px;overflow:hidden;border-radius:3px;
-  background:rgba(148,163,184,.2);box-shadow:inset 0 1px 2px rgba(0,0,0,.28);}
-.action-ev-bubble__fill{display:block;width:var(--action-ev-strength,0%);height:100%;border-radius:inherit;
-  background:#7bd3ff;box-shadow:0 0 8px rgba(123,211,255,.34);transition:width 180ms ease;}
-.action-ev-bubble--best{color:#a8f2c3;border-top-color:rgba(43,213,118,.48);}
-/* Akce, kterou solve nepočítal: zřetelně jiná než číslo, ale ne prázdná. */
-.action-ev-bubble--unsolved{color:#9fb2d5;font-style:italic;font-weight:800;}
-.action-ev-bubble--unsolved .action-ev-bubble__meter{opacity:.25;}
-.action-ev-bubble--best .action-ev-bubble__fill{background:#2bd576;box-shadow:0 0 9px rgba(43,213,118,.42);}
-.action-ev-bubble--chosen .action-ev-bubble__value{text-decoration:underline;text-decoration-color:#7bd3ff;
-  text-decoration-thickness:2px;text-underline-offset:3px;}
-`;
-
 export function setActionEvButtonContent(
   button: HTMLButtonElement,
   label: string,

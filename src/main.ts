@@ -34,6 +34,15 @@
  * _Requirements: 4.6, 12.3, 12.4, 13.4, 14.6_
  */
 
+// Styly starého GUI v pořadí, v jakém dřív ležely ve stránce jako vložené
+// <style> (shell, stůl, statistiky, HH, postflop, dialog range) - pořadí určuje,
+// které pravidlo vyhraje. Mizí s obrazovkami, které nahradí nové GUI.
+import "./ui/styles/legacy/app-shell.css";
+import "./ui/styles/legacy/table.css";
+import "./ui/styles/legacy/dashboard.css";
+import "./ui/styles/legacy/hh-view.css";
+import "./ui/styles/legacy/postflop-view.css";
+import "./ui/styles/legacy/range-modal.css";
 // Tokeny a prvky nového GUI (Agents/ui-redesign-plan.md). Vite je vytáhne do
 // samostatného hashovaného CSS, které prohlížeč cachuje.
 import "./ui/styles/tokens.css";
@@ -125,12 +134,11 @@ import { renderRangeModalButton } from "./ui/rangeModal";
 import { renderHHView } from "./ui/hhView";
 import { renderPostflopView, type PostflopRuntimeNotice } from "./ui/postflopView";
 import {
-  ACTION_EV_BUTTON_STYLES,
   formatActionEvBb,
   revealActionEvButtonBubbles,
   setActionEvButtonContent,
 } from "./ui/actionEvButtonBubbles";
-import { ACTION_PRICE_STYLES, revealActionPriceLines } from "./ui/actionPriceLines";
+import { revealActionPriceLines } from "./ui/actionPriceLines";
 import { preflopDecisionPrices } from "./core/preflopDecisionPrice";
 import {
   CS,
@@ -776,7 +784,6 @@ function buildAppShell(
   root: HTMLElement,
   onLanguageChange: (language: AppLanguage) => void,
 ): AppShell {
-  root.appendChild(appStyles());
 
   const app = el("div", "app");
 
@@ -1769,220 +1776,6 @@ function installGlobalErrorBoundary(root: HTMLElement): void {
       event.reason,
     );
   });
-}
-
-// ---------------------------------------------------------------------------
-// Styly app shellu (sobÄ›staÄŤnĂ©, aby aplikace fungovala i bez externĂ­ho CSS)
-// ---------------------------------------------------------------------------
-
-function appStyles(): HTMLStyleElement {
-  const style = document.createElement("style");
-  style.textContent = `
-:root{color-scheme:dark;}
-/* The felt reads through the whole page rather than stopping at the table.
-   A trainer that looks like a form with a poker table in it is a form; the
-   green is what tells a player at a glance which app they are in. Kept low in
-   saturation so the action colours, which carry meaning, stay the brightest
-   thing on screen. */
-body{margin:0;background:
-  radial-gradient(ellipse at 50% -12%,rgba(34,150,96,.20),rgba(34,150,96,0) 42%),
-  radial-gradient(circle at 12% 8%,rgba(43,213,118,.10),rgba(43,213,118,0) 30%),
-  radial-gradient(circle at 90% 2%,rgba(123,211,255,.09),rgba(123,211,255,0) 32%),
-  linear-gradient(180deg,#08110d,#060c10 46%,#05080e);
-  color:#e8ecf7;font-family:Inter,ui-sans-serif,system-ui,Arial,sans-serif;}
-.app{width:min(100% - 32px,1120px);margin:0 auto;padding:28px 0 56px;}
-.app__header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
-  margin-bottom:18px;padding:4px 0 2px;}
-.app__header-copy{min-width:0;}
-/* Solid, not a gradient. A gradient title needs color:transparent with
-   background-clip, which makes the computed colour transparent - the Chrome
-   accessibility pass measured the h1 at 1:1 against a required 3:1, and any
-   browser without background-clip support would render nothing at all. The
-   felt behind it already carries the colour; the title only has to be read. */
-.app__title{margin:0;font-size:28px;font-weight:950;letter-spacing:0;color:#f8fbff;
-  text-shadow:0 10px 30px rgba(0,0,0,.35);}
-.app__subtitle{margin:6px 0 0;font-size:14px;color:#a8b7d5;}
-.language-switch{display:grid;grid-template-columns:repeat(2,40px);flex:0 0 auto;
-  border:1px solid rgba(148,163,184,.28);border-radius:7px;background:#111827;padding:2px;}
-.language-switch__option{appearance:none;border:0;border-radius:5px;background:transparent;color:#a8b7d5;
-  min-height:30px;padding:4px 7px;font-size:12px;font-weight:900;cursor:pointer;}
-.language-switch__option:hover{color:#f8fbff;background:rgba(255,255,255,.06);}
-.language-switch__option--active{background:#2bd576;color:#082817;}
-.app__notice{margin:10px 0;padding:10px 12px;border-radius:10px;
-  background:rgba(255,209,91,.14);border:1px solid rgba(255,209,91,.45);
-  color:#ffd15b;font-size:13px;}
-.app__notice-line+.app__notice-line{margin-top:6px;}
-.app__tabs{display:flex;gap:8px;border-bottom:1px solid rgba(148,163,184,.16);
-  margin-bottom:18px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:#7bd3ff transparent;}
-.app__tab{appearance:none;border:1px solid transparent;background:transparent;color:#9fb0cf;
-  font-size:14px;font-weight:850;padding:11px 18px;cursor:pointer;border-radius:10px 10px 0 0;
-  border-bottom:3px solid transparent;white-space:nowrap;}
-.app__tab:hover{color:#e8ecf7;background:rgba(255,255,255,.035);}
-.app__tab--active{color:#f8fbff;border-color:rgba(148,163,184,.16);
-  border-bottom-color:#2bd576;background:linear-gradient(180deg,rgba(24,44,36,.92),rgba(13,24,20,.72));
-  box-shadow:0 10px 24px rgba(0,0,0,.22),inset 0 1px 0 rgba(140,240,190,.12);}
-.app__panel{outline:none;}
-.training__filters{background:linear-gradient(180deg,rgba(18,25,38,.98),rgba(10,15,24,.98));
-  border:1px solid rgba(148,163,184,.16);border-radius:16px;padding:18px 20px;margin-bottom:18px;
-  box-shadow:0 24px 70px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.05);}
-.profile-selector{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));
-  gap:12px 14px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid
-  rgba(148,163,184,.14);}
-.profile-selector__title{grid-column:1/-1;font-size:14px;font-weight:950;color:#f8fbff;}
-.profile-selector__field{display:grid;gap:6px;font-size:12px;color:#a8b7d5;font-weight:750;}
-.profile-selector__field select,.filter-scoring,.filter-seed{box-sizing:border-box;min-width:0;background:#151f31;color:#f8fbff;
-  border:1px solid rgba(148,163,184,.24);border-radius:10px;padding:9px 11px;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);}
-.profile-selector__field select:focus,.filter-scoring:focus,.filter-seed:focus{outline:2px solid rgba(43,213,118,.42);
-  outline-offset:1px;border-color:#2bd576;}
-.profile-selector__note{grid-column:1/-1;font-size:12px;color:#b5c3df;line-height:1.4;
-  overflow-wrap:anywhere;border-radius:10px;padding:9px 11px;background:rgba(123,211,255,.06);
-  border:1px solid rgba(123,211,255,.14);}
-.profile-selector__note--production{background:rgba(43,213,118,.08);border-color:rgba(43,213,118,.2);}
-.profile-selector__note--candidate{background:rgba(255,209,91,.08);border-color:rgba(255,209,91,.2);}
-.profile-selector__note--missing{background:rgba(226,59,59,.08);border-color:rgba(226,59,59,.28);}
-.filter-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.filter-section-title{color:#f8fbff;}
-.filter-bulk{display:inline-flex;gap:5px;margin-left:0!important;flex-wrap:wrap;}
-.filter-bulk-all,.filter-bulk-none{appearance:none;border:1px solid rgba(148,163,184,.22);
-  border-radius:8px;background:linear-gradient(180deg,#2a3448,#182235);color:#e8ecf7;
-  font-size:12px;font-weight:850;padding:5px 9px;cursor:pointer;}
-.filter-bulk-all:hover,.filter-bulk-none:hover{border-color:#2bd576;}
-.filter-group{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;}
-.filter-position-item,.filter-bucket-item,.filter-context-item,.filter-ante-item,
-.filter-scoring-item,.filter-seed-item{border-radius:999px;background:rgba(255,255,255,.035);
-  border:1px solid rgba(148,163,184,.13);padding:5px 8px;margin-right:0!important;
-  color:#edf3ff;}
-.filter-group--config .filter-scoring-item,.filter-group--config .filter-seed-item{border-radius:10px;}
-.filter-position,.filter-bucket,.filter-context,.filter-ante{accent-color:#2bd576;}
-.training__game{display:flex;flex-direction:column;gap:16px;}
-.training__session-bar{display:flex;align-items:center;justify-content:space-between;
-  gap:12px;}
-.training__session-info{min-width:0;display:grid;gap:3px;}
-.training__session-title{font-size:15px;font-weight:900;color:#e8ecf7;}
-.training__session-meta{font-size:12px;font-weight:700;color:#9aa6c2;
-  overflow-wrap:anywhere;}
-.training__change-situation{appearance:none;border:1px solid rgba(148,163,184,.24);
-  background:linear-gradient(180deg,#202a3e,#151d2d);color:#e8ecf7;border-radius:10px;font-size:13px;
-  font-weight:850;padding:9px 13px;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.18);}
-.training__change-situation:hover{border-color:#2bd576;}
-.training__scoreboard{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-  margin:0 auto 0 8px;}
-.training__streak{font-size:12px;font-weight:950;letter-spacing:.2px;
-  padding:5px 11px;border-radius:999px;color:#c6d3ea;
-  border:1px solid rgba(148,163,184,.26);background:rgba(255,255,255,.04);
-  transition:color .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease;}
-/* Lit only from three up, so the signal keeps meaning something. */
-.training__streak--hot{color:#0b2a17;border-color:transparent;
-  background:linear-gradient(180deg,#8ef0b4,#2bd576);
-  box-shadow:0 0 0 1px rgba(43,213,118,.35),0 6px 18px rgba(43,213,118,.28);}
-.training__tally{font-size:11px;font-weight:800;color:#9fb2d5;}
-@media (prefers-reduced-motion:reduce){.training__streak{transition:none;}}
-.training__actions-title{font-weight:700;font-size:14px;margin-bottom:8px;}
-.training__actions-row{display:flex;flex-wrap:wrap;gap:8px;}
-.action-btn{appearance:none;position:relative;overflow:hidden;
-  border:1px solid color-mix(in srgb,var(--action-accent,#94a3b8) 42%,transparent);
-  background:
-    linear-gradient(180deg,color-mix(in srgb,var(--action-accent,#94a3b8) 16%,transparent),transparent 62%),
-    linear-gradient(180deg,#202a3f,#141d2f);
-  color:#e8ecf7;font-size:14px;font-weight:900;
-  display:grid;grid-template-rows:minmax(20px,auto) 24px;place-items:center;gap:5px;
-  min-width:156px;min-height:68px;padding:9px 12px;border-radius:8px;cursor:pointer;
-  transition:border-color .12s ease,transform .12s ease,box-shadow .12s ease;
-  box-shadow:0 10px 20px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.06);}
-/* The category stripe. This is the part that has to survive at a glance, so it
-   is the full accent rather than a tint of it. */
-.action-btn::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;
-  background:var(--action-accent,#94a3b8);}
-.action-btn:hover:not(:disabled){border-color:var(--action-accent,#2bd576);
-  transform:translateY(-1px);box-shadow:0 14px 26px rgba(0,0,0,.26),
-  inset 0 1px 0 rgba(255,255,255,.09);}
-.action-btn:active:not(:disabled){transform:translateY(0);}
-@media (prefers-reduced-motion:reduce){
-  .action-btn{transition:none;}
-  .action-btn:hover:not(:disabled){transform:none;}
-}
-.action-btn:disabled{opacity:.55;cursor:default;}
-.action-btn[data-ev-available="true"]:disabled{opacity:1;}
-.action-btn--chosen{outline:2px solid #2bd576;outline-offset:1px;}
-.action-btn--recommended{border-color:#2bd576;background:linear-gradient(180deg,rgba(43,213,118,.28),rgba(43,213,118,.14));}
-${ACTION_EV_BUTTON_STYLES}
-${ACTION_PRICE_STYLES}
-/* The verdict is the moment the player is here for, so it gets a border that
-   states it before any text is read - a stripe down the leading edge in the
-   colour the answer earned. */
-.result{border-radius:12px;padding:14px 16px;border-left-width:4px;
-  animation:result-in .16s ease-out;}
-.result--correct{background:linear-gradient(90deg,rgba(43,213,118,.16),rgba(43,213,118,.06));
-  border:1px solid rgba(43,213,118,.5);border-left:4px solid #2bd576;}
-.result--wrong{background:linear-gradient(90deg,rgba(226,59,59,.16),rgba(226,59,59,.06));
-  border:1px solid rgba(226,59,59,.5);border-left:4px solid #e23b3b;}
-.result__verdict{font-size:18px;font-weight:900;margin-bottom:6px;}
-@keyframes result-in{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
-@media (prefers-reduced-motion:reduce){.result{animation:none;}}
-.result__recommended{font-size:14px;font-weight:700;margin-bottom:6px;}
-.action-ev{margin:8px 0 10px;border-top:1px solid rgba(255,255,255,.12);padding-top:10px;}
-.action-ev__title{margin-bottom:6px;color:#e8ecf7;font-size:11px;font-weight:950;text-transform:uppercase;}
-.action-ev__list{display:grid;gap:4px;}
-.action-ev__row{display:grid;grid-template-columns:minmax(88px,1fr) minmax(72px,auto) minmax(64px,auto);
-  gap:8px;align-items:center;border:1px solid rgba(255,255,255,.1);border-radius:6px;
-  background:rgba(255,255,255,.035);padding:6px 8px;}
-.action-ev__row--best{border-color:rgba(43,213,118,.5);background:rgba(43,213,118,.1);}
-.action-ev__row--chosen{box-shadow:inset 3px 0 0 #7bd3ff;}
-.action-ev__action{font-weight:900;color:#f8fbff;}
-.action-ev__value,.action-ev__delta{font-variant-numeric:tabular-nums;text-align:right;}
-.action-ev__value{color:#e8ecf7;}.action-ev__delta{color:#aebbd3;}
-.action-ev__row--best .action-ev__delta{color:#9ff0bd;font-weight:900;}
-.action-ev__note,.action-ev__unavailable{margin:6px 0 0;color:#aebbd3;font-size:11px;font-weight:650;}
-.result__explanation{font-size:13px;color:#cdd5e6;}
-.decision-price{margin:10px 0 2px;padding:9px 11px;border-radius:10px;
-  background:linear-gradient(180deg,rgba(123,211,255,.09),rgba(123,211,255,.03));
-  border:1px solid rgba(123,211,255,.22);}
-.decision-price__headline{font-size:13px;font-weight:850;color:#e8f4ff;}
-.decision-price__verdict{margin-top:5px;font-size:12px;font-weight:850;color:#ffd15b;}
-.decision-price__verdict--good{color:#8ef0b4;}
-.decision-price__basis{margin-top:5px;font-size:11px;font-weight:750;color:#93a5c4;}
-.result__explanation--unavailable{font-style:italic;color:#9aa6c2;}
-.result__save-warning{margin-top:8px;font-size:12px;color:#ffd15b;}
-.result__next{margin-top:12px;appearance:none;border:0;border-radius:10px;
-  background:#2bd576;color:#0c3526;font-weight:800;font-size:14px;
-  padding:9px 18px;cursor:pointer;}
-.fatal{background:rgba(226,59,59,.12);border:1px solid rgba(226,59,59,.5);
-  border-radius:12px;padding:16px 18px;}
-.fatal__title{font-size:16px;font-weight:900;margin-bottom:6px;color:#ffb4b4;}
-.fatal__message{font-size:13px;color:#e8ecf7;line-height:1.5;}
-.filter-start{appearance:none;border:0;border-radius:12px;background:linear-gradient(180deg,#45e58c,#20bd65);
-  color:#082817;min-height:42px;box-shadow:0 14px 28px rgba(43,213,118,.22),
-  inset 0 1px 0 rgba(255,255,255,.35);}
-.filter-start:hover{filter:brightness(1.04);transform:translateY(-1px);}
-@media (max-width:720px){
-  .app{width:min(100% - 20px,1120px);padding:18px 0 40px;}
-  .app__header{align-items:center;gap:10px;}
-  .app__title{font-size:25px;}
-  .app__subtitle{font-size:13px;}
-  .app__tabs{gap:4px;margin-left:-2px;margin-right:-2px;}
-  .app__tab{padding:10px 13px;font-size:13px;}
-  .training__filters{padding:14px 12px;border-radius:14px;}
-  .profile-selector{grid-template-columns:1fr;gap:10px;}
-  .filter-row{align-items:flex-start;justify-content:space-between;}
-  .filter-group{gap:7px;}
-  .filter-position-item,.filter-bucket-item,.filter-context-item{min-height:32px;}
-  .filter-group--config{align-items:stretch!important;gap:10px!important;}
-  .filter-ante-item,.filter-scoring-item,.filter-seed-item{width:100%;box-sizing:border-box;
-    justify-content:space-between;}
-  .filter-scoring,.filter-seed{width:min(56%,220px);}
-  .filter-start{width:100%;font-size:15px!important;}
-  .training__session-bar{flex-direction:column;align-items:stretch;}
-  .training__change-situation,.action-btn,.result__next{width:100%;}
-  .training__actions-row{display:grid;grid-template-columns:1fr;}
-}
-@media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;
-    animation-duration:.01ms!important;animation-iteration-count:1!important;}
-  .filter-start:hover{filter:none;transform:none;}
-}
-`;
-  return style;
 }
 
 // ---------------------------------------------------------------------------

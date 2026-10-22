@@ -22,13 +22,6 @@ import type { DecisionPrice } from "../core/decisionPrice";
 
 const PRICE_CLASS = "action-price";
 
-export const ACTION_PRICE_STYLES = `
-.action-price{box-sizing:border-box;display:block;width:100%;min-width:0;padding:3px 1px 0;
-  color:#93a4c4;font-size:9px;font-weight:700;font-variant-numeric:tabular-nums;
-  line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.action-price[hidden]{display:block!important;visibility:hidden;}
-`;
-
 function priceNode(button: HTMLButtonElement): HTMLElement {
   const existing = button.querySelector(`.${PRICE_CLASS}`);
   if (existing !== null) return existing as HTMLElement;

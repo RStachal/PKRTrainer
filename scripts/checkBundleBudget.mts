@@ -288,6 +288,18 @@ const MAX_LAZY_MTT_TOTAL_GZIP_KB = numberFromEnv(
 // growth has to be deliberate.
 const MAX_DEFERRED_JS_KB = numberFromEnv("BUNDLE_MAX_DEFERRED_JS_KB", 140);
 const MAX_DEFERRED_GZIP_KB = numberFromEnv("BUNDLE_MAX_DEFERRED_GZIP_KB", 52);
+/**
+ * CSS má vlastní strop od 22. 10. 2026, kdy se styly starého GUI přesunuly
+ * z řetězců v JS do souborů (fáze 0b, Agents/ui-redesign-plan.md). Přesun
+ * stáhl z hlavního JS 55 KiB a bez tohohle stropu by se velikost jen přesunula
+ * mimo kontrolu.
+ *
+ * Naměřeno po přesunu 69,33 KiB syrově a 12,82 KiB gzip. Rezerva je na prvky
+ * nového GUI během přechodu, kdy v balíku žijí obě podoby; staré styly mizí
+ * s obrazovkami, které nové GUI nahradí, takže číslo má spíš klesat.
+ */
+const MAX_PRECACHE_CSS_KB = numberFromEnv("BUNDLE_MAX_PRECACHE_CSS_KB", 80);
+const MAX_PRECACHE_CSS_GZIP_KB = numberFromEnv("BUNDLE_MAX_PRECACHE_CSS_GZIP_KB", 15);
 
 let hasFailure = false;
 
@@ -390,6 +402,27 @@ checkTotalBudget("precache raw JS", precacheRawKb, MAX_PRECACHE_JS_KB);
 checkTotalBudget("precache gzip JS", precacheGzipKb, MAX_PRECACHE_GZIP_KB);
 checkTotalBudget("lazy MTT raw JS", lazyMttRawKb, MAX_LAZY_MTT_TOTAL_JS_KB);
 checkTotalBudget("lazy MTT gzip JS", lazyMttGzipKb, MAX_LAZY_MTT_TOTAL_GZIP_KB);
+
+// Všechno CSS jde do precache: načítá ho main.ts, žádné se nestahuje líně.
+let cssRawKb = 0;
+let cssGzipKb = 0;
+const cssFiles = readdirSync(DIST_ASSETS_DIR)
+  .filter((file) => file.endsWith(".css"))
+  .sort();
+for (const file of cssFiles) {
+  const path = join(DIST_ASSETS_DIR, file);
+  const rawKb = bytesToKiB(statSync(path).size);
+  const gzipKb = bytesToKiB(gzipSync(readFileSync(path)).length);
+  cssRawKb += rawKb;
+  cssGzipKb += gzipKb;
+  console.log(`${file}: raw=${rawKb.toFixed(2)} KiB gzip=${gzipKb.toFixed(2)} KiB`);
+}
+console.log(
+  `precache CSS total: count=${cssFiles.length} raw=${cssRawKb.toFixed(2)} KiB ` +
+    `gzip=${cssGzipKb.toFixed(2)} KiB (max ${MAX_PRECACHE_CSS_KB} / ${MAX_PRECACHE_CSS_GZIP_KB} KiB)`,
+);
+checkTotalBudget("precache raw CSS", cssRawKb, MAX_PRECACHE_CSS_KB);
+checkTotalBudget("precache gzip CSS", cssGzipKb, MAX_PRECACHE_CSS_GZIP_KB);
 
 if (hasFailure) {
   process.exitCode = 1;

@@ -213,6 +213,10 @@ describe("release bundle metadata", () => {
     // pojistka - hlavní je gzip součet (128) a ten má 16 KiB rezervy.
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_JS_KB", 416)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_GZIP_KB", 128)');
+    // CSS má strop od 22. 10. 2026, kdy se styly starého GUI přesunuly z JS do
+    // souborů; naměřeno 69,33 / 12,82 KiB. Zvedat jen s měřením, jako u JS.
+    expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_CSS_KB", 80)');
+    expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_CSS_GZIP_KB", 15)');
     // Zvednuto z 512 na 520 dne 25. 8. 2026, s A/B: `mtt-postflop-pilot-runtime`
     // má 510,80 KiB bez doručení akcí do matice a 513,70 s ním, tedy 2,9 KiB za
     // barvu akce a blafovací lajnu na všech třech ulicích. Kód se nekopíruje do

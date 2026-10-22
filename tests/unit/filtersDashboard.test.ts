@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest";
+import { stylesheet } from "../stylesheets";
 
 import type { Filters } from "../../src/core/types";
 import type { TrainingProfile } from "../../src/core/trainingProfile";
@@ -253,7 +254,7 @@ describe("dashboard - DOM statistiky", () => {
     const root = document.createElement("div");
     renderDashboard({ store, sessionCount: 1 }, root);
 
-    const css = root.querySelector("style")?.textContent ?? "";
+    const css = stylesheet("legacy/dashboard.css");
     expect(css).toContain("linear-gradient(180deg,rgba(18,25,38,.98)");
     expect(css).toContain("@media (max-width:640px)");
     expect(css).toContain(".stats-json-box");
