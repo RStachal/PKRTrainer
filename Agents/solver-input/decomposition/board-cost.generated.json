@@ -1,7 +1,7 @@
 {
-  "measuredAt": "2026-10-22 04:31",
+  "measuredAt": "2026-10-23 04:31",
   "source": "artifacts/decomposition/expansion.log",
-  "solves": 928,
+  "solves": 937,
   "depths": [
     {
       "depthBB": 25,
@@ -17,12 +17,12 @@
     },
     {
       "depthBB": 40,
-      "boards": 149,
-      "median": 27.3,
+      "boards": 158,
+      "median": 27.6,
       "p90": 58.1,
       "max": 85.6,
-      "planMinutes": 27.3,
-      "promiseMinutes": 30.8,
+      "planMinutes": 27.6,
+      "promiseMinutes": 31.4,
       "capMinutes": 90,
       "reserveMinutes": 59,
       "basis": "měřeno"
@@ -247,9 +247,9 @@
     {
       "family": "MTT9_40BB_BTN_BB_SRP",
       "depthBB": 40,
-      "boards": 1,
-      "median": 73.6,
-      "mean": 73.6
+      "boards": 4,
+      "median": 72.2,
+      "mean": 55.4
     },
     {
       "family": "MTT9_40BB_CO_BB_SRP",
@@ -292,6 +292,13 @@
       "boards": 5,
       "median": 58.1,
       "mean": 51.7
+    },
+    {
+      "family": "MTT9_40BB_LJ_BTN_SRP",
+      "depthBB": 40,
+      "boards": 6,
+      "median": 37.3,
+      "mean": 36.5
     },
     {
       "family": "MTT9_40BB_LJ_HJ_SRP",
@@ -545,11 +552,11 @@
     },
     {
       "depthBB": 40,
-      "boards": 149,
-      "intercept": -0.3327,
-      "slope": 0.6084,
-      "smear": 1.1159,
-      "r2": 0.35,
+      "boards": 158,
+      "intercept": -0.2507,
+      "slope": 0.5955,
+      "smear": 1.1156,
+      "r2": 0.34,
       "minWidth": 190,
       "maxWidth": 1300
     },

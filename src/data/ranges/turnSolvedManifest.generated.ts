@@ -276,10 +276,52 @@ export const solvedTurnManifest: readonly SolvedTurnManifestEntry[] = [
     load: () => import("./turn/mtt9-50bb-co-bb-srp-cbet-midspr.generated.json?raw").then((module) => JSON.parse(module.default) as TurnStrategyPack),
   },
   {
+    familyId: "MTT9_50BB_LJ_SB_SRP",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-50bb-lj-sb-srp-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-50bb-lj-sb-srp.generated.json?raw").then((module) => JSON.parse(module.default) as TurnStrategyPack),
+  },
+  {
     familyId: "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
     packId: "mtt-full-ring-9-turn-solved-mtt9-50bb-sb-bb-srp-oop-cbet-midspr-v1",
     profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
     load: () => import("./turn/mtt9-50bb-sb-bb-srp-oop-cbet-midspr.generated.json?raw").then((module) => JSON.parse(module.default) as TurnStrategyPack),
+  },
+  {
+    familyId: "MTT9_50BB_UTG_1_BTN_SRP",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-50bb-utg-1-btn-srp-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-50bb-utg-1-btn-srp.generated.json?raw").then((module) => JSON.parse(module.default) as TurnStrategyPack),
+  },
+  {
+    familyId: "MTT9_50BB_UTG_1_CO_SRP",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-50bb-utg-1-co-srp-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-50bb-utg-1-co-srp.generated.json?raw").then((module) => JSON.parse(module.default) as TurnStrategyPack),
+  },
+  {
+    familyId: "MTT9_50BB_UTG_1_HJ_SRP",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-50bb-utg-1-hj-srp-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-50bb-utg-1-hj-srp.generated.json?raw").then((module) => JSON.parse(module.default) as TurnStrategyPack),
+  },
+  {
+    familyId: "MTT9_50BB_UTG_1_LJ_SRP",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-50bb-utg-1-lj-srp-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-50bb-utg-1-lj-srp.generated.json?raw").then((module) => JSON.parse(module.default) as TurnStrategyPack),
+  },
+  {
+    familyId: "MTT9_50BB_UTG_2_BTN_SRP",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-50bb-utg-2-btn-srp-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-50bb-utg-2-btn-srp.generated.json?raw").then((module) => JSON.parse(module.default) as TurnStrategyPack),
+  },
+  {
+    familyId: "MTT9_50BB_UTG_2_CO_SRP",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-50bb-utg-2-co-srp-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-50bb-utg-2-co-srp.generated.json?raw").then((module) => JSON.parse(module.default) as TurnStrategyPack),
   },
   {
     familyId: "MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR",

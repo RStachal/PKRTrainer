@@ -3408,3 +3408,58 @@ UnicodeDecodeError: 'charmap' codec can't decode byte 0x88 in position 1122: cha
 [06:31:19] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
 [06:31:19] konec okna 2026-10-22T07:00 (vikendovy rozvrh: True)
 [06:31:22] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[21:01:11] napajeni: sit
+[21:01:12] viko na siti: nedelat nic (overeno v registru)
+[21:01:12] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:01:12] konec okna 2026-10-23T07:00 (vikendovy rozvrh: True)
+[21:02:13] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[21:02:13] nastagováno 176 desek bez checkpointu; deadline Fri 23.10. 07:00
+[21:02:13] na disku volno 615.6 GB (hranice 8 GB)
+[21:02:13] stroj se drží vzhůru po dobu běhu
+[21:02:13] napájení: síť
+[21:02:13] cena desky změřena 2026-10-22 04:31 na 928 deskách: 25 bb 6.4 min, 40 bb 27.3 min, 50 bb 23.9 min
+[21:02:13] solving MTT9_40BB_BTN_BB_SRP 883r (vlákna 16)
+[22:32:15]   (stupeň 1 by dal týž strop i přesnost, přeskakuje se)
+[22:32:15]   SELHALO po 90.0 min (rc=timeout); příští noc stupeň 2 - strop 90 min, přesnost 1.0 %
+[22:32:15] solving MTT9_40BB_BTN_BB_SRP 986tt (vlákna 16)
+[23:21:17]   hotovo za 49.0 min, checkpoint 169 MB
+[23:21:17] solving MTT9_40BB_BTN_BB_SRP AT4mono (vlákna 12)
+[23:48:11]   hotovo za 26.9 min, checkpoint 123 MB
+[23:48:11] solving MTT9_40BB_BTN_BB_SRP 742r (vlákna 16)
+[01:18:14]   (stupeň 1 by dal týž strop i přesnost, přeskakuje se)
+[01:18:14]   SELHALO po 90.1 min (rc=timeout); příští noc stupeň 2 - strop 90 min, přesnost 1.0 %
+[01:18:14] solving MTT9_40BB_BTN_BB_SRP K98tt (vlákna 16)
+[01:18:31]   spadlo po 0.3 min (rc=3221225477); zkouším znovu
+[02:30:41]   hotovo za 72.2 min, checkpoint 167 MB (napodruhé)
+[02:30:41] solving MTT9_40BB_LJ_BTN_SRP A72r (vlákna 12)
+[03:19:27]   hotovo za 48.8 min, checkpoint 50 MB
+[03:19:27] solving MTT9_40BB_LJ_BTN_SRP 883r (vlákna 12)
+[03:56:43]   hotovo za 37.3 min, checkpoint 54 MB
+[03:56:43] solving MTT9_40BB_LJ_BTN_SRP 986tt (vlákna 12)
+[04:28:02]   hotovo za 31.3 min, checkpoint 49 MB
+[04:28:02] solving MTT9_40BB_LJ_BTN_SRP AT4mono (vlákna 16)
+[04:42:13]   hotovo za 14.2 min, checkpoint 35 MB
+[04:42:13] solving MTT9_40BB_LJ_BTN_SRP 742r (vlákna 16)
+[05:36:46]   hotovo za 54.5 min, checkpoint 52 MB
+[05:36:46] solving MTT9_40BB_LJ_BTN_SRP K98tt (vlákna 16)
+[06:09:25]   hotovo za 32.7 min, checkpoint 48 MB
+[06:09:25] končím 51 min před deadline: deska potřebuje asi 59
+[06:09:26] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[06:09:26] expansion: hotovo 9, selhalo 2, zbývá 167
+[06:09:26] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[06:09:26] fronta není prázdná, rozkladu okno nepředávám
+[06:31:11] napajeni: sit
+[06:31:11] viko na siti: nedelat nic (overeno v registru)
+[06:31:11] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[06:31:11] konec okna 2026-10-23T07:00 (vikendovy rozvrh: True)
+[06:31:12] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[06:31:12] nastagováno 167 desek bez checkpointu; deadline Fri 23.10. 07:00
+[06:31:12] na disku volno 613.8 GB (hranice 8 GB)
+[06:31:12] stroj se drží vzhůru po dobu běhu
+[06:31:12] napájení: síť
+[06:31:12] cena desky změřena 2026-10-22 04:31 na 928 deskách: 25 bb 6.4 min, 40 bb 27.3 min, 50 bb 23.9 min
+[06:31:12] končím 29 min před deadline: deska potřebuje asi 59
+[06:31:12] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[06:31:12] expansion: hotovo 0, selhalo 0, zbývá 167
+[06:31:12] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[06:31:12] fronta není prázdná, rozkladu okno nepředávám

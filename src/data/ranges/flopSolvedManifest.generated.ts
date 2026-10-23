@@ -264,6 +264,12 @@ export const solvedFlopManifest: readonly SolvedFlopManifestEntry[] = [
     load: () => import("./flop/mtt9-40bb-hj-co-srp.generated.json?raw").then((module) => JSON.parse(module.default) as FlopSolvedStrategyPack),
   },
   {
+    familyId: "MTT9_40BB_LJ_BTN_SRP",
+    packId: "mtt-full-ring-9-flop-solved-mtt9-40bb-lj-btn-srp-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|FLOP",
+    load: () => import("./flop/mtt9-40bb-lj-btn-srp.generated.json?raw").then((module) => JSON.parse(module.default) as FlopSolvedStrategyPack),
+  },
+  {
     familyId: "MTT9_40BB_LJ_HJ_SRP",
     packId: "mtt-full-ring-9-flop-solved-mtt9-40bb-lj-hj-srp-v1",
     profileKey: "FULL_RING_9|REGULAR|CHIP_EV|FLOP",
