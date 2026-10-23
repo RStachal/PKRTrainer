@@ -157,6 +157,16 @@ describe("postflopView - DOM", () => {
     expect(bigGeometry?.querySelectorAll(".postflop-table__bet-chip")).toHaveLength(4);
   });
 
+  it("neprozradí doporučenou velikost před odpovědí", () => {
+    // Ukazatel kreslí doporučenou akci. Viditelný u otázky by hráči řekl
+    // odpověď dřív, než ji dá.
+    const root = renderGeneratedSpot(1, "FLOP");
+    const geometry = root.querySelector<HTMLElement>(".postflop-table__bet-geometry");
+    expect(geometry?.hidden).toBe(true);
+    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+    expect(geometry?.hidden).toBe(false);
+  });
+
   it("zobrazi explicitni akci predchoziho hrace v IP c-bet spotu", () => {
     const root = document.createElement("div");
     renderPostflopView(root, {

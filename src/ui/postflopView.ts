@@ -852,6 +852,10 @@ function betGeometry(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
   geometry.dataset.betBB = String(sizing.betBB);
   geometry.style.setProperty("--bet-size", `${Math.round(sizing.ratio * 100)}%`);
   geometry.setAttribute("aria-label", sizing.ariaLabel);
+  // Ukazatel kreslí **doporučenou** akci, takže před odpovědí by ji prozradil:
+  // od 8. 6. 2026 stál uprostřed stolu „Malý bet 2 BB“ dřív, než hráč
+  // odpověděl. Místo zůstává obsazené (styl), ukáže se až s vyhodnocením.
+  geometry.hidden = true;
 
   const track = doc.createElement("div");
   track.className = "postflop-table__bet-track";
@@ -1219,6 +1223,8 @@ function showResult(
   // Cena dorovnání ze skutečné linie, kterou solver hrál. Na flopu a turnu je
   // to jediné číslo, které tam být může: EV se tam spočítat nedá (bod 131).
   revealActionPriceLines(buttons, postflopDecisionPrices(spot));
+  const geometry = root.querySelector<HTMLElement>(".postflop-table__bet-geometry");
+  if (geometry) geometry.hidden = false;
 
   const result = root.querySelector<HTMLElement>(".postflop-result");
   if (!result) return;
