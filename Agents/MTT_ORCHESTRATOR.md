@@ -657,6 +657,15 @@ níž, se hlásí jako ztrátová, i když všechny ostatní brány svítí zele
    tabulku velikostí sázek, takže se otisk sdílených vstupů změnil a
    přegenerovalo se všech 58 rodin.
 
+   **23. 10. 2026: tohle přegenerování bylo zbytečné celé.** Tabulku velikostí
+   sázek žádný generátor packů neimportuje ani nečte; čte ji jen aplikace za
+   běhu. V ručním seznamu sdílených vstupů byla omylem, takže každá noc, která
+   dokončila rodinu, přegenerovala ráno všechno - 23. 10. 83 rodin přes dvě
+   hodiny a ranní brána se nestihla spustit. Seznamu přitom chybělo 17 modulů,
+   ze kterých generátory pravidla opravdu staví. Sdílené vstupy jsou od té doby
+   graf importů generátorů zjištěný z esbuild (`packGeneratorInputs`
+   v `scripts/lib/packInputs.mts`), ne ruční seznam.
+
    Rozdíl byl v **paměti**:
 
    | | 7. 10. | 8. 10. |

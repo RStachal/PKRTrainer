@@ -15,8 +15,8 @@
  *
  * Tvrzení je „tenhle pack byl postavený z těchto sdílených vstupů". Dokazuje se
  * časem: bere se jen pack, který je **novější než zadaná hranice** (`--since`),
- * tedy vznikl v běhu, o kterém se ví, že jel proti dnešnímu obsahu
- * `postflopBetSizing.generated.ts` i dnešním generátorům.
+ * tedy vznikl v běhu, o kterém se ví, že jel proti dnešním generátorům (jejich
+ * graf importů, `packGeneratorInputs`).
  *
  * Proto se **nesmí** seedovat všechno, co na disku leží: ranní cyklus 7. 10. 2026
  * jednu kombinaci rodina+ulice odmítl, takže jeden pack je starý. Kdyby se
@@ -32,6 +32,7 @@ import { join } from "node:path";
 import {
   PACK_INPUTS_PATH,
   newestCheckpointMs,
+  packGeneratorInputs,
   packSlug,
   sharedInputsHash,
   type PackInputsRecord,
@@ -59,7 +60,7 @@ if (Number.isNaN(sinceMs)) {
   process.exit(2);
 }
 
-const shared = sharedInputsHash();
+const shared = sharedInputsHash(await packGeneratorInputs());
 const record: Record<string, PackInputsRecord> = (() => {
   try {
     return JSON.parse(readFileSync(PACK_INPUTS_PATH, "utf8")) as Record<string, PackInputsRecord>;

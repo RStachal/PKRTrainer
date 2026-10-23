@@ -6,7 +6,7 @@
  * u hráče a nic o tom nezakřičí. Každý test proto říká, na kterou stranu se
  * v tom případě musí mýlit.
  */
-import { mkdirSync, mkdtempSync, utimesSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -17,6 +17,7 @@ import {
   newestCheckpointMs,
   newestRiverLayerMs,
   newestTurnLayerMs,
+  packGeneratorInputs,
   packSlug,
   sharedInputsHash,
   type PackInputsRecord,
@@ -222,8 +223,8 @@ describe("sharedInputsHash", () => {
   });
 
   it("se nezmění, když se přepíše tentýž obsah", () => {
-    // Přesně tohle dělá cyklus s tabulkou velikostí sázek každé ráno. Kdyby
-    // otisk šel podle času zápisu, nepřeskočilo by se nikdy nic.
+    // Generované soubory se přepisují i beze změny obsahu. Kdyby otisk šel
+    // podle času zápisu, nepřeskočilo by se nikdy nic.
     const root = mkdtempSync(join(tmpdir(), "shared-same-"));
     const file = join(root, "a.ts");
     writeFileSync(file, "stejny", "utf8");
@@ -239,6 +240,30 @@ describe("sharedInputsHash", () => {
     const empty = join(root, "prazdny.ts");
     writeFileSync(empty, "", "utf8");
     expect(sharedInputsHash([missing])).not.toBe(sharedInputsHash([empty]));
+  });
+});
+
+describe("packGeneratorInputs", () => {
+  it("bere graf importů generátorů i s moduly, ze kterých stavějí pravidla", async () => {
+    // Do 23. 10. 2026 je ruční seznam vynechával, takže jejich změna by
+    // nechala packy tiše zastaralé.
+    const inputs = await packGeneratorInputs();
+    expect(inputs).toEqual(expect.arrayContaining([
+      "scripts/buildFlopStrategyPacks.mts",
+      "scripts/buildTurnStrategyPacks.mts",
+      "scripts/buildRiverStrategyPacks.mts",
+      "src/data/ranges/turnStrategyRuleBuilder.ts",
+      "src/core/riverActionEv.ts",
+    ]));
+    for (const path of inputs) expect(existsSync(path), path).toBe(true);
+  });
+
+  it("nebere tabulku velikostí sázek - čte ji aplikace, ne generátor", async () => {
+    // Ruční seznam ji měl, a každá nová rodina tak ráno přegenerovala všechny
+    // packy (23. 10. 2026: 83 rodin přes dvě hodiny).
+    const inputs = await packGeneratorInputs();
+    expect(inputs).not.toContain("src/data/ranges/postflopBetSizing.generated.ts");
+    expect(inputs.some((path) => path.includes("node_modules"))).toBe(false);
   });
 });
 

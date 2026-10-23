@@ -40,9 +40,10 @@
  *
  * ## Čím se to řídí, a proč ne časem
  *
- * Čas zápisu nestačí: tabulku velikostí sázek cyklus **přepisuje každé ráno**,
- * takže by byla vždycky novější než každý pack a brána by nikdy nic nepřeskočila.
- * Rozhoduje proto obsah - `sha1` sdílených vstupů - plus čas checkpointů té
+ * Čas zápisu nestačí: generované soubory cyklus **přepisuje každé ráno**, i když
+ * se jejich obsah nezmění, takže by byly vždycky novější než každý pack a brána
+ * by nikdy nic nepřeskočila. Rozhoduje proto obsah - `sha1` sdílených vstupů
+ * (graf importů generátorů, `packGeneratorInputs`) - plus čas checkpointů té
  * jedné rodiny. Je to táž zásada, jakou projekt zjistil u dodávky packů: počítat
  * se musí **otisk pravidel**, ne jejich počet, protože třináct packů změnilo
  * strategii při nezměněném počtu.
@@ -59,30 +60,64 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
+import { build } from "esbuild";
+
 /** Kde leží záznam o tom, z čeho byl pack naposled postavený. Gitignorováno schválně:
  * po čerstvém checkoutu se má vygenerovat všechno, ne věřit cizímu záznamu. */
 export const PACK_INPUTS_PATH = "artifacts/pack-inputs.json";
 
-/**
- * Sdílené vstupy, které mění **každý** pack. Hashuje se obsah, ne čas.
- *
- * Tabulka velikostí sázek je data; generátory jsou kód. Obojí se do packu
- * promítá, takže obojí musí být v otisku - jinak by změna generátoru nechala
- * všechny packy ležet.
- */
-export const SHARED_INPUTS: readonly string[] = [
-  "src/data/ranges/postflopBetSizing.generated.ts",
+/** Generátory packů. Sdílený vstup všech packů je jejich graf importů. */
+export const PACK_GENERATORS: readonly string[] = [
   "scripts/buildFlopStrategyPacks.mts",
   "scripts/buildTurnStrategyPacks.mts",
   "scripts/buildRiverStrategyPacks.mts",
-  // Výběr riverových pravidel do rozpočtu; vytažený z generátoru 20. 10. 2026,
-  // a bez téhle řádky by jeho změna žádný pack nepřegenerovala.
-  "scripts/lib/riverRuleBudget.mts",
-  "scripts/lib/solvedPackBuilding.mts",
-  "scripts/lib/postflopBetActionMapping.mts",
 ];
 
-export function sharedInputsHash(files: readonly string[] = SHARED_INPUTS): string {
+/**
+ * Sdílené vstupy, které mění **každý** pack: soubory, ze kterých se generátory
+ * skládají, podle grafu importů (esbuild), ne podle ručně psaného seznamu.
+ *
+ * Ruční seznam se do 23. 10. 2026 rozešel s kódem oběma směry:
+ *
+ * - **Obsahoval tabulku velikostí sázek, kterou žádný generátor nečte** - čte ji
+ *   jen aplikace za běhu. Každá noc, která dokončila rodinu a přidala do
+ *   tabulky řádek, proto ráno přegenerovala všechny packy: 8. 10. 58 rodin za
+ *   45 min, 23. 10. 83 rodin přes dvě hodiny, a ranní brána se kvůli tomu
+ *   nestihla spustit. Totéž `postflopBetActionMapping.mts`.
+ * - **Chybělo v něm 17 modulů, ze kterých generátory pravidla skutečně staví**
+ *   (`*StrategyRuleBuilder`, `riverActionEv`, `evCodec`, ...). Jejich změna by
+ *   nechala packy tiše zastaralé.
+ *
+ * Data, která generátor čte z disku (checkpointy, vrstvy rozkladu, verdikty),
+ * v grafu nejsou a nemají být - hlídá je záznam každé rodiny zvlášť. Importy
+ * `?raw` jsou data, ne kód, a zůstávají mimo stejně jako balíčky z node_modules.
+ */
+export async function packGeneratorInputs(
+  entries: readonly string[] = PACK_GENERATORS,
+): Promise<string[]> {
+  const result = await build({
+    entryPoints: [...entries],
+    bundle: true,
+    platform: "node",
+    format: "esm",
+    write: false,
+    metafile: true,
+    outdir: "pack-generator-graph",
+    packages: "external",
+    logLevel: "silent",
+    plugins: [{
+      name: "raw-imports-are-data",
+      setup(graph) {
+        graph.onResolve({ filter: /\?raw$/ }, (args) => ({ path: args.path, external: true }));
+      },
+    }],
+  });
+  return Object.keys(result.metafile.inputs)
+    .map((path) => path.split("\\").join("/"))
+    .sort();
+}
+
+export function sharedInputsHash(files: readonly string[]): string {
   const hash = createHash("sha1");
   for (const file of files) {
     // Chybějící soubor se do otisku zapíše jako chybějící, ne přeskočí: kdyby

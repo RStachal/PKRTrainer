@@ -15,6 +15,7 @@ import {
   newestDecompositionMs,
   newestRiverLayerMs,
   newestTurnLayerMs,
+  packGeneratorInputs,
   sharedInputsHash,
   type PackInputsRecord,
 } from "./lib/packInputs.mts";
@@ -591,7 +592,7 @@ function readPackInputs(): Record<string, PackInputsRecord> {
 async function generateAll(list: readonly string[], label: string): Promise<void> {
   const startedAll = Date.now();
   const { lanes, heapMb, freeGb } = laneBudget();
-  const sharedHash = sharedInputsHash();
+  const sharedHash = sharedInputsHash(await packGeneratorInputs());
   const packInputs = readPackInputs();
   // Verdikty, které generátor teď přečte. Pack z nich bere důvěru, takže patří
   // mezi vstupy; snímek se bere jednou, před generováním, aby záznam říkal
@@ -856,17 +857,18 @@ if (!write) {
   if (turnEvOnly) console.log("\n--turn-ev-only: packy se negenerují, jde se rovnou na turnovou EV");
   else if (streetsWanted.size === 0) console.log("\nžádná ulice ke generování, jde se rovnou na turnovou EV");
   /*
-   * Tabulka velikostí sázek se obnovuje **před** generováním packů.
+   * Tabulka velikostí sázek se obnovuje v každém cyklu.
    *
    * `postflopBetSizing.generated.ts` se odvozuje z checkpointů, takže každá noc,
-   * která dosolví desku v nové rodině, ji nechá zastaralou - a packy se pak
-   * generují proti tabulce, která tu rodinu nezná. Do 6. 10. 2026 to cyklus
+   * která dosolví desku v nové rodině, ji nechá zastaralou - a aplikace pak
+   * kreslí tlačítka sázek rodině, kterou tabulka nezná. Do 6. 10. 2026 to cyklus
    * nedělal a chytala to až brána: `postflopBetSizing.test.ts` zčervenal ráno
-   * 6. 10., protože noc přidala tři rodiny na 40 bb. Dvakrát za dva dny, takže
-   * to není náhoda, ale chybějící krok.
+   * 6. 10., protože noc přidala tři rodiny na 40 bb.
    *
-   * Pořadí je podstatné: packy nesou velikosti z téhle tabulky, takže obnovit ji
-   * po generování by znamenalo pack z jedné verze a tabulku z druhé.
+   * Packy na tabulce nezávisí: žádný generátor ji neimportuje ani nečte
+   * (změřeno grafem importů 23. 10. 2026, viz `packGeneratorInputs`). Do té
+   * doby tu stálo, že packy nesou velikosti z tabulky - to neplatilo a stálo to
+   * celé přegenerování každé ráno po nové rodině.
    */
   if (!generateNothing) {
     // Prázdný řádek zvlášť, ne `\n` v šabloně - stejný důvod jako v
