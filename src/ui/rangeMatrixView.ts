@@ -50,6 +50,7 @@
  * _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
  */
 
+import type { PostflopAction } from "../core/postflopGenerator";
 import type { ActionKey, HandLabel, Spot } from "../core/types";
 import { GRID_SIZE, RANKS, handLabel } from "../core/poker";
 import type { RangeEntry, RangeKey, RangeStore } from "../data/rangeStore";
@@ -259,6 +260,30 @@ export function categoryForActionKey(key: ActionKey): ActionCategory {
  */
 export function colorForActionKey(key: ActionKey): string {
   return CATEGORIES[categoryForActionKey(key)].color;
+}
+
+/**
+ * Postflopová akce v kategorii preflopu, která znamená totéž: check jako limp
+ * (pasivní vstup), malá sázka jako otevření, velká jako 3bet, raise jako 4bet.
+ */
+const POSTFLOP_CATEGORY: Record<PostflopAction, ActionCategory> = {
+  CHECK: "LIMP",
+  BET_SMALL: "OPEN",
+  BET_BIG: "3BET",
+  CALL: "CALL",
+  RAISE: "4BET",
+  FOLD: "FOLD",
+};
+
+/**
+ * Barva postflopové akce - z téže palety jako preflop (23. 10. 2026, nové GUI).
+ *
+ * Postflop barvy akcí dosud neměl. Vlastní paleta by porušila zásadu „jedna
+ * barva pro jeden význam“ a obešla by odstup od palety zdroje, který hlídá
+ * `rangeMatrixPalette.test.ts`; proto se bere existující kategorie.
+ */
+export function colorForPostflopAction(action: PostflopAction): string {
+  return CATEGORIES[POSTFLOP_CATEGORY[action]].color;
 }
 
 export function categoryForHand(keys: ActionKey[] | undefined): ActionCategory {

@@ -123,8 +123,9 @@ describe("tokeny vzhledu", () => {
 describe("prvky nad tokeny", () => {
   it("odkazují jen na tokeny, které existují", () => {
     const defined = new Set([...tokens.keys(), ...declaredProperties(componentsCss).keys()]);
-    // Barvu akce nastavuje kód z jediného zdroje barev akcí, ne CSS.
-    defined.add("--action-accent");
+    // Nastavuje je kód, ne CSS: barvu akce z jediného zdroje barev akcí,
+    // polohu sedadla z geometrie stolu.
+    for (const name of ["--action-accent", "--seat-x", "--seat-y"]) defined.add(name);
     const used = [...withoutComments(componentsCss + tokensCss).matchAll(/var\((--[a-z0-9-]+)/gi)]
       .map((match) => match[1]);
     expect(used.filter((name) => !defined.has(name))).toEqual([]);

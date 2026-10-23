@@ -403,6 +403,10 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   const postflopLineStatsStore = createPostflopLineStatsStore(storage);
   const hhReviewStore = createHHReviewStore(storage);
 
+  // Nové GUI tréninku je za přepínačem, dokud neprojde E2E (fáze 1 redesignu).
+  // Čte se tady, protože postflopový panel se vykresluje dřív než trénink.
+  const nextUi = isNextUiEnabled(typeof location === "undefined" ? "" : location.search, storage);
+
   // Statistiky (dashboard) a HH import jsou dostupné nezávisle na Range_Store.
   let sessionCount = 0;
   let currentPostflopProfile: TrainingProfile | undefined;
@@ -534,6 +538,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       initialPotBB: postflopIntent?.potBB,
       initialEffectiveStackBB: postflopIntent?.effectiveStackBB,
       autoGenerate: options.autoGenerate === true,
+      nextUi,
       runtimeNotice,
       strategyResolver: runtimeProfileForView
         ? (input) => postflopRuntime?.resolver?.(input) ?? null
@@ -709,8 +714,6 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   renderPostflopPanel();
 
   // --- Krok 3: filtry + tréninková smyčka (Req 13.4) ---
-  // Nové GUI tréninku je za přepínačem, dokud neprojde E2E (fáze 1 redesignu).
-  const nextUi = isNextUiEnabled(typeof location === "undefined" ? "" : location.search, storage);
   const trainingController = setupTraining(shell, statsStore, {
     onAnswered: () => {
       sessionCount += 1;

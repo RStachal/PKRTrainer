@@ -1,8 +1,14 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
 
+import { POSTFLOP_ACTIONS } from "../../src/core/postflopGenerator";
 import type { ActionKey } from "../../src/core/types";
-import { categoryForActionKey, colorForActionKey } from "../../src/ui/rangeMatrixView";
+import {
+  RANGE_MATRIX_COLORS,
+  categoryForActionKey,
+  colorForActionKey,
+  colorForPostflopAction,
+} from "../../src/ui/rangeMatrixView";
 
 // The matrix has always coloured its cells by action category while the action
 // buttons were uniformly grey, so nothing tied the button a player pressed to the
@@ -40,5 +46,16 @@ describe("action colour", () => {
     }
     expect(colorForActionKey("JAM" as ActionKey))
       .not.toBe(colorForActionKey("CALL_JAM" as ActionKey));
+  });
+
+  it("dává postflopovým akcím barvy z téže palety, každé jinou", () => {
+    // Jedna barva pro jeden význam: call je modrý na preflopu i postflopu,
+    // a paleta zůstává ta, kterou hlídá odstup od zdroje.
+    const palette = new Set(Object.values(RANGE_MATRIX_COLORS));
+    const colours = POSTFLOP_ACTIONS.map(colorForPostflopAction);
+    for (const colour of colours) expect(palette.has(colour)).toBe(true);
+    expect(new Set(colours).size).toBe(POSTFLOP_ACTIONS.length);
+    expect(colorForPostflopAction("CALL")).toBe(colorForActionKey("CALL" as ActionKey));
+    expect(colorForPostflopAction("FOLD")).toBe(colorForActionKey("FOLD" as ActionKey));
   });
 });

@@ -7,6 +7,15 @@ import type { TranslatedAction } from "./turnActionTranslation";
 export type SolvedBetSizing = PostflopSolvedBetSizing;
 
 /**
+ * Velikost za tlačítkem, když ji solve nenese: modelová třetina a tři čtvrtiny
+ * potu. Je to záloha, ne odhad vyřešené velikosti - viz `solvedBetSizing`.
+ */
+export const MODEL_BET_RATIO: Readonly<Record<"BET_SMALL" | "BET_BIG", number>> = {
+  BET_SMALL: 0.33,
+  BET_BIG: 0.75,
+};
+
+/**
  * Jakou velikost sázky solve za tlačítkem skutečně hrál, když ji známe.
  *
  * ## Proč to bydlí tady, a ne v pohledu

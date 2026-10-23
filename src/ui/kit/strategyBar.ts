@@ -9,10 +9,22 @@ export interface StrategySegment {
   color: string;
 }
 
-/** Celé procento, v češtině s mezerou před znakem procenta. */
+/**
+ * Celé procento, v češtině s nezlomitelnou mezerou před znakem procenta.
+ * Zapsaná escapem, protože v editoru vypadá jako obyčejná a přepis ji ztratí.
+ */
 export function formatSharePercent(share: number): string {
   const percent = Math.round(share * 100);
-  return localizedText(`${percent}%`, `${percent} %`);
+  return localizedText(`${percent}%`, `${percent}\u00a0%`);
+}
+
+/** Segmenty s kladným podílem a jejich součet; pruh i legenda čtou totéž. */
+function visibleSegments(segments: readonly StrategySegment[]): {
+  visible: readonly StrategySegment[];
+  total: number;
+} {
+  const visible = segments.filter((segment) => Number.isFinite(segment.share) && segment.share > 0);
+  return { visible, total: visible.reduce((sum, segment) => sum + segment.share, 0) };
 }
 
 /**
@@ -26,8 +38,7 @@ export function strategyBar(
   segments: readonly StrategySegment[],
   options: { label?: string } = {},
 ): HTMLDivElement {
-  const visible = segments.filter((segment) => Number.isFinite(segment.share) && segment.share > 0);
-  const total = visible.reduce((sum, segment) => sum + segment.share, 0);
+  const { visible, total } = visibleSegments(segments);
 
   const bar = doc.createElement("div");
   bar.className = "dx-strategy-bar";
@@ -48,4 +59,30 @@ export function strategyBar(
     bar.appendChild(part);
   }
   return bar;
+}
+
+/**
+ * Legenda k pruhu: barva, akce a podíl. Pruh popisky nemá, protože úzký
+ * segment by je neunesl. Čtečka má totéž v popisu pruhu, a tak legendu
+ * přeskočí, aby neslyšela každé číslo dvakrát.
+ */
+export function strategyLegend(doc: Document, segments: readonly StrategySegment[]): HTMLUListElement {
+  const { visible, total } = visibleSegments(segments);
+
+  const list = doc.createElement("ul");
+  list.className = "dx-strategy-legend";
+  list.setAttribute("aria-hidden", "true");
+  for (const segment of visible) {
+    const item = doc.createElement("li");
+    item.className = "dx-strategy-legend__item";
+    const swatch = doc.createElement("span");
+    swatch.className = "dx-strategy-legend__swatch";
+    swatch.style.setProperty("--action-accent", segment.color);
+    const share = doc.createElement("span");
+    share.className = "dx-strategy-legend__share";
+    share.textContent = formatSharePercent(segment.share / total);
+    item.append(swatch, `${segment.label} `, share);
+    list.appendChild(item);
+  }
+  return list;
 }

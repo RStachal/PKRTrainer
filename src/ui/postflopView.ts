@@ -1,10 +1,8 @@
 import { revealActionPriceLines } from "./actionPriceLines";
 import { postflopDecisionPrices } from "../core/postflopDecisionPrice";
 import {
-  generatePostflopSpot,
   POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS,
   PostflopStrategyUnavailableError,
-  type BoardTexture,
   type PostflopAction,
   type PostflopHeroRangeBucket,
   type PostflopPositionContext,
@@ -21,14 +19,11 @@ import {
 } from "../core/postflopLineSimulator";
 import {
   postflopSpotToTrainingSpot,
+  villainActionBeforeHero,
   type PostflopActionNode,
   type PostflopTrainingSpot,
 } from "../core/postflopTrainingSpot";
 import { createDefaultPostflopStrategyResolver } from "../data/ranges/postflopStrategyRegistry";
-import {
-  mttPostflopPilotScopeForInput,
-  resolvingMttPostflopPilotScopes,
-} from "../data/ranges/mttPostflopPilotRuntime";
 import {
   pickSolvedTurnSpot,
   solvedTurnSpotConfig,
@@ -38,16 +33,13 @@ import {
   pickSolvedRiverSpot,
   solvedRiversForTurnBoard,
 } from "../data/ranges/solvedRiverSpotCatalogue";
-import {
-  cataloguePatternFor,
-  primeRiverEvForSeed,
-  primeTurnEvForSeed,
-  selectedActionNode,
-  solvedFlopConfigForSeed,
-  solvedRiverConfigForSeed,
-  solvedTurnConfigForSeed,
-} from "../data/ranges/solvedSpotDealing";
+import { selectedActionNode } from "../data/ranges/solvedSpotDealing";
 import { primeRiverEvForPack } from "../data/ranges/riverEvPrefetch";
+import {
+  dealPostflopSpot,
+  isResolvingPilotSpot,
+  primePostflopDeal,
+} from "../training/postflopDeal";
 import { mulberry32 } from "../core/rng";
 import { RANKS, SUITS } from "../core/poker";
 import { POSITION_ORDER, type Card, type Position, type Suit } from "../core/types";
@@ -61,6 +53,11 @@ import {
   type FlopzillaLane,
 } from "./postflopRangeMatrixView";
 import { CS, getAppLanguage, localizedText } from "./cs";
+import { postflopModelNotes, textureLabel } from "./postflopModelNotes";
+import {
+  createPostflopTrainerView,
+  type PostflopTrainerView,
+} from "./trainer/postflopTrainerView";
 import { solvedBetSizing, type SolvedBetSizing } from "../data/ranges/solvedBetSizing";
 import { gradePostflopAction, type PostflopGrade } from "../core/postflopScoring";
 import {
@@ -108,7 +105,15 @@ export interface PostflopViewOptions {
     chosen: PostflopAction,
     responseMs?: number,
   ) => void;
+  /**
+   * Jednotlivý spot kreslí nová obrazovka (Agents/ui-redesign-plan.md, fáze 1,
+   * krok 3b). Rozdání, nastavení i linka zůstávají tady; linka do kroku 3c.
+   */
+  nextUi?: boolean;
 }
+
+/** Nová obrazovka panelu; při dalším vykreslení panelu se odpojí. */
+const NEXT_VIEWS = new WeakMap<HTMLElement, PostflopTrainerView>();
 
 export interface PostflopRuntimeNotice {
   kind: "SCOPED_PILOT" | "LOCKED_PILOT" | "PRODUCTION" | "PREVIEW" | "DEEP_STACK_UNCOVERED";
@@ -132,22 +137,6 @@ const POT_TYPE_LABEL: Record<PostflopPotType, string> = {
   SINGLE_RAISED: "SRP",
   THREE_BET_POT: "3bet pot",
   LIMPED_POT: "limped pot",
-};
-
-const TEXTURE_LABEL: Record<BoardTexture, string> = {
-  paired: "Paired",
-  monotone: "Monotone",
-  "two-tone": "Two-tone",
-  rainbow: "Rainbow",
-  connected: "Connected",
-  dry: "Dry",
-  "ace-high": "A-high",
-  "broadway-high": "Broadway-high",
-  low: "Low",
-  medium: "Medium",
-  "straight-possible": "Straight possible",
-  "flush-draw-heavy": "Flush-draw heavy",
-  disconnected: "Disconnected",
 };
 
 const SUIT_SYMBOL: Record<Suit, string> = {
@@ -184,6 +173,8 @@ function focusElement(element: HTMLElement | null): void {
 
 export function renderPostflopView(root: HTMLElement, options: PostflopViewOptions = {}): void {
   const doc = root.ownerDocument ?? document;
+  NEXT_VIEWS.get(root)?.destroy();
+  NEXT_VIEWS.delete(root);
   root.innerHTML = "";
 
   const wrap = doc.createElement("div");
@@ -314,6 +305,21 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
     focusElement(streetSelect);
   };
 
+  // Nová obrazovka vzniká s prvním spotem a drží skóre relace, dokud se panel
+  // nevykreslí znovu.
+  let trainerView: PostflopTrainerView | null = null;
+  const nextView = (): PostflopTrainerView => {
+    if (trainerView === null) {
+      trainerView = createPostflopTrainerView(doc, {
+        onNext: () => void showNewSpot(),
+        onChangeSituation: showSituationInput,
+        onAnswered: (spot, chosen, responseMs) => options.onAnswered?.(spot, chosen, responseMs),
+      });
+      NEXT_VIEWS.set(root, trainerView);
+    }
+    return trainerView;
+  };
+
   const showNewSpot = async (): Promise<void> => {
     const seed = parseSeed(seedInput.value) ?? randomSeed();
     // Seed je jednorázový vstup pro reprodukci konkrétní situace. Po použití
@@ -368,112 +374,46 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
         return;
       }
 
-      // `street` a `actionNode` se počítají nad `try` (viz tam): ví o nich
-      // i větev, která spot odmítne.
-      // A solved turn answers one board and refuses every other, so dealing at
-      // random reaches it about never - the content being unreachable and the
-      // resolver being broken look identical from the player's side. When solved
-      // turns are loaded and the player has not pinned the situation themselves,
-      // deal one of them.
-      //
-      // Only one that answers the decision the player asked for. Overriding the
-      // situation selector to reach solved content would answer a question they
-      // did not ask, which is a worse failure than falling back to a heuristic on
-      // the question they did.
-      /*
-       * Katalog se používá **vždy**, i když si hráč situaci vybral.
-       *
-       * Do 14. 10. 2026 tu stálo `dealsSolved = initialPositionContext == null`,
-       * tedy katalog se obcházel, jakmile si hráč něco vybral - a deska se
-       * losovala. Změřeno (`npm run mtt:picked-situation`, 300 spotů na ulici):
-       * matice se tím barvila podle akce v **0,0 %** spotů proti 100 % na
-       * katalogové cestě, a cena akce na flopu klesla z 31,3 % na nulu.
-       * Odpovídal texturový pilot, který `rangeBuckets` nenese, takže matice
-       * přepnula na sílu ruky - správné chování, ale jiná osa, než na jakou se
-       * hráč ptá.
-       *
-       * Vyřešený obsah přitom pro **35 z 61** nabízených situací existuje
-       * (`npm run mtt:catalogue-situations`). Stačí tedy katalog filtrovat
-       * podle vybraného vzoru místo obcházení; když pro ten vzor nic nemá,
-       * vrátí `undefined` a spadne se na dosavadní chování s losovanou deskou.
-       */
-      // Vzor pro katalog, ne vzor kontextu: filtry u obrany blindu dávají hrubé
-      // `EP_VS_BB`, kdežto katalog vede jemné `SRP_CO_VS_BB` (viz
-      // `cataloguePatternFor`). Kontext pro generátor a zálohu zůstává beze změny.
-      const situation = options.initialPositionContext
-        ? {
-          positionPattern: cataloguePatternFor(options.initialPositionContext),
-          stackBB: options.initialEffectiveStackBB,
-        }
-        : undefined;
-      // `Partial`, protože katalog nemusí nabídnout nic a pak se nepřebíjí nic:
-      // prázdný katalog nesmí znamenat, že se nedá hrát.
-      const solvedTurn: Partial<Parameters<typeof generatePostflopSpot>[0]> = (
-        street === "TURN"
-          ? solvedTurnConfigForSeed(seed, actionNode, situation)
-          // Flop ze stejného důvodu a od 21. 8. 2026: rodin se dodává 47 a bez
-          // katalogu se na vyřešenou desku trefil hráč v 0,0 % rozdání.
-          //
-          // Pozn. k tomu číslu: platí pro turn a river, kde vyřešený pack
-          // odpovídá jen na desku, kterou solvil. U flopu je to 18,8 %,
-          // protože chartové packy odpovídají na třídu textury. Původní
-          // měření hlásilo nulu všude, protože se ptalo na neexistující pole
-          // `spot.recommendation` - opraveno 26. 8. 2026.
-          : street === "FLOP"
-            ? solvedFlopConfigForSeed(seed, actionNode, situation)
-            // A river, poslední ulice, která katalog pro jednotlivý spot neměla.
-            : street === "RIVER"
-              ? solvedRiverConfigForSeed(seed, actionNode, situation)
-              : undefined
-      ) ?? {};
-      // Tabulka EV se musí stihnout načíst, jinak ji resolver uprostřed rozdání
-      // nenajde a spot se ukáže bez čísel. Viz `primeRiverEvForSeed`.
-      //
-      // Tvar je stejný jako u `beforeGenerate` o pár řádků výš a ze stejného
-      // důvodu: **nečeká se, když není na co**. Bez téhle podmínky by `await`
-      // udělal z každého rozdání asynchronní operaci - i tam, kde se žádná
-      // tabulka nenačítá - a spot by se přestal vykreslovat synchronně.
-      // Tentýž vzor jako u rozdání - jinak by se předčetla tabulka jiné rodiny
-      // než té rozdané (viz `solvedSpotDealing.ts`).
-      const priming = street === "RIVER"
-        ? primeRiverEvForSeed(seed, actionNode, situation)
-        : street === "TURN"
-          ? primeTurnEvForSeed(seed, actionNode, situation)
-          : undefined;
-      if (priming) await priming;
-      const spot = generatePostflopSpot({
-        seed,
-        street,
+      // Jednotlivý spot rozdává `dealPostflopSpot` (src/training/postflopDeal.ts),
+      // tentýž jako nové GUI: katalog vyřešených desek, záloha i rozlišení
+      // pilota čekajícího na přesolvení jsou tam i s důvody.
+      const request = { seed, street, actionNode };
+      const context = {
         potType: options.initialPotType,
-        actionNode,
         potBB: options.initialPotBB,
         effectiveStackBB: options.initialEffectiveStackBB,
-        positionContext: options.initialPositionContext ?? undefined,
+        positionContext: options.initialPositionContext,
         strategyResolver: options.strategyResolver ?? POSTFLOP_STRATEGY_RESOLVER,
-        // Jednotlivý spot zůstává přísný. Hráč si vybral ulici, obsah pro ni
-        // máme, a tiše mu podstrčit heuristiku je přesně to, čemu tenhle příznak
-        // brání. Uvolňuje se jen linka, která prochází i ulice bez obsahu.
         allowFallback: options.allowFallback,
-        ...(solvedTurn ?? {}),
-      });
-      controls.hidden = true;
+      };
+      const priming = primePostflopDeal(request, context);
+      if (priming) await priming;
+      const dealt = dealPostflopSpot(request, context);
       output.hidden = false;
-      renderSpot(output, spot, options, {
+      if (dealt.kind === "UNAVAILABLE") {
+        controls.hidden = false;
+        renderUnavailable(output, dealt.resolvingPilot);
+        return;
+      }
+      controls.hidden = true;
+      if (options.nextUi === true) {
+        const view = nextView();
+        output.replaceChildren(view.element);
+        view.show(dealt.spot.trainingSpot ?? postflopSpotToTrainingSpot(dealt.spot, getAppLanguage()));
+        return;
+      }
+      renderSpot(output, dealt.spot, options, {
         onNewSpot: showNewSpot,
         onChangeSituation: showSituationInput,
       });
     } catch (error) {
+      // Odmítnutí linky; jednotlivý spot ho vrací z `dealPostflopSpot`.
       // Only a missing-strategy refusal means "no content for this spot". A bare
       // catch made every other failure look like that too, so a real defect would
       // have been reported by players as thin coverage and never as a bug.
       if (!(error instanceof PostflopStrategyUnavailableError)) throw error;
       controls.hidden = false;
       output.hidden = false;
-      // Dvě různá „tady nic nemám" se nesmějí slít do jedné věty. Pilot, jehož
-      // strategii čtenář odmítl, se nerozdává schválně a čeká na přesolvení
-      // (rozhodnutí vlastníka 9a a odpověď 4a, 22. 9. 2026); všude jinde jde
-      // o chybějící produkční obsah. Hráč, který za pilota platí, má vědět,
-      // které z toho se mu právě stalo.
       renderUnavailable(output, isResolvingPilotSpot(street, actionNode, {
         potType: options.initialPotType ?? "SINGLE_RAISED",
         positionPattern: options.initialPositionContext?.positionPattern,
@@ -500,31 +440,6 @@ function renderRuntimeNotice(
   element.setAttribute("role", alerting ? "alert" : "status");
   element.textContent = notice.text;
   return element;
-}
-
-/**
- * Míří tenhle spot na pilota, který se přesolvuje?
- *
- * Scope se skládá z toho, co hráč vybral (ulice, typ potu, dvojice sedaček,
- * uzel) - textury na něj vliv nemají, takže se posílá prázdné pole. Když
- * mapování scope nenajde, nejde o pilotní buňku a platí obecná hláška.
- */
-function isResolvingPilotSpot(
-  street: PostflopStreet,
-  actionNode: PostflopActionNode | undefined,
-  options: { potType: PostflopPotType; positionPattern: string | undefined },
-): boolean {
-  if (actionNode === undefined || options.positionPattern === undefined) return false;
-  const scope = mttPostflopPilotScopeForInput({
-    street,
-    textures: [],
-    potType: options.potType,
-    potBB: 1,
-    effectiveStackBB: 1,
-    positionPattern: options.positionPattern as never,
-    actionNode,
-  });
-  return scope !== null && resolvingMttPostflopPilotScopes().includes(scope);
 }
 
 function renderUnavailable(root: HTMLElement, resolvingPilot = false): void {
@@ -639,7 +554,7 @@ function renderSpot(
     const chip = doc.createElement("span");
     chip.className = "postflop-texture";
     chip.dataset.texture = texture;
-    chip.textContent = TEXTURE_LABEL[texture];
+    chip.textContent = textureLabel(texture);
     textures.appendChild(chip);
   }
   root.appendChild(textures);
@@ -757,7 +672,8 @@ function inferredActionHistory(spot: PostflopTrainingSpot): {
   prompt: string;
 } {
   const preflop = preflopActionSummary(spot);
-  if (spot.actionNode.endsWith("_FACING_BET")) {
+  const villainAction = villainActionBeforeHero(spot);
+  if (villainAction === "BET") {
     return {
       previousActor: spot.villainPosition,
       previousAction: "BET_SMALL",
@@ -774,7 +690,7 @@ function inferredActionHistory(spot: PostflopTrainingSpot): {
       ),
     };
   }
-  if (spot.inPosition) {
+  if (villainAction === "CHECK") {
     return {
       previousActor: spot.villainPosition,
       previousAction: "CHECK",
@@ -1441,7 +1357,7 @@ function renderPracticalExplanation(
   grid.appendChild(explanationBlock(doc, CS.postflop.blocks.value, spot.explanation.valueHands));
   grid.appendChild(explanationBlock(doc, CS.postflop.blocks.bluffs, spot.explanation.bluffHands));
   grid.appendChild(explanationBlock(doc, CS.postflop.blocks.check, spot.explanation.checkHands));
-  grid.appendChild(explanationBlock(doc, CS.postflop.blocks.model, modelItems(spot)));
+  grid.appendChild(explanationBlock(doc, CS.postflop.blocks.model, postflopModelNotes(spot)));
 
   const plan = doc.createElement("div");
   plan.className = "postflop-practical__block postflop-practical__block--wide";
@@ -1813,195 +1729,12 @@ function rangeFocusText(spot: PostflopTrainingSpot): string {
   }
 }
 
-function modelItems(spot: PostflopTrainingSpot): readonly string[] {
-  const source = spot.explanation.source;
-  if (source.kind === "STRATEGY_PACK") {
-    return [
-      localizedText(
-        isPublicHeuristicStrategySource(source) ? "Heuristic model" : "Production model",
-        isPublicHeuristicStrategySource(source) ? "Heuristický model" : "Produkční model",
-      ),
-      localizedText(`Confidence: ${confidenceLabel(source.confidence)}`, `Spolehlivost: ${confidenceLabel(source.confidence)}`),
-      ...textureItems(source),
-      localizedText(`SPR range: ${source.sprMin}-${source.sprMax}`, `Rozsah SPR: ${source.sprMin}-${source.sprMax}`),
-      ...sprFidelityItems(source.sprFidelity),
-      ...treeIntegrityItems(source.treeIntegrity),
-      ...source.assumptions.map(
-        (assumption, index) => localizedText(
-          `Assumption ${index + 1}: ${userFacingAssumption(assumption)}`,
-          `Předpoklad ${index + 1}: ${userFacingAssumption(assumption)}`,
-        ),
-      ),
-    ];
-  }
-  return [localizedText("Basic heuristic", "Základní heuristika")];
-}
-
-/**
- * Show the SPR the strategy was actually solved at, and warn when the shown spot
- * sits far from it. A rule matches a wide SPR band while its content comes from a
- * solve at one point, so a spot can display strategy computed at a very different
- * stack depth - most visibly a shallow three-bet pot shown a deeper solve. The
- * band alone hides this; the solved point and the distance make it honest.
- */
-function sprFidelityItems(
-  fidelity: Extract<PostflopTrainingSpot["explanation"]["source"], { kind: "STRATEGY_PACK" }>["sprFidelity"],
-): readonly string[] {
-  if (!fidelity) return [];
-  const solved = localizedText(
-    `Solved at SPR ${fidelity.solvedSpr}`,
-    `Solveno na SPR ${fidelity.solvedSpr}`,
-  );
-  if (fidelity.band === "MATCH") return [solved];
-
-  const times = `${fidelity.ratio}x`;
-  const warning = fidelity.band === "MISMATCH"
-    ? localizedText(
-      `Shown SPR is ${times} the solved SPR - the strategy may not transfer`,
-      `Zobrazené SPR je ${times} solveného - strategie nemusí sedět`,
-    )
-    : localizedText(
-      `Shown SPR is ${times} the solved SPR - treat as approximate`,
-      `Zobrazené SPR je ${times} solveného - ber orientačně`,
-    );
-  return [solved, warning];
-}
-
-/**
- * Describe how the strategy relates to the board, without overstating it.
- *
- * "Texture match: paired, low, dry" reads as evidence that the strategy was
- * selected for this board. For the shipped library it is not: eighteen of the
- * nineteen rules declare every texture in the taxonomy and the nineteenth omits
- * one, so the reported match is the intersection of the board's own textures with
- * everything - which is just a description of the board that was dealt.
- *
- * These are family-level aggregates and their ids say so. A rule covering the
- * whole taxonomy says that plainly; anything narrower reports how much it covers,
- * because twelve of thirteen is not a match either and no threshold should have
- * to be invented to say so.
- */
-function textureItems(
-  source: Extract<PostflopTrainingSpot["explanation"]["source"], { kind: "STRATEGY_PACK" }>,
-): readonly string[] {
-  const coverage = source.textureCoverage;
-  // Prázdný seznam znamená, že odpověď na texturách nestojí - vyřešená rodina
-  // odpovídá na jednu konkrétní desku, ne na třídu textur. Říct „shoda textury:"
-  // a nechat za dvojtečkou prázdno by bylo tvrzení, které se o nic neopírá.
-  if (source.matchedTextures.length === 0) return [];
-  const matched = source.matchedTextures.map(textureLabel).join(", ");
-  if (coverage === undefined) {
-    return [localizedText(`Texture match: ${matched}`, `Shoda textury: ${matched}`)];
-  }
-  if (coverage.covered >= coverage.total) {
-    return [localizedText(
-      "One aggregate for every board texture in this band, not tuned to this board",
-      "Jeden agregát pro všechny textury desky v tomto pásmu, není laděný na tuhle desku",
-    )];
-  }
-  // Stated as a fraction so a rule covering twelve of thirteen cannot pass for a
-  // selective one, and a genuinely narrow rule reads as narrow, with no threshold
-  // anywhere for someone to argue about.
-  return [
-    localizedText(
-      `Covers ${coverage.covered} of ${coverage.total} board textures`,
-      `Pokrývá ${coverage.covered} z ${coverage.total} textur desky`,
-    ),
-    localizedText(`This board matches: ${matched}`, `Tahle deska odpovídá: ${matched}`),
-  ];
-}
-
-/**
- * Say when a rule's content was aggregated over two different solver trees.
- *
- * Some families were solved partly on the authoritative full tree and partly on
- * a reduced one that has no turn or river raise, no donk and no all-in. That is a
- * different game, not a coarser description of the same one, so an aggregate over
- * both blends two of them. The release gate has named these families to operators
- * since the mixing was found, and the player training the spot was told nothing -
- * while being told plainly when the shown SPR sits far from the solved one.
- */
-function treeIntegrityItems(
-  integrity: Extract<PostflopTrainingSpot["explanation"]["source"], { kind: "STRATEGY_PACK" }>["treeIntegrity"],
-): readonly string[] {
-  if (integrity !== "MIXED_TREES") return [];
-  return [localizedText(
-    "Built from two solver trees - one without turn and river raises, so treat the turn and river plan as approximate",
-    "Postaveno ze dvou solverových stromů - jeden bez raisů na turnu a riveru, takže plán na turnu a riveru ber orientačně",
-  )];
-}
-
-/**
- * Never present a heuristic answer as solver-backed. This reads the structural
- * provenance the resolver records, not the wording of an assumption: matching
- * free text meant that rephrasing one sentence would silently relabel the public
- * heuristic model as production content.
- */
 /** Nodes where the hero is facing a bet, so checking is not a legal action. */
 const FACING_BET_ACTION_NODES = new Set<PostflopActionNode>([
   "FLOP_FACING_BET",
   "TURN_FACING_BET",
   "RIVER_FACING_BET",
 ]);
-
-function isPublicHeuristicStrategySource(
-  source: Extract<PostflopTrainingSpot["explanation"]["source"], { kind: "STRATEGY_PACK" }>,
-): boolean {
-  return source.provenance === "PUBLIC_HEURISTIC";
-}
-
-function userFacingAssumption(assumption: string): string {
-  if (getAppLanguage() === "EN") {
-    return assumption
-      .replace(/\bStrategyPack\b/g, "strategy model")
-      .replace(/\bRangePack\b/g, "strategy model");
-  }
-  return assumption
-    .replace(
-      /^Public heuristic(?: .*?)? StrategyPack only; no paid chart values or exact solver frequencies are copied\.$/,
-      "Veřejná tréninková heuristika bez přesných solverových frekvencí.",
-    )
-    .replace(
-      "Flop first: board texture, position pattern, pot type, SPR and effective stack are explicit dimensions.",
-      "Flop model explicitně rozlišuje texturu boardu, pozice, typ potu, SPR a efektivní stack.",
-    )
-    .replace(
-      "Turn and river packs should be added only after the flop model is stable.",
-      "Turn a river model se přidává až po stabilizaci flop modelu.",
-    )
-    .replace(
-      "Rules are texture-level training prompts, not production equilibrium strategy.",
-      "Pravidla jsou tréninkové podněty podle textury, nikoli produkční rovnovážná strategie.",
-    )
-    .replace(
-      "River decisions are simplified to check, small value/block bet, or large polarized pressure.",
-      "River rozhodnutí jsou zjednodušena na check, malý value/block bet nebo velký polarizovaný tlak.",
-    )
-    .replace(
-      "Specific blocker/card-removal selection remains future solver/import work.",
-      "Přesný výběr podle blockerů a card removal zůstává úkolem solver/import pipeline.",
-    )
-    .replace(/\bStrategyPack\b/g, "model")
-    .replace(/\bRangePack\b/g, "model")
-    .replace(/\bLOW confidence\b/g, "nízká spolehlivost");
-}
-
-function confidenceLabel(confidence: "LOW" | "MEDIUM" | "HIGH"): string {
-  switch (confidence) {
-    case "LOW":
-      return localizedText("low", "nízká");
-    case "MEDIUM":
-      return localizedText("medium", "střední");
-    case "HIGH":
-      return localizedText("high", "vysoká");
-    default:
-      return confidence;
-  }
-}
-
-function textureLabel(texture: BoardTexture): string {
-  return TEXTURE_LABEL[texture] ?? texture;
-}
 
 function actionLabel(action: PostflopAction): string {
   switch (action) {

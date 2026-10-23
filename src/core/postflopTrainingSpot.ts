@@ -144,6 +144,24 @@ export function postflopTrainingSpotId(spot: Pick<PostflopSpot, "seed" | "street
   ].join("|");
 }
 
+/** Co soupeř na téhle ulici udělal, než přišel hráč na řadu. */
+export type PostflopVillainAction = "BET" | "CHECK" | "NONE";
+
+/**
+ * Akce soupeře před hráčem na téhle ulici.
+ *
+ * Spot nenese akční log, jen uzel a pozici, a z nich to plyne jednoznačně:
+ * proti sázce soupeř vsadil, hráč v pozici bez sázky před sebou je na řadě po
+ * checku a hráč mimo pozici jedná první. Starý i nový stůl to čtou odsud, aby
+ * obrázek a text nad ním nemohly tvrdit každý něco jiného.
+ */
+export function villainActionBeforeHero(
+  spot: Pick<PostflopTrainingSpot, "actionNode" | "inPosition">,
+): PostflopVillainAction {
+  if (spot.actionNode.endsWith("_FACING_BET")) return "BET";
+  return spot.inPosition ? "CHECK" : "NONE";
+}
+
 function actionNodeForSpot(
   spot: Pick<PostflopSpot, "street" | "potType" | "actionNode">,
 ): PostflopActionNode {

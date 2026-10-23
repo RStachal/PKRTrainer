@@ -150,6 +150,49 @@
   color: var(--dx-text);
 }
 
+/* Postflop: co soupeř udělal před otázkou, na vlastním řádku nad ní. */
+.dx-trainer__situation {
+  flex-basis: 100%;
+  color: var(--dx-text-secondary);
+  font-size: var(--dx-text-sm);
+  font-weight: var(--dx-weight-regular);
+}
+
+.dx-trainer__price {
+  margin: 0;
+  color: var(--dx-text-secondary);
+  font-size: var(--dx-text-sm);
+  font-variant-numeric: var(--dx-numeric);
+}
+
+.dx-trainer__strategy {
+  display: grid;
+  gap: var(--dx-space-2);
+}
+
+.dx-trainer__strategy-title {
+  margin: 0;
+  color: var(--dx-text-muted);
+  font-size: var(--dx-text-xs);
+  font-weight: var(--dx-weight-medium);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.dx-trainer__hands-title {
+  margin: 0 0 var(--dx-space-1);
+  color: var(--dx-text);
+  font-size: var(--dx-text-sm);
+  font-weight: var(--dx-weight-bold);
+}
+
+.dx-trainer__notes {
+  margin: 0;
+  padding-left: var(--dx-space-4);
+  color: var(--dx-text-secondary);
+  font-size: var(--dx-text-sm);
+}
+
 .dx-trainer__ev {
   display: grid;
   gap: var(--dx-space-1);

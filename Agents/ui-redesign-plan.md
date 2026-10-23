@@ -220,12 +220,70 @@ používat první.
      matice range za tlačítkem „Range“.
    - Pruh strategie preflop nemá: range dává doporučené akce, ne frekvence.
      Přijde s postflopem, kde frekvence solveru jsou.
-   - Stůl je zatím starý (`renderTable`). Nový stůl, který vyřeší i
-     překrývání sedadel na 360 px, je další krok.
+   - **Nový stůl 23. 10.** (`src/ui/kit/pokerTable.ts`). Sedadlo je štítek
+     s pozicí, stackem a akcí, ne karta s ukazatelem stacku. Devět štítků se
+     vejde na elipsu i na 360 px, kde se sedadla starého stolu překrývala.
+     E2E nového GUI to hlídá na všech šířkách: počítá překryvy obdélníků
+     sedadel a čeká nulu.
+   - Rozmístění sedadel (kdo složil, akce, jmenovaný protihráč) je vytažené
+     do `src/ui/tableModel.ts`. Starý i nový stůl kreslí totéž.
 
    Prohlídka: `npm run ui:tour -- --ui=next`.
-3. **Postflop stejně.** Nejdřív řadič vytažený z `postflopView.ts`, pak nová
-   obrazovka.
+3. **Postflop stejně.** Je výrazně složitější než preflop: má jeden spot
+   i celou linku (flop → turn → river), resolver strategie s pravidly pro
+   záložní obsah, a statistiky zapisuje přes zpětná volání z `main.ts`.
+   Proto po částech:
+   - **3a** řadič jednoho spotu vytažený z `postflopView.ts` (generování se
+     seedem, `gradePostflopAction`, záznam přes stejná volání jako dnes).
+     **Rozdání hotové 23. 10.** (`src/training/postflopDeal.ts`). Patří k němu
+     katalog vyřešených desek podle ulice, záloha a rozlišení pilota, který
+     čeká na přesolvení. Předčtení tabulky EV je zvlášť
+     (`primePostflopDeal`): vrací Promise jen tehdy, když je na co čekat, takže
+     spot bez tabulky se dál vykreslí synchronně. Vyhodnocení už řadič
+     nepotřebuje, `gradePostflopAction` je čistá funkce a zápis dělá `main.ts`
+     přes `onAnswered`;
+   - **3b** nová obrazovka jednoho spotu: deska, stůl, akce s velikostmi,
+     vyhodnocení s pruhem strategie z frekvencí solveru.
+     **Hotovo 23. 10.** (`src/ui/trainer/postflopTrainerView.ts`). Stav:
+     - Stůl kreslí `postflopPokerTable` z téhož modelu jako preflop. Deska je
+       uprostřed, aktivní jsou jen hráč a soupeř a u soupeře je jeho akce na
+       téhle ulici. Proti sázce ukazuje i její velikost, když ji vyřešené
+       pravidlo nese. Akci soupeře určuje `villainActionBeforeHero`, kterou
+       čte i starý pohled.
+     - Tlačítka nesou velikost, kterou solve hrál („Bet 33 %“, pod tím
+       „2 BB“), nebo all-in za celý stack. Bez vyřešené velikosti se použije
+       modelová, tatáž jako v simulátoru linky (`MODEL_BET_RATIO`).
+     - Vyhodnocení ukazuje verdikt („neposouzeno“ pro akci mimo strom), ztrátu
+       a EV akcí tam, kde je solver spočítal, a cenu dorovnání. Pruh strategie
+       „Jak solver hraje ruce jako tvoje“ kreslí frekvence kbelíku hráčovy
+       ruky, jen u vyřešeného obsahu a jen s přesnými frekvencemi. Heuristiku
+       za solver nevydává.
+     - V podrobnostech jsou ruce po lajnách, plán a poznámky k modelu
+       (`postflopModelNotes`, vytažené ze starého pohledu, aby je četly obě
+       obrazovky).
+     - Skóre relace drží obrazovka. Neposouzená odpověď se do něj nepočítá.
+     - Kostru (hlavička, stůl, dok, klávesy 1–9 a Enter) sdílí s preflopem
+       (`trainerFrame.ts`).
+
+     Chybí oproti starému pohledu: matice range (patří do dialogu, jako
+     u preflopu) a režim linky (3c).
+
+     Při práci se našly dvě chyby mimo redesign:
+     - **Starý pohled prozrazoval odpověď.** Ukazatel sázky uprostřed stolu
+       kreslil doporučenou akci („Malý bet 2 BB“) už u otázky, a to od 8. 6.
+       2026. Opraveno: ukáže se až s vyhodnocením.
+     - **Statistiky počítají neposouzenou odpověď jako chybu.**
+       `buildPostflopResultRecord` zapisuje `correct: false` a nic dál
+       `unsolved` nečte, přestože `postflopScoring.ts` výslovně říká, že to
+       statistika rozlišit musí. Na riveru to v srpnu postihlo 104 z 300
+       spotů. Oprava sahá na schéma záznamu, import a přehled, a proto je to
+       samostatný krok.
+   - **3c** režim linky v nové obrazovce;
+   - **3d** E2E postflopu za přepínačem. **Napsané 23. 10.**
+     (`runNextUiPostflopScenario`): start flopu formulářem, otázka s deskou,
+     odpověď skutečným vstupem, vyhodnocení a další spot na všech šířkách.
+     Hlídá překryvy sedadel i desky s potem, kontrast a čas do vyhodnocení
+     (`nextUiPostflop` v reportu).
 4. **Start zatím přes dnešní formulář.** Nové nastavení přijde ve fázi 3, do
    té doby se po startu ukáže nová obrazovka.
 5. **E2E pro nové GUI za přepínačem**, včetně měření času od kliknutí na akci

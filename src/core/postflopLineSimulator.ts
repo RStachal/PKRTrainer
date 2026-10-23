@@ -6,7 +6,7 @@ import {
   type PostflopSpot,
   type PostflopStreet,
 } from "./postflopGenerator";
-import { solvedBetSizing, type SolvedBetSizing } from "../data/ranges/solvedBetSizing";
+import { MODEL_BET_RATIO, solvedBetSizing, type SolvedBetSizing } from "../data/ranges/solvedBetSizing";
 import type { PostflopActionNode } from "./postflopTrainingSpot";
 import type { Card } from "./types";
 
@@ -977,7 +977,7 @@ function betSizeBB(
   solved?: SolvedBetSizing,
 ): number {
   if (solved?.allIn === true) return stackBB;
-  const ratio = solved?.ratio ?? (action === "BET_SMALL" ? 0.33 : 0.75);
+  const ratio = solved?.ratio ?? MODEL_BET_RATIO[action];
   return Math.min(stackBB, roundTenths(potBB * ratio));
 }
 

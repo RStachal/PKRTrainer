@@ -648,14 +648,16 @@ try {
   // krok 5). Běží na všech šířkách a stejnými vstupy jako zbytek E2E, aby se
   // přepínač dal otočit na výchozí s důkazem, ne s odhadem.
   const nextUiResults: Array<{ viewport: string; feedbackMs: number }> = [];
-  if (expectedPreflop !== "blocked") {
-    for (const viewport of activeViewports) {
+  const nextUiPostflopResults: Array<{ viewport: string; feedbackMs: number }> = [];
+  for (const viewport of activeViewports) {
+    if (expectedPreflop !== "blocked") {
       nextUiResults.push(await runNextUiScenario(cdp, viewport, browserErrors, contrastAudits));
     }
-    // Zpět na dnešní GUI, ať zbytek běhu zkouší výchozí stav.
-    await navigate(cdp, withUi(targetUrl, "classic"));
-    await waitForSelector(cdp, ".filter-start");
+    nextUiPostflopResults.push(await runNextUiPostflopScenario(cdp, viewport, browserErrors, contrastAudits));
   }
+  // Zpět na dnešní GUI, ať zbytek běhu zkouší výchozí stav.
+  await navigate(cdp, withUi(targetUrl, "classic"));
+  await waitForSelector(cdp, ".filter-start");
 
   browserErrors.length = 0;
   await cdp.send("Network.emulateNetworkConditions", {
@@ -754,6 +756,7 @@ try {
     resilience,
     serviceWorkerUpgrade,
     nextUi: nextUiResults,
+    nextUiPostflop: nextUiPostflopResults,
   };
   writeFileSync(join(artifactDirectory, "report.json"), JSON.stringify(report, null, 2));
   console.log("MTT Chrome E2E");
@@ -770,6 +773,9 @@ try {
   console.log("- service worker: real upgrade and previous-build chunk rollback passed");
   for (const result of nextUiResults) {
     console.log(`- next UI ${result.viewport}: question/feedback/next passed, feedback ${result.feedbackMs} ms`);
+  }
+  for (const result of nextUiPostflopResults) {
+    console.log(`- next UI postflop ${result.viewport}: board/question/feedback/next passed, feedback ${result.feedbackMs} ms`);
   }
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
@@ -1061,16 +1067,41 @@ async function runNextUiScenario(
     cards: number;
     feedbackHidden: boolean;
     overflow: number;
-  }>(client, `(() => ({
-    actions: document.querySelectorAll(".dx-trainer__actions button").length,
-    cards: document.querySelectorAll(".dx-trainer__prompt .dx-card").length,
-    feedbackHidden: document.querySelector(".dx-trainer__feedback")?.hidden === true,
-    overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
-  }))()`);
+    seats: number;
+    overlaps: string[];
+  }>(client, `(() => {
+    // Štítky sedadel se nesmějí překrývat na žádné šířce - starý stůl to
+    // na 360 px dělal (Agents/ui-redesign-plan.md).
+    const seats = [...document.querySelectorAll(".dx-table__seat")];
+    const boxes = seats.map((seat) => ({ name: seat.dataset.position, box: seat.getBoundingClientRect() }));
+    const overlaps = [];
+    for (let i = 0; i < boxes.length; i += 1) {
+      for (let j = i + 1; j < boxes.length; j += 1) {
+        const a = boxes[i].box;
+        const b = boxes[j].box;
+        if (a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) {
+          overlaps.push(boxes[i].name + "/" + boxes[j].name);
+        }
+      }
+    }
+    return {
+      actions: document.querySelectorAll(".dx-trainer__actions button").length,
+      cards: document.querySelectorAll(".dx-trainer__prompt .dx-card").length,
+      feedbackHidden: document.querySelector(".dx-trainer__feedback")?.hidden === true,
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      seats: seats.length,
+      overlaps
+    };
+  })()`);
   assert(question.actions >= 2, `${viewport.name} next UI: only ${question.actions} actions`);
   assert(question.cards === 2, `${viewport.name} next UI: hero cards missing beside the actions`);
   assert(question.feedbackHidden, `${viewport.name} next UI: feedback visible before an answer`);
   assert(question.overflow <= 1, `${viewport.name} next UI: page overflow ${question.overflow}px`);
+  assert(question.seats === 9, `${viewport.name} next UI: ${question.seats} seats on the table`);
+  assert(
+    question.overlaps.length === 0,
+    `${viewport.name} next UI: overlapping seats ${question.overlaps.join(", ")}`,
+  );
   contrastAudits.push({
     viewport: viewport.name,
     surface: "next-ui-question",
@@ -1120,6 +1151,153 @@ async function runNextUiScenario(
   await activate(client, ".dx-trainer__actions button", input);
   await waitForSelector(client, ".dx-trainer__feedback:not([hidden])");
   assert(browserErrors.length === 0, `${viewport.name} next UI: ${browserErrors.join(" | ")}`);
+  return { viewport: viewport.name, feedbackMs: Math.round(feedbackMs * 10) / 10 };
+}
+
+/**
+ * Nová obrazovka jednoho postflopového spotu (plán redesignu, fáze 1, krok
+ * 3d): start flopu přes dnešní formulář, otázka s deskou, odpověď skutečným
+ * vstupem, vyhodnocení a další spot. Selektory jsou omezené na postflopový
+ * panel, protože preflopová obrazovka zůstává ve skrytém panelu tréninku.
+ */
+async function runNextUiPostflopScenario(
+  client: CdpClient,
+  viewport: Viewport,
+  browserErrors: string[],
+  contrastAudits: Array<{ viewport: string; surface: string; entries: ContrastAuditEntry[] }>,
+): Promise<{ viewport: string; feedbackMs: number }> {
+  const input = viewport.mobile ? "touch" : "keyboard";
+  const scope = ".postflop-output .dx-trainer";
+  browserErrors.length = 0;
+  await client.send("Emulation.setDeviceMetricsOverride", {
+    width: viewport.width,
+    height: viewport.height,
+    deviceScaleFactor: 1,
+    mobile: viewport.mobile,
+  });
+  await client.send("Emulation.setTouchEmulationEnabled", {
+    enabled: viewport.mobile,
+    maxTouchPoints: viewport.mobile ? 5 : 1,
+  });
+  await navigate(client, withUi(targetUrl, "next"));
+  await waitForSelector(client, ".filter-start");
+  await evaluate(client, `(() => {
+    const select = document.querySelector(".profile-street");
+    if (!(select instanceof HTMLSelectElement)) throw new Error("Missing street selector");
+    select.value = "FLOP";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    const seed = document.querySelector(".filter-seed");
+    if (!(seed instanceof HTMLInputElement)) throw new Error("Missing seed input");
+    seed.value = ${JSON.stringify(postflopSeed)};
+    seed.dispatchEvent(new Event("input", { bubbles: true }));
+  })()`);
+  await activate(client, ".filter-start", input);
+  await waitForSelector(client, `${scope} .dx-trainer__actions button`);
+
+  const question = await evaluate<{
+    actions: number;
+    board: number;
+    cards: number;
+    active: number;
+    feedbackHidden: boolean;
+    overflow: number;
+    seats: number;
+    situation: string;
+    overlaps: string[];
+  }>(client, `(() => {
+    const scope = document.querySelector(${JSON.stringify(scope)});
+    // Ani sedadla, ani deska s potem se nesmějí překrývat na žádné šířce.
+    const seats = [...scope.querySelectorAll(".dx-table__seat")];
+    const boxes = seats.map((seat) => ({ name: seat.dataset.position, box: seat.getBoundingClientRect() }));
+    const center = scope.querySelector(".dx-table__center");
+    if (center) boxes.push({ name: "deska", box: center.getBoundingClientRect() });
+    const overlaps = [];
+    for (let i = 0; i < boxes.length; i += 1) {
+      for (let j = i + 1; j < boxes.length; j += 1) {
+        const a = boxes[i].box;
+        const b = boxes[j].box;
+        if (a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) {
+          overlaps.push(boxes[i].name + "/" + boxes[j].name);
+        }
+      }
+    }
+    return {
+      actions: scope.querySelectorAll(".dx-trainer__actions button").length,
+      board: scope.querySelectorAll(".dx-table__board .dx-card").length,
+      cards: scope.querySelectorAll(".dx-trainer__prompt .dx-card").length,
+      active: scope.querySelectorAll('.dx-table__seat[data-folded="false"]').length,
+      feedbackHidden: scope.querySelector(".dx-trainer__feedback")?.hidden === true,
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      seats: seats.length,
+      situation: scope.querySelector(".dx-trainer__situation")?.textContent ?? "",
+      overlaps
+    };
+  })()`);
+  const label = `${viewport.name} next UI postflop`;
+  assert(question.actions >= 2, `${label}: only ${question.actions} actions`);
+  assert(question.board === 3, `${label}: flop shows ${question.board} board cards`);
+  assert(question.cards === 2, `${label}: hero cards missing beside the actions`);
+  assert(question.seats === 9 && question.active === 2, `${label}: table ${question.seats} seats, ${question.active} active`);
+  assert(question.situation !== "", `${label}: villain action before the question is missing`);
+  assert(question.feedbackHidden, `${label}: feedback visible before an answer`);
+  assert(question.overflow <= 1, `${label}: page overflow ${question.overflow}px`);
+  assert(question.overlaps.length === 0, `${label}: overlapping ${question.overlaps.join(", ")}`);
+  contrastAudits.push({
+    viewport: viewport.name,
+    surface: "next-ui-postflop-question",
+    entries: await auditContrast(client, viewport.name, "next UI postflop question", [
+      `${scope} .dx-trainer__title`,
+      `${scope} .dx-trainer__meta`,
+      `${scope} .dx-trainer__situation`,
+      `${scope} .dx-trainer__prompt`,
+      `${scope} .dx-btn--action`,
+      `${scope} .dx-table__pot`,
+    ]),
+  });
+
+  const feedbackMs = await evaluate<number>(client, `new Promise((resolve) => {
+    const scope = document.querySelector(${JSON.stringify(scope)});
+    const action = scope.querySelector(".dx-trainer__actions button");
+    const feedback = scope.querySelector(".dx-trainer__feedback");
+    const started = performance.now();
+    action.click();
+    requestAnimationFrame(() => resolve(feedback && !feedback.hidden ? performance.now() - started : -1));
+  })`);
+  assert(feedbackMs >= 0, `${label}: feedback did not render after an answer`);
+  assert(feedbackMs < 1000, `${label}: feedback took ${Math.round(feedbackMs)} ms`);
+
+  const answered = await evaluate<{ outcome: string; locked: boolean; nextFocused: boolean; text: string }>(
+    client,
+    `(() => {
+      const scope = document.querySelector(${JSON.stringify(scope)});
+      return {
+        outcome: scope.querySelector(".dx-trainer__feedback .dx-chip")?.getAttribute("data-outcome") ?? "",
+        locked: [...scope.querySelectorAll(".dx-trainer__actions button")].every((button) => button.disabled),
+        nextFocused: document.activeElement?.classList.contains("dx-trainer__next") ?? false,
+        text: scope.textContent ?? ""
+      };
+    })()`,
+  );
+  assert(answered.outcome !== "", `${label}: verdict chip missing`);
+  assert(answered.locked, `${label}: actions still enabled after an answer`);
+  assert(answered.nextFocused, `${label}: focus did not move to the next spot`);
+  assertSourceFree(answered.text, label);
+  contrastAudits.push({
+    viewport: viewport.name,
+    surface: "next-ui-postflop-feedback",
+    entries: await auditContrast(client, viewport.name, "next UI postflop feedback", [
+      `${scope} .dx-trainer__feedback .dx-chip`,
+      `${scope} .dx-trainer__choice`,
+      `${scope} .dx-trainer__plan`,
+      `${scope} .dx-trainer__next`,
+    ]),
+  });
+
+  await activate(client, `${scope} .dx-trainer__next`, input);
+  await waitForSelector(client, `${scope} .dx-trainer__feedback[hidden]`);
+  await activate(client, `${scope} .dx-trainer__actions button`, input);
+  await waitForSelector(client, `${scope} .dx-trainer__feedback:not([hidden])`);
+  assert(browserErrors.length === 0, `${label}: ${browserErrors.join(" | ")}`);
   return { viewport: viewport.name, feedbackMs: Math.round(feedbackMs * 10) / 10 };
 }
 

@@ -264,6 +264,37 @@
   box-shadow: inset 1px 0 0 var(--dx-bg);
 }
 
+.dx-strategy-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dx-space-1) var(--dx-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--dx-text-secondary);
+  font-size: var(--dx-text-sm);
+}
+
+.dx-strategy-legend__item {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.dx-strategy-legend__swatch {
+  width: 10px;
+  height: 10px;
+  margin-right: var(--dx-space-2);
+  border-radius: 3px;
+  background: var(--action-accent, var(--dx-text-subtle));
+}
+
+.dx-strategy-legend__share {
+  color: var(--dx-text);
+  font-weight: var(--dx-weight-bold);
+  font-variant-numeric: var(--dx-numeric);
+}
+
 /* Hrací karta. Velikost řídí jedna šířka, zbytek se z ní odvodí. */
 
 .dx-card {
@@ -312,4 +343,150 @@
 
 .dx-card--s {
   color: var(--dx-suit-spades);
+}
+
+/*
+ * Stůl: devět štítků sedadel na elipse kolem plsti. Polohu sedadla dává kód
+ * přes --seat-x a --seat-y (procenta), aby se stůl s šířkou jen škáloval.
+ */
+
+.dx-table {
+  position: relative;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  aspect-ratio: 16 / 10;
+}
+
+.dx-table__felt {
+  position: absolute;
+  inset: 12% 10%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--dx-felt) 82%, var(--dx-accent)),
+    var(--dx-felt) 70%
+  );
+  box-shadow: 0 0 0 8px var(--dx-felt-rail), var(--dx-shadow-2);
+}
+
+/* Střed stolu: deska (jen postflop) a pod ní pot. */
+.dx-table__center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--dx-space-2);
+}
+
+.dx-table__board {
+  display: flex;
+  gap: var(--dx-space-1);
+}
+
+.dx-table__pot {
+  padding: var(--dx-space-1) var(--dx-space-3);
+  border: 1px solid var(--dx-border-strong);
+  border-radius: var(--dx-radius-pill);
+  background: var(--dx-surface-sunken);
+  font-size: var(--dx-text-sm);
+  font-weight: var(--dx-weight-bold);
+  font-variant-numeric: var(--dx-numeric);
+  white-space: nowrap;
+}
+
+.dx-table__seat {
+  position: absolute;
+  top: var(--seat-y);
+  left: var(--seat-x);
+  transform: translate(-50%, -50%);
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 60px;
+  padding: var(--dx-space-1) var(--dx-space-2);
+  border: 1px solid var(--dx-border-strong);
+  border-radius: var(--dx-radius-md);
+  background: var(--dx-surface-raised);
+  font-size: var(--dx-text-xs);
+  line-height: 1.3;
+  text-align: center;
+}
+
+.dx-table__seat[data-folded="true"] {
+  opacity: 0.45;
+}
+
+.dx-table__seat[data-hero="true"] {
+  border-color: var(--dx-accent);
+  box-shadow: 0 0 0 1px var(--dx-accent);
+}
+
+.dx-table__pos {
+  font-size: var(--dx-text-sm);
+  font-weight: var(--dx-weight-bold);
+  white-space: nowrap;
+}
+
+.dx-table__stack {
+  color: var(--dx-text-muted);
+  font-variant-numeric: var(--dx-numeric);
+  white-space: nowrap;
+}
+
+.dx-table__badge {
+  padding: 0 var(--dx-space-2);
+  border: 1px solid var(--action-accent, var(--dx-text-subtle));
+  border-radius: var(--dx-radius-pill);
+  background: color-mix(in srgb, var(--action-accent, var(--dx-text-subtle)) 24%, var(--dx-surface));
+  font-weight: var(--dx-weight-bold);
+  white-space: nowrap;
+}
+
+/* Dealer: kolečko na rohu štítku BTN, jako žeton na stole. */
+.dx-table__dealer {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--dx-text);
+  color: var(--dx-bg);
+  font-size: 11px;
+  font-weight: var(--dx-weight-bold);
+}
+
+.dx-table__cards {
+  display: flex;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+@media (max-width: 719px) {
+  /* Na telefonu je stůl vyšší, aby se štítky na elipse nedotýkaly. */
+  .dx-table {
+    aspect-ratio: 4 / 3;
+  }
+
+  .dx-table__seat {
+    min-width: 52px;
+    padding: 2px var(--dx-space-1);
+  }
+
+  /* Karty hráče jsou na telefonu přímo u akcí; na stole by jen zabraly místo. */
+  .dx-table__cards {
+    display: none;
+  }
+
+  /* Pět karet desky se musí vejít mezi boční sedadla. */
+  .dx-table__board .dx-card {
+    --dx-card-w: 32px;
+  }
 }
