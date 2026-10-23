@@ -61,6 +61,10 @@ function validNineHandedText(position: Position, cards: [Card, Card]): string {
     `${bbName}: posts big blind 20`,
     "*** HOLE CARDS ***",
     `Dealt to Hero [${cardToken(cards[0])} ${cardToken(cards[1])}]`,
+    // Hrdina ve velkém blindu bez akce před sebou žádné rozhodnutí nemá (všichni
+    // složili). Aby ruka byla platná i pro BB, otevře před ním SB: od 17. 9. 2026
+    // je to `VS_OPEN` z SB (bod 254), ne BvB.
+    ...(position === "BB" ? [`${sbName}: raises 40 to 60`] : []),
     "Hero: folds",
     "*** SUMMARY ***",
   ].join("\n");
@@ -205,6 +209,26 @@ describe("hhParser - total parser properties", () => {
     expect(result.errors.join(" ")).toContain("produkční preflop strategie");
   });
 
+  it("bez vyzadaneho priznaku nevymysli doporuceni pro spot bez zaznamu", () => {
+    // The sharp case: the store IS loaded, it just has nothing for this spot.
+    // The parser used to synthesise the default action - a fold - shaped exactly
+    // like a real recommendation, so nothing downstream could tell "fold is right
+    // here" from "we have no data". Failing closed is now the default, so a
+    // caller has to ask for the lenient behaviour rather than inherit it.
+    const result = parseHandHistory(validNineHandedText("BTN", [
+      { rank: "A", suit: "s" },
+      { rank: "K", suit: "d" },
+    ]), {
+      rangeStore: {
+        lookup: () => undefined,
+        isLoaded: () => true,
+      },
+    });
+
+    expect(result.spot).toBeUndefined();
+    expect(result.errors.join(" ")).toMatch(/produkční preflop strategie/i);
+  });
+
   it("odmitne duplicitni kartu mezi hero handou a boardem", () => {
     const text = validNineHandedText("BTN", [
       { rank: "A", suit: "s" },
@@ -246,6 +270,24 @@ describe("hhParser - total parser properties", () => {
     expect(result.spot).toBeUndefined();
     expect(result.unreadableFields).toEqual(HH_FIELDS);
     expect(result.errors.join(" ")).toContain(String(MAX_INPUT_LENGTH));
+  });
+
+  it("vraci podrobne EN chyby a EN vysvetleni importovaneho spotu", () => {
+    const empty = parseHandHistory("", { language: "EN" });
+    expect(empty.errors).toEqual(["Input is empty or contains only whitespace."]);
+
+    const incompatible = parseHandHistory(incompatibleTableText(5), { language: "EN" });
+    expect(incompatible.errors.join(" ")).toContain("not compatible with the training model");
+    expect(incompatible.errors.join(" ")).not.toContain("Data nejsou kompatibilní");
+
+    const valid = parseHandHistory(validNineHandedText("BTN", [
+      { rank: "A", suit: "s" },
+      { rank: "K", suit: "d" },
+    ]), { language: "EN" });
+    expect(valid.ok).toBe(true);
+    expect(valid.spot?.explanation).toContain("Recommended:");
+    expect(valid.spot?.explanation).toContain("Position:");
+    expect(valid.spot?.explanation).not.toContain("Doporučení:");
   });
 
   it("podporuje bezne odchylky HH: currency stacks, unicode karty, header blindy a alternativni button", () => {

@@ -1,10 +1,12 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest";
+import { stylesheet } from "../stylesheets";
 
 import { renderHHView } from "../../src/ui/hhView";
 import type { PostflopStrategyResolver } from "../../src/core/postflopGenerator";
 import type { HHReviewRecord } from "../../src/persistence/hhReviewStore";
 import type { RangeStore } from "../../src/data/rangeStore";
+import { initializeAppLanguage, setAppLanguage } from "../../src/ui/cs";
 
 const validHh = [
   "PokerStars Hand #1: Tournament #1, 10/20",
@@ -141,6 +143,7 @@ const productionLikePostflopResolver: PostflopStrategyResolver = (input) => ({
   explanation: `Production HH resolver ${input.street.toLowerCase()} recommendation`,
   source: {
     kind: "STRATEGY_PACK",
+    provenance: "SOLVER_BACKED",
     packId: "internal-hh-production-parity-pack",
     packVersion: "2026.06",
     packVerifiedAt: "2026-06-17",
@@ -258,20 +261,39 @@ describe("hhView - DOM import", () => {
 
     const errors = root.querySelector<HTMLElement>(".hh-errors");
     const unreadable = root.querySelector<HTMLElement>(".hh-unreadable");
-    const css = root.querySelector("style")?.textContent ?? "";
+    const css = stylesheet("legacy/hh-view.css");
     expect(css).toContain("linear-gradient(180deg,rgba(18,25,38,.98)");
     expect(css).toContain("@media (max-width:640px)");
     expect(css).toContain(".hh-analysis__matrix");
     expect(root.querySelector<HTMLTextAreaElement>(".hh-input")?.placeholder)
-      .toBe("Vložte historii handy…");
-    expect(root.querySelector<HTMLButtonElement>(".hh-analyze")?.textContent).toBe("Analyzovat");
+      .toBe("Paste hand history...");
+    expect(root.querySelector<HTMLButtonElement>(".hh-analyze")?.textContent).toBe("Analyze");
     expect(errors?.hidden).toBe(false);
     expect(errors?.textContent).toContain("Vstup je prázdný");
     expect(unreadable?.hidden).toBe(false);
-    expect(unreadable?.textContent).toContain("pozice");
+    expect(unreadable?.textContent).toContain("position");
     expect(root.textContent).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
     expect(document.activeElement).toBe(errors);
     expect(root.querySelector(".poker-table")).toBeNull();
+  });
+
+  it("v EN rezimu zobrazi podrobnou parser chybu bez ceskeho fallbacku", () => {
+    setAppLanguage("EN", null);
+    try {
+      const root = document.createElement("div");
+      renderHHView(root);
+
+      root.querySelector<HTMLButtonElement>(".hh-analyze")?.click();
+
+      expect(root.querySelector<HTMLElement>(".hh-errors")?.textContent)
+        .toContain("Input is empty or contains only whitespace.");
+      expect(root.querySelector<HTMLElement>(".hh-errors")?.textContent)
+        .not.toContain("Vstup je prázdný");
+      expect(root.querySelector<HTMLElement>(".hh-unreadable")?.textContent)
+        .toContain("position");
+    } finally {
+      initializeAppLanguage(null);
+    }
   });
 
   it("vykresli kompatibilni HH jako stul a zavola callback", () => {
@@ -305,11 +327,11 @@ describe("hhView - DOM import", () => {
     expect(root.querySelector<HTMLElement>(".hh-analysis")?.dataset.chosen).toBe("FOLD");
     expect(root.querySelector<HTMLElement>(".hh-analysis")?.dataset.correct).toMatch(/true|false/);
     expect(root.querySelector<HTMLElement>(".hh-analysis")?.dataset.reviewRecordCount).toBe("1");
-    expect(root.querySelector<HTMLElement>(".hh-analysis")?.textContent).toContain("Vaše akce");
+    expect(root.querySelector<HTMLElement>(".hh-analysis")?.textContent).toContain("Your action");
     expect(root.querySelector<HTMLElement>(".hh-analysis")?.textContent)
-      .toContain("50 BB → nejbližší úroveň 50 BB");
+      .toContain("50 BB -> nejbližší úroveň 50 BB");
     expect(root.querySelector<HTMLElement>(".hh-analysis")?.textContent).toContain("Fold");
-    expect(root.querySelector<HTMLElement>(".hh-analysis")?.textContent).toContain("Výsledek");
+    expect(root.querySelector<HTMLElement>(".hh-analysis")?.textContent).toContain("Result");
     expect(root.querySelectorAll(".hh-analysis .matrix-cell")).toHaveLength(169);
     expect(root.querySelector<HTMLElement>(".hh-analysis .matrix-cell--hero")?.dataset.hand)
       .toBe("AKo");
@@ -341,11 +363,11 @@ describe("hhView - DOM import", () => {
     expect(flop?.dataset.positionPattern).toBe("SRP_BTN_VS_BB");
     expect(flop?.dataset.board).toBe("Ah-7d-2c");
     expect(flop?.dataset.recommended).toMatch(/^(CHECK|BET_SMALL|BET_BIG)$/);
-    expect(flop?.textContent).toContain("Flop – rozbor");
+    expect(flop?.textContent).toContain("Flop review");
     expect(flop?.textContent).toContain("Ah 7d 2c");
     expect(flop?.textContent).toContain("Single-raised pot");
     expect(flop?.textContent).toContain("SRP BTN vs BB");
-    expect(flop?.textContent).toContain("Doporučení");
+    expect(flop?.textContent).toContain("Recommended");
     expect(flop?.textContent).not.toContain("SINGLE_RAISED");
     expect(flop?.textContent).not.toContain("SRP_BTN_VS_BB");
     expect(flop?.textContent).not.toContain("StrategyPack");
@@ -385,8 +407,8 @@ describe("hhView - DOM import", () => {
     expect(postflop[1].dataset.board).toBe("Ah-7d-2c-5s");
     expect(postflop[2].dataset.board).toBe("Ah-7d-2c-5s-Jd");
     expect(postflop[2].dataset.recommended).toMatch(/^(FOLD|CALL|RAISE)$/);
-    expect(postflop[1].textContent).toContain("Turn – rozbor");
-    expect(postflop[2].textContent).toContain("River – rozbor");
+    expect(postflop[1].textContent).toContain("Turn review");
+    expect(postflop[2].textContent).toContain("River review");
     expect(postflop[2].textContent).not.toContain("RIVER_FACING_BET");
     expect(postflop[2].textContent).not.toContain("StrategyPack");
     expect(postflop[2].textContent).not.toContain("http");
@@ -433,9 +455,10 @@ describe("hhView - DOM import", () => {
       "false",
       "false",
     ]);
-    expect(visibleText).toContain("Production HH resolver flop recommendation");
-    expect(visibleText).toContain("Production HH resolver turn recommendation");
-    expect(visibleText).toContain("Production HH resolver river recommendation");
+    expect(visibleText).toContain(
+      "Kontrolovaná strategie pro tuto handu a tento node doporučuje Call.",
+    );
+    expect(visibleText).not.toContain("Production HH resolver");
     expect(visibleText).not.toContain("STRATEGY_PACK");
     expect(visibleText).not.toContain("internal-hh-production-parity-pack");
     expect(visibleText).not.toContain("hh-production-");

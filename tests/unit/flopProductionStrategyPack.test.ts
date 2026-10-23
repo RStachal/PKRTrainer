@@ -278,8 +278,12 @@ describe("flopProductionStrategyPack", () => {
     expect(errors).toContain(
       "flop-single_raised-btn_vs_bb-dry: range bucket value contains invalid hand not-a-hand.",
     );
-    expect(errors).toContain("flop-single_raised-btn_vs_bb-dry: missing BLUFF range lane.");
-    expect(errors).toContain("flop-single_raised-btn_vs_bb-dry: missing CHECK range lane.");
+    // Lane coverage is enforced per pack, not per rule: a single SPR band can
+    // legitimately have no bluffs, so the rule itself must not be rejected for
+    // that alone.
+    expect(errors).not.toContain("flop-single_raised-btn_vs_bb-dry: missing BLUFF range lane.");
+    expect(errors).not.toContain("flop-single_raised-btn_vs_bb-dry: missing CHECK range lane.");
+    expect(coverage.missingRangeLanes).toEqual(expect.arrayContaining(["BLUFF", "CHECK"]));
     expect(coverage.productionReady).toBe(false);
     expect(coverage.missingPotTypes).toEqual(["THREE_BET_POT"]);
     expect(coverage.missingPositionPatterns).toHaveLength(FLOP_PRODUCTION_REQUIRED_POSITION_PATTERNS.length);
@@ -371,6 +375,48 @@ describe("flopProductionStrategyPack", () => {
     expect(validateFlopProductionStrategyPack(pack)).toContain(
       "Flop production pack must use gameVariant MTT.",
     );
+  });
+
+  it("prijme SPR pasmo bez bluffu, kdyz solver v nem zadne bluffy nema", () => {
+    // A converged solve below SPR 3 can bet only pairs and broadway. Rejecting
+    // that rule would force a bluff lane to be invented, so only the pack as a
+    // whole must demonstrate every lane.
+    const noBluffRule: FlopProductionStrategyRule = {
+      ...productionRule("SINGLE_RAISED", "SRP_BTN_VS_BB", "dry"),
+      id: "flop-single_raised-srp_btn_vs_bb-lowspr",
+      rangeBuckets: productionRule("SINGLE_RAISED", "SRP_BTN_VS_BB", "dry")
+        .rangeBuckets.filter((bucket) => bucket.lane !== "BLUFF"),
+    };
+
+    const ruleErrors = validateFlopProductionRule(noBluffRule, { exactFrequencyAllowed: true });
+    expect(ruleErrors).toEqual([]);
+  });
+
+  it("odmitne pravidlo bez jakekoli range lane", () => {
+    const emptyRule: FlopProductionStrategyRule = {
+      ...productionRule("SINGLE_RAISED", "SRP_BTN_VS_BB", "dry"),
+      id: "flop-single_raised-srp_btn_vs_bb-empty",
+      rangeBuckets: [],
+    };
+
+    const ruleErrors = validateFlopProductionRule(emptyRule);
+    expect(ruleErrors).toContain("flop-single_raised-srp_btn_vs_bb-empty: rangeBuckets are required.");
+    expect(ruleErrors).toContain("flop-single_raised-srp_btn_vs_bb-empty: at least one range lane is required.");
+  });
+
+  it("stale hlasi chybejici lane na urovni celeho packu", () => {
+    const base = productionPack();
+    const pack = {
+      ...base,
+      rules: base.rules.map((rule) => ({
+        ...rule,
+        rangeBuckets: rule.rangeBuckets.filter((bucket) => bucket.lane !== "BLUFF"),
+      })),
+    } satisfies FlopProductionStrategyPack;
+
+    const coverage = buildFlopProductionCoverageReport(pack);
+    expect(coverage.missingRangeLanes).toContain("BLUFF");
+    expect(coverage.productionReady).toBe(false);
   });
 
 });

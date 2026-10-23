@@ -163,6 +163,51 @@ describe("range intake examples", () => {
     expect(rendered).not.toContain("url");
   });
 
+  it("u owned solver exportu akceptuje potvrzeni ownera bez evidence references", () => {
+    const manifest = readExample<ProductionPermissionManifest>(
+      "Agents/range-intake/examples/permission-manifest.synthetic.json",
+    );
+    const report = buildProductionPermissionManifestReport({
+      ...manifest,
+      evidence: [],
+      reusePolicy: {
+        allowedDimensions: ["BLIND_SPEED"],
+        reviewedAt: "2026-07-10",
+        reviewer: "PKRTrainer owner",
+        rationale: "Owner confirmed owned-export reuse for blind speed.",
+        sourceMaterialReferenceIds: [],
+      },
+    }, {
+      packId: manifest.packId,
+      licenseKind: "OWNED_SOLVER_EXPORT",
+      blindSpeeds: ["REGULAR", "TURBO"],
+      evModels: ["CHIP_EV"],
+    });
+
+    expect(report.valid).toBe(true);
+    expect(report.evidenceCount).toBe(0);
+    expect(report.warnings).not.toContain(
+      "Permission manifest evidence does not mark where range values are stored.",
+    );
+  });
+
+  it("u third-party permission vetve evidence nadale vyzaduje", () => {
+    const manifest = readExample<ProductionPermissionManifest>(
+      "Agents/range-intake/examples/permission-manifest.synthetic.json",
+    );
+    const report = buildProductionPermissionManifestReport({
+      ...manifest,
+      licenseKind: "PUBLIC_CHART_WITH_PERMISSION",
+      evidence: [],
+    }, {
+      packId: manifest.packId,
+      licenseKind: "PUBLIC_CHART_WITH_PERMISSION",
+    });
+
+    expect(report.valid).toBe(false);
+    expect(report.errors).toContain("Permission manifest needs at least one evidence record.");
+  });
+
   it("vyzaduje explicitni reuse policy pro multi-speed permission target", () => {
     const manifest = readExample<ProductionPermissionManifest>(
       "Agents/range-intake/examples/permission-manifest.synthetic.json",

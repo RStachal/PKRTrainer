@@ -110,6 +110,16 @@ const postflopRecord: PostflopStatsV2BridgeRecord = {
   confidence: "LOW",
 };
 
+const postflopEvRecord: PostflopStatsV2BridgeRecord = {
+  ...postflopRecord,
+  schemaVersion: 5,
+  actionEvOutcome: "EQUIVALENT",
+  chosenEvBb: 0.195,
+  bestEvBb: 0.2,
+  evLossBb: 0.005,
+  equivalentBestActions: ["CHECK", "BET_SMALL"],
+};
+
 const heroCards: [Card, Card] = [
   { rank: "A", suit: "s" },
   { rank: "K", suit: "d" },
@@ -183,6 +193,24 @@ describe("statsTransfer - export/import JSON", () => {
     expect(target.events()).toEqual([record]);
   });
 
+  it("zachova kompletni postflop action EV payload v exportu a importu", () => {
+    const source = createStatsStore(new MemoryStorage());
+    const exported = buildStatsExportJson(
+      source,
+      new Date("2026-06-01T12:00:00.000Z"),
+      { postflopRecords: [postflopEvRecord] },
+    );
+    const parsed = JSON.parse(exported) as {
+      postflopRecords: PostflopStatsV2BridgeRecord[];
+    };
+
+    expect(parsed.postflopRecords).toEqual([postflopEvRecord]);
+    const imported = importStatsJson(exported, createStatsStore(new MemoryStorage()));
+    expect(imported.ok).toBe(true);
+    if (!imported.ok) return;
+    expect(imported.postflopRecords).toEqual([postflopEvRecord]);
+  });
+
   it("umi vybrat, exportovat a odebrat statistiky jen pro jeden profil", () => {
     const source = createStatsStore(new MemoryStorage());
     const offRecord = profiledRecord("OFF", 1);
@@ -249,7 +277,10 @@ describe("statsTransfer - export/import JSON", () => {
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.postflopRecords[0]).toEqual(postflopRecord);
+    expect(result.postflopRecords[0]).toEqual({
+      ...postflopRecord,
+      schemaVersion: 5,
+    });
     expect(result.postflopLineRecords).toEqual([]);
   });
 

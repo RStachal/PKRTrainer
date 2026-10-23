@@ -6,6 +6,9 @@ import {
   type MttCompletionImportSlotHint,
   type MttCompletionReadinessRow,
 } from "../src/data/ranges/mttProductionReadiness.ts";
+import { generatedMttProductionManifest } from "../src/data/ranges/mttProductionRegistry.generated.ts";
+import { allMttPreflopRangePacks } from "../src/data/ranges/mttPreflopRangePacks.ts";
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 import {
   emptyMttIntakePriorityCounts,
   MTT_INTAKE_PRIORITY_KEYS,
@@ -18,7 +21,13 @@ const allowedTrackedRawFiles = new Set([
   "Agents/range-intake/raw/.gitignore",
   "Agents/range-intake/raw/README.md",
 ]);
-const expectedRawGitignore = ["*", "!.gitignore", "!README.md"].join("\n");
+const expectedRawGitignore = [
+  "*",
+  "!.gitignore",
+  "!README.md",
+  "!*/",
+  "!*/permission.json",
+].join("\n");
 
 interface CliArgs {
   json: boolean;
@@ -44,6 +53,7 @@ interface IntakeWorkspaceReport {
 
 try {
   const args = parseArgs(process.argv.slice(2));
+  await loadCompleteMttProductionRegistry();
   const report = buildIntakeWorkspaceReport();
   if (args.outputPath !== null) {
     mkdirSync(dirname(args.outputPath), { recursive: true });
@@ -100,28 +110,67 @@ function buildIntakeWorkspaceReport(): IntakeWorkspaceReport {
   if (!existsSync(rawGitignorePath)) {
     errors.push(`${rawGitignorePath} is missing.`);
   } else if (normalizeLineEndings(readFileSync(rawGitignorePath, "utf8").trim()) !== expectedRawGitignore) {
-    errors.push(`${rawGitignorePath} must ignore every raw file except .gitignore and README.md.`);
+    errors.push(`${rawGitignorePath} must ignore strategy files while allowing .gitignore, README.md and exact permission.json manifests.`);
   }
   if (!existsSync(rawReadmePath)) {
     errors.push(`${rawReadmePath} is missing.`);
   }
 
+  const legalSlots = legalImportSlots();
   const trackedRawFiles = gitTrackedRawFiles();
-  const disallowedTrackedRawFiles = trackedRawFiles.filter((file) => !allowedTrackedRawFiles.has(file));
+  const sourceSafePermissionFiles = new Set(generatedMttProductionManifest.map((entry) => (
+    `${rawFolder}/${entry.packId}/permission.json`
+  )));
+  for (const slot of legalSlots) {
+    sourceSafePermissionFiles.add(slot.importSlot.permissionManifestPath.replaceAll("\\", "/"));
+  }
+  const legalSlotByRawFolder = new Map(legalSlots.map((slot) => [slot.importSlot.rawInputFolder, slot]));
+  const productionPackByRawFolder = new Map(generatedMttProductionManifest.map((entry) => [
+    `${rawFolder}/${entry.packId}`,
+    entry.packId,
+  ]));
+  // Preview pack má povolení, ale nikdy nebude mít produkční slot: odpovídá jen
+  // tam, kde ví, takže `productionReady` z principu nesplní (ICM vrstva ze
+  // schválených mřížek RYE, rozhodnutí vlastníka 4a z 22. 9. 2026). Do té doby
+  // brána každou takovou složku hlásila jako neznámou - a jediná odpověď, která
+  // by jí vyhověla, by byla povolení nedokládat.
+  const previewPackByRawFolder = new Map(allMttPreflopRangePacks
+    .filter((pack) => pack.confidence === "LOW"
+      && !productionPackByRawFolder.has(`${rawFolder}/${pack.id}`)
+      && !legalSlotByRawFolder.has(`${rawFolder}/${pack.id}`))
+    .map((pack) => [`${rawFolder}/${pack.id}`, pack.id]));
+  // Manifest preview packu do gitu patří ze stejného důvodu jako produkční: je
+  // to doklad povolení bez jediné hodnoty ze zdroje. Proto se seznam povolených
+  // sledovaných souborů dokončuje až tady, kde jsou preview packy známé; do
+  // 23. 9. 2026 brána vlastní manifest hlásila jako „disallowed tracked file".
+  for (const folder of previewPackByRawFolder.keys()) {
+    sourceSafePermissionFiles.add(`${folder}/permission.json`);
+  }
+  const disallowedTrackedRawFiles = trackedRawFiles.filter((file) => (
+    !allowedTrackedRawFiles.has(file) && !sourceSafePermissionFiles.has(file)
+  ));
   if (disallowedTrackedRawFiles.length > 0) {
     errors.push(`Disallowed tracked raw intake files: ${disallowedTrackedRawFiles.join(", ")}`);
   }
 
-  const legalSlots = legalImportSlots();
-  const legalSlotByRawFolder = new Map(legalSlots.map((slot) => [slot.importSlot.rawInputFolder, slot]));
   const localRawFolders = listLocalRawFolders();
   for (const folder of localRawFolders) {
     const slot = legalSlotByRawFolder.get(folder);
-    if (slot === undefined) {
-      errors.push(`Unknown raw intake folder: ${folder}`);
+    if (slot !== undefined) {
+      errors.push(...validateLocalManifestPair(slot));
       continue;
     }
-    errors.push(...validateLocalManifestPair(slot));
+    const productionPackId = productionPackByRawFolder.get(folder);
+    if (productionPackId !== undefined) {
+      errors.push(...validatePromotedRawFolder(folder, productionPackId));
+      continue;
+    }
+    const previewPackId = previewPackByRawFolder.get(folder);
+    if (previewPackId !== undefined) {
+      errors.push(...validatePreviewRawFolder(folder, previewPackId));
+      continue;
+    }
+    errors.push(`Unknown raw intake folder: ${folder}`);
   }
 
   return {
@@ -207,6 +256,50 @@ function validateLocalManifestPair(slot: LegalImportSlotState): string[] {
   return errors;
 }
 
+function validatePromotedRawFolder(folder: string, expectedPackId: string): string[] {
+  const errors: string[] = [];
+  const normalizedPath = `${folder}/normalized.json`;
+  const permissionPath = `${folder}/permission.json`;
+
+  if (existsSync(normalizedPath)) {
+    const normalizedId = readJsonStringField(normalizedPath, "id");
+    if (normalizedId !== expectedPackId) {
+      errors.push(`${normalizedPath} id ${normalizedId ?? "missing"} does not match production packId ${expectedPackId}.`);
+    }
+  }
+  if (!existsSync(permissionPath)) {
+    errors.push(`Promoted production pack is missing source-free manifest: ${permissionPath}`);
+  } else {
+    const permissionPackId = readJsonStringField(permissionPath, "packId");
+    if (permissionPackId !== expectedPackId) {
+      errors.push(`${permissionPath} packId ${permissionPackId ?? "missing"} does not match production packId ${expectedPackId}.`);
+    }
+  }
+
+  return errors;
+}
+
+/**
+ * Složka preview packu: povolení ano, zdrojová data ne.
+ *
+ * Kandidát preview packu bydlí v `artifacts/`, ne tady - do `raw/` patří jen
+ * manifest, a ten musí jmenovat právě ten pack, ke kterému leží. Bez té
+ * kontroly by stačilo vyrobit složku se jménem packu a brána by mlčela.
+ */
+function validatePreviewRawFolder(folder: string, expectedPackId: string): string[] {
+  const errors: string[] = [];
+  const permissionPath = `${folder}/permission.json`;
+  if (!existsSync(permissionPath)) {
+    errors.push(`Preview pack is missing source-free manifest: ${permissionPath}`);
+    return errors;
+  }
+  const permissionPackId = readJsonStringField(permissionPath, "packId");
+  if (permissionPackId !== expectedPackId) {
+    errors.push(`${permissionPath} packId ${permissionPackId ?? "missing"} does not match preview packId ${expectedPackId}.`);
+  }
+  return errors;
+}
+
 function readJsonStringField(path: string, fieldName: string): string | null {
   try {
     const parsed = JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
@@ -256,5 +349,3 @@ function renderIntakeWorkspaceReport(report: IntakeWorkspaceReport): string {
 function normalizeLineEndings(value: string): string {
   return value.replace(/\r\n/g, "\n");
 }
-import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
-await loadCompleteMttProductionRegistry();

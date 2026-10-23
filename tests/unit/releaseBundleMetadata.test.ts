@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 
+import { QA_VIEWPORTS } from "../../scripts/lib/viewports.mts";
 import { DEFAULT_TRAINING_PROFILE, profileWith } from "../../src/core/trainingProfile";
 import { postflopPublicHeuristicStrategyPacks } from "../../src/data/ranges/postflopStrategyPack";
 import { validateRangePack } from "../../src/data/ranges/rangePack";
@@ -13,7 +14,9 @@ describe("release bundle metadata", () => {
   it("obsahuje nove RangePack/StrategyPack metadata v offline katalogu", () => {
     const ids = allTrainingRangePacks.map((pack) => pack.id);
 
-    expect(ids).toContain("mtt-six-max-regular-preflop-chip-ev-ante-on-candidate-v0");
+    // The derived pack is what ships for six-max regular; the empty candidate it
+    // replaced is no longer in the catalogue.
+    expect(ids).toContain("mtt-six-max-regular-preflop-chip-ev-ante-on-derived-v1");
     expect(ids).toContain("sng-six-max-turbo-preflop-chip-ev-ante-off-candidate-v0");
     expect(ids).toContain("cash-six-max-regular-preflop-chip-ev-rake-candidate-v0");
     expect(ids).toContain("cash-six-max-regular-preflop-chip-ev-no-rake-candidate-v0");
@@ -57,7 +60,13 @@ describe("release bundle metadata", () => {
   it("publikovana app metadata pouzivaji cestinu a platne UTF-8 popisy", () => {
     const html = readFileSync("index.html", "utf8");
     const budgetScript = readFileSync("scripts/checkBundleBudget.mts", "utf8");
+    const viteConfig = readFileSync("vite.config.ts", "utf8");
     const chromeE2eScript = readFileSync("scripts/runChromeE2e.mts", "utf8");
+    const chromePreviewE2eScript = readFileSync("scripts/runChromePreviewE2e.mts", "utf8");
+    // Build a náhled pro prohlížečové běhy jsou od 22. 10. 2026 jednou,
+    // v knihovně sdílené E2E i prohlídkou UI; vlastnosti se hlídají tam.
+    const previewServerLib = readFileSync("scripts/lib/previewServer.mts", "utf8");
+    const ftpPackageScript = readFileSync("scripts/packageMttPlayableBeta.mts", "utf8");
     const productionFixtureE2eScript = readFileSync(
       "scripts/runChromeProductionFixtureE2e.mts",
       "utf8",
@@ -82,66 +91,49 @@ describe("release bundle metadata", () => {
     expect(manifest.lang).toBe("cs");
     expect(manifest.description).toBe("Offline trenažér pokerových rozhodnutí pro turnajovou hru.");
     expect(pkg.description).toContain("offline full-ring 9-handed poker decision trainer");
-    expect(pkg.scripts["verify:ranges"]).toBe("vite-node scripts/verifyRanges.mts");
-    expect(pkg.scripts["validate:range-import"]).toBe("vite-node scripts/validateRangeImport.mts");
-    expect(pkg.scripts["build:range-module"]).toBe("vite-node scripts/buildRangeModule.mts");
-    expect(pkg.scripts["mtt:slots"]).toBe("vite-node scripts/listMttImportSlots.mts");
-    expect(pkg.scripts["mtt:completion"]).toBe("vite-node scripts/checkMttCompletion.mts");
-    expect(pkg.scripts["mtt:blockers"]).toBe("vite-node scripts/checkMttBlockers.mts");
-    expect(pkg.scripts["mtt:intake-plan"]).toBe("vite-node scripts/checkMttIntakePlan.mts");
-    expect(pkg.scripts["mtt:postflop-matrix"]).toBe("vite-node scripts/checkMttPostflopMatrix.mts");
-    expect(pkg.scripts["mtt:postflop-coverage"]).toBe("vite-node scripts/checkMttPostflopProductionCoverage.mts");
-    expect(pkg.scripts["mtt:postflop-positions"]).toBe("vite-node scripts/checkMttPostflopPositions.mts");
-    expect(pkg.scripts["mtt:postflop-release"]).toBe("vite-node scripts/checkMttPostflopReleaseGate.mts");
-    expect(pkg.scripts["mtt:solver-verification"]).toBe("vite-node scripts/checkMttSolverVerification.mts");
-    expect(pkg.scripts["mtt:texas-solver-review-protocol"]).toBe("vite-node scripts/checkTexasSolverReviewProtocol.mts");
-    expect(pkg.scripts["mtt:stage-texas-solver"]).toBe("vite-node scripts/stageTexasSolverExports.mts");
-    expect(pkg.scripts["mtt:texas-solver-pack"]).toBe("vite-node scripts/checkTexasSolverParameterPack.mts");
-    expect(pkg.scripts["mtt:texas-solver-review"]).toBe("vite-node scripts/extractTexasSolverReview.mts");
-    expect(pkg.scripts["mtt:texas-solver-scenario-audit"]).toBe("vite-node scripts/auditTexasSolverScenarioBatch.mts");
-    expect(pkg.scripts["mtt:texas-solver-srp-sb-bb-cbet-batch"])
-      .toBe("vite-node scripts/buildTexasSolverSrpSbBbCbetBatch.mts");
-    expect(pkg.scripts["mtt:texas-solver-srp-co-bb-cbet-batch"])
-      .toBe("vite-node scripts/buildTexasSolverSrpCoBbCbetBatch.mts");
-    expect(pkg.scripts["mtt:texas-solver-coverage-batch"]).toBe("vite-node scripts/buildTexasSolverCoverageBatch.mts");
-    expect(pkg.scripts["mtt:texas-solver-coverage-status"]).toBe("vite-node scripts/checkTexasSolverCoverageBatchStatus.mts");
-    expect(pkg.scripts["mtt:texas-solver-coverage-overview"]).toBe("vite-node scripts/checkTexasSolverCoverageOverview.mts");
-    expect(pkg.scripts["mtt:texas-solver-ingest-completed"]).toBe("vite-node scripts/ingestTexasSolverCompletedCoverage.mts");
-    expect(pkg.scripts["mtt:texas-solver-normalize-draft"]).toBe("vite-node scripts/buildTexasSolverNormalizedDraft.mts");
-    expect(pkg.scripts["mtt:texas-solver-merge-pilot-drafts"]).toBe("vite-node scripts/mergeTexasSolverPilotDrafts.mts");
-    expect(pkg.scripts["mtt:texas-solver-viewer"]).toBe("vite-node scripts/buildTexasSolverReviewViewer.mts");
-    expect(pkg.scripts["mtt:postflop-pilot-gate"]).toBe("vite-node scripts/checkMttPostflopPilotGate.mts");
-    expect(pkg.scripts["mtt:postflop-pilot-suite"]).toBe("vite-node scripts/checkMttPostflopPilotSuite.mts");
-    expect(pkg.scripts["mtt:postflop-pilot-catalog"]).toBe("vite-node scripts/checkMttPostflopPilotCatalog.mts");
-    expect(pkg.scripts["mtt:postflop-pilot-modules"]).toBe("vite-node scripts/buildMttPostflopPilotModules.mts");
-    expect(pkg.scripts["mtt:release-gates"]).toBe("vite-node scripts/checkMttReleaseGates.mts");
-    expect(pkg.scripts["mtt:acceptance"]).toBe("vite-node scripts/checkMttAcceptance.mts");
-    expect(pkg.scripts["mtt:technical-acceptance"])
-      .toBe("vite-node scripts/checkMttTechnicalAcceptance.mts");
-    expect(pkg.scripts["mtt:handoff"]).toBe("vite-node scripts/writeMttHandoffArtifacts.mts");
-    expect(pkg.scripts["mtt:scenario-catalog"]).toBe("vite-node scripts/checkMttScenarioCatalog.mts");
-    expect(pkg.scripts["mtt:utility-stats"]).toBe("vite-node scripts/checkMttUtilityStats.mts");
-    expect(pkg.scripts["mtt:content-packs"]).toBe("vite-node scripts/checkMttContentPacks.mts");
-    expect(pkg.scripts["mtt:variant-qa"]).toBe("vite-node scripts/checkMttVariantQa.mts");
-    expect(pkg.scripts["mtt:next-action"]).toBe("vite-node scripts/reportNextMttAction.mts");
-    expect(pkg.scripts["mtt:promote-ready"]).toBe("vite-node scripts/promoteReadyMttIntake.mts");
-    expect(pkg.scripts["mtt:registry-integrity"]).toBe("vite-node scripts/checkMttProductionRegistryIntegrity.mts");
-    expect(pkg.scripts["mtt:validate-ready-intake"]).toBe("vite-node scripts/validateMttReadyIntake.mts");
-    expect(pkg.scripts["mtt:preflop-csv-scaffold"]).toBe("vite-node scripts/buildMttPreflopCsvScaffold.mts");
-    expect(pkg.scripts["mtt:preflop-csv-draft"]).toBe("vite-node scripts/buildMttPreflopCsvDraft.mts");
-    expect(pkg.scripts["range:intake"]).toBe("vite-node scripts/checkRangeIntakeStatus.mts");
-    expect(pkg.scripts["range:intake:guard"]).toBe("vite-node scripts/checkRangeIntakeWorkspace.mts");
-    expect(pkg.scripts["bundle:budget"]).toBe("vite-node scripts/checkBundleBudget.mts");
-    expect(pkg.scripts["verify:precache"]).toBe("vite-node scripts/checkDistPrecache.mts");
-    expect(pkg.scripts["profile:render"]).toBe("vite-node scripts/profileRenderPerformance.mts");
-    expect(pkg.scripts["e2e:chrome"]).toBe("vite-node scripts/runChromeE2e.mts");
-    expect(pkg.scripts["e2e:chrome:production-fixture"])
-      .toBe("vite-node scripts/runChromeProductionFixtureE2e.mts");
-    expect(pkg.scripts["e2e:android:preflight"])
-      .toBe("vite-node scripts/checkAndroidDeviceAvailability.mts");
-    expect(chromeE2eScript).toContain('"mobile-360"');
-    expect(chromeE2eScript).toContain('"mobile-390"');
-    expect(chromeE2eScript).toContain('"mobile-412"');
+
+    // Every CLI script goes through the cached runner. This replaced a list of
+    // individual scripts pinned to their exact text, which had the effect of
+    // locking in the slow invocation: raw vite-node re-transpiles the whole
+    // import graph in every process, 63 seconds a time on a script that touches
+    // the data layer. Stated as a property so a new script cannot quietly
+    // reintroduce it.
+    const cliScripts = Object.entries(pkg.scripts)
+      .filter(([, command]) => command.includes("scripts/") && command.endsWith(".mts"));
+    expect(cliScripts.length).toBeGreaterThan(50);
+    for (const [name, command] of cliScripts) {
+      expect(command, name).not.toContain("vite-node");
+      // Cesta, ne přesný začátek řádku. Tvrzení znělo „node scripts/run-cli.mjs"
+      // a spadlo 31. 8. 2026 na tom, že tři generátory dostaly mezi `node`
+      // a skript ještě `--max-old-space-size=16384`. To je legitimní změna -
+      // ručně spuštěný generátor jinak spadne na výchozích 4 GB - a test měl
+      // hlídat, že se běží přes `run-cli.mjs`, ne jakými přepínači.
+      expect(command.startsWith("node "), name).toBe(true);
+      expect(command, name).toContain("scripts/run-cli.mjs");
+    }
+    expect(pkg.scripts["mtt:texas-solver-accuracy-handoff"])
+      .toContain("finalize-texas-solver-accuracy-recovery.ps1");
+    expect(chromePreviewE2eScript).toContain('NODE_ENV: "production"');
+    expect(chromePreviewE2eScript).toContain("buildProduction()");
+    expect(chromePreviewE2eScript).toContain("startVitePreview(");
+    expect(previewServerLib).toContain('NODE_ENV: "production"');
+    expect(previewServerLib).toContain('"--strictPort"');
+    // Halda pro build smí být napsaná **jen jednou**, ve skriptu `build`.
+    // E2E si staví vlastní balík a mělo to číslo opsané; 10. 9. 2026 se halda
+    // kvůli turnové EV zvedla na 12 GB v `package.json` a tady zůstalo osm,
+    // takže `npm run build` prošel a brána spadla o krok dál na tomtéž.
+    expect(
+      /"--max-old-space-size=\d+"/.test(previewServerLib + chromePreviewE2eScript),
+      "halda v E2E nesmí být napsaná číslem, čte se ze skriptu build",
+    ).toBe(false);
+    expect(previewServerLib).toContain("pkg.scripts.build");
+    expect(ftpPackageScript).toContain('!source.path.endsWith(".map")');
+    expect(ftpPackageScript).toContain("Source map must not enter the FTP package");
+    expect(pkg.scripts["release:mtt-core"])
+      .toBe("npm run typecheck && npm test && npm run mtt:refresh-registry -- --check && npm run mtt:core-release && npm run verify:ranges && npm run build && npm run verify:precache && npm run bundle:budget");
+    expect(chromeE2eScript).toContain("QA_VIEWPORTS");
+    expect(QA_VIEWPORTS.map((viewport) => viewport.name))
+      .toEqual(expect.arrayContaining(["mobile-360", "mobile-390", "mobile-412"]));
     expect(chromeE2eScript).toContain("Input.dispatchTouchEvent");
     expect(chromeE2eScript).toContain("Input.dispatchKeyEvent");
     expect(chromeE2eScript).toContain(".hh-analysis .matrix-cell");
@@ -180,6 +172,7 @@ describe("release bundle metadata", () => {
     expect(technicalAcceptanceScript).toContain("createNpmShim");
     expect(technicalAcceptanceScript).toContain("findAvailablePort");
     expect(technicalAcceptanceScript).toContain("mtt-technical-acceptance");
+    expect(technicalAcceptanceScript).toContain('item === "--summary"');
     expect(handoffScript).toContain("nextActionPacket");
     expect(handoffScript).toContain("--packet-dir=artifacts/mtt-next-action/packet");
     expect(handoffScript).toContain("--board-dir=artifacts/mtt-intake-board");
@@ -209,15 +202,111 @@ describe("release bundle metadata", () => {
     expect(handoffScript).toContain("NORMALIZED_JSON_REQUIREMENTS.md");
     expect(handoffScript).toContain("PERMISSION_JSON_REQUIREMENTS.md");
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_JS_KB", 325)');
-    expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_GZIP_KB", 86)');
-    expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_JS_KB", 400)');
+    expect(viteConfig).toContain('sourcemap: "hidden"');
+    // Zvednuto z 86 dne 21. 8. 2026. Hlavní balík nese manifesty vyřešených
+    // rodin a ty rostou s obsahem - naměřeno ~23 B gzipu na rodinu, takže 28
+    // rodin přidaných za jednu noc ho posunulo z 85,45 na 86,16 KiB. Instalační
+    // cestu hlídá součet (`BUNDLE_MAX_PRECACHE_GZIP_KB`, 128), a ten má rezervu.
+    expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_GZIP_KB", 96)');
+    // Zvednuto ze 400 na 416 dne 25. 8. 2026. Doručení akcí a blafů do matice
+    // range přidalo 8,4 KiB syrového kódu; naměřeno 404,94 KiB. Zvedá se druhá
+    // pojistka - hlavní je gzip součet (128) a ten má 16 KiB rezervy.
+    expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_JS_KB", 416)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_GZIP_KB", 128)');
-    expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_LAZY_MTT_JS_KB", 512)');
+    // CSS má strop od 22. 10. 2026, kdy se styly starého GUI přesunuly z JS do
+    // souborů; naměřeno 69,33 / 12,82 KiB. Zvedat jen s měřením, jako u JS.
+    expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_CSS_KB", 80)');
+    expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_CSS_GZIP_KB", 15)');
+    // Zvednuto z 512 na 520 dne 25. 8. 2026, s A/B: `mtt-postflop-pilot-runtime`
+    // má 510,80 KiB bez doručení akcí do matice a 513,70 s ním, tedy 2,9 KiB za
+    // barvu akce a blafovací lajnu na všech třech ulicích. Kód se nekopíruje do
+    // dalších chunků (jeden výskyt v dist) a gzip je 66 ze 128 KiB.
+    //
+    // Podruhé 26. 8. 2026, z 520 na 528: EV dostalo všech 47 riverových rodin
+    // místo sedmnácti, takže manifest v tomhle chunku povyrostl ze 5 147 na
+    // 12 695 bajtů a chunk z 513,70 na 520,26 KiB. Zaplatí se to **jen syrově**,
+    // gzip klesl z 66,18 na 65,34 KiB - třicet skoro identických položek se
+    // zkomprimuje pryč. Hráč za to dostane EV akcí na 89,7 % rozdaných riverů
+    // místo 30,0 % (`npm run mtt:post-answer`).
+    expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_LAZY_MTT_JS_KB", 528)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_LAZY_MTT_GZIP_KB", 128)');
-    expect(budgetScript).toContain('"BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 32768');
+    // Zvednuto z 32 768 na 45 056 (32 -> 44 MB) dne 25. 8. 2026 a je to
+    // **prozatímní číslo, které patří majiteli** - plán ho na dvou místech
+    // označuje za rozhodnutí o šířce pásma, ne o kódu.
+    //
+    // Noc dodala 46 rodin a knihovna povyrostla z 28,5 na 41,5 MB: river 22,6,
+    // turn 14,8, flop 3,5. Zvednout to jde proto, že tenhle strop měří **celou
+    // knihovnu, kterou žádný hráč nestáhne** - rodiny se berou po jedné. Co
+    // platí hráč, hlídají stropy s rezervou: 512 KiB raw a 128 KiB gzip na
+    // chunk, a gzip celé knihovny je 4,2 z 8 MB.
+    //
+    // Jen na 44, ať brána za pár nocí kousne znovu a rozhodne se s novými čísly.
+    //
+    // Podruhé 26. 8. 2026, z 45 056 na 54 272 (44 -> 53 MB). **Majitel tohle
+    // rozhodnutí předal** („To rozhodnutí je tvoje"), takže tady je i důvod,
+    // proč padlo takhle: knihovna vyrostla ze 44,07 na 52,27 MB tím, že EV akcí
+    // dostalo všech 47 riverových rodin místo sedmnácti, a doručení skočilo
+    // z 30,0 na 89,7 % rozdaných riverových spotů. Gzip celé knihovny je při tom
+    // 6,2 z 8 MB a jedna tabulka stojí hráče 74 KiB gzipu ze 128.
+    //
+    // Zase jen o kousek: rezerva je 1,96 MB, tedy zhruba jedna noc.
+    //
+    // Potřetí 27. 8. 2026, z 54 272 na 65 536 (53 -> 64 MB), a tentokrát se tím
+    // mění role stropu. Změřená trajektorie ze dvou nocí: raw +1 232 KiB za noc,
+    // gzip +159 KiB. Rezerva po ranním dodání byla 773 KiB raw (méně než jedna
+    // noc) proti 1 700 KiB gzip (deset nocí). Zvedat raw každé dvě noci není
+    // strategie; jde rovnou tam, kde jako první kousne gzip - ten jediný ze dvou
+    // součtů měří, co se po drátě přenese. Raw zůstává pojistkou proti řádovému
+    // skoku. Až kousne gzip, odpovědí není další zvednutí, ale ořez podle
+    // změřené poptávky.
+    //
+    // ## Gzip kousl 13. 10. 2026 a zvedlo se znovu - vědomě proti té větě výš
+    //
+    // Tenhle test byl to jediné, co tu větu připomnělo: spadl na zadrátovaném
+    // 84 992 a teprve pak jsem si ji přečetl. Platí tedy, že odpověď podle plánu
+    // z 27. 8. měl být **ořez podle změřené poptávky**, ne zvednutí.
+    //
+    // Ořez jsem změřil a je dnes špatný: tabulky EV drží 75 % líné knihovny
+    // (turn 5 247 KiB, river 4 044 z 12 333), takže by zabral - ale
+    // `mtt:post-answer` hlásí EV akcí u **72 % turnů a 89,7 % riverů** a nula
+    // nevyřešených spotů. Není to mrtvý obsah podle poptávky, je to to, co hráč
+    // dostává; ořez by mu vzal oceněné spoty. S tím měřením rozhodl vlastník
+    // zvednout („13312 a do budoucna musíme vyřešit nějak systémově").
+    //
+    // Role raw stropu se přitom **obrátila**, což bod 139 nepředvídal: tempo za
+    // tři noci je gzip 14,4 KiB a raw 124,0 (tabulky EV se komprimují asi 8,6:1),
+    // takže raw by kousl za 8 nocí a gzip za 68. Raw proto nejde nahoru
+    // proporčně, ale výš - 94 208 vydrží 82 nocí, takže pojistka zůstane
+    // pojistkou a brzdou je zase gzip.
+    //
+    // Co z původní věty platí dál: **další zvednutí už odpověď není.** Příště se
+    // musí dělit líná knihovna po variantách (úkol v `MTT_COMPLETION_PLAN.md`),
+    // protože tenhle strop měří jednu variantu a druhá přinese další násobek.
+    expect(budgetScript).toContain('"BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 94208');
     expect(budgetScript).toContain('"BUNDLE_MAX_LAZY_MTT_TOTAL_GZIP_KB",');
+    // Řetěz je připnutý schválně: má se měnit vědomě, ne mimochodem. Poslední
+    // článek přibyl 24. 8. 2026 a je to oprava chybějící brány - Chrome E2E
+    // běželo dosud až uvnitř balíčkování, takže blok se hlásil jako hotový a
+    // teprve balíček našel, že stránka na mobilu 360 px přetéká o 39 px.
+    // Definice hotového je proto jeden příkaz, který E2E obsahuje.
+    // `verify:block` je podle `AGENTS.md` definice hotového pro jeden blok, takže
+    // platí totéž co u `release:check`: má se měnit vědomě, ne mimochodem.
+    // Připnuto 25. 8. 2026, když do řetězu přibyl `mtt:post-answer` - brána na
+    // doručení, bez které se dva týdny stavěl obsah, co se k hráči nedostal.
+    // 9. 9. 2026 přibyl `mtt:ev-bounds`: fyzická mez na EV přes obě ulice, která
+    // chytila jednotkovou chybu až o 38 % ve 3bet potech. Tenhle test si toho
+    // **nevšiml až teď**, protože se článek přidal a připnutí neaktualizovalo -
+    // brána od té chvíle padala a hlásilo se, že prošla. Proto se mění vědomě.
+    // 17. 9. 2026 přibyl `mtt:preflop-drift`: produkční preflop packy byly dva
+    // měsíce snímek z 16. 7. a nikdo to nepoznal, protože sada i brány měřily
+    // legacy pack a produkci neměřilo nic (bod 257).
+    // 15. 10. 2026 přibyl `mtt:picked-situation`: doručení na cestě „Change
+    // situation" stálo do 14. 10. na nule a měření z toho dne jen tisklo, takže
+    // by se tam regrese vrátila bez jediné červené (bod 315).
+    expect(pkg.scripts["verify:block"])
+      .toBe("npm run typecheck && npm test && npm run verify:ranges && npm run mtt:preflop-drift && npm run mtt:post-answer && npm run mtt:picked-situation && npm run mtt:ev-bounds && npm run build && npm run verify:precache && npm run bundle:budget && npm run e2e:chrome:preview");
     expect(pkg.scripts["release:check"])
-      .toBe("npm run typecheck && npm test && npm run mtt:refresh-registry -- --check && npm run mtt:release-gates && npm run verify:ranges && npm run build && npm run verify:precache && npm run bundle:budget");
+      .toBe("npm run typecheck && npm test && npm run mtt:refresh-registry -- --check && npm run mtt:release-gates && npm run verify:ranges && npm run build && npm run verify:precache && npm run bundle:budget && npm run e2e:chrome:preview");
     expect(`${html}\n${manifest.description}\n${pkg.description}`).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
   });
 
@@ -227,7 +316,13 @@ describe("release bundle metadata", () => {
     const forpsiDeployment = readFileSync("Agents/forpsi-ftp-deployment.md", "utf8");
     const forpsiHtaccess = readFileSync("deploy/forpsi/.htaccess.example", "utf8");
     const mttDoneChecklist = readFileSync("Agents/mtt-done-checklist.md", "utf8");
+    const mttCompletionPriorities = readFileSync("Agents/mtt-completion-priorities.md", "utf8");
     const mttCoverageAudit = readFileSync("Agents/mtt-production-coverage-audit.md", "utf8");
+    const mttCoreReleaseNotes = readFileSync(
+      "Agents/release-notes-mtt-core-v1-2026-07-10.md",
+      "utf8",
+    );
+    const paymentModel = readFileSync("Agents/payment-model.md", "utf8");
     const p1PreflopIntake = readFileSync("Agents/mtt-p1-preflop-chip-ev-intake.md", "utf8");
     const p1PreflopCsvTemplate = readFileSync(
       "Agents/range-intake/templates/mtt-preflop-records-template.csv",
@@ -248,6 +343,8 @@ describe("release bundle metadata", () => {
     expect(quickStart).toContain("Statistiky");
     expect(quickStart).toContain("Import HH");
     expect(quickStart).toContain("Postflop");
+    expect(quickStart).toContain("MTT ChipEV Core");
+    expect(quickStart).toContain("sedm scoped FLOP pilotů");
     expect(quickStart).not.toMatch(/\bhttps?:\/\//i);
     expect(quickStart).not.toMatch(/\b(?:RangePack|StrategyPack)\b/);
     expect(quickStart).not.toMatch(/\b(?:mtt|sng|cash)-(?:full-ring|six-max|6max)[a-z0-9-]*/i);
@@ -369,6 +466,18 @@ describe("release bundle metadata", () => {
     expect(mttDoneChecklist).toContain("npm run mtt:registry-integrity");
     expect(mttDoneChecklist).toContain("No production promotion uses public heuristic fallback");
     expect(mttDoneChecklist).toContain("Start and answer representative 9-max turbo DOLAR_EV preflop training");
+    expect(mttCompletionPriorities).toContain("Status: ACTIVE EXECUTION CONTRACT");
+    expect(mttCompletionPriorities).toContain("MTT_CORE_V1");
+    expect(mttCompletionPriorities).toContain("P0 - Restore Truthful Gates");
+    expect(mttCompletionPriorities).toContain("seven scoped FLOP pilots");
+    expect(mttCoreReleaseNotes).toContain("4/4 scoped production profiles");
+    expect(mttCoreReleaseNotes).toContain("7/7 `READY`");
+    expect(mttCoreReleaseNotes).toContain("current state is 4/64");
+    expect(mttCoreReleaseNotes).toContain("It is not a paid-user license");
+    expect(mttCoreReleaseNotes).toContain("npm run release:mtt-core");
+    expect(paymentModel).toContain("all seven scoped FLOP pilots are `READY`");
+    expect(paymentModel).toContain("`permission.json` never grants a customer access");
+    expect(paymentModel).not.toContain("reserved / WAITING");
     expect(forpsiDeployment).toContain("FORPSI FTP Deployment");
     expect(forpsiDeployment).toContain("dist/index.html");
     expect(forpsiDeployment).toContain("deploy/forpsi/.htaccess.example");
@@ -379,7 +488,7 @@ describe("release bundle metadata", () => {
     expect(forpsiHtaccess).toContain("AuthType Basic");
     expect(forpsiHtaccess).toContain("Require valid-user");
     expect(forpsiHtaccess).toContain(".htpasswd-pkrtrainer");
-    expect(mttCoverageAudit).toContain("Updated: 2026-06-22");
+    expect(mttCoverageAudit).toContain("Updated: 2026-07-10");
     expect(mttCoverageAudit).toContain("DOLAR_EV");
     expect(mttCoverageAudit).toContain("Completion matrix");
     expect(mttCoverageAudit).toContain("npm run mtt:completion -- --summary");
@@ -396,9 +505,9 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("captured outputs for operator tooling");
     expect(mttCoverageAudit).toContain("defaults to a production gate");
     expect(mttCoverageAudit).toContain("total MTT rows: 64");
-    expect(mttCoverageAudit).toContain("production-ready rows: 0");
-    expect(mttCoverageAudit).toContain("candidate/preview rows: 54");
-    expect(mttCoverageAudit).toContain("blocked/missing rows: 10");
+    expect(mttCoverageAudit).toContain("production-ready rows: 4");
+    expect(mttCoverageAudit).toContain("candidate/preview rows: 52");
+    expect(mttCoverageAudit).toContain("blocked/missing rows: 8");
     expect(mttCoverageAudit).toContain("npm run range:intake -- --ready-only --json");
     expect(mttCoverageAudit).toContain("npm run mtt:blockers");
     expect(mttCoverageAudit).toContain("npm run mtt:blockers -- --summary");
@@ -430,10 +539,17 @@ describe("release bundle metadata", () => {
     expect(p1PreflopIntake).toContain("mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1");
     expect(p1PreflopIntake).toContain("Agents/range-intake/templates/mtt-preflop-records-template.csv");
     expect(p1PreflopIntake).toContain("Agents/range-intake/templates/mtt-p1-preflop-chip-ev-coverage.csv");
-    expect(p1PreflopIntake).toContain("Turbo slots must not become production by copying regular-speed metadata");
+    expect(p1PreflopIntake).toContain("Turbo slots must not become production by changing regular-speed metadata only");
+    expect(p1PreflopIntake).toContain("npm run mtt:sixmax-preflop-intake-progress");
+    expect(p1PreflopIntake).toContain("npm run mtt:sixmax-preflop-stage-progress");
+    expect(p1PreflopIntake).toContain("Agents/range-intake/raw/<packId>/permission.json");
+    expect(p1PreflopIntake).toContain("CANONICAL_STAGED_MANIFEST");
+    expect(p1PreflopIntake).not.toContain("permission.candidate.json");
     expect(p1PreflopIntake).toContain("Do not use postflop TexasSolver outputs for P1 preflop ranges");
     expect(p1PreflopCsvTemplate).toContain("rowKind,packId,tableFormat,blindSpeed,ante,evModel");
-    expect(p1PreflopCsvTemplate).toContain("strictActions,lenientActions,sourceReferenceId");
+    expect(p1PreflopCsvTemplate).toContain(
+      "strictActions,lenientActions,actionEvsBb,equivalentThresholdBb,acceptableThresholdBb,sourceReferenceId",
+    );
     expect(p1PreflopCoverageCsv).toContain("P1_PREFLOP_CHIP_EV");
     expect(p1PreflopCoverageCsv).toContain("mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1");
     expect(p1PreflopCoverageCsv).toContain("mtt-six-max-turbo-preflop-chip-ev-ante-off-production-v1");

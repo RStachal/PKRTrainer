@@ -151,6 +151,36 @@ describe("mttPreflopRangePackImport", () => {
     expect(renderMttPreflopImportReadinessReport(report)).toContain("action distribution:");
   });
 
+  it("zpresneny zaznam s otviracem projde vedle obecneho a nezahodi se", () => {
+    // Bod 234: produkční cesta `vsSeat` při normalizaci zahazovala a dva
+    // záznamy téže buňky lišící se otvíračem hlásila jako duplicitu. Zpřesněný
+    // záznam je nadstavba nad obecným - úplnost packu se počítá jen z obecných.
+    const input = fullRingTurboInput();
+    const general = input.records.find((record) => record.context === "VS_OPEN")!;
+    const refined = {
+      ...general,
+      vsSeat: "BTN" as const,
+      provenance: "test: koupený chart vlastníka, schváleno 2026-09-15",
+      strict: handMap("3BET"),
+      lenient: handMap("3BET"),
+    };
+    const withRefined = { ...input, records: [...input.records, refined] };
+    const pack = normalizeMttPreflopRangePackImport(withRefined);
+    const stored = pack.records.filter((record) => (
+      record.context === "VS_OPEN" && record.position === general.position && record.bucket === general.bucket
+    ));
+    expect(stored.map((record) => record.vsSeat)).toEqual([undefined, "BTN"]);
+    expect(stored[1].provenance).toContain("koupený chart");
+    expect(stored[1].strict.AA).toEqual(["3BET"]);
+    const report = buildMttPreflopImportReadinessReport(withRefined);
+    expect(report.duplicateRecordKeys).toEqual([]);
+    expect(report.productionReady).toBe(true);
+    // Táž sedačka podruhé už duplicita je.
+    const twice = { ...input, records: [...input.records, refined, refined] };
+    expect(buildMttPreflopImportReadinessReport(twice).duplicateRecordKeys)
+      .toEqual([`${general.position}|${general.bucket}|VS_OPEN|vsBTN`]);
+  });
+
   it("povoli DOLAR_EV jako samostatny MTT preflop importni model", () => {
     const input = fullRingTurboInput();
     const report = buildMttPreflopImportReadinessReport({
@@ -280,5 +310,70 @@ describe("mttPreflopRangePackImport", () => {
       "records[0].strict.AA contains duplicate actions.",
       "records[0].strict.AA action CALL is missing from lenient.",
     ]));
+  });
+
+  it("pocita EV coverage jen kdyz export obsahuje kazdou nabizenou akci", () => {
+    const input = fullRingTurboInput();
+    const record = input.records[2];
+    expect(record.context).toBe("VS_OPEN");
+    expect(record.bucket).toBe(15);
+
+    const completeReport = buildMttPreflopImportReadinessReport({
+      ...input,
+      records: input.records.map((item, index) => index === 2
+        ? {
+            ...item,
+            actionEvs: {
+              AA: {
+                source: "SOLVER" as const,
+                unit: "BB" as const,
+                equivalentThresholdBb: 0.01,
+                acceptableThresholdBb: 0.05,
+                values: [
+                  { action: "FOLD" as const, evBb: 0 },
+                  { action: "CALL" as const, evBb: 0.204 },
+                  { action: "3BET" as const, evBb: 0.21 },
+                  // A shove is offered against an open at 15BB, so a complete
+                  // export has to price it. This fixture is the "complete" half
+                  // of the test, and the whole point of the check is that
+                  // "complete" means every action actually on offer.
+                  { action: "JAM" as const, evBb: 0.18 },
+                ],
+              },
+            },
+          }
+        : item),
+    });
+
+    expect(completeReport.valid).toBe(true);
+    expect(completeReport.actionEvHands).toBe(1);
+    expect(completeReport.evReady).toBe(false);
+
+    const partialReport = buildMttPreflopImportReadinessReport({
+      ...input,
+      records: input.records.map((item, index) => index === 2
+        ? {
+            ...item,
+            actionEvs: {
+              AA: {
+                source: "SOLVER" as const,
+                unit: "BB" as const,
+                equivalentThresholdBb: 0.01,
+                acceptableThresholdBb: 0.05,
+                values: [
+                  { action: "CALL" as const, evBb: 0.204 },
+                  { action: "3BET" as const, evBb: 0.21 },
+                ],
+              },
+            },
+          }
+        : item),
+    });
+
+    expect(partialReport.valid).toBe(false);
+    expect(partialReport.actionEvHands).toBe(0);
+    expect(partialReport.errors).toContain(
+      "records[2].actionEvs.AA: action FOLD is missing an EV.",
+    );
   });
 });

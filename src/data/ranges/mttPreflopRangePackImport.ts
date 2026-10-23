@@ -1,5 +1,12 @@
 import { ALL_HAND_CLASSES } from "../../core/poker";
 import {
+  cloneActionEvSet,
+  isActionEvSetComplete,
+  validateActionEvSet,
+  type ActionEvSet,
+} from "../../core/actionEv";
+import { offeredPreflopActionKeysForContext } from "../../core/preflopActionOptions";
+import {
   POSITION_ORDER,
   STACK_BUCKETS,
   type ActionContext,
@@ -9,13 +16,14 @@ import {
   type StackBucket,
 } from "../../core/types";
 import { positionsForFormat } from "../../core/trainingProfile";
+import { reachabilityErrors } from "./refinementReachability";
 import type {
   RangePack,
   RangePackDimensions,
   RangePackRecord,
   RangeSourceEvidence,
 } from "./rangePack";
-import { validateRangePack } from "./rangePack";
+import { validateRangePack, type RangeStackSetup } from "./rangePack";
 import { findPlaceholderStringPaths } from "./placeholderText";
 
 export type MttPreflopImportLicenseKind =
@@ -30,8 +38,31 @@ export interface MttPreflopImportRecord {
   sourceStackBB: number;
   bucket: StackBucket;
   context: ActionContext;
+  /**
+   * Zpřesnění (osa otvírače, bod 234): sedačka, která jednala proti hrdinovi,
+   * a rozložení stacků. Do 16. 9. 2026 je produkční cesta při normalizaci
+   * **zahazovala** a dva záznamy téže buňky lišící se otvíračem hlásila jako
+   * duplicitu - přesně to, co bod 234 naměřil. Zpřesněný záznam je nadstavba
+   * nad obecným: do úplnosti packu se nepočítá a obecný záznam téže buňky
+   * musí existovat dál.
+   */
+  vsSeat?: Position;
+  stackSetupId?: string;
+  /**
+   * Osa dorovnávajícího (rozhodnutí 4a, 1. 10. 2026): kdo otevření dorovnal,
+   * zkratkami zdroje a v pořadí akce. Chová se jako `vsSeat` - je to nadstavba
+   * nad obecným záznamem, do úplnosti packu se nepočítá.
+   */
+  flatCallers?: readonly string[];
+  /**
+   * Odkud záznam je, když to není odkud je celý pack. Pack má jeden
+   * `licenseKind`; záznam z jiného zdroje (koupené charty vlastníka) to musí
+   * říct sám, jinak by pack tvrdil o jeho původu něco jiného.
+   */
+  provenance?: string;
   lenient: Partial<Record<HandLabel, readonly ActionKey[]>>;
   strict: Partial<Record<HandLabel, readonly ActionKey[]>>;
+  actionEvs?: Partial<Record<HandLabel, ActionEvSet<ActionKey>>>;
 }
 
 export interface MttPreflopRangePackImportInput {
@@ -47,6 +78,8 @@ export interface MttPreflopRangePackImportInput {
   assumptions: readonly string[];
   searchQueries: readonly string[];
   sourceEvidence: readonly RangeSourceEvidence[];
+  /** Scénáře (rozložení stacků), na které se záznamy odkazují přes `stackSetupId`. */
+  stackSetups?: Readonly<Record<string, RangeStackSetup>>;
   records: readonly MttPreflopImportRecord[];
 }
 
@@ -56,6 +89,7 @@ export interface MttPreflopImportRecordReport {
   bucket: StackBucket;
   context: ActionContext;
   explicitHands: number;
+  actionEvHands: number;
   missingHands: readonly HandLabel[];
   strictActionDistribution: readonly MttPreflopImportActionCount[];
   lenientActionDistribution: readonly MttPreflopImportActionCount[];
@@ -78,6 +112,9 @@ export interface MttPreflopImportReadinessReport {
   sourceCount: number;
   searchQueryCount: number;
   recordCount: number;
+  actionEvHands: number;
+  actionEvCoveragePct: number;
+  evReady: boolean;
   positions: readonly Position[];
   contexts: readonly ActionContext[];
   buckets: readonly StackBucket[];
@@ -120,13 +157,19 @@ const ACTION_KEYS: readonly ActionKey[] = [
 ];
 
 const EXPECTED_NON_FOLD_ACTIONS_BY_CONTEXT: Record<ActionContext, readonly ActionKey[]> = {
-  RFI: ["OPEN_2X", "OPEN_25X", "OPEN_3X"],
-  VS_LIMP: ["ISO_2X", "ISO_25X", "ISO_3X", "OVERLIMP", "CALL"],
+  // JAM belongs in RFI for the same reason it belongs in VS_OPEN and VS_LIMP:
+  // between ten and twenty big blinds the owner's sheets shove the small pairs
+  // rather than opening them, so a pack that says so is correct, not malformed.
+  RFI: ["OPEN_2X", "OPEN_25X", "OPEN_3X", "LIMP", "JAM"],
+  // JAM belongs here for the same reason it belongs in VS_OPEN: short of thirty
+  // big blinds the owner's chart answers a limp with a shove - 20.5 percent of
+  // hands at 15-20BB - so a pack that teaches it is correct, not malformed.
+  VS_LIMP: ["ISO_2X", "ISO_25X", "ISO_3X", "OVERLIMP", "LIMP", "CALL", "JAM"],
   VS_OPEN: ["CALL", "3BET", "JAM"],
   VS_3BET: ["CALL", "4BET", "JAM"],
   VS_4BET: ["CALL", "CALL_JAM", "JAM"],
   SQUEEZE: ["SQUEEZE", "3BET", "CALL", "JAM"],
-  BVB: ["OPEN_2X", "OPEN_25X", "OPEN_3X", "LIMP", "CALL", "JAM"],
+  BVB: ["OPEN_2X", "OPEN_25X", "OPEN_3X", "LIMP", "CALL", "3BET", "JAM"],
   PUSH_FOLD: ["JAM", "CALL_JAM"],
   VS_ALLIN: ["CALL", "CALL_JAM"],
 };
@@ -148,6 +191,29 @@ const LEGAL_LICENSE_KINDS: readonly MttPreflopImportLicenseKind[] = [
   "EXPLICIT_WRITTEN_PERMISSION",
 ];
 
+/**
+ * Zdroje jmenované na úrovni záznamů: text `provenance` před první čárkou.
+ *
+ * Manifest povolení je musí uznat každý zvlášť
+ * (`ProductionPermissionManifest.additionalSources`).
+ */
+export function recordProvenanceSources(
+  records: readonly Pick<MttPreflopImportRecord, "provenance">[],
+  ownSource?: string,
+): string[] {
+  const sources = new Set<string>();
+  for (const record of records) {
+    if (record.provenance === undefined) continue;
+    const source = record.provenance.split(",")[0].trim();
+    // Záznam, který jen říká, že je z vlastního zdroje packu (`licenseKind`
+    // jako první položka `provenance`), není cizí zdroj: převedený záznam
+    // (bod 254, BVB|BB → VS_OPEN z SB) má stejný původ jako celý pack.
+    if (ownSource !== undefined && source === ownSource) continue;
+    sources.add(source);
+  }
+  return [...sources].sort();
+}
+
 export function normalizeMttPreflopRangePackImport(
   input: MttPreflopRangePackImportInput,
 ): RangePack {
@@ -161,6 +227,10 @@ export function normalizeMttPreflopRangePackImport(
     assumptions: [...input.assumptions, `License: ${input.licenseKind}. ${input.licenseNote}`],
     searchQueries: [...input.searchQueries],
     sourceEvidence: input.sourceEvidence.map((source) => ({ ...source })),
+    ...(input.stackSetups === undefined ? {} : {
+      stackSetups: Object.fromEntries(Object.entries(input.stackSetups)
+        .map(([id, setup]) => [id, { label: setup.label, stacksBB: { ...setup.stacksBB } }])),
+    }),
     records: input.records.map(normalizeRecord),
   };
 }
@@ -189,6 +259,8 @@ export function buildMttPreflopImportReadinessReport(
     missingBuckets,
   });
   const legalLicense = LEGAL_LICENSE_KINDS.includes(input.licenseKind);
+  const actionEvHands = records.reduce((sum, record) => sum + record.actionEvHands, 0);
+  const totalHands = records.length * ALL_HAND_CLASSES.length;
 
   return {
     packId: input.id,
@@ -201,6 +273,9 @@ export function buildMttPreflopImportReadinessReport(
     sourceCount: input.sourceEvidence.length,
     searchQueryCount: input.searchQueries.length,
     recordCount: input.records.length,
+    actionEvHands,
+    actionEvCoveragePct: totalHands === 0 ? 0 : roundPct(actionEvHands, totalHands),
+    evReady: totalHands > 0 && actionEvHands === totalHands,
     positions,
     contexts,
     buckets,
@@ -228,6 +303,7 @@ export function renderMttPreflopImportReadinessReport(
     `sources: ${report.sourceCount}`,
     `searches: ${report.searchQueryCount}`,
     `records: ${report.recordCount}`,
+    `action EV: ${report.actionEvHands} hands (${report.actionEvCoveragePct}%), ready=${report.evReady}`,
     `positions: ${report.positions.join(",") || "none"}`,
     `contexts: ${report.contexts.join(",") || "none"}`,
     `buckets: ${report.buckets.join(",") || "none"}`,
@@ -272,9 +348,25 @@ function normalizeRecord(record: MttPreflopImportRecord): RangePackRecord {
     position: record.position,
     bucket: record.bucket,
     context: record.context,
+    ...(record.vsSeat ? { vsSeat: record.vsSeat } : {}),
+    ...(record.stackSetupId ? { stackSetupId: record.stackSetupId } : {}),
+    ...(record.flatCallers?.length ? { flatCallers: record.flatCallers } : {}),
+    ...(record.provenance ? { provenance: record.provenance } : {}),
     lenient: normalizeActionMap(record.lenient),
     strict: normalizeActionMap(record.strict),
+    ...(record.actionEvs ? { actionEvs: normalizeActionEvMap(record.actionEvs) } : {}),
   };
+}
+
+function normalizeActionEvMap(
+  map: Partial<Record<HandLabel, ActionEvSet<ActionKey>>>,
+): Partial<Record<HandLabel, ActionEvSet<ActionKey>>> {
+  const out: Partial<Record<HandLabel, ActionEvSet<ActionKey>>> = {};
+  for (const hand of ALL_HAND_CLASSES) {
+    const set = map[hand];
+    if (set !== undefined) out[hand] = cloneActionEvSet(set);
+  }
+  return out;
 }
 
 function normalizeActionMap(
@@ -291,6 +383,17 @@ function normalizeActionMap(
 function validateMttPreflopInput(input: MttPreflopRangePackImportInput): string[] {
   const errors: string[] = [];
   const validPositions = positionsForFormat(input.dimensions.tableFormat);
+
+  /*
+   * Zpřesněný záznam, na který se nikdo nedokáže zeptat, je tiše ztracený obsah.
+   *
+   * Přidáno 7. 10. 2026 poté, co osa dorovnávajícího udělala tři schválené
+   * mřížky nedosažitelnými a **žádná brána to nenašla**: počet přijatých záznamů
+   * zůstal 69, sada procházela a kontrola importu hlásila `valid true`. Záznamy
+   * nezmizely, jen se překlíčovaly. Proč je to chyba a ne varování, je rozepsané
+   * v `refinementReachability`.
+   */
+  errors.push(...reachabilityErrors(input.records));
 
   if (input.dimensions.gameVariant !== "MTT") {
     errors.push("MTT preflop import must use gameVariant MTT.");
@@ -378,6 +481,32 @@ function validateMttPreflopInput(input: MttPreflopRangePackImportInput): string[
           errors.push(`${tag}.strict.${hand} action ${action} is missing from lenient.`);
         }
       }
+
+      const actionEvs = record.actionEvs?.[hand];
+      if (actionEvs !== undefined) {
+        const evActions = actionEvs.values.map((item) => item.action);
+        const offeredActions = offeredPreflopActionKeysForContext(
+          record.context,
+          record.position,
+          record.bucket,
+          strict,
+        );
+        for (const error of validateActionEvSet(actionEvs, offeredActions)) {
+          errors.push(`${tag}.actionEvs.${hand}: ${error}.`);
+        }
+        for (const action of evActions) {
+          if (!ACTION_KEYS.includes(action)) {
+            errors.push(`${tag}.actionEvs.${hand} contains unsupported action ${action}.`);
+          } else if (!LEGAL_ACTIONS_BY_CONTEXT[record.context].has(action)) {
+            errors.push(`${tag}.actionEvs.${hand} contains action ${action} illegal for ${record.context}.`);
+          }
+        }
+        for (const action of new Set<ActionKey>([...strict, ...lenient])) {
+          if (!evActions.includes(action)) {
+            errors.push(`${tag}.actionEvs.${hand} is missing accepted action ${action}.`);
+          }
+        }
+      }
     }
   }
 
@@ -440,6 +569,17 @@ function reportRecord(record: MttPreflopImportRecord): MttPreflopImportRecordRep
     bucket: record.bucket,
     context: record.context,
     explicitHands: ALL_HAND_CLASSES.length - missingHands.length,
+    actionEvHands: ALL_HAND_CLASSES.filter((hand) => {
+      const set = record.actionEvs?.[hand];
+      const strict = record.strict[hand] ?? [];
+      const offeredActions = offeredPreflopActionKeysForContext(
+        record.context,
+        record.position,
+        record.bucket,
+        strict,
+      );
+      return isActionEvSetComplete(set, offeredActions);
+    }).length,
     missingHands,
     strictActionDistribution: actionDistribution(record.strict),
     lenientActionDistribution: actionDistribution(record.lenient),
@@ -453,7 +593,12 @@ function missingHandClasses(record: MttPreflopImportRecord): HandLabel[] {
 }
 
 function recordKey(record: MttPreflopImportRecord): string {
-  return `${record.position}|${record.bucket}|${record.context}`;
+  return `${record.position}|${record.bucket}|${record.context}`
+    + `${record.vsSeat ? `|vs${record.vsSeat}` : ""}${record.stackSetupId ? `|#${record.stackSetupId}` : ""}`
+    // Bez dorovnávajících v klíči by dvě mřížky lišící se jen jimi hlásily
+    // duplicitu a jedna by se zahodila - tatáž vada, jakou mel do 16. 9. 2026
+    // zahazovaný `vsSeat` (bod 234).
+    + `${record.flatCallers?.length ? `|@${record.flatCallers.join("+")}` : ""}`;
 }
 
 function semanticWarningsForRecord(record: MttPreflopImportRecord): string[] {
@@ -523,6 +668,10 @@ function actionDistribution(
       pct: Math.round(((counts.get(action) ?? 0) / ALL_HAND_CLASSES.length) * 1000) / 10,
     }))
     .filter((item) => item.count > 0);
+}
+
+function roundPct(value: number, total: number): number {
+  return Math.round((value / total) * 1000) / 10;
 }
 
 function renderActionDistribution(distribution: readonly MttPreflopImportActionCount[]): string {

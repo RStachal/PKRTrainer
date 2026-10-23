@@ -21,6 +21,7 @@ import {
   type MttIntakePriorityKey,
 } from "../src/data/ranges/mttIntakePriority.ts";
 import { buildRangeModuleDryRunCommand } from "../src/data/ranges/rangeImportCommands.ts";
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 
 interface CliArgs {
   filters: MttCompletionReadinessFilters;
@@ -92,6 +93,7 @@ function usage(): string {
 
 try {
   const args = parseArgs(process.argv.slice(2));
+  await loadCompleteMttProductionRegistry();
   const report = buildReadyValidationReport(args);
   if (args.outputPath !== null) {
     mkdirSync(dirname(args.outputPath), { recursive: true });
@@ -272,5 +274,3 @@ function renderReadyValidationReport(report: ReadyValidationReport): string {
 
   return lines.join("\n");
 }
-import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
-await loadCompleteMttProductionRegistry();

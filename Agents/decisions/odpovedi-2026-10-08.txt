@@ -1,0 +1,65 @@
+# DrillEV — 8. 10. 2026, odpovědi na rozhodnutí (stránka 10:53, otisk 66d7db7e)
+# Vyplnil Claude na pokyn vlastníka „na základě znalostí v PKR vyplň přiložené soubory, co nebudeš
+# vědět, dohledej na internetu" - tedy návrh, ne vlastníkův vlastní zápis.
+# Vlastník soubor předal 9. 10. 2026 slovy „zde mas vyplneno, pokracuj" - tedy přijal ho jako vstup.
+# Zpracuje: npm run mtt:decision-answers -- --answers-file=<tenhle soubor>
+# U otázky 2 je volba jiná než doporučení (c místo a) - důvod je v T2.
+
+DRILLEV-DECISIONS-V1 66d7db7e 1a 2c 3b
+T1: Volím a). Dá se to přečíst přímo ve tvých podkladech: v poznámkách z koučinku (PKR\PKR COACHING.enex) stojí doslova „Early Position: UTG - MP" a „Late Position: CO - BTN". Zdroj to potvrzuje ve vlastní nabídce Multi-way (MUL-menu-20BB/40BB/100BB): u hrdiny BB proti EP je položka „BB VS EP OPEN & CO/BU FLATCALL", u hrdiny SB na stejném místě „SB VS EP OPEN & LP FLATCALL" - tatáž skupina pozdních dorovnávajících, jednou vypsaná, jednou zkratkou. Na webu se konvence liší (PokerNews i PokerStrategy počítají u plného stolu do late position i HJ), ale CO a BTN jsou LP v každé z nich, HJ jen v některých. Proto a) platí v každém výkladu: kdyby autor myslel i HJ, trenažér jen nerozdá s těmi mřížkami flat z HJ, kdežto b) by učila range postavenou proti flatu z CO/BU proti těsnějšímu flatu z HJ. B) navíc vynechává BTN, a to je u hrdinů v blindech pozdní dorovnávající v každé konvenci. C) vyvrací sám zdroj: SB má vlastní stránky („BB VS MP OPEN & SB FLATCALL"). U hrdiny BTN (SQU-40BBMais-BU-vs-MP-LP) z LP zbyde CO. Důležitější než LP je ale jiná věc na téže ose: EP/MP a CO/BU ve jménech MUL nejsou dva dorovnávající, ale jeden ze skupiny. V draftu nese 12 záznamů seznam dvou sedaček (121, 122, 132, 135, 143, 144, 146, 149, 150, 160, 161, 163), a po schválení by je drill podle entry.flatCallers.length rozdal se dvěma cally - tedy jako pot ve čtyřech, pro který ty range nejsou. Důkazy ze zdroje: (1) nabídka píše „EP/MP FLATCALL" a „CO/BU FLATCALL" v jednotném čísle, stejně jako „SB FLATCALL"; (2) velikost squeeze se se skupinou nemění: BB na 40 bb squeezuje na 11 bb proti EP/MP, CO/BU, LP, SB i BTN flatu, BB na 100 bb na 13 bb ve všech sedmi stránkách, SB na 100 bb na 13 bb ve všech třech, a SB na 40 bb proti EP/MP dokonce na 9 bb, kdežto proti LP a BTN na 10 bb - druhý dorovnávající by velikost zvedl zhruba o jedno otevření, nikdy ji nesnížil; (3) BB na 40 bb dorovnává 506 kombinací proti EP/MP, 644 proti CO/BU a 751 proti SB, tedy podle toho, jak těsný je jeden dorovnávající. Skupinu tedy rozbalit na jednu sedačku: EP/MP při otvírači UTG = UTG+1, UTG+2 nebo LJ; CO/BU = CO nebo BTN; LP = CO nebo BTN. Seznam dvou dorovnávajících nechat jen tam, kde je zdroj jmenuje oba. Tak jsem myslel i T4 z 1. 10. („skupinu … drill rozdá jako konkrétní sedačku"); bod o seznamu platil jen pro dvě SQU stránky (CO/BU/SB, HJ/CO/BU), a podle téhož zápisu jde nejspíš i tam o jednoho ze skupiny. Velikost tam zdroj neuvádí, takže to dokázat nejde.
+T2: Volím c), jinak než doporučení, s jednou úpravou žebříku. (1) Přesnost 0,5 % kupuje rozdíl, který trenažér sám nerozliší: turnStrategyResolver.ts i riverStrategyResolver.ts berou rozdíl EV do 1 % potu jako rovnocennou odpověď (EV_EQUIVALENT_POT_SHARE = 0,01), a komentář u toho výslovně počítá s tím, že solve má vlastní nepřesnost „při cíli kolem procenta". Solvit na 0,5 % tedy znamená platit noci za přesnost, kterou hodnocení zahodí. (2) Cena: podle board-cost.generated.json je medián 50 bb 50,6 min (extrapolace), tedy 96 desek je asi 81 h, tedy 8 nocí. Na 1 % solver skončí dřív; u CFR solverů chyba klesá zhruba nepřímo úměrně počtu iterací, takže poloviční cíl je zhruba poloviční čas, kolem 4 nocí. „O řád" bych nečekal, první noc to změří. (3) B je horší než obě: deska, která na 0,5 % narazí na 90 min, ty minuty zahodí a stupeň 2 ji stejně dořeší na 1 % - tatáž přesnost jako c), jen o 90 min dražší za každou takovou desku. (4) A drží stejnou přesnost jako 25 a 40 bb, ale ten rozdíl hráč neuvidí, a stojí asi 4 noci navíc. Úprava žebříku: na 1 % zůstane jediný smysluplný stupeň, strop - pro 50 bb a hlubší tedy stupeň 1 = 150 min při 1 %, jen pro vzácnou desku, která se nevejde do 90. A kontrola, ať se o tom rozhoduje měřením: až bude fronta prázdná, přesolvit 2-3 typické desky 50 bb na 0,5 % a porovnat doporučení na flopu; kdyby se nejlepší akce změnila u víc než zhruba 2 % tříd, vrátit 50 bb na 0,5 % se stropem 150 (tedy a). Přesnost ať je zapsaná u rodiny v provenance, aby bylo za rok vidět, z čeho pack je.
+T3: Volím b), a s důvodem, který v otázce chybí: ta rodina stojí na starém základu. Všech 32 checkpointů MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR je z 8.-27. 7., tedy z doby, kdy se ranže do solvu psaly rukou podle šablon dávek (komentář v measureSolverInputRangeDrift.mts: z produkčních packů se berou od 20. 8.), a dávno před RYE ranžemi z 22.-24. 9. Dopočítat turnovou EV z takových checkpointů je noc (asi 26 desek na 40 bb) za doladění dat, která se zahodí, až přijde na řadu přesolvení 100 bb na dnešních ranžích - a s ním se tabulka postaví znovu celá. K tomu: rozklad posledních vrstev jinde nezměnil prakticky nic (čtyři noci, 1 085 vrstev, 0,006 % buněk), a těch 112,5 min ráno nebyla cena rodiny, ale hlad po haldě (deník 299). C) by udělalo díru v BvB na 100 bb, kterou dnešní pack pořád pokrývá. Prosím jen o dvě věci: označit tu rodinu v detektoru jako „čeká na přesolvení 100 bb", ať nesvítí jako zastaralá, a totéž u dalších dvou stobblindových rodin z července (MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR, 33 checkpointů z 9.-26. 7.; MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR, 24 z 7.-29. 7.). Kolik se jejich ranže liší od dnešních, změří npm run mtt:solver-range-drift. Přesolvení 100 bb (přes 2,5 h na desku) je samostatné rozpočtové rozhodnutí, až dojede 50 bb.
+
+# ── Která verze stránky ──────────────────────────────────────────────────────
+#
+# Vlastník poslal stránku z 08:05 (otisk ffcf1d87). Na disku ležela novější z 10:53
+# (otisk 66d7db7e): otázka 1 dostala doporučení a nové popisky voleb (commit 87244de).
+# decisionsHash počítá i s popisky voleb, takže token s ffcf1d87 by mtt:decision-answers
+# odmítl („Otisk otázek nesedí"). Vyplněná je proto verze 10:53; volby a, b, c, d znamenají
+# totéž jako v 08:05.
+#
+#
+# ── Z čeho odpovědi stojí (dá se přepočítat) ─────────────────────────────────
+#
+# Otázka 1 - LP
+#   PKR\PKR COACHING.enex (vlastníkovy poznámky z koučinku):
+#     „Early Position: UTG - MP" / „Late Position: CO - BTN"
+#   Nabídka zdroje (MUL-menu-20BB/40BB/100BB.html), položky jednou za druhou:
+#     BB VS EP OPEN & EP/MP FLATCALL · BB VS EP OPEN & MP FLATCALL · BB VS EP OPEN & CO/BU FLATCALL
+#     BB VS EP OPEN & SB FLATCALL · BB VS MP OPEN & LP FLATCALL · BB VS MP OPEN & SB FLATCALL
+#     SB VS EP OPEN & EP/MP FLATCALL · SB VS EP OPEN & LP FLATCALL · SB VS CO OPEN & BU FLATCALL
+#   Web: PokerNews (10 hold'em tips, pozice) a PokerStrategy (glosář, Hijack) řadí u plného stolu
+#   do late position i HJ; PokerListings HJ popisuje jako pozdní místo. CO a BTN jsou LP všude.
+#
+#   Skupina = jeden dorovnávající. Velikost squeeze z legend všech MUL stránek
+#   (hrdina, hloubka: otvírač+dorovnávající → velikost):
+#     BB 40:  EP+EP/MP 11 · EP+CO/BU 11 · EP+SB 11 · MP+LP 11 · MP+SB 11 · CO+BTN 11 · BTN+SB 11
+#             (EP+MP 9 je kopie stránky BTN, viz mřížky 136/151)
+#     BB 100: EP+EP/MP 13 · EP+CO/BU 13 · EP+SB 13 · MP+LP 13 · MP+SB 13 · CO+BTN 13 · BTN+SB 13
+#     SB 100: EP+EP/MP 13 · EP+LP 13 · CO+BTN 13
+#     SB 40:  EP+EP/MP 9 · EP+LP 10 · CO+BTN 10
+#   Dorovnání BB 40 bb (kombinace): EP+EP/MP 506 · EP+CO/BU 644 · EP+SB 751 (mřížky 150, 149, 152).
+#   Kód: villainsFromTokens (scripts/lib/ryeActionMapping.mts) dělá z EP_EP-MP seznam [EP, MP];
+#   drillEngine.ts bere callsBefore = entry.flatCallers.length, tedy 2.
+#
+# Otázka 2 - strop a přesnost u 50 bb
+#   src/data/ranges/turnStrategyResolver.ts a riverStrategyResolver.ts:
+#     EV_EQUIVALENT_POT_SHARE = 0.01, EV_EQUIVALENT_FLOOR_BB = 0.1; komentář v river resolveru:
+#     „A solve má vlastní nepřesnost, vyjádřenou jako podíl potu - při cíli kolem procenta …"
+#   Agents/solver-input/decomposition/board-cost.generated.json (8. 10. 04:31):
+#     25 bb 698 desek, medián 6,4 · 40 bb 58 desek, medián 24,5, p90 38, max 46,8 ·
+#     50 bb extrapolace: medián 50,6, p90 78,5, strop 90
+#   run_night_expansion.py: ESCALATION = ((0, 0.5), (30, 0.5), (30, 1.0)), CAP_CEILING_MINUTES = 90
+#   Stupeň 2 (1 %) zatím neběžel ani jednou - poměr času 1 % / 0,5 % tedy není naměřený.
+#
+# Otázka 3 - rodiny na 100 bb
+#   Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver/<rodina>/raw:
+#     MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR 32 checkpointů: 4x 8. 7., 6x 14. 7., 12x 16. 7.,
+#       2x 17. 7., 3x 20. 7., 2x 26. 7., 3x 27. 7.
+#     MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR 33 checkpointů, 9.-26. 7.
+#     MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR 24 checkpointů, 7.-29. 7.
+#   artifacts/turn-ev-attempts.json: MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR 8
+#
+# Drobnost na stránce: nadpis i <title> píšou „1. 10. 2026 10:53", ačkoli je stránka z 8. 10.,
+# a KEY v localStorage je pořád "drillev-decisions-2026-10-01" - na stejném prohlížeči se
+# proto při otevření ukáže varování o změněných otázkách (staré odpovědi z 1. 10.).

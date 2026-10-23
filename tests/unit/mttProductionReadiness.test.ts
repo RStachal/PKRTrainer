@@ -206,16 +206,30 @@ describe("mttProductionReadiness", () => {
       row.coverage.contexts.join("|") === REQUIRED_CONTEXTS.join("|")
     ))).toBe(true);
 
+    // Six-max splits by speed now. Regular carries ranges derived from the
+    // nine-handed pack by seats-behind; turbo does not, because a derived turbo
+    // pack would be the derived regular pack relabelled, which is the silent
+    // metadata-only reuse the speed audit exists to catch. Both remain
+    // CANDIDATE - derived is not measured, and production refuses inferred
+    // chart values.
     const sixMax = report.rows.filter((row) => row.tableFormat === "SIX_MAX");
     expect(sixMax).toHaveLength(4);
     expect(sixMax.every((row) => row.status === "CANDIDATE")).toBe(true);
-    expect(sixMax.every((row) => row.recordCount === 0)).toBe(true);
-    expect(sixMax.every((row) => (
+
+    const sixMaxRegular = sixMax.filter((row) => row.blindSpeed === "REGULAR");
+    expect(sixMaxRegular).toHaveLength(2);
+    expect(sixMaxRegular.every((row) => row.recordCount > 0)).toBe(true);
+    expect(sixMaxRegular.every((row) => row.packId?.includes("derived") === true)).toBe(true);
+
+    const sixMaxTurbo = sixMax.filter((row) => row.blindSpeed === "TURBO");
+    expect(sixMaxTurbo).toHaveLength(2);
+    expect(sixMaxTurbo.every((row) => row.recordCount === 0)).toBe(true);
+    expect(sixMaxTurbo.every((row) => (
       row.coverage.missingPositions.join("|") === SIX_MAX_POSITION_ORDER.join("|") &&
       row.coverage.missingStackBuckets.join("|") === STACK_BUCKETS.join("|") &&
       row.coverage.missingContexts.join("|") === REQUIRED_CONTEXTS.join("|")
     ))).toBe(true);
-    expect(sixMax.every((row) => row.missingReasons.some((reason) => (
+    expect(sixMaxTurbo.every((row) => row.missingReasons.some((reason) => (
       reason.includes("no normalized hand-class records")
     )))).toBe(true);
 
@@ -254,8 +268,13 @@ describe("mttProductionReadiness", () => {
 
     expect(report.rows).toHaveLength(64);
     expect(report.productionRows).toBe(0);
-    expect(report.missingRows).toBe(10);
-    expect(report.candidateRows).toBe(54);
+    // Tři DOLAR_EV sloty se posunuly z MISSING na CANDIDATE: dva devítistolové
+    // mají odvozený bublinový pack a šestistolový regular s ante má od 22. 9.
+    // 2026 ICM vrstvu ze schválených mřížek RYE (rozhodnutí vlastníka 3a a 4a).
+    // Nic se tím nedostalo do produkce - odvozené ani neúplné packy produkční
+    // brána dál odmítá - ale slot s daty už není prázdný.
+    expect(report.missingRows).toBe(7);
+    expect(report.candidateRows).toBe(57);
 
     const production = report.rows.filter((row) => row.status === "PRODUCTION");
     expect(production).toEqual([]);
@@ -281,11 +300,17 @@ describe("mttProductionReadiness", () => {
       row.evModel === "DOLAR_EV" && row.street === "PREFLOP"
     ));
     expect(dolarPreflop).toHaveLength(8);
-    expect(dolarPreflop.every((row) => row.status === "MISSING")).toBe(true);
+    // Devítistolové regular sloty mají odvozený bublinový pack, zbytek ne.
+    // Podstatné je, že žádný z nich není produkční - to drží řádek pod tímhle.
+    expect(dolarPreflop.filter((row) => row.status === "CANDIDATE")).toHaveLength(3);
+    expect(dolarPreflop.filter((row) => row.status === "MISSING")).toHaveLength(5);
     expect(dolarPreflop.every((row) => row.productionReady === false)).toBe(true);
-    expect(dolarPreflop.every((row) => row.missingReasons.some((reason) => (
+    // Šest slotů bez packu ten důvod pořád nese; dva odvozené už ne, protože
+    // pack mají. Jejich důvod je jiný a jde o ten, na kterém záleží: odvozená
+    // data produkční brána nepustí.
+    expect(dolarPreflop.filter((row) => row.missingReasons.some((reason) => (
       reason.includes("No dedicated DOLAR_EV MTT preflop RangePack")
-    )))).toBe(true);
+    )))).toHaveLength(5);
     expect(dolarPreflop.find((row) => (
       row.tableFormat === "SIX_MAX" && row.blindSpeed === "TURBO" && row.ante === "OFF"
     ))?.importSlot).toMatchObject({
@@ -352,8 +377,13 @@ describe("mttProductionReadiness", () => {
     });
 
     expect(report.productionRows).toBe(0);
-    expect(report.candidateRows).toBe(54);
-    expect(report.missingRows).toBe(10);
+    // Tři DOLAR_EV sloty se posunuly z MISSING na CANDIDATE: dva devítistolové
+    // mají odvozený bublinový pack a šestistolový regular s ante má od 22. 9.
+    // 2026 ICM vrstvu ze schválených mřížek RYE (rozhodnutí vlastníka 3a a 4a).
+    // Nic se tím nedostalo do produkce - odvozené ani neúplné packy produkční
+    // brána dál odmítá - ale slot s daty už není prázdný.
+    expect(report.candidateRows).toBe(57);
+    expect(report.missingRows).toBe(7);
 
     const flopRows = report.rows.filter((row) => (
       row.tableFormat === "FULL_RING_9" &&
@@ -401,8 +431,13 @@ describe("mttProductionReadiness", () => {
     expect(gate.mode).toBe("PRODUCTION");
     expect(gate.totalRows).toBe(64);
     expect(gate.productionReadyRows).toBe(0);
-    expect(gate.previewRows).toBe(54);
-    expect(gate.blockedRows).toBe(10);
+    // Tři DOLAR_EV sloty se posunuly z MISSING na CANDIDATE: dva devítistolové
+    // mají odvozený bublinový pack a šestistolový regular s ante má od 22. 9.
+    // 2026 ICM vrstvu ze schválených mřížek RYE (rozhodnutí vlastníka 3a a 4a).
+    // Nic se tím nedostalo do produkce - odvozené ani neúplné packy produkční
+    // brána dál odmítá - ale slot s daty už není prázdný.
+    expect(gate.previewRows).toBe(57);
+    expect(gate.blockedRows).toBe(7);
     expect(gate.errors).toHaveLength(64);
     expect(gate.errors[0]).toContain("row is not production-ready");
     expect(rendered).toContain("mode: PRODUCTION");
@@ -422,8 +457,13 @@ describe("mttProductionReadiness", () => {
     expect(gate.mode).toBe("PREVIEW");
     expect(gate.totalRows).toBe(64);
     expect(gate.productionReadyRows).toBe(0);
-    expect(gate.previewRows).toBe(54);
-    expect(gate.blockedRows).toBe(10);
+    // Tři DOLAR_EV sloty se posunuly z MISSING na CANDIDATE: dva devítistolové
+    // mají odvozený bublinový pack a šestistolový regular s ante má od 22. 9.
+    // 2026 ICM vrstvu ze schválených mřížek RYE (rozhodnutí vlastníka 3a a 4a).
+    // Nic se tím nedostalo do produkce - odvozené ani neúplné packy produkční
+    // brána dál odmítá - ale slot s daty už není prázdný.
+    expect(gate.previewRows).toBe(57);
+    expect(gate.blockedRows).toBe(7);
     expect(gate.errors).toEqual([]);
     expect(rendered).toContain("mode: PREVIEW");
     expect(rendered).toContain("valid: true");
@@ -497,10 +537,14 @@ describe("mttProductionReadiness", () => {
       blindSpeed: "REGULAR",
       ante: "OFF",
     });
+    // Six-max regular has records now, so the reason it is not production is no
+    // longer emptiness - it is that derived data carries LOW confidence, which
+    // is the honest blocker and the one that should remain until measured
+    // six-max charts land.
     expect(sixMaxCandidate.status).toBe("CANDIDATE");
     expect(sixMaxCandidate.confidence).toBe("LOW");
     expect(sixMaxCandidate.missingReasons).toContain("RangePack confidence is LOW.");
-    expect(sixMaxCandidate.missingReasons).toContain(
+    expect(sixMaxCandidate.missingReasons).not.toContain(
       "RangePack has no normalized hand-class records.",
     );
   });
@@ -518,9 +562,13 @@ describe("mttProductionReadiness", () => {
 
     const dolar = profileWith(DEFAULT_TRAINING_PROFILE, { evModel: "DOLAR_EV" });
     const dolarCompletion = mttCompletionReadinessRowForTrainingProfile(dolar, "ON");
-    expect(dolarCompletion?.status).toBe("MISSING");
+    // Devítistolový regular DOLAR_EV už odvozený pack má, takže je kandidát.
+    expect(dolarCompletion?.status).toBe("CANDIDATE");
     expect(dolarCompletion?.productionReady).toBe(false);
-    expect(dolarCompletion?.missingReasons.join(" ")).toContain("DOLAR_EV");
+    // Důvod se změnil, protože slot už pack má: nechybí data, chybí legální
+    // produkční doklad. Odvozený pack je preview a produkční brána ho nepustí -
+    // což je přesně to, co má tenhle řádek hlídat.
+    expect(dolarCompletion?.missingReasons.join(" ")).toContain("canonical legal production provenance");
 
     const sixMaxRegular = profileWith(DEFAULT_TRAINING_PROFILE, { tableFormat: "SIX_MAX" });
     const sixMaxCompletion = mttCompletionReadinessRowForTrainingProfile(sixMaxRegular, "ON");
@@ -533,7 +581,7 @@ describe("mttProductionReadiness", () => {
       status: "CANDIDATE",
       productionReady: false,
       coverageKind: "PREFLOP_RANGE_PACK",
-      packId: "mtt-six-max-regular-preflop-chip-ev-ante-on-candidate-v0",
+      packId: "mtt-six-max-regular-preflop-chip-ev-ante-on-derived-v1",
     });
     expect(sixMaxCompletion?.importSlot?.packId)
       .toBe("mtt-six-max-regular-preflop-chip-ev-ante-on-production-v1");
@@ -549,11 +597,14 @@ describe("mttProductionReadiness", () => {
   it("vytvori import-readiness report pro vsechny registrovane MTT preflop packy", () => {
     const report = buildMttPreflopPackImportReadinessReport();
 
-    expect(report.rows).toHaveLength(6);
+    // Šest chipEV a šestistolových packů, dva odvozené ICM a od 22. 9. 2026
+    // ICM preview vrstva ze schválených mřížek RYE (rozhodnutí 3a a 4a).
+    expect(report.rows).toHaveLength(9);
     expect(report.productionReadyRows).toBe(0);
-    expect(report.candidateRows).toBe(6);
-    expect(report.lowConfidenceRows).toBe(4);
-    expect(report.emptyRecordRows).toBe(4);
+    expect(report.candidateRows).toBe(9);
+    expect(report.lowConfidenceRows).toBe(7);
+    // Two, not four: six-max regular is populated and six-max turbo is not.
+    expect(report.emptyRecordRows).toBe(2);
     expect(report.missingExpectedProfiles).toHaveLength(2);
     expect(report.missingExpectedProfiles.every((row) => (
       row.tableFormat === "FULL_RING_9" && row.blindSpeed === "TURBO"
@@ -562,8 +613,13 @@ describe("mttProductionReadiness", () => {
     const productionRows = report.rows.filter((row) => row.productionReady);
     expect(productionRows).toEqual([]);
 
-    const legacyCandidates = report.rows.filter((row) => row.recordCount === 487);
-    expect(legacyCandidates).toHaveLength(2);
+    // 487 until the calling-rejam sheets added VS_ALLIN at 15, 20, 25 and 30BB
+    // for the five seats they cover - twenty records that did not exist before.
+    // Čtyři, ne dva: odvozené ICM packy vznikly z těchto dvou a mají proto
+    // stejný počet záznamů. Odvození jen posouvá šířku uvnitř záznamu, nepřidává
+    // ani neubírá řádky.
+    const legacyCandidates = report.rows.filter((row) => row.recordCount === 507);
+    expect(legacyCandidates).toHaveLength(4);
     expect(legacyCandidates.every((row) => (
       row.status === "CANDIDATE" &&
       !row.productionReady &&
@@ -587,7 +643,7 @@ describe("mttProductionReadiness", () => {
     const productionRows = mttReport.rows.filter((row) => row.status === "PRODUCTION");
 
     expect(productionRows).toEqual([]);
-    expect(mttReport.rows.filter((row) => row.recordCount === 487).every((row) => (
+    expect(mttReport.rows.filter((row) => row.recordCount === 507).every((row) => (
       row.warnings.some((warning) => (
         warning.includes("canonical legal production provenance")
       ))
@@ -614,5 +670,61 @@ describe("mttProductionReadiness", () => {
         pack.licenseKind === "UNKNOWN"
       ));
     expect(invalidFlopProductionPacks).toEqual([]);
+  });
+});
+
+/**
+ * Co řádek knihovny říká o postflopu.
+ *
+ * Řádky sledují `*ProductionStrategyPack`, takže **97 vyřešených rodin je jim
+ * neviditelných** - a řádek u nich tvrdil, že trénink jede na heuristice. To
+ * přestalo platit ve chvíli, kdy trenažér začal rozdávat z katalogu vyřešených
+ * spotů: měřeno 100 % odpovědí podložených solverem na všech třech ulicích.
+ *
+ * Podcenit, co produkt umí, je nepravda stejného druhu jako nadsazení - jen
+ * opačným směrem. A rozhoduje se podle ní o tom, co se bude solvit dál.
+ */
+describe("postflopový řádek knihovny přizná vyřešený obsah", () => {
+  // Počty se vkládají, ne čtou z dodávaných manifestů. Test tím měří chování
+  // modulu, ne to, kolik rodin zrovna existuje - a nespadne, až jich noc přidá.
+  const counts = {
+    "FULL_RING_9|REGULAR|CHIP_EV|FLOP": 48,
+    "FULL_RING_9|REGULAR|CHIP_EV|TURN": 32,
+    "FULL_RING_9|REGULAR|CHIP_EV|RIVER": 17,
+  };
+  const rows = buildMttCompletionReadinessReport({ solvedFamilyCounts: counts })
+    .rows.filter((row) => (
+      row.tableFormat === "FULL_RING_9" && row.evModel === "CHIP_EV" && row.street !== "PREFLOP"
+    ));
+
+  it("řekne, kolik vyřešených rodin na profil odpovídá", () => {
+    const flop = rows.find((row) => row.street === "FLOP")!;
+    const reasons = flop.missingReasons.join(" ");
+    expect(reasons).toMatch(/\d+ solved families answer this profile/);
+    // A nesmí u toho tvrdit, že se jede na heuristice.
+    expect(reasons).not.toContain("currently uses public heuristic");
+  });
+
+  it("přesto zůstane kandidátem, ne produkcí", () => {
+    // Vyřešená rodina odpovídá jen na desky, na kterých vznikla. Prohlásit kvůli
+    // ní profil za pokrytý by bylo přehnané tvrzení - a brána by pak pustila do
+    // produkce něco, co na většině desek mlčí.
+    for (const row of rows) {
+      expect(row.status, `${row.street}`).toBe("CANDIDATE");
+      expect(row.productionReady, `${row.street}`).toBe(false);
+      // Tahle věta musí zaznít u každého postflopového řádku bez ohledu na to,
+      // jestli k profilu vyřešený obsah existuje. Turbo profily ho nemají.
+      expect(row.missingReasons.join(" "), `${row.street} ${row.blindSpeed}`)
+        .toContain("Dedicated production StrategyPack coverage is required");
+    }
+  });
+
+  it("u profilu bez vyřešeného obsahu mluví dál o heuristice", () => {
+    // Six-max vyřešené rodiny nemá, takže tam ta věta platí a musí zůstat.
+    const sixMax = buildMttCompletionReadinessReport({ solvedFamilyCounts: counts })
+      .rows.find((row) => (
+      row.tableFormat === "SIX_MAX" && row.evModel === "CHIP_EV" && row.street === "FLOP"
+    ));
+    expect(sixMax?.missingReasons.join(" ")).toContain("public heuristic");
   });
 });

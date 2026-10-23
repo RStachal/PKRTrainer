@@ -13,17 +13,18 @@ afterEach(() => {
 });
 
 describe("mtt:registry-integrity CLI", () => {
-  it("overi soucasny MTT registry baseline bez importovanych production modulu", () => {
+  it("overi soucasny MTT registry baseline s importovanymi full-ring production moduly", () => {
     const result = runRegistryIntegrity();
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("MTT production registry integrity");
     expect(result.stdout).toContain("valid: true");
     expect(result.stdout).toContain("legal import slots: 64");
-    expect(result.stdout).toContain("registered runtime packs: 6");
-    expect(result.stdout).toContain("generated production modules: 0");
-    expect(result.stdout).toContain("permission manifests: 0");
+    expect(result.stdout).toContain("registered runtime packs: 13");
+    expect(result.stdout).toContain("generated production modules: 4");
+    expect(result.stdout).toContain("permission manifests: 8");
     expect(result.stdout).toContain("errors: 0");
+    expect(result.stdout).toContain("mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1 | mtt-preflop | REGISTERED | LEGAL_SLOT");
     expect(result.stdout).toContain("mtt-full-ring-9-regular-preflop-chip-ev-ante-on-v1 | mtt-preflop | REGISTERED | PREVIEW_ONLY");
     expect(result.stdout).not.toContain("LEGACY_OR_UNKNOWN");
     expect(result.stdout).not.toContain("error:");
@@ -58,11 +59,20 @@ describe("mtt:registry-integrity CLI", () => {
     expect(parsed.valid).toBe(true);
     expect(parsed.counts).toEqual({
       legalImportSlots: 64,
-      registeredRuntimePacks: 6,
-      generatedProductionModules: 0,
-      permissionManifests: 0,
+      // Třináctý je ICM preview vrstva ze schválených mřížek RYE (22. 9. 2026,
+      // rozhodnutí 3a a 4a): registrovaná, ale PREVIEW_ONLY - legal slot pro
+      // šestistolový $EV čeká na úplný pack, ne na tuhle vrstvu.
+      registeredRuntimePacks: 13,
+      generatedProductionModules: 4,
+      permissionManifests: 8,
       errors: 0,
     });
+    expect(parsed.packs.some((pack) => (
+      pack.packId === "mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1" &&
+      pack.registered &&
+      pack.legalImportSlot &&
+      pack.registryStatus === "LEGAL_SLOT"
+    ))).toBe(true);
     expect(parsed.packs.some((pack) => (
       pack.packId === "mtt-full-ring-9-regular-preflop-chip-ev-ante-on-v1" &&
       pack.registered &&

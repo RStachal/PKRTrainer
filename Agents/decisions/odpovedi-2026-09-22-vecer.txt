@@ -1,0 +1,4 @@
+# Odpovědi vlastníka na rozhodnutí z 22. 9. 2026 (druhá sada, odpoledne).
+# Vlastník odpověděl zprávou „1. ano, 2. ano, 3. ano, 4. ano“ - tedy souhlas
+# s doporučením u každé otázky. Doporučení byla: 1a, 2a, 3c, 4a.
+DRILLEV-DECISIONS-V1 d9f000d2 1a 2a 3c 4a

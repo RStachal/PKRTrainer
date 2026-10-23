@@ -1,9 +1,60 @@
 # Range cross-check workflow
 
-Status: ready for pilot use  
-Updated: 2026-07-07
+Status: aggregate pilot plus exact-node comparison ready
+Updated: 2026-07-22
 
-This workflow is for random spot/hand-class verification against another solver or poker tool. It does not promote production content by itself; it produces review evidence.
+This workflow has two levels. The original random hand-class comparison is a
+fast diagnostic. Production poker review should use the exact-node contract,
+which proves that both solvers used the same profile, ranges, board, node and
+action tree before comparing combo strategy and EV. Neither level promotes
+production content by itself.
+
+## Preferred exact-node workflow
+
+Convert each owned solver export to `PKRTRAINER_SOLVER_EXACT_NODE_V1`. The two
+documents must share:
+
+- profile dimensions, players, stacks, pot and acting seat;
+- canonical input-range SHA-256 for every player;
+- exact board and canonical node path;
+- canonical actions and sizings;
+- action-tree SHA-256 and row granularity;
+- variant-configuration SHA-256 covering blind/ante and payout/ICM rules or
+  rake/cap/straddle economics;
+- a completed solve whose exploitability is at or below the same pinned target.
+
+Then run:
+
+```powershell
+npm run range:cross-check-exact -- --left=artifacts/range-cross-check/texas-exact.json --right=artifacts/range-cross-check/gto-plus-exact.json --summary
+```
+
+Optional review thresholds:
+
+```powershell
+npm run range:cross-check-exact -- --left=<left.json> --right=<right.json> --max-mean-strategy-distance-pct=5 --max-row-strategy-distance-pct=15 --max-action-ev-delta-bb=0.03 --equivalent-ev-threshold-bb=0.01 --max-disjoint-best-action-pct=5
+```
+
+The report measures weighted total-variation strategy distance, maximum action
+frequency delta, every comparable action-EV delta and overlap between each
+solver's EV-equivalent best-action set. This matters when two or more actions
+have effectively equal EV: a different nominal top action is not a mismatch if
+the reviewed equivalent sets still overlap. The disjoint-best-action threshold
+is weighted by the compared range rather than by raw row count.
+
+`COMBO` evidence is the production-review target. `HAND_CLASS` remains
+diagnostic because aggregation can hide suit and blocker effects. If either
+solver lacks complete action EV, the report explicitly downgrades to strategy
+only. A passing result is still review evidence, not permission, staging or
+promotion.
+
+Current adapter state: the solver-neutral validator/comparator is implemented;
+one real export from each solver is still required to finish and prove the raw
+TexasSolver and second-solver adapters. The existing GTO+ lane is the preferred
+first pair because its three-family/four-board inputs already exist, but its
+current readiness is `0/3` with nine expected outputs missing.
+
+## Aggregate diagnostic workflow
 
 ## 1. Generate a PKRTrainer sample
 
@@ -60,6 +111,8 @@ The report fails if:
 4. Run compare.
 5. If mismatch is large, mark the candidate as review-blocked rather than production-ready.
 
-## Current limitation
+## Aggregate limitation
 
-The sample is hand-class/rule based. It does not yet export exact board-by-board TexasSolver node inputs for every row. For high-stakes production sign-off, pair this with a smaller exact-board review from raw solver exports.
+The random sample is hand-class/rule based and does not prove identical solver
+inputs. Do not use it alone for production sign-off; use the exact-node workflow
+above on the same raw board and node exports.

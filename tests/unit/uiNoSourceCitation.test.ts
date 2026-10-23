@@ -70,6 +70,7 @@ const heroCards: [Card, Card] = [
 const tableState: TableState = {
   heroPos: "BTN",
   pushFold: false,
+  effectiveStackBB: 100,
   limpsBefore: 0,
   callsBefore: 0,
   facing: "NONE",
@@ -135,6 +136,7 @@ const sourceHeavyResolver: PostflopStrategyResolver = (input) => ({
   explanation: `Release gate ${input.street.toLowerCase()} recommendation`,
   source: {
     kind: "STRATEGY_PACK",
+    provenance: "SOLVER_BACKED",
     packId: "mtt-full-ring-9-flop-production-private-v1",
     packVersion: "source-free-test-v1",
     packVerifiedAt: "2026-06-17",
@@ -330,7 +332,7 @@ describe("UI source citation policy", () => {
     root.querySelector<HTMLButtonElement>('.postflop-action[data-action="FOLD"]')?.click();
 
     expect(root.querySelector<HTMLElement>(".postflop-line-complete")?.textContent)
-      .toBe("Hand line dokončena: 1/2 street.");
+      .toBe("Hand line complete: 1/2 streets.");
     expectNoSourceCitation(root.textContent ?? "");
   });
 
@@ -368,8 +370,8 @@ describe("UI source citation policy", () => {
     }, root);
 
     const text = root.querySelector<HTMLElement>(".permission-audit")?.textContent ?? "";
-    expect(text).toContain("Kontrola range");
-    expect(text).toContain("Vlastní solver export");
+    expect(text).toContain("Range audit");
+    expect(text).toContain("Owned solver export");
     expectNoSourceCitation(root.textContent ?? "");
     expect(text).not.toContain("mtt-full-ring-9-flop-production-private-v1");
     expect(text).not.toContain("Private Solver Owner");

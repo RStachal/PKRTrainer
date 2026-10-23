@@ -23,6 +23,13 @@ import {
   createRiverProductionStrategyResolverChain,
   riverProductionStrategyPacks,
 } from "./riverProductionStrategyResolver";
+import type { TurnStrategyPack } from "./turnStrategyPack";
+import { createFlopSolvedStrategyResolverChain } from "./flopSolvedStrategyResolver";
+import { createRiverSolvedStrategyResolverChain } from "./riverStrategyResolver";
+import {
+  createTurnSolvedStrategyResolverChain,
+  turnSolvedStrategyPacks,
+} from "./turnSolvedStrategyPacks";
 
 export interface MttProductionPostflopResolverProfile {
   gameVariant?: GameVariant;
@@ -37,6 +44,7 @@ export interface MttProductionPostflopResolverProfile {
 export interface MttProductionPostflopResolverPacks {
   flopProductionPacks?: readonly FlopProductionStrategyPack[];
   turnProductionPacks?: readonly TurnProductionStrategyPack[];
+  turnSolvedPacks?: readonly TurnStrategyPack[];
   riverProductionPacks?: readonly RiverProductionStrategyPack[];
 }
 
@@ -45,14 +53,38 @@ export function createPostflopStrategyResolverWithProductionFallback(
   heuristicPacks: readonly PostflopStrategyPack[] = postflopPublicHeuristicStrategyPacks,
   turnProductionPacks: readonly TurnProductionStrategyPack[] = turnProductionStrategyPacks,
   riverProductionPacks: readonly RiverProductionStrategyPack[] = riverProductionStrategyPacks,
+  turnSolvedPacks?: readonly TurnStrategyPack[],
 ): PostflopStrategyResolver {
   const productionResolver = createFlopProductionStrategyResolverChain(productionPacks);
+  // Vyřešený flop stojí před chartovým, protože odpovídá na konkrétní desku,
+  // kterou někdo doopravdy spočítal, kdežto chartový na třídu textury. Kde
+  // přesná odpověď není, se vyřešený flop přizná a agregát odpoví jako dosud.
+  const flopSolvedResolver = createFlopSolvedStrategyResolverChain();
+  // The solved packs go ahead of the chart-derived turn packs, because they are
+  // the only turn content that names the run it came from. Both refuse spots
+  // they were not solved for, so the ordering decides nothing except which of
+  // two answers a player sees when both exist - and that should be the one whose
+  // evidence is on disk.
+  //
+  // Left undefined, the chain reads the solved packs late, so families that
+  // finish downloading mid-session are used instead of being missed.
+  const turnSolvedResolver = createTurnSolvedStrategyResolverChain(turnSolvedPacks);
+  // River má vyřešený obsah od 13. srpna a tenhle řetězec se ho nikdy nezeptal.
+  //
+  // Turn tu byl a river ne, což je ta horší varianta: vypadá to jako promyšlené
+  // pořadí, ne jako opomenutí. Vyřešený river přitom odmítá všechno, co
+  // nevyřešil, takže před chartovým riverem nic nezastíní - jen dá přednost
+  // odpovědi, jejíž podklad leží na disku.
+  const riverSolvedResolver = createRiverSolvedStrategyResolverChain();
   const turnProductionResolver = createTurnProductionStrategyResolverChain(turnProductionPacks);
   const riverProductionResolver = createRiverProductionStrategyResolverChain(riverProductionPacks);
   const heuristicResolver = createPostflopStrategyResolverChain(heuristicPacks);
 
   return (input) => (
+    flopSolvedResolver(input) ??
     productionResolver(input) ??
+    turnSolvedResolver(input) ??
+    riverSolvedResolver(input) ??
     turnProductionResolver(input) ??
     riverProductionResolver(input) ??
     heuristicResolver(input)
@@ -104,10 +136,17 @@ function createProductionResolverForProfile(
       return createFlopProductionStrategyResolverChain(
         matchingFlopPacksForProfile(profile, packs.flopProductionPacks ?? flopProductionStrategyPacks),
       );
-    case "TURN":
-      return createTurnProductionStrategyResolverChain(
+    case "TURN": {
+      // Solved packs are filtered per call, not once: the profile filter has to
+      // run against whatever has finished downloading now, not at boot.
+      const solved: PostflopStrategyResolver = (input) => createTurnSolvedStrategyResolverChain(
+        matchingTurnSolvedPacksForProfile(profile, packs.turnSolvedPacks ?? turnSolvedStrategyPacks),
+      )(input);
+      const charted = createTurnProductionStrategyResolverChain(
         matchingTurnPacksForProfile(profile, packs.turnProductionPacks ?? turnProductionStrategyPacks),
       );
+      return (input) => solved(input) ?? charted(input);
+    }
     case "RIVER":
       return createRiverProductionStrategyResolverChain(
         matchingRiverPacksForProfile(profile, packs.riverProductionPacks ?? riverProductionStrategyPacks),
@@ -126,6 +165,13 @@ function matchingTurnPacksForProfile(
   profile: MttProductionPostflopResolverProfile,
   packs: readonly TurnProductionStrategyPack[],
 ): readonly TurnProductionStrategyPack[] {
+  return packs.filter((pack) => matchesProfile(pack.dimensions, profile));
+}
+
+function matchingTurnSolvedPacksForProfile(
+  profile: MttProductionPostflopResolverProfile,
+  packs: readonly TurnStrategyPack[],
+): readonly TurnStrategyPack[] {
   return packs.filter((pack) => matchesProfile(pack.dimensions, profile));
 }
 

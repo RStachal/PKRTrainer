@@ -50,9 +50,11 @@
  * _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
  */
 
+import type { PostflopAction } from "../core/postflopGenerator";
 import type { ActionKey, HandLabel, Spot } from "../core/types";
 import { GRID_SIZE, RANKS, handLabel } from "../core/poker";
 import type { RangeEntry, RangeKey, RangeStore } from "../data/rangeStore";
+import { localizedText } from "./cs";
 
 // ---------------------------------------------------------------------------
 // Vizuální kategorie
@@ -83,6 +85,25 @@ interface CategoryDef {
 /**
  * Mapa kategorií na popisek + barvu. Fold je záměrně neutrální (šedá) a
  * vizuálně odlišený od všech akčních kategorií (Req 10.2).
+ *
+ * ## Proč se paleta nesmí přiblížit zdroji
+ *
+ * Část ranží pochází z vlastníkových koupených chartů RYE Rangeviewer. Vlastník
+ * 24. 9. 2026 určil rozsah toho užití: *„zde máme RYE zaplaceno a můžeme použít
+ * pro náš vývoj, jen grafická - vizuální podoba nemůže být 1:1, ale musíme
+ * použít jiné barevné škálování atp, prostě se lehce odlišit, ale ne v rozsahu
+ * range.“* Obsah ranží tedy zůstává, jak je; podoba se musí lišit.
+ *
+ * Zdroj maluje mřížku paletou Material Design (`mdl-color--green` a spol.).
+ * Změřeno týž den: čtyři naše barvy k ní ležely blíž, než je práh splývání -
+ * `JAM` byla od `red` vzdálená **35**, `4BET` 56, `CALL_JAM` 57, `3BET` 68.
+ * Posunuly se tak, aby každá byla aspoň **70** od každé barvy zdroje a zároveň
+ * aspoň **60** od ostatních našich, jinak by se matice stala nečitelnou.
+ * Posun je 40, tedy nad prahem splývání: změna je vidět, ale význam zůstal
+ * (jam je dál červený, 3bet oranžový, call all-in tmavě modrý).
+ *
+ * Hlídá to `rangeMatrixPalette.test.ts`, aby se nová barva nedala přidat
+ * nedopatřením tak, že na zdroj zase sedne.
  */
 const CATEGORIES: Record<ActionCategory, CategoryDef> = {
   FOLD: { label: "Fold", color: "#3a3f4b" },
@@ -91,12 +112,23 @@ const CATEGORIES: Record<ActionCategory, CategoryDef> = {
   OVERLIMP: { label: "Over-limp", color: "#1c7d77" },
   OPEN: { label: "Open / RFI", color: "#2bd576" },
   ISO: { label: "Iso-raise", color: "#7bd86a" },
-  "3BET": { label: "3bet", color: "#f0922b" },
+  "3BET": { label: "3bet", color: "#dc8830" },
   SQUEEZE: { label: "Squeeze", color: "#9b6cf0" },
-  "4BET": { label: "4bet", color: "#d9512b" },
-  JAM: { label: "All-in (jam)", color: "#e23b3b" },
-  CALL_JAM: { label: "Call all-in", color: "#274b9b" },
+  "4BET": { label: "4bet", color: "#c44c20" },
+  JAM: { label: "All-in (jam)", color: "#cc3440" },
+  CALL_JAM: { label: "Call all-in", color: "#243894" },
 };
+
+/**
+ * Barvy matice pro bránu nad podobou - viz komentář u `CATEGORIES`.
+ *
+ * Je to export kvůli testu, ne kvůli dalšímu použití: podmínka vlastníka
+ * o odlišení od zdroje se musí dát ověřit, jinak ji příští přidaná barva tiše
+ * poruší.
+ */
+export const RANGE_MATRIX_COLORS: Readonly<Record<string, string>> = Object.freeze(
+  Object.fromEntries(Object.entries(CATEGORIES).map(([key, def]) => [key, def.color])),
+);
 
 /**
  * Priorita kategorií pro výběr zobrazené barvy, má-li ruka více doporučených
@@ -132,6 +164,22 @@ const LEGEND_ORDER: ActionCategory[] = [
 ];
 
 type CategoryCounts = Partial<Record<ActionCategory, number>>;
+
+/**
+ * Combinations in a hand class: 6 for a pair, 4 suited, 12 offsuit.
+ *
+ * The legend used to divide class counts by 169, which is not a range width.
+ * A class is not a unit - forty offsuit classes are three times the range forty
+ * suited ones are - so that figure could be a dozen points off the truth. The
+ * button opening 46.9 percent of hands showed as 59, because it happens to use
+ * many suited classes. Everything here counts combinations out of 1326.
+ */
+const TOTAL_COMBOS = 1326;
+
+function combosInClass(hand: HandLabel): number {
+  if (hand.length === 2) return 6;
+  return hand.endsWith("s") ? 4 : 12;
+}
 
 const HAND_LABEL_GRID: readonly (readonly HandLabel[])[] = Array.from(
   { length: GRID_SIZE },
@@ -201,6 +249,43 @@ export function categoryForActionKey(key: ActionKey): ActionCategory {
  * Prázdná množina ⇒ FOLD (ruka bez doporučené akce, Req 10.2). Při více klíčích
  * se vybere kategorie s nejvyšší prioritou agresivity.
  */
+/**
+ * The colour this action wears, wherever it appears.
+ *
+ * The matrix has always coloured its cells by action category. The action
+ * buttons were uniformly grey, so nothing connected the button a player pressed
+ * to the field they then read in the matrix - the same decision in two visual
+ * languages. One lookup, used by both, makes the colour mean something: press
+ * amber, find amber.
+ */
+export function colorForActionKey(key: ActionKey): string {
+  return CATEGORIES[categoryForActionKey(key)].color;
+}
+
+/**
+ * Postflopová akce v kategorii preflopu, která znamená totéž: check jako limp
+ * (pasivní vstup), malá sázka jako otevření, velká jako 3bet, raise jako 4bet.
+ */
+const POSTFLOP_CATEGORY: Record<PostflopAction, ActionCategory> = {
+  CHECK: "LIMP",
+  BET_SMALL: "OPEN",
+  BET_BIG: "3BET",
+  CALL: "CALL",
+  RAISE: "4BET",
+  FOLD: "FOLD",
+};
+
+/**
+ * Barva postflopové akce - z téže palety jako preflop (23. 10. 2026, nové GUI).
+ *
+ * Postflop barvy akcí dosud neměl. Vlastní paleta by porušila zásadu „jedna
+ * barva pro jeden význam“ a obešla by odstup od palety zdroje, který hlídá
+ * `rangeMatrixPalette.test.ts`; proto se bere existující kategorie.
+ */
+export function colorForPostflopAction(action: PostflopAction): string {
+  return CATEGORIES[POSTFLOP_CATEGORY[action]].color;
+}
+
 export function categoryForHand(keys: ActionKey[] | undefined): ActionCategory {
   if (!keys || keys.length === 0) return "FOLD";
   let best: ActionCategory = "FOLD";
@@ -266,6 +351,114 @@ function renderUnavailable(doc: Document, root: HTMLElement, message: string): v
   root.appendChild(wrap);
 }
 
+/**
+ * How wide the hero's range is here, and what it is made of.
+ *
+ * The grid answers "what would I do with each hand"; this answers the question a
+ * player actually asks when reviewing a spot - "how much am I playing, and how
+ * does it split". Those are different questions and the grid alone answers only
+ * the first: thirteen by thirteen coloured squares is a picture of every possible
+ * holding, not of a range. The bar below is the range itself, folds excluded,
+ * divided by action in the legend's own colours, so the split is read at a glance
+ * rather than assembled from numbers on separate pills.
+ */
+function renderRangeWidth(doc: Document, counts: CategoryCounts): HTMLElement {
+  const entries = Object.entries(counts) as [ActionCategory, number][];
+  const rangeCombos = entries
+    .filter(([category]) => category !== "FOLD")
+    .reduce((sum, [, combos]) => sum + combos, 0);
+  const foldCombos = counts.FOLD ?? 0;
+
+  const bar = doc.createElement("div");
+  bar.className = "range-width";
+  bar.dataset.rangeCombos = String(rangeCombos);
+  bar.dataset.foldCombos = String(foldCombos);
+  bar.style.display = "flex";
+  bar.style.alignItems = "baseline";
+  bar.style.gap = "8px";
+  bar.style.marginTop = "10px";
+  bar.style.fontSize = "12px";
+  bar.style.fontWeight = "900";
+  bar.style.color = "#e8ecf7";
+
+  const headline = doc.createElement("span");
+  headline.className = "range-width-value";
+  headline.textContent = `Vaše range: ${categoryShare(rangeCombos)}`;
+  headline.style.fontSize = "15px";
+  headline.style.color = "#8ef0b4";
+
+  const detail = doc.createElement("span");
+  detail.className = "range-width-detail";
+  detail.textContent = `${rangeCombos} z ${TOTAL_COMBOS} kombinací — foldujete ${categoryShare(foldCombos)}`;
+  detail.style.fontSize = "11px";
+  detail.style.fontWeight = "850";
+  detail.style.color = "#9fb2d5";
+
+  bar.appendChild(headline);
+  bar.appendChild(detail);
+
+  const block = doc.createElement("div");
+  block.className = "range-composition-block";
+  block.appendChild(bar);
+  if (rangeCombos > 0) block.appendChild(renderComposition(doc, counts, rangeCombos));
+  return block;
+}
+
+/**
+ * The hero's range as one bar, split by action in proportion to combinations.
+ *
+ * Folds are left out on purpose. Including them would make the bar a picture of
+ * the deck again, and at ten big blinds under the gun the fold slice is over nine
+ * tenths of it - every played action squeezed into a sliver. What the player needs
+ * to see is the shape of what they *play*.
+ */
+function renderComposition(
+  doc: Document,
+  counts: CategoryCounts,
+  rangeCombos: number,
+): HTMLElement {
+  const strip = doc.createElement("div");
+  strip.className = "range-composition";
+  strip.dataset.rangeCombos = String(rangeCombos);
+  strip.setAttribute("role", "img");
+  strip.style.display = "flex";
+  strip.style.height = "16px";
+  strip.style.marginTop = "7px";
+  strip.style.borderRadius = "999px";
+  strip.style.overflow = "hidden";
+  strip.style.border = "1px solid rgba(255,255,255,.12)";
+  strip.style.background = "rgba(2,7,13,.5)";
+
+  const parts: string[] = [];
+  for (const cat of LEGEND_ORDER) {
+    if (cat === "FOLD") continue;
+    const combos = counts[cat] ?? 0;
+    if (combos === 0) continue;
+    const pct = combos / rangeCombos * 100;
+
+    const segment = doc.createElement("span");
+    segment.className = "range-composition__part";
+    segment.dataset.action = cat;
+    segment.dataset.combos = String(combos);
+    segment.style.flex = `${combos} 0 0`;
+    segment.style.background = CATEGORIES[cat].color;
+    segment.style.display = "flex";
+    segment.style.alignItems = "center";
+    segment.style.justifyContent = "center";
+    segment.style.fontSize = "9px";
+    segment.style.fontWeight = "950";
+    segment.style.color = "rgba(4,10,18,.86)";
+    segment.title = `${CATEGORIES[cat].label}: ${combos} kombinací, ${pct.toFixed(0)} % range`;
+    // A number inside a sliver is unreadable and makes the bar look broken; below
+    // about a tenth the colour and the tooltip carry it.
+    if (pct >= 12) segment.textContent = `${pct.toFixed(0)} %`;
+    strip.appendChild(segment);
+    parts.push(`${CATEGORIES[cat].label} ${pct.toFixed(0)} %`);
+  }
+  strip.setAttribute("aria-label", `Rozdělení range: ${parts.join(", ")}`);
+  return strip;
+}
+
 /** Vykreslí legendu pro množinu použitých kategorií (fold vždy zahrnut). */
 function renderLegend(
   doc: Document,
@@ -273,6 +466,12 @@ function renderLegend(
   counts: CategoryCounts,
   matrix: HTMLElement,
 ): HTMLElement {
+  // The hero's range is everything that is not a fold. Stated once here so the
+  // per-action shares below add up to a hundred rather than to something the
+  // reader has to work out.
+  const rangeCombos = (Object.entries(counts) as [ActionCategory, number][])
+    .filter(([category]) => category !== "FOLD")
+    .reduce((sum, [, combos]) => sum + combos, 0);
   // Fold je vždy přítomen (Req 10.5).
   used.add("FOLD");
 
@@ -293,7 +492,7 @@ function renderLegend(
     item.setAttribute("role", "button");
     item.setAttribute("tabindex", "0");
     item.setAttribute("aria-pressed", "false");
-    item.setAttribute("aria-label", `Zobrazit pouze handy kategorie ${def.label}`);
+    item.setAttribute("aria-label", `Show only hands in category ${def.label}`);
     item.dataset.action = cat;
     item.dataset.count = String(counts[cat] ?? 0);
     item.dataset.share = categoryShare(counts[cat] ?? 0);
@@ -322,7 +521,13 @@ function renderLegend(
 
     const count = doc.createElement("span");
     count.className = "legend-count";
-    count.textContent = `${counts[cat] ?? 0}/169 (${categoryShare(counts[cat] ?? 0)})`;
+    // Two different questions, both worth answering: how much of the whole deck
+    // this action is, and how much of the hero's own range it makes up. The old
+    // single number answered neither - it was a count of classes over 169.
+    const combos = counts[cat] ?? 0;
+    count.textContent = cat === "FOLD"
+      ? `${combos} kombinací (${categoryShare(combos)})`
+      : `${combos} komb. — ${categoryShare(combos)} balíčku, ${shareOfRange(combos, rangeCombos)} range`;
     count.style.color = "#9fb2d5";
     count.style.fontSize = "10px";
     count.style.fontWeight = "900";
@@ -368,8 +573,15 @@ function applyLegendFilter(
   });
 }
 
-function categoryShare(count: number): string {
-  return `${Math.round((count / (GRID_SIZE * GRID_SIZE)) * 100)}%`;
+/** Share of the whole deck this many combinations is. */
+function categoryShare(combos: number): string {
+  return `${(combos / TOTAL_COMBOS * 100).toFixed(1).replace(".", ",")} %`;
+}
+
+/** Share of the hero's own range, which is what the legend is really about. */
+function shareOfRange(combos: number, rangeCombos: number): string {
+  if (rangeCombos <= 0) return "0 %";
+  return `${(combos / rangeCombos * 100).toFixed(0)} %`;
 }
 
 function actionListLabel(keys: readonly ActionKey[] | undefined): string {
@@ -451,15 +663,15 @@ function showCellDetail(
 
   const title = doc.createElement("div");
   title.className = "matrix-cell-detail__title";
-  title.textContent = `${hand}${hero ? " – handa Hero" : ""}`;
+  title.textContent = `${hand}${hero ? " - Hero hand" : ""}`;
   title.style.fontSize = "13px";
   title.style.fontWeight = "950";
   title.style.color = "#f8fbff";
   detail.appendChild(title);
 
-  detail.appendChild(renderDetailLine(doc, "Kategorie range", CATEGORIES[category].label));
-  detail.appendChild(renderDetailLine(doc, "Přísná akce", actionListLabel(entry.strict[hand])));
-  detail.appendChild(renderDetailLine(doc, "Tolerované akce", actionListLabel(entry.actions[hand])));
+  detail.appendChild(renderDetailLine(doc, "Range category", CATEGORIES[category].label));
+  detail.appendChild(renderDetailLine(doc, "Strict action", actionListLabel(entry.strict[hand])));
+  detail.appendChild(renderDetailLine(doc, "Lenient actions", actionListLabel(entry.actions[hand])));
   detail.focus();
 }
 
@@ -518,15 +730,29 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
   try {
     // Req 10.6: data nejsou konzistentně načtena jako celek.
     if (!store.isLoaded()) {
-      renderUnavailable(doc, root, "Data range nejsou dostupná.");
+      renderUnavailable(
+        doc,
+        root,
+        localizedText("Range data is unavailable.", "Data range nejsou dostupná."),
+      );
       return;
     }
 
+    // Matice musí ukázat tu range, ze které se odpověď hodnotila. Spot s
+    // jmenovaným protihráčem (osa otvírače, od 16. 9. 2026 se zpřesněnými
+    // záznamy v packu) má odpověď z záznamu proti té sedačce; bez sedačky v
+    // klíči by hráč po odpovědi „Proti openu z BTN“ viděl obecnou matici
+    // proti kalibrovanému otvírači - jinou range, než podle které byl
+    // ohodnocen. Bez zpřesněného záznamu padá klíč na obecný jako všude.
+    // Volitelný přístup schválně: matici volají i spoty poskládané mimo drill
+    // (kompoziční lišta, historie) bez `tableState`.
+    const vsSeat = spot.tableState?.vsSeat;
     const key: RangeKey = {
       position: spot.heroPos,
       bucket: spot.effStack,
       context: spot.context,
       ante: spot.ante,
+      ...(vsSeat === undefined ? {} : { vsSeat }),
     };
 
     const entry = store.lookup(key);
@@ -536,7 +762,10 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
       renderUnavailable(
         doc,
         root,
-        "Pro tento spot nejsou dostupná data range.",
+        localizedText(
+          "No range data is available for this spot.",
+          "Pro tento spot nejsou dostupná data range.",
+        ),
       );
       return;
     }
@@ -565,7 +794,7 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
 
     const title = doc.createElement("div");
     title.className = "range-matrix-title";
-    title.textContent = "Preflop matice range";
+    title.textContent = "Preflop range matrix";
     title.style.fontSize = "12px";
     title.style.fontWeight = "950";
     title.style.textTransform = "uppercase";
@@ -573,7 +802,12 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
 
     const meta = doc.createElement("div");
     meta.className = "range-matrix-meta";
-    meta.textContent = `${spot.context} | ${spot.heroPos} | ${spot.effStack} BB | Hero: ${spot.hand}`;
+    // Kdo jednal proti hrdinovi, a jestli je matice proti němu zpřesněná,
+    // nebo obecná (spot sedačku zná, knihovna pro ni záznam nemá).
+    const versus = vsSeat === undefined
+      ? ""
+      : ` | vs ${vsSeat}${entry.vsSeat === vsSeat ? "" : localizedText(" (general)", " (obecná)")}`;
+    meta.textContent = `${spot.context} | ${spot.heroPos} | ${spot.effStack} BB${versus} | Hero: ${spot.hand}`;
     meta.style.fontSize = "11px";
     meta.style.fontWeight = "850";
     meta.style.color = "#b9cff4";
@@ -588,7 +822,12 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
     matrix.className = "matrix";
     matrix.style.display = "grid";
     matrix.style.gridTemplateColumns = `repeat(${GRID_SIZE + 1}, 1fr)`;
-    matrix.style.minWidth = "640px";
+    // No fixed floor. 640px was wider than every phone this ships to, so the one
+    // view a player most needs to read whole was the one they had to scroll
+    // sideways through. The grid is fourteen equal columns and shrinks cleanly;
+    // what stops it collapsing is the cell font, set from the column width below.
+    matrix.style.minWidth = "0";
+    matrix.style.width = "100%";
     matrix.style.gap = "2px";
     matrix.style.padding = "5px";
     matrix.style.borderRadius = "10px";
@@ -615,7 +854,7 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
         const keys = entry.actions[hand];
         const category = categoryForHand(keys); // Req 10.2
         usedCategories.add(category);
-        counts[category] = (counts[category] ?? 0) + 1;
+        counts[category] = (counts[category] ?? 0) + combosInClass(hand);
 
         const cell = doc.createElement("div");
         cell.className = `matrix-cell matrix-cell--${category}`;
@@ -625,13 +864,17 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
         cell.setAttribute("tabindex", "0");
         cell.setAttribute(
           "aria-label",
-          `${hand}: ${CATEGORIES[category].label}; zobrazit přísnou a tolerované akce`,
+          `${hand}: ${CATEGORIES[category].label}; show strict and lenient actions`,
         );
         cell.textContent = hand;
         cell.style.background = CATEGORIES[category].color;
         cell.style.textAlign = "center";
-        cell.style.fontSize = "10px";
-        cell.style.minHeight = "28px";
+        // Sized from the viewport rather than pinned, so the grid scales instead
+        // of overflowing. Fourteen columns across a 360px phone leave about 20px
+        // each; the lower clamp keeps a three-character label inside that, and
+        // the upper stops the cells ballooning on a desktop.
+        cell.style.fontSize = "clamp(7px,1.9vw,11px)";
+        cell.style.minHeight = "clamp(18px,5vw,28px)";
         cell.style.padding = "2px 0";
         cell.style.color = "#fff";
         cell.style.borderRadius = "5px";
@@ -661,6 +904,13 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
 
     wrap.appendChild(matrix);
 
+    // --- Šířka range (co vlastně hrajeme) ---
+    // The grid shows all 169 classes because that is what a range chart is, but
+    // the number a player needs first is how wide their own range is here. Without
+    // it the panel reads as "these are the possible hands" rather than "this is
+    // your range and this is how it splits".
+    wrap.appendChild(renderRangeWidth(doc, counts));
+
     // --- Legenda (Req 10.5) ---
     wrap.appendChild(renderLegend(doc, usedCategories, counts, matrix));
     wrap.appendChild(cellDetail);
@@ -668,6 +918,13 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
     root.appendChild(wrap);
   } catch {
     // Req 10.6: za žádných okolností neprovést pád aplikace.
-    renderUnavailable(doc, root, "Matici range se nepodařilo zobrazit.");
+    renderUnavailable(
+      doc,
+      root,
+      localizedText(
+        "The range matrix could not be displayed.",
+        "Matici range se nepodařilo zobrazit.",
+      ),
+    );
   }
 }

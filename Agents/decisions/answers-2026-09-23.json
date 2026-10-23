@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "PKRTRAINER_OWNER_DECISIONS_V1",
+  "questionsHash": "54a0eadc",
+  "answers": [
+    {
+      "id": 1,
+      "title": "Rejam a open-shove jsou v korpusu obrázky, ne mřížky - číst je?",
+      "code": "a",
+      "label": "Číst obojí: rejam i open-shove",
+      "recommended": false,
+      "text": "Ber i EV čísla, ale ne jako cenu - jako kontrolu dekódování a jako míru marginality. Proč ne jako cenu: EV v obrázcích je spočítané v modelu RYE proti jeho předpokládaným call ranžím, kdežto produkt oceňuje jamy z ALL_IN_EQUITY (rozhodnutí 8a ze 17. 9.); dvě různě vzniklé EV v jednom profilu by si protiřečily, takže zobrazovat se má dál ta produktová. Zato jako kontrola je EV mnohem silnější než šířka range v hlavičce: ta ověří jen součet, kdežto znaménko EV se dá ověřit u každé ruky zvlášť - v jamovací mřížce má mít každá ruka uvnitř EV >= 0 a každá venku < 0. Přesně to chytí chybu, kterou dnes dělá prototyp (zelená v rámečku u sousedních buněk): špatně přečtená buňka se prozradí obráceným znaménkem i tehdy, když součet vyjde. Navrhuju tedy EV ukládat jako pole zdroje, tvrdě na neshodě znaménka failovat import, a v trenažéru ho použít nejvýš na rozlišení „jasný jam\" vs „těsný jam\" (pásmo kolem nuly), ne jako zobrazenou cenu."
+    },
+    {
+      "id": 2,
+      "title": "Čtyřicet čtyři stránek jmenuje otvírače skupinou („EP“, „LP“)",
+      "code": "a",
+      "label": "EP = UTG (nejranější sedačka)",
+      "recommended": true
+    },
+    {
+      "id": 3,
+      "title": "Jak dělit noci mezi přesolv a rozklad",
+      "code": "c",
+      "label": "Nejdřív dorozložit, co je přesolvené, pak dál",
+      "recommended": false
+    }
+  ]
+}

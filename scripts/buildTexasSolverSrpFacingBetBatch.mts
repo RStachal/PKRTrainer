@@ -1,6 +1,8 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 
+import { texasSolverBoardForId } from "../src/core/texasSolverBoardCatalog.ts";
+
 const DEFAULT_OUTPUT_DIR =
   "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_facing_bet_v1";
 const DEFAULT_MANIFEST =
@@ -10,15 +12,6 @@ const LOWSPR_OUTPUT_DIR =
 const LOWSPR_MANIFEST =
   "Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-srp-facing-bet-lowspr-v1-manifest.json";
 const OUTPUT_BASE = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
-
-const BOARD_TO_TEXAS_SOLVER: Record<string, string> = {
-  A72r: "As,7d,2c",
-  K98tt: "Ks,9s,8d",
-  T76tt: "Ts,7s,6d",
-  QJ9tt: "Qs,Js,9d",
-  "985mono": "9s,8s,5s",
-  "654r": "6s,5d,4c",
-};
 
 interface Scenario {
   familyId: string;
@@ -222,8 +215,7 @@ function writeBatch(args: CliArgs, files: readonly GeneratedFile[]): void {
 }
 
 function renderParameter(scenario: Scenario, boardId: string): string {
-  const board = BOARD_TO_TEXAS_SOLVER[boardId];
-  if (board === undefined) throw new Error(`Unsupported board id: ${boardId}`);
+  const board = texasSolverBoardForId(boardId);
   return [
     `set_pot ${scenario.pot}`,
     `set_effective_stack ${scenario.effectiveStack}`,

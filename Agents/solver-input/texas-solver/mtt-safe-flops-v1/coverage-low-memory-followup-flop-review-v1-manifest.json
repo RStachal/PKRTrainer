@@ -1,0 +1,777 @@
+{
+    "packId":  "pkrtrainer-mtt-texas-solver-low-memory-followup-flop-review-v1",
+    "generatedAt":  "2026-07-16",
+    "parameterDir":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1",
+    "outputBase":  "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver",
+    "scenarios":  [
+                      {
+                          "familyId":  "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+                          "templatePath":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/01_MTT9_20BB_BTN_BB_SRP_LOWSPR_A72r.txt",
+                          "boards":  [
+                                         "K83r",
+                                         "Q72r",
+                                         "JT9tt",
+                                         "AT4mono",
+                                         "986tt",
+                                         "742r"
+                                     ],
+                          "purpose":  "BTN vs BB SRP c-bet LOW-SPR board expansion for review depth.",
+                          "coverageTags":  [
+                                               "LOW_SPR",
+                                               "SINGLE_RAISED",
+                                               "SRP_BTN_VS_BB",
+                                               "SINGLE_RAISED_POT_CBET",
+                                               "LARGE_FLOP_REVIEW"
+                                           ]
+                      },
+                      {
+                          "familyId":  "MTT9_50BB_BTN_BB_SRP",
+                          "templatePath":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_safe_flops_v1/01_MTT9_50BB_BTN_BB_SRP_A72r.txt",
+                          "boards":  [
+                                         "K83r",
+                                         "Q72r",
+                                         "JT9tt",
+                                         "AT4mono",
+                                         "986tt",
+                                         "742r"
+                                     ],
+                          "purpose":  "BTN vs BB SRP c-bet MID-SPR board expansion for review depth.",
+                          "coverageTags":  [
+                                               "MID_SPR",
+                                               "SINGLE_RAISED",
+                                               "SRP_BTN_VS_BB",
+                                               "SINGLE_RAISED_POT_CBET",
+                                               "LARGE_FLOP_REVIEW"
+                                           ]
+                      },
+                      {
+                          "familyId":  "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+                          "templatePath":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/21_MTT9_80BB_BTN_BB_SRP_HIGHSPR_A72r.txt",
+                          "boards":  [
+                                         "K83r",
+                                         "Q72r",
+                                         "JT9tt",
+                                         "AT4mono",
+                                         "986tt",
+                                         "742r"
+                                     ],
+                          "purpose":  "BTN vs BB SRP c-bet HIGH-SPR board expansion for review depth.",
+                          "coverageTags":  [
+                                               "HIGH_SPR",
+                                               "SINGLE_RAISED",
+                                               "SRP_BTN_VS_BB",
+                                               "SINGLE_RAISED_POT_CBET",
+                                               "LARGE_FLOP_REVIEW"
+                                           ]
+                      },
+                      {
+                          "familyId":  "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR",
+                          "templatePath":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_co_bb_cbet_v1/01_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_A72r.txt",
+                          "boards":  [
+                                         "K83r",
+                                         "Q72r",
+                                         "JT9tt",
+                                         "AT4mono",
+                                         "986tt",
+                                         "742r"
+                                     ],
+                          "purpose":  "CO vs BB SRP c-bet LOW-SPR board expansion for review depth.",
+                          "coverageTags":  [
+                                               "LOW_SPR",
+                                               "SINGLE_RAISED",
+                                               "SRP_CO_VS_BB",
+                                               "SINGLE_RAISED_POT_CBET",
+                                               "IP_AGGRESSOR",
+                                               "LARGE_FLOP_REVIEW"
+                                           ]
+                      },
+                      {
+                          "familyId":  "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR",
+                          "templatePath":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_co_bb_cbet_v1/21_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_A72r.txt",
+                          "boards":  [
+                                         "K83r",
+                                         "Q72r",
+                                         "JT9tt",
+                                         "AT4mono",
+                                         "986tt",
+                                         "742r"
+                                     ],
+                          "purpose":  "CO vs BB SRP c-bet MID-SPR board expansion for review depth.",
+                          "coverageTags":  [
+                                               "MID_SPR",
+                                               "SINGLE_RAISED",
+                                               "SRP_CO_VS_BB",
+                                               "SINGLE_RAISED_POT_CBET",
+                                               "IP_AGGRESSOR",
+                                               "LARGE_FLOP_REVIEW"
+                                           ]
+                      },
+                      {
+                          "familyId":  "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
+                          "templatePath":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_co_bb_cbet_v1/41_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_K98tt.txt",
+                          "boards":  [
+                                         "K83r",
+                                         "Q72r",
+                                         "JT9tt",
+                                         "AT4mono",
+                                         "986tt",
+                                         "742r"
+                                     ],
+                          "purpose":  "CO vs BB SRP c-bet HIGH-SPR board expansion for review depth.",
+                          "coverageTags":  [
+                                               "HIGH_SPR",
+                                               "SINGLE_RAISED",
+                                               "SRP_CO_VS_BB",
+                                               "SINGLE_RAISED_POT_CBET",
+                                               "IP_AGGRESSOR",
+                                               "LARGE_FLOP_REVIEW"
+                                           ]
+                      },
+                      {
+                          "familyId":  "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+                          "templatePath":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1/01_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_A72r.txt",
+                          "boards":  [
+                                         "K83r",
+                                         "Q72r",
+                                         "JT9tt",
+                                         "AT4mono",
+                                         "986tt",
+                                         "742r"
+                                     ],
+                          "purpose":  "SB vs BB SRP OOP c-bet LOW-SPR board expansion for review depth.",
+                          "coverageTags":  [
+                                               "LOW_SPR",
+                                               "SINGLE_RAISED",
+                                               "SRP_SB_VS_BB",
+                                               "SINGLE_RAISED_POT_CBET",
+                                               "OOP_AGGRESSOR",
+                                               "LARGE_FLOP_REVIEW"
+                                           ]
+                      },
+                      {
+                          "familyId":  "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
+                          "templatePath":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1/21_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_A72r.txt",
+                          "boards":  [
+                                         "K83r",
+                                         "Q72r",
+                                         "JT9tt",
+                                         "AT4mono",
+                                         "986tt",
+                                         "742r"
+                                     ],
+                          "purpose":  "SB vs BB SRP OOP c-bet MID-SPR board expansion for review depth.",
+                          "coverageTags":  [
+                                               "MID_SPR",
+                                               "SINGLE_RAISED",
+                                               "SRP_SB_VS_BB",
+                                               "SINGLE_RAISED_POT_CBET",
+                                               "OOP_AGGRESSOR",
+                                               "LARGE_FLOP_REVIEW"
+                                           ]
+                      },
+                      {
+                          "familyId":  "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
+                          "templatePath":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1/41_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_K98tt.txt",
+                          "boards":  [
+                                         "K83r",
+                                         "Q72r",
+                                         "JT9tt",
+                                         "AT4mono",
+                                         "986tt",
+                                         "742r"
+                                     ],
+                          "purpose":  "SB vs BB SRP OOP c-bet HIGH-SPR board expansion for review depth.",
+                          "coverageTags":  [
+                                               "HIGH_SPR",
+                                               "SINGLE_RAISED",
+                                               "SRP_SB_VS_BB",
+                                               "SINGLE_RAISED_POT_CBET",
+                                               "OOP_AGGRESSOR",
+                                               "LARGE_FLOP_REVIEW"
+                                           ]
+                      },
+                      {
+                          "familyId":  "MTT9_35BB_CO_BTN_3BP_REPAIR",
+                          "templatePath":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_repair_v1/01_MTT9_35BB_CO_BTN_3BP_REPAIR_A72r.txt",
+                          "boards":  [
+                                         "K83r",
+                                         "Q72r",
+                                         "JT9tt",
+                                         "AT4mono",
+                                         "986tt",
+                                         "742r"
+                                     ],
+                          "purpose":  "BTN vs CO 3bet-pot c-bet LOW-SPR board expansion for review depth.",
+                          "coverageTags":  [
+                                               "LOW_SPR",
+                                               "THREE_BET_POT",
+                                               "3BP_BTN_VS_CO",
+                                               "THREE_BET_POT_CBET",
+                                               "LARGE_FLOP_REVIEW"
+                                           ]
+                      },
+                      {
+                          "familyId":  "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+                          "templatePath":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_expansion_v1/01_MTT9_80BB_CO_BTN_3BP_MIDSPR_A72r.txt",
+                          "boards":  [
+                                         "K83r",
+                                         "Q72r",
+                                         "JT9tt",
+                                         "AT4mono",
+                                         "986tt",
+                                         "742r"
+                                     ],
+                          "purpose":  "BTN vs CO 3bet-pot c-bet MID-SPR board expansion for review depth.",
+                          "coverageTags":  [
+                                               "MID_SPR",
+                                               "THREE_BET_POT",
+                                               "3BP_BTN_VS_CO",
+                                               "THREE_BET_POT_CBET",
+                                               "LARGE_FLOP_REVIEW"
+                                           ]
+                      },
+                      {
+                          "familyId":  "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+                          "templatePath":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_expansion_v1/21_MTT9_150BB_CO_BTN_3BP_HIGHSPR_A72r.txt",
+                          "boards":  [
+                                         "K83r",
+                                         "Q72r",
+                                         "JT9tt",
+                                         "AT4mono",
+                                         "986tt",
+                                         "742r"
+                                     ],
+                          "purpose":  "BTN vs CO 3bet-pot c-bet HIGH-SPR board expansion for review depth.",
+                          "coverageTags":  [
+                                               "HIGH_SPR",
+                                               "THREE_BET_POT",
+                                               "3BP_BTN_VS_CO",
+                                               "THREE_BET_POT_CBET",
+                                               "LARGE_FLOP_REVIEW"
+                                           ]
+                      }
+                  ],
+    "files":  [
+                  {
+                      "fileName":  "001_MTT9_20BB_BTN_BB_SRP_LOWSPR_K83r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/001_MTT9_20BB_BTN_BB_SRP_LOWSPR_K83r.txt",
+                      "familyId":  "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+                      "boardId":  "K83r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "002_MTT9_20BB_BTN_BB_SRP_LOWSPR_Q72r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/002_MTT9_20BB_BTN_BB_SRP_LOWSPR_Q72r.txt",
+                      "familyId":  "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+                      "boardId":  "Q72r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "003_MTT9_20BB_BTN_BB_SRP_LOWSPR_JT9tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/003_MTT9_20BB_BTN_BB_SRP_LOWSPR_JT9tt.txt",
+                      "familyId":  "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+                      "boardId":  "JT9tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "004_MTT9_20BB_BTN_BB_SRP_LOWSPR_AT4mono.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/004_MTT9_20BB_BTN_BB_SRP_LOWSPR_AT4mono.txt",
+                      "familyId":  "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+                      "boardId":  "AT4mono",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "005_MTT9_20BB_BTN_BB_SRP_LOWSPR_986tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/005_MTT9_20BB_BTN_BB_SRP_LOWSPR_986tt.txt",
+                      "familyId":  "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+                      "boardId":  "986tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "006_MTT9_20BB_BTN_BB_SRP_LOWSPR_742r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/006_MTT9_20BB_BTN_BB_SRP_LOWSPR_742r.txt",
+                      "familyId":  "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+                      "boardId":  "742r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "101_MTT9_50BB_BTN_BB_SRP_K83r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/101_MTT9_50BB_BTN_BB_SRP_K83r.txt",
+                      "familyId":  "MTT9_50BB_BTN_BB_SRP",
+                      "boardId":  "K83r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "102_MTT9_50BB_BTN_BB_SRP_Q72r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/102_MTT9_50BB_BTN_BB_SRP_Q72r.txt",
+                      "familyId":  "MTT9_50BB_BTN_BB_SRP",
+                      "boardId":  "Q72r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "103_MTT9_50BB_BTN_BB_SRP_JT9tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/103_MTT9_50BB_BTN_BB_SRP_JT9tt.txt",
+                      "familyId":  "MTT9_50BB_BTN_BB_SRP",
+                      "boardId":  "JT9tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "104_MTT9_50BB_BTN_BB_SRP_AT4mono.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/104_MTT9_50BB_BTN_BB_SRP_AT4mono.txt",
+                      "familyId":  "MTT9_50BB_BTN_BB_SRP",
+                      "boardId":  "AT4mono",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "105_MTT9_50BB_BTN_BB_SRP_986tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/105_MTT9_50BB_BTN_BB_SRP_986tt.txt",
+                      "familyId":  "MTT9_50BB_BTN_BB_SRP",
+                      "boardId":  "986tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "106_MTT9_50BB_BTN_BB_SRP_742r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/106_MTT9_50BB_BTN_BB_SRP_742r.txt",
+                      "familyId":  "MTT9_50BB_BTN_BB_SRP",
+                      "boardId":  "742r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "201_MTT9_80BB_BTN_BB_SRP_HIGHSPR_K83r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/201_MTT9_80BB_BTN_BB_SRP_HIGHSPR_K83r.txt",
+                      "familyId":  "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+                      "boardId":  "K83r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "202_MTT9_80BB_BTN_BB_SRP_HIGHSPR_Q72r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/202_MTT9_80BB_BTN_BB_SRP_HIGHSPR_Q72r.txt",
+                      "familyId":  "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+                      "boardId":  "Q72r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "203_MTT9_80BB_BTN_BB_SRP_HIGHSPR_JT9tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/203_MTT9_80BB_BTN_BB_SRP_HIGHSPR_JT9tt.txt",
+                      "familyId":  "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+                      "boardId":  "JT9tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "204_MTT9_80BB_BTN_BB_SRP_HIGHSPR_AT4mono.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/204_MTT9_80BB_BTN_BB_SRP_HIGHSPR_AT4mono.txt",
+                      "familyId":  "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+                      "boardId":  "AT4mono",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "205_MTT9_80BB_BTN_BB_SRP_HIGHSPR_986tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/205_MTT9_80BB_BTN_BB_SRP_HIGHSPR_986tt.txt",
+                      "familyId":  "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+                      "boardId":  "986tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "206_MTT9_80BB_BTN_BB_SRP_HIGHSPR_742r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/206_MTT9_80BB_BTN_BB_SRP_HIGHSPR_742r.txt",
+                      "familyId":  "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+                      "boardId":  "742r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "301_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_K83r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/301_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_K83r.txt",
+                      "familyId":  "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR",
+                      "boardId":  "K83r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "302_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_Q72r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/302_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_Q72r.txt",
+                      "familyId":  "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR",
+                      "boardId":  "Q72r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "303_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_JT9tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/303_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_JT9tt.txt",
+                      "familyId":  "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR",
+                      "boardId":  "JT9tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "304_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_AT4mono.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/304_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_AT4mono.txt",
+                      "familyId":  "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR",
+                      "boardId":  "AT4mono",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "305_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_986tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/305_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_986tt.txt",
+                      "familyId":  "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR",
+                      "boardId":  "986tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "306_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_742r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/306_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_742r.txt",
+                      "familyId":  "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR",
+                      "boardId":  "742r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "401_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_K83r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/401_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_K83r.txt",
+                      "familyId":  "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR",
+                      "boardId":  "K83r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "402_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_Q72r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/402_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_Q72r.txt",
+                      "familyId":  "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR",
+                      "boardId":  "Q72r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "403_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_JT9tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/403_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_JT9tt.txt",
+                      "familyId":  "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR",
+                      "boardId":  "JT9tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "404_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_AT4mono.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/404_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_AT4mono.txt",
+                      "familyId":  "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR",
+                      "boardId":  "AT4mono",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "405_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_986tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/405_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_986tt.txt",
+                      "familyId":  "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR",
+                      "boardId":  "986tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "406_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_742r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/406_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_742r.txt",
+                      "familyId":  "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR",
+                      "boardId":  "742r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "501_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_K83r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/501_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_K83r.txt",
+                      "familyId":  "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
+                      "boardId":  "K83r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "502_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_Q72r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/502_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_Q72r.txt",
+                      "familyId":  "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
+                      "boardId":  "Q72r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "503_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_JT9tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/503_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_JT9tt.txt",
+                      "familyId":  "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
+                      "boardId":  "JT9tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "504_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_AT4mono.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/504_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_AT4mono.txt",
+                      "familyId":  "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
+                      "boardId":  "AT4mono",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "505_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_986tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/505_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_986tt.txt",
+                      "familyId":  "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
+                      "boardId":  "986tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "506_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_742r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/506_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_742r.txt",
+                      "familyId":  "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
+                      "boardId":  "742r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "601_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_K83r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/601_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_K83r.txt",
+                      "familyId":  "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+                      "boardId":  "K83r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "602_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_Q72r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/602_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_Q72r.txt",
+                      "familyId":  "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+                      "boardId":  "Q72r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "603_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_JT9tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/603_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_JT9tt.txt",
+                      "familyId":  "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+                      "boardId":  "JT9tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "604_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_AT4mono.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/604_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_AT4mono.txt",
+                      "familyId":  "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+                      "boardId":  "AT4mono",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "605_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_986tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/605_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_986tt.txt",
+                      "familyId":  "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+                      "boardId":  "986tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "606_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_742r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/606_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_742r.txt",
+                      "familyId":  "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+                      "boardId":  "742r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "701_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_K83r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/701_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_K83r.txt",
+                      "familyId":  "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
+                      "boardId":  "K83r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "702_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_Q72r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/702_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_Q72r.txt",
+                      "familyId":  "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
+                      "boardId":  "Q72r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "703_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_JT9tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/703_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_JT9tt.txt",
+                      "familyId":  "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
+                      "boardId":  "JT9tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "704_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_AT4mono.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/704_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_AT4mono.txt",
+                      "familyId":  "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
+                      "boardId":  "AT4mono",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "705_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_986tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/705_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_986tt.txt",
+                      "familyId":  "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
+                      "boardId":  "986tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "706_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_742r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/706_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_742r.txt",
+                      "familyId":  "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
+                      "boardId":  "742r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "801_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_K83r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/801_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_K83r.txt",
+                      "familyId":  "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
+                      "boardId":  "K83r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "802_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_Q72r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/802_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_Q72r.txt",
+                      "familyId":  "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
+                      "boardId":  "Q72r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "803_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_JT9tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/803_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_JT9tt.txt",
+                      "familyId":  "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
+                      "boardId":  "JT9tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "804_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_AT4mono.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/804_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_AT4mono.txt",
+                      "familyId":  "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
+                      "boardId":  "AT4mono",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "805_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_986tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/805_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_986tt.txt",
+                      "familyId":  "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
+                      "boardId":  "986tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "806_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_742r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/806_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_742r.txt",
+                      "familyId":  "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
+                      "boardId":  "742r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "901_MTT9_35BB_CO_BTN_3BP_REPAIR_K83r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/901_MTT9_35BB_CO_BTN_3BP_REPAIR_K83r.txt",
+                      "familyId":  "MTT9_35BB_CO_BTN_3BP_REPAIR",
+                      "boardId":  "K83r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "902_MTT9_35BB_CO_BTN_3BP_REPAIR_Q72r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/902_MTT9_35BB_CO_BTN_3BP_REPAIR_Q72r.txt",
+                      "familyId":  "MTT9_35BB_CO_BTN_3BP_REPAIR",
+                      "boardId":  "Q72r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "903_MTT9_35BB_CO_BTN_3BP_REPAIR_JT9tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/903_MTT9_35BB_CO_BTN_3BP_REPAIR_JT9tt.txt",
+                      "familyId":  "MTT9_35BB_CO_BTN_3BP_REPAIR",
+                      "boardId":  "JT9tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "904_MTT9_35BB_CO_BTN_3BP_REPAIR_AT4mono.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/904_MTT9_35BB_CO_BTN_3BP_REPAIR_AT4mono.txt",
+                      "familyId":  "MTT9_35BB_CO_BTN_3BP_REPAIR",
+                      "boardId":  "AT4mono",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "905_MTT9_35BB_CO_BTN_3BP_REPAIR_986tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/905_MTT9_35BB_CO_BTN_3BP_REPAIR_986tt.txt",
+                      "familyId":  "MTT9_35BB_CO_BTN_3BP_REPAIR",
+                      "boardId":  "986tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "906_MTT9_35BB_CO_BTN_3BP_REPAIR_742r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/906_MTT9_35BB_CO_BTN_3BP_REPAIR_742r.txt",
+                      "familyId":  "MTT9_35BB_CO_BTN_3BP_REPAIR",
+                      "boardId":  "742r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "1001_MTT9_80BB_CO_BTN_3BP_MIDSPR_K83r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/1001_MTT9_80BB_CO_BTN_3BP_MIDSPR_K83r.txt",
+                      "familyId":  "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+                      "boardId":  "K83r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "1002_MTT9_80BB_CO_BTN_3BP_MIDSPR_Q72r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/1002_MTT9_80BB_CO_BTN_3BP_MIDSPR_Q72r.txt",
+                      "familyId":  "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+                      "boardId":  "Q72r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "1003_MTT9_80BB_CO_BTN_3BP_MIDSPR_JT9tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/1003_MTT9_80BB_CO_BTN_3BP_MIDSPR_JT9tt.txt",
+                      "familyId":  "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+                      "boardId":  "JT9tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "1004_MTT9_80BB_CO_BTN_3BP_MIDSPR_AT4mono.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/1004_MTT9_80BB_CO_BTN_3BP_MIDSPR_AT4mono.txt",
+                      "familyId":  "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+                      "boardId":  "AT4mono",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "1005_MTT9_80BB_CO_BTN_3BP_MIDSPR_986tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/1005_MTT9_80BB_CO_BTN_3BP_MIDSPR_986tt.txt",
+                      "familyId":  "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+                      "boardId":  "986tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "1006_MTT9_80BB_CO_BTN_3BP_MIDSPR_742r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/1006_MTT9_80BB_CO_BTN_3BP_MIDSPR_742r.txt",
+                      "familyId":  "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+                      "boardId":  "742r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "1101_MTT9_150BB_CO_BTN_3BP_HIGHSPR_K83r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/1101_MTT9_150BB_CO_BTN_3BP_HIGHSPR_K83r.txt",
+                      "familyId":  "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+                      "boardId":  "K83r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "1102_MTT9_150BB_CO_BTN_3BP_HIGHSPR_Q72r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/1102_MTT9_150BB_CO_BTN_3BP_HIGHSPR_Q72r.txt",
+                      "familyId":  "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+                      "boardId":  "Q72r",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "1103_MTT9_150BB_CO_BTN_3BP_HIGHSPR_JT9tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/1103_MTT9_150BB_CO_BTN_3BP_HIGHSPR_JT9tt.txt",
+                      "familyId":  "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+                      "boardId":  "JT9tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "1104_MTT9_150BB_CO_BTN_3BP_HIGHSPR_AT4mono.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/1104_MTT9_150BB_CO_BTN_3BP_HIGHSPR_AT4mono.txt",
+                      "familyId":  "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+                      "boardId":  "AT4mono",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "1105_MTT9_150BB_CO_BTN_3BP_HIGHSPR_986tt.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/1105_MTT9_150BB_CO_BTN_3BP_HIGHSPR_986tt.txt",
+                      "familyId":  "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+                      "boardId":  "986tt",
+                      "written":  true
+                  },
+                  {
+                      "fileName":  "1106_MTT9_150BB_CO_BTN_3BP_HIGHSPR_742r.txt",
+                      "path":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_followup_review_v1/1106_MTT9_150BB_CO_BTN_3BP_HIGHSPR_742r.txt",
+                      "familyId":  "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+                      "boardId":  "742r",
+                      "written":  true
+                  }
+              ],
+    "notes":  [
+                  "Owner-directed resource-balanced followup review batch. Generated from an isolated batch without changing the legacy queue.",
+                  "MEMORY_SAFE_REVIEW_ONLY tree: reduced sizing branches and iterations after the full tree exceeded the RAM guard. It is not comparable to a full-tree production solve.",
+                  "Review-only evidence: no raw export or derived draft is runtime strategy until the separate review protocol is complete."
+              ],
+    "commands":  [
+                     "npm run mtt:texas-solver-low-memory-status",
+                     "npm run mtt:texas-solver-coverage-status -- --manifest Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-low-memory-followup-flop-review-v1-manifest.json --summary"
+                 ],
+    "executionProfile":  {
+                             "threads":  3,
+                             "treeProfile":  "MEMORY_SAFE_REVIEW_ONLY",
+                             "minimumFreeMemoryPercent":  35,
+                             "maximumCpuPercent":  40,
+                             "stopBelowFreeMemoryPercent":  25,
+                             "processPriority":  "BelowNormal"
+                         }
+}

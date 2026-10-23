@@ -13,6 +13,7 @@ const heroCards: [Card, Card] = [
 const tableState: TableState = {
   heroPos: "BTN",
   pushFold: false,
+  effectiveStackBB: 100,
   limpsBefore: 0,
   callsBefore: 0,
   facing: "NONE",
@@ -66,14 +67,19 @@ describe("rangeMatrixView - DOM", () => {
     expect(hero?.dataset.hand).toBe("AKs");
     expect(hero?.dataset.action).toBe("OPEN");
     expect(root.querySelector<HTMLElement>(".range-matrix-title")?.textContent)
-      .toBe("Preflop matice range");
+      .toBe("Preflop range matrix");
     expect(root.querySelector<HTMLElement>(".range-matrix-meta")?.textContent)
       .toContain("Hero: AKs");
     expect(root.querySelector<HTMLElement>(".range-matrix-view")?.style.background)
       .toContain("linear-gradient");
     expect(root.querySelector<HTMLElement>(".range-matrix-view")?.style.overflowX)
       .toBe("auto");
-    expect(root.querySelector<HTMLElement>(".matrix")?.style.minWidth).toBe("640px");
+    // No fixed floor. It used to demand 640px, wider than every phone this ships
+    // to, so the one view a player most needs to read whole was the one they had
+    // to scroll sideways through. Asserting "0" rather than a new number because
+    // the property is the absence of a floor, not a smaller one.
+    expect(root.querySelector<HTMLElement>(".matrix")?.style.minWidth).toBe("0");
+    expect(root.querySelector<HTMLElement>(".matrix")?.style.width).toBe("100%");
     expect(root.querySelectorAll<HTMLElement>(".matrix-header--row")).toHaveLength(13);
     expect(root.querySelector<HTMLElement>(".matrix-header--row")?.dataset.axis).toBe("row");
     expect(root.querySelector<HTMLElement>(".matrix-header--row")?.style.position)
@@ -91,11 +97,24 @@ describe("rangeMatrixView - DOM", () => {
       .toContain("Open / RFI");
     expect(root.querySelector<HTMLElement>('.legend-item[data-action="OPEN"]')
       ?.dataset.count).toMatch(/^\d+$/);
+    // Shares are combinations out of 1326, not classes out of 169. A class is not
+    // a unit - forty offsuit classes are three times the range forty suited ones
+    // are - so the old figure could be a dozen points from the truth.
     expect(root.querySelector<HTMLElement>('.legend-item[data-action="OPEN"]')
-      ?.dataset.share).toMatch(/^\d+%$/);
+      ?.dataset.share).toMatch(/^\d+,\d %$/);
     expect(root.querySelectorAll(".legend-count").length).toBeGreaterThan(1);
     expect([...root.querySelectorAll<HTMLElement>(".legend-count")]
-      .some((node) => /\d+\/169 \(\d+%\)/.test(node.textContent ?? ""))).toBe(true);
+      .some((node) => /komb\. — \d+,\d % balíčku, \d+ % range/.test(node.textContent ?? ""))).toBe(true);
+
+    // The panel leads with the hero's own range width, so it reads as "this is
+    // your range" rather than "these are the possible hands".
+    const width = root.querySelector<HTMLElement>(".range-width");
+    expect(width).not.toBeNull();
+    const rangeCombos = Number(width!.dataset.rangeCombos);
+    const foldCombos = Number(width!.dataset.foldCombos);
+    expect(rangeCombos).toBeGreaterThan(0);
+    expect(rangeCombos + foldCombos).toBe(1326);
+    expect(width!.textContent).toContain("Vaše range");
 
     const openLegend = root.querySelector<HTMLElement>('.legend-item[data-action="OPEN"]');
     expect(openLegend?.getAttribute("role")).toBe("button");
@@ -119,10 +138,10 @@ describe("rangeMatrixView - DOM", () => {
     expect(detail?.hidden).toBe(false);
     expect(detail?.dataset.hand).toBe("AKs");
     expect(detail?.dataset.action).toBe("OPEN");
-    expect(detail?.textContent).toContain("handa Hero");
-    expect(detail?.textContent).toContain("Přísná akce");
+    expect(detail?.textContent).toContain("Hero hand");
+    expect(detail?.textContent).toContain("Strict action");
     expect(detail?.textContent).toContain("Raise 2x");
-    expect(detail?.textContent).toContain("Tolerované akce");
+    expect(detail?.textContent).toContain("Lenient actions");
     expect(hero?.classList.contains("matrix-cell--selected")).toBe(true);
 
     const aces = root.querySelector<HTMLElement>('.matrix-cell[data-hand="AA"]');
@@ -130,6 +149,39 @@ describe("rangeMatrixView - DOM", () => {
     expect(detail?.dataset.hand).toBe("AA");
     expect(detail?.textContent).toContain("3-bet");
     expect(aces?.classList.contains("matrix-cell--selected")).toBe(true);
+  });
+
+  it("matice s jmenovaným otvíračem se hledá proti němu a říká, jestli je zpřesněná", () => {
+    // Od 16. 9. 2026 jsou v packu zpřesněné záznamy; hráč ohodnocený podle
+    // range proti BTN musí po odpovědi vidět tu samou range, ne obecnou.
+    const keys: string[] = [];
+    const refinedStore: RangeStore = {
+      isLoaded: () => true,
+      lookup: (key) => {
+        keys.push(`${key.context}|${key.position}|${key.bucket}|${key.vsSeat ?? "-"}`);
+        return key.vsSeat === "BTN"
+          ? { actions: { AKs: ["3BET"] }, strict: { AKs: ["3BET"] }, vsSeat: "BTN" }
+          : { actions: { AKs: ["CALL"] }, strict: { AKs: ["CALL"] } };
+      },
+    };
+    const facing: Spot = {
+      ...spot, id: "VS_OPEN|BB|25|AKs|vsBTN|OFF", context: "VS_OPEN", heroPos: "BB",
+      tableState: { ...tableState, heroPos: "BB", facing: "OPEN", vsSeat: "BTN" },
+    };
+    const root = document.createElement("div");
+    renderMatrix(facing, refinedStore, root);
+    expect(keys).toEqual(["VS_OPEN|BB|25|BTN"]);
+    expect(root.querySelector(".range-matrix-meta")?.textContent).toContain("vs BTN");
+    expect(root.querySelector(".range-matrix-meta")?.textContent).not.toContain("obecná");
+
+    // Sedačka bez zpřesněného záznamu: obecná matice, a řekne to.
+    const generalOnly: RangeStore = {
+      isLoaded: () => true,
+      lookup: () => ({ actions: { AKs: ["CALL"] }, strict: { AKs: ["CALL"] } }),
+    };
+    const root2 = document.createElement("div");
+    renderMatrix({ ...facing, tableState: { ...facing.tableState, vsSeat: "UTG" } }, generalOnly, root2);
+    expect(root2.querySelector(".range-matrix-meta")?.textContent).toContain("vs UTG (obecná)");
   });
 
   it("pri nedostupnych datech zobrazi indikaci bez mrizky", () => {

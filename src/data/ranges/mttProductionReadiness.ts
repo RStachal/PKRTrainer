@@ -133,6 +133,15 @@ export interface MttCompletionImportSlotHint {
 }
 
 export interface MttCompletionReadinessOptions {
+  /**
+   * Kolik vyřešených rodin odpovídá na který profil, klíčováno `profileKey`.
+   *
+   * Předává se vstupem, **ne importem manifestů**, a je to měřený důvod: import
+   * tří manifestů do tohohle modulu nafoukl líný chunk `mtt-postflop-pilot-runtime`
+   * z 500 na 523,5 KiB, tedy přes strop 512. Modul si data o obsahu nesmí tahat
+   * sám; kdo report staví, ať je dodá - stejně jako to dělá u packů.
+   */
+  solvedFamilyCounts?: Readonly<Record<string, number>>;
   preflopPacks?: readonly RangePack[];
   flopProductionPacks?: readonly FlopProductionStrategyPack[];
   turnProductionPacks?: readonly TurnProductionStrategyPack[];
@@ -590,12 +599,32 @@ function matchingPreflopPack(
   ));
 }
 
+/**
+ * Kolik vyřešených rodin na tenhle profil odpovídá.
+ *
+ * Čte se z manifestů, ne z produkčních packů - a právě v tom rozdílu byla ta
+ * nepravda: řádky knihovny sledují `*ProductionStrategyPack`, takže **97
+ * vyřešených rodin bylo bráně neviditelných** a hlásila u nich heuristiku.
+ *
+ * Nemění to stav řádku na produkční, a nemá. Vyřešená rodina odpovídá jen na
+ * desky, na kterých vznikla; prohlásit kvůli ní profil za pokrytý by bylo
+ * přehnané tvrzení. Mění to jen to, co se o řádku říká.
+ */
+function solvedFamilyCountForProfile(
+  profile: MttCompletionReadinessProfile,
+  options: MttCompletionReadinessOptions,
+): number {
+  const key = `${profile.tableFormat}|${profile.blindSpeed}|${profile.evModel}|${profile.street}`;
+  return options.solvedFamilyCounts?.[key] ?? 0;
+}
+
 function postflopCompletionReadinessRow(
   profile: MttCompletionReadinessProfile,
   options: MttCompletionReadinessOptions,
 ): MttCompletionReadinessRow {
   const packReadiness = postflopProductionPackReadiness(profile, options);
   if (!packReadiness) {
+    const solved = solvedFamilyCountForProfile(profile, options);
     return {
       ...profile,
       status: "CANDIDATE",
@@ -605,8 +634,23 @@ function postflopCompletionReadinessRow(
       importSlot: completionImportSlotHint(profile),
       missingReasons: [
         `No production ${profile.street} StrategyPack is registered for ${profile.tableFormat}/${profile.evModel}.`,
-        "Postflop training currently uses public heuristic or generator fallback for this MTT profile.",
-        "Dedicated production StrategyPack coverage is required before production scoring.",
+        // Věta „trénink používá heuristiku" tu stála i poté, co přestala platit.
+        // Vyřešených rodin je dnes 97 a trenažér z nich rozdává - měřeno 100 %
+        // odpovědí podložených solverem na všech třech ulicích. Podcenit, co
+        // produkt umí, je nepravda stejného druhu jako nadsazení, jen opačným
+        // směrem, a rozhoduje se podle ní o tom, co solvit dál.
+        solved === 0
+          ? "Postflop training currently uses public heuristic or generator fallback for this MTT profile."
+          : `${solved} solved families answer this profile and the trainer deals boards from them, `
+            + "so dealt spots get solver-backed strategy; a freely dealt board still falls back to the heuristic.",
+        // Věta o nutnosti produkčního packu zůstává v obou větvích doslova.
+        // Hlídá ji test nad celou maticí a je to skutečná pojistka: vyřešená
+        // rodina odpovídá jen na desky, na kterých vznikla, takže „máme obsah"
+        // nikdy nesmí znamenat „profil je pokrytý".
+        solved === 0
+          ? "Dedicated production StrategyPack coverage is required before production scoring."
+          : "Dedicated production StrategyPack coverage is required before production scoring: "
+            + "solved families answer only the boards they were solved on.",
       ],
     };
   }

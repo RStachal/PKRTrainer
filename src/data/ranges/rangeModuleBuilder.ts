@@ -1,8 +1,10 @@
 import { createHash } from "node:crypto";
 import type { RangePack } from "./rangePack";
+import { PACK_REFINEMENT_KEYS, refinementValueOf } from "./rangePack";
 import {
   buildMttPreflopImportReadinessReport,
   normalizeMttPreflopRangePackImport,
+  recordProvenanceSources,
   type MttPreflopRangePackImportInput,
 } from "./mttPreflopRangePackImport";
 import {
@@ -135,6 +137,7 @@ function buildMttPreflopRangeModule(
     licenseKind: input.licenseKind,
     blindSpeeds: [input.dimensions.blindSpeed],
     evModels: [input.dimensions.evModel],
+    additionalSources: recordProvenanceSources(input.records, input.licenseKind),
   });
   const slotReport = buildMttPreflopImportSlotValidationReport(input);
   const languageBlockers = playerFacingLanguageBlockers(input.contentLanguage);
@@ -356,18 +359,219 @@ function buildPostflopSlotReport(
   });
 }
 
+/**
+ * Modul **preview** packu: tentýž kód jako produkční, bez otisku povolení.
+ *
+ * Preview pack z podstaty neprojde produkční cestou: `writeReady` chce
+ * `productionReady`, a ten chce každou sedačku × hloubku × kontext. Vrstva, co
+ * odpovídá jen tam, kde ví (rozhodnutí vlastníka 22. 9. 2026, 4a), to nikdy
+ * mít nebude - a přesto má jít k hráči. Tahle cesta je pro ni, a je úmyslně
+ * úzká: pack musí být platný a nálepkovaný `LOW`, jinak se modul nevykreslí.
+ * Produkci to neotvírá: kde se pack smí hrát, rozhoduje `startableMttPreflopRangePack`
+ * proti měřené připravenosti, ne existence modulu.
+ */
+export function renderPreviewMttPreflopRangePackModule(
+  input: MttPreflopRangePackImportInput,
+  exportName = defaultExportName(input.id, "RangePack"),
+  banner: readonly string[] = [],
+): { moduleText: string | null; errors: readonly string[] } {
+  const readiness = buildMttPreflopImportReadinessReport(input);
+  const errors = [
+    ...readiness.errors,
+    ...(input.confidence === "LOW" ? [] : [`Preview module needs confidence LOW, not ${input.confidence}.`]),
+    ...playerFacingLanguageBlockers(input.contentLanguage),
+  ];
+  if (errors.length > 0) return { moduleText: null, errors };
+  const header = ["// preview module: no production permission fingerprint", ...banner.map((line) => `// ${line}`)];
+  return {
+    moduleText: renderMttPreflopRangePackModule(
+      normalizeMttPreflopRangePackImport(input),
+      exportName,
+      null,
+      header,
+    ),
+    errors: [],
+  };
+}
+
 function renderMttPreflopRangePackModule(
   pack: RangePack,
   exportName: string,
-  fingerprint: string,
+  fingerprint: string | null,
+  header: readonly string[] = [],
 ): string {
+  const runtimePack = compactMttPreflopRangePack(pack);
+  const { records, ...metadata } = runtimePack;
+  const encoded = encodeMttPreflopRuntime(records);
   return [
-    `// provenance-fingerprint: sha256:${fingerprint}`,
+    ...(fingerprint === null ? header : [`// provenance-fingerprint: sha256:${fingerprint}`]),
     'import type { RangePack } from "./rangePack";',
     "",
-    `export const ${exportName} = ${jsonForModule(pack)} satisfies RangePack;`,
+    "type EncodedHandMap = Array<[actionSet: number, hands: string]>;",
+    // Typ zpřesnění se **skládá** z `PACK_REFINEMENT_KEYS`, ne vypisuje: vypsaný
+    // seznam se tu už jednou rozešel s obsahem packu a zahodil osu dorovnávajícího.
+    `type Refinement = Pick<RangePack["records"][number], ${
+      PACK_REFINEMENT_KEYS.map((key) => `"${key}"`).join(" | ")
+    }>;`,
+    "type EncodedRecord = [position: string, bucket: number, context: string, lenient: number, strict: number, actionEvs?: RangePack[\"records\"][number][\"actionEvs\"] | null, refinement?: Refinement];",
+    "",
+    `const encodedActions: string[][] = ${jsonForModule(encoded.actionSets)};`,
+    `const encodedHandMaps: EncodedHandMap[] = ${jsonForModule(encoded.handMaps)};`,
+    `const encodedRecords: EncodedRecord[] = ${jsonForModule(encoded.records)};`,
+    "",
+    "function decodeHandMap(groups: EncodedHandMap): Record<string, string[]> {",
+    "  const decoded: Record<string, string[]> = {};",
+    "  for (const [actionSet, hands] of groups) {",
+    "    for (const hand of hands.split(\",\")) decoded[hand] = [...encodedActions[actionSet]];",
+    "  }",
+    "  return decoded;",
+    "}",
+    "",
+    "const decodedHandMaps = encodedHandMaps.map(decodeHandMap);",
+    `export const ${exportName} = {`,
+    `  ...${jsonForModule(metadata)},`,
+    "  records: encodedRecords.map(([position, bucket, context, lenient, strict, actionEvs, refinement]) => ({",
+    "    position,",
+    "    bucket,",
+    "    context,",
+    "    ...(refinement ?? {}),",
+    "    lenient: decodedHandMaps[lenient],",
+    "    strict: decodedHandMaps[strict],",
+    "    ...(actionEvs ? { actionEvs } : {}),",
+    "  })),",
+    "} as RangePack;",
     "",
   ].join("\n");
+}
+
+type MttPreflopRecord = RangePack["records"][number];
+type EncodedMttPreflopHandMap = Array<[actionSet: number, hands: string]>;
+type EncodedMttPreflopRecord = [
+  position: MttPreflopRecord["position"],
+  bucket: MttPreflopRecord["bucket"],
+  context: MttPreflopRecord["context"],
+  lenient: number,
+  strict: number,
+  /** `null` drží místo, když záznam EV nemá, ale nese zpřesnění za ním. */
+  actionEvs?: MttPreflopRecord["actionEvs"] | null,
+  refinement?: Pick<MttPreflopRecord, typeof PACK_REFINEMENT_KEYS[number]>,
+];
+
+function encodeMttPreflopRuntime(records: readonly MttPreflopRecord[]): {
+  actionSets: string[][];
+  handMaps: EncodedMttPreflopHandMap[];
+  records: EncodedMttPreflopRecord[];
+} {
+  const serializedActionSets = new Set<string>();
+  for (const record of records) {
+    for (const handMap of [record.lenient, record.strict]) {
+      for (const actions of Object.values(handMap)) {
+        if (actions !== undefined) serializedActionSets.add(JSON.stringify(actions));
+      }
+    }
+  }
+  const actionSetKeys = [...serializedActionSets].sort();
+  const actionSets = actionSetKeys.map((key) => JSON.parse(key) as string[]);
+  const actionSetIndex = new Map(actionSetKeys.map((key, index) => [key, index]));
+  const handMaps: EncodedMttPreflopHandMap[] = [];
+  const handMapIndexes = new Map<string, number>();
+
+  const indexHandMap = (handMap: MttPreflopRecord["strict"]): number => {
+    const encoded = encodeMttPreflopHandMap(handMap, actionSetIndex);
+    const key = JSON.stringify(encoded);
+    const existing = handMapIndexes.get(key);
+    if (existing !== undefined) return existing;
+    const index = handMaps.length;
+    handMaps.push(encoded);
+    handMapIndexes.set(key, index);
+    return index;
+  };
+
+  return {
+    actionSets,
+    handMaps,
+    records: records.map((record) => {
+      const encoded: EncodedMttPreflopRecord = [
+        record.position,
+        record.bucket,
+        record.context,
+        indexHandMap(record.lenient),
+        indexHandMap(record.strict),
+      ];
+      // Zpřesnění a původ záznamu musí přežít i kompaktní zápis: do 16. 9. 2026
+      // tahle cesta tiše zahodila osu otvírače (bod 234) a do 9. 10. osu
+      // dorovnávajícího - obojí proto, že seznam vlastností byl **vypsaný tady**
+      // a rozešel se s obsahem packu. Teď se čte z `PACK_REFINEMENT_KEYS`.
+      const refinement: Record<string, unknown> = {};
+      for (const key of PACK_REFINEMENT_KEYS) {
+        const value = refinementValueOf(record, key);
+        if (value !== undefined) refinement[key] = value;
+      }
+      const refined = Object.keys(refinement).length > 0;
+      if (record.actionEvs) encoded.push(record.actionEvs);
+      else if (refined) encoded.push(null);
+      if (refined) encoded.push(refinement);
+      return encoded;
+    }),
+  };
+}
+
+function encodeMttPreflopHandMap(
+  handMap: MttPreflopRecord["strict"],
+  actionSetIndex: ReadonlyMap<string, number>,
+): EncodedMttPreflopHandMap {
+  const handsByActionSet = new Map<number, string[]>();
+  for (const [hand, actions] of Object.entries(handMap)) {
+    if (actions === undefined) continue;
+    const index = actionSetIndex.get(JSON.stringify(actions));
+    if (index === undefined) throw new Error(`Missing encoded action set for ${hand}.`);
+    const hands = handsByActionSet.get(index) ?? [];
+    hands.push(hand);
+    handsByActionSet.set(index, hands);
+  }
+  return [...handsByActionSet.entries()]
+    .sort(([left], [right]) => left - right)
+    .map(([index, hands]) => [index, hands.sort().join(",")]);
+}
+
+function compactMttPreflopRangePack(pack: RangePack): RangePack {
+  return {
+    ...pack,
+    records: pack.records.map((record) => {
+      const strict = {} as RangePack["records"][number]["strict"];
+      const lenient = {} as RangePack["records"][number]["lenient"];
+      const hands = new Set([
+        ...Object.keys(record.strict),
+        ...Object.keys(record.lenient),
+        ...Object.keys(record.actionEvs ?? {}),
+      ]);
+      const actionEvs = {} as NonNullable<RangePack["records"][number]["actionEvs"]>;
+
+      for (const hand of hands) {
+        const typedHand = hand as keyof typeof record.strict;
+        const strictActions = record.strict[typedHand];
+        const lenientActions = record.lenient[typedHand];
+        const effectiveStrict = strictActions ?? ["FOLD"];
+        const effectiveLenient = lenientActions ?? strictActions ?? ["FOLD"];
+        const handActionEvs = record.actionEvs?.[typedHand];
+        if (isFoldOnly(effectiveStrict) && isFoldOnly(effectiveLenient) && !handActionEvs) continue;
+        if (strictActions !== undefined) strict[typedHand] = [...strictActions];
+        if (lenientActions !== undefined) lenient[typedHand] = [...lenientActions];
+        if (handActionEvs !== undefined) actionEvs[typedHand] = handActionEvs;
+      }
+
+      return {
+        ...record,
+        strict,
+        lenient,
+        ...(Object.keys(actionEvs).length > 0 ? { actionEvs } : {}),
+      };
+    }),
+  };
+}
+
+function isFoldOnly(actions: readonly string[]): boolean {
+  return actions.length === 1 && actions[0] === "FOLD";
 }
 
 function renderFlopProductionStrategyPackModule(
@@ -413,7 +617,7 @@ function renderRiverProductionStrategyPackModule(
 }
 
 function jsonForModule(value: unknown): string {
-  return JSON.stringify(value, null, 2);
+  return JSON.stringify(value);
 }
 
 function permissionFingerprint(manifest: ProductionPermissionManifest): string {

@@ -1,69 +1,82 @@
 ﻿/**
- * Bootstrap a propojenĂ­ aplikace MTT Preflop Trainer (task 20.1).
+ * Bootstrap a propojení aplikace MTT Preflop Trainer (task 20.1).
  *
- * Tento modul je tenkĂˇ integraÄŤnĂ­ vrstva (DOM I/O). Spojuje ÄŤistĂ© jĂˇdro
+ * Tento modul je tenká integrační vrstva (DOM I/O). Spojuje čisté jádro
  * (Drill_Engine, Scoring_Engine), datovou vrstvu (Range_Store), perzistenci
- * (migrace + Stats_Store) a UI komponenty (filtry, stĹŻl, range matice,
- * dashboard, HH import) do funkÄŤnĂ­ho celku. VeĹˇkerĂ˝ uĹľivatelskĂ˝ text je v
- * ÄŤeĹˇtinÄ› (Req 12.3); strojovĂ© identifikĂˇtory zĹŻstĂˇvajĂ­ v ASCII.
+ * (migrace + Stats_Store) a UI komponenty (filtry, stůl, range matice,
+ * dashboard, HH import) do funkčního celku. Veškerý uživatelský text je v
+ * češtině (Req 12.3); strojové identifikátory zůstávají v ASCII.
  *
- * ## InicializaÄŤnĂ­ poĹ™adĂ­ (design â€žInicializaÄŤnĂ­ poĹ™adĂ­", Req 14)
+ * ## Inicializační pořadí (design „Inicializační pořadí", Req 14)
  *
- *   1. **Migrace** (`runMigration`) â€” probÄ›hne jen, pokud novĂ˝ stav dosud
- *      neexistuje (idempotence Ĺ™eĹˇĂ­ samotnĂˇ `runMigration`).
- *   2. **OvÄ›Ĺ™enĂ­ platnĂ©ho stavu** pod verzovanĂ˝mi klĂ­ÄŤi. Pokud nelze zĂ­skat ani
- *      migrovanĂ˝, ani ÄŤistĂ˝ novĂ˝ stav â‡’ **Req 14.6**: zobraz chybu
- *      â€žnekonzistentnĂ­ ĂşloĹľiĹˇtÄ›" a relaci NESPOUĹ TÄšJ.
- *   3. **NaÄŤtenĂ­ Range_Store** (`isRangeDataLoaded`). Pokud data nejsou naÄŤtena
- *      jako celek â‡’ **Req 4.6**: zobraz chybu â€žranges nedostupnĂ©" a relaci
- *      NESPOUĹ TÄšJ.
- *   4. Jinak zobraz filtry a ÄŤekej na **explicitnĂ­ start** (**Req 13.4**) â€”
- *      ĹľĂˇdnĂ© spoty se negenerujĂ­ automaticky.
+ *   1. **Migrace** (`runMigration`) — proběhne jen, pokud nový stav dosud
+ *      neexistuje (idempotence řeší samotná `runMigration`).
+ *   2. **Ověření platného stavu** pod verzovanými klíči. Pokud nelze získat ani
+ *      migrovaný, ani čistý nový stav ⇒ **Req 14.6**: zobraz chybu
+ *      „nekonzistentní úložiště" a relaci NESPOUŠTĚJ.
+ *   3. **Načtení Range_Store** (`isRangeDataLoaded`). Pokud data nejsou načtena
+ *      jako celek ⇒ **Req 4.6**: zobraz chybu „ranges nedostupné" a relaci
+ *      NESPOUŠTĚJ.
+ *   4. Jinak zobraz filtry a čekej na **explicitní start** (**Req 13.4**) —
+ *      žádné spoty se negenerují automaticky.
  *
- * ## GlobĂˇlnĂ­ error boundary (Req 12.3)
+ * ## Globální error boundary (Req 12.3)
  *
- * CelĂ˝ bootstrap je obalen `try/catch`; navĂ­c se registrujĂ­ posluchaÄŤe
- * `window.error` a `window.unhandledrejection`, kterĂ© vykreslĂ­ ÄŤeskou chybovou
- * zprĂˇvu do DOM. Aplikace tak nikdy â€žtiĹˇe nespadne".
+ * Celý bootstrap je obalen `try/catch`; navíc se registrují posluchače
+ * `window.error` a `window.unhandledrejection`, které vykreslí českou chybovou
+ * zprávu do DOM. Aplikace tak nikdy „tiše nespadne".
  *
  * ## Service Worker (Req 12.4)
  *
- * `registerServiceWorker` se volĂˇ defenzivnÄ›; pĹ™i selhĂˇnĂ­ nakeĹˇovĂˇnĂ­ zobrazĂ­
- * nenĂˇsilnĂ© ÄŤeskĂ© upozornÄ›nĂ­ a neblokuje aplikaci.
+ * `registerServiceWorker` se volá defenzivně; při selhání nakešování zobrazí
+ * nenásilné české upozornění a neblokuje aplikaci.
  *
  * _Requirements: 4.6, 12.3, 12.4, 13.4, 14.6_
  */
 
+// Styly starého GUI v pořadí, v jakém dřív ležely ve stránce jako vložené
+// <style> (shell, stůl, statistiky, HH, postflop, dialog range) - pořadí určuje,
+// které pravidlo vyhraje. Mizí s obrazovkami, které nahradí nové GUI.
+import "./ui/styles/legacy/app-shell.css";
+import "./ui/styles/legacy/table.css";
+import "./ui/styles/legacy/dashboard.css";
+import "./ui/styles/legacy/hh-view.css";
+import "./ui/styles/legacy/postflop-view.css";
+import "./ui/styles/legacy/range-modal.css";
+// Tokeny a prvky nového GUI (Agents/ui-redesign-plan.md). Vite je vytáhne do
+// samostatného hashovaného CSS, které prohlížeč cachuje.
+import "./ui/styles/tokens.css";
+import "./ui/styles/components.css";
+import "./ui/styles/trainer.css";
 import type {
   ActionKey,
   ActionContext,
   Filters,
-  ScoringMode,
-  SessionConfig,
   Spot,
 } from "./core/types";
 import {
   DEFAULT_TRAINING_PROFILE,
   evModelLabel,
   isPostflopStreet,
+  profileId,
   type TrainingProfile,
 } from "./core/trainingProfile";
 import { isFlowAllowed } from "./core/trainingCapability";
-import { resolveSeed, spotSequence } from "./core/drillEngine";
+import { resolveSeed } from "./core/drillEngine";
 import { postflopIntentFromFilters } from "./core/postflopIntent";
 import { grade } from "./core/scoring";
-import type { PostflopStreet } from "./core/postflopGenerator";
+import { buildPreflopExplanationForSpot } from "./core/preflopExplanation";
+import type { PostflopPotType, PostflopStreet } from "./core/postflopGenerator";
+import {
+  isPostflopSprCovered,
+  maxCoveredSprForPotType,
+} from "./data/ranges/postflopSprCoverage";
 import { runtimeEntitlementGrants } from "./core/runtimeEntitlements";
 import { evaluateEntitlementAccess } from "./core/paymentEntitlements";
-import {
-  createRangeStoreFromRangePack,
-  rangeStore,
-  type RangeStore,
-} from "./data/rangeStore";
+import { createRangeStoreFromRangePack } from "./data/rangeStore";
 import { getRangeDataErrors, isRangeDataLoaded } from "./data/ranges";
 import { hasNewState, runMigration, type MigrationResult } from "./persistence/migration";
 import { createStatsStore, type StatsStore } from "./persistence/statsStore";
-import { buildProfileAwarePreflopResultRecord } from "./persistence/statsRecordV2";
 import { KEY_EVENTS, KEY_STATE, SCHEMA_VERSION } from "./persistence/keys";
 import { createHHReviewStore } from "./persistence/hhReviewStore";
 import {
@@ -76,11 +89,20 @@ import { buildPostflopLineResultRecord } from "./persistence/postflopLineResultR
 import {
   isPlayableMttPreflopPreview,
   trainingCapabilityForProfile,
-  type TrainingCapability,
 } from "./data/ranges/trainingCapability";
-import { mttPreflopRangePackForProfile } from "./data/ranges/mttPreflopRangePacks";
+import {
+  mttPreflopRangePackForProfile,
+  startableMttPreflopRangePack,
+} from "./data/ranges/mttPreflopRangePacks";
 import { mttProductionImportSlotId } from "./data/ranges/mttImportSlotNaming";
 import { mttProductionLazyLoader } from "./data/ranges/mttProductionLazyLoader";
+import { loadSolvedTurnPacks } from "./data/ranges/turnSolvedStrategyPacks";
+import { loadSolvedRiverPacks } from "./data/ranges/riverSolvedStrategyPacks";
+import { loadSolvedFlopPacks } from "./data/ranges/flopSolvedStrategyPacks";
+import { runtimeSolvedTurnPacks } from "./data/ranges/turnSolvedRuntimeRegistry";
+
+/** Oprávnění k vyřešenému turn obsahu; jedno na celý turn, ne na rodinu. */
+const SOLVED_TURN_PILOT_ENTITLEMENT = "mtt.postflop.turn.solved.pilot" as const;
 import type { RangePack } from "./data/ranges/rangePack";
 import {
   createMttProductionPostflopStrategyResolver,
@@ -92,15 +114,36 @@ import {
 } from "./data/ranges/mttPostflopPilotCatalog";
 import { renderFilters, type FiltersView } from "./ui/filters";
 import { renderTable } from "./ui/tableRenderer";
+import { loadPreflopEquity } from "./core/preflopEquity";
+import { renderDecisionPrice } from "./ui/decisionPricePanel";
+import { isHotStreak } from "./core/sessionScore";
+import { createPreflopSession } from "./training/preflopSession";
+import { createPreflopTrainerView } from "./ui/trainer/preflopTrainerView";
+import { isNextUiEnabled } from "./ui/trainer/uiFlag";
+import { colorForActionKey } from "./ui/rangeMatrixView";
 import { renderMatrix } from "./ui/rangeMatrixView";
 import { renderRangeModalButton } from "./ui/rangeModal";
 import { renderHHView } from "./ui/hhView";
 import { renderPostflopView, type PostflopRuntimeNotice } from "./ui/postflopView";
-import { CS } from "./ui/cs";
+import {
+  formatActionEvBb,
+  revealActionEvButtonBubbles,
+  setActionEvButtonContent,
+} from "./ui/actionEvButtonBubbles";
+import { revealActionPriceLines } from "./ui/actionPriceLines";
+import { preflopDecisionPrices } from "./core/preflopDecisionPrice";
+import {
+  CS,
+  getAppLanguage,
+  initializeAppLanguage,
+  localizedText,
+  setAppLanguage,
+  type AppLanguage,
+} from "./ui/cs";
 import { registerServiceWorker } from "./pwa/registerSw";
 
 // ---------------------------------------------------------------------------
-// ÄŚeskĂ© popisky AkÄŤnĂ­ch_klĂ­ÄŤĹŻ (zobrazenĂ­ doporuÄŤenĂ­ po vyhodnocenĂ­, Req 12.3)
+// České popisky Akčních_klíčů (zobrazení doporučení po vyhodnocení, Req 12.3)
 // ---------------------------------------------------------------------------
 
 const ACTION_KEY_LABEL: Record<ActionKey, string> = {
@@ -133,7 +176,7 @@ const ACTION_CONTEXT_LABEL: Record<ActionContext, string> = {
   VS_ALLIN: "Proti all-inu (call-jam)",
 };
 
-/** PĹ™eloĹľĂ­ AkÄŤnĂ­_klĂ­ÄŤ na ÄŤeskĂ˝ popisek (fallback = samotnĂ˝ klĂ­ÄŤ). */
+/** Přeloží Akční_klíč na český popisek (fallback = samotný klíč). */
 function actionKeyLabel(key: ActionKey): string {
   return ACTION_KEY_LABEL[key] ?? key;
 }
@@ -142,29 +185,37 @@ function actionContextLabel(context: ActionContext): string {
   return ACTION_CONTEXT_LABEL[context] ?? context;
 }
 
+/**
+ * Nadpis otázky: kontext, a když spot jmenuje protihráče, i on.
+ *
+ * „Proti openu - BB - AKs" neříká, kdo otevřel, a range proti UTG a proti BTN
+ * je jiná (bod 234). Od 15. 9. 2026 spot otvírače nese (`tableState.vsSeat`)
+ * a hráč ho musí číst dřív, než odpoví - jinak odpovídá na jinou otázku než
+ * range. Bez sedačky zůstává nadpis jako dřív.
+ */
+function spotTitle(spot: Spot): string {
+  const seat = spot.tableState.vsSeat;
+  const context = actionContextLabel(spot.context);
+  const situation = seat === undefined
+    ? context
+    : spot.context === "VS_3BET"
+      ? `${context} od ${seat}`
+      : spot.context === "SQUEEZE"
+        ? `${context} (${seat} otevírá, ${spot.tableState.callsBefore}x call)`
+        : `${context} z ${seat}`;
+  return `${situation} - ${spot.heroPos} - ${spot.hand}`;
+}
+
 // ---------------------------------------------------------------------------
 // DOM helpery
 // ---------------------------------------------------------------------------
 
-/** VytvoĹ™Ă­ element s volitelnou CSS tĹ™Ă­dou a textem. */
+/** Vytvoří element s volitelnou CSS třídou a textem. */
 function el(tag: string, className?: string, text?: string): HTMLElement {
   const node = document.createElement(tag);
   if (className) node.className = className;
   if (text !== undefined) node.textContent = text;
   return node;
-}
-
-function nowMs(): number {
-  if (typeof performance !== "undefined" && typeof performance.now === "function") {
-    return performance.now();
-  }
-  return Date.now();
-}
-
-function elapsedMs(startMs: number): number | undefined {
-  if (!Number.isFinite(startMs) || startMs <= 0) return undefined;
-  const value = Math.max(0, Math.round(nowMs() - startMs));
-  return Number.isFinite(value) ? value : undefined;
 }
 
 function focusElement(element: HTMLElement | null): void {
@@ -173,25 +224,25 @@ function focusElement(element: HTMLElement | null): void {
 }
 
 // ---------------------------------------------------------------------------
-// Inicializace ĂşloĹľiĹˇtÄ› (Req 14.2, 14.3, 14.6)
+// Inicializace úložiště (Req 14.2, 14.3, 14.6)
 // ---------------------------------------------------------------------------
 
-/** VĂ˝sledek inicializace lokĂˇlnĂ­ho ĂşloĹľiĹˇtÄ›. */
+/** Výsledek inicializace lokálního úložiště. */
 interface StorageInit {
-  /** Je pod verzovanĂ˝mi klĂ­ÄŤi k dispozici platnĂ˝ (migrovanĂ˝ / ÄŤistĂ˝) stav? */
+  /** Je pod verzovanými klíči k dispozici platný (migrovaný / čistý) stav? */
   ok: boolean;
-  /** VĂ˝sledek migrace (pro odvozenĂ­ uĹľivatelskĂ˝ch upozornÄ›nĂ­). */
+  /** Výsledek migrace (pro odvození uživatelských upozornění). */
   migration?: MigrationResult;
-  /** Selhala migrace, takĹľe trĂ©nink zaÄŤĂ­nĂˇ s prĂˇzdnĂ˝mi statistikami (Req 14.3). */
+  /** Selhala migrace, takže trénink začíná s prázdnými statistikami (Req 14.3). */
   startedEmpty: boolean;
 }
 
 /**
- * ZapĂ­Ĺˇe ÄŤistĂ˝ novĂ˝ stav (prĂˇzdnĂ˝ event log + snapshot) pod verzovanĂ© klĂ­ÄŤe,
- * pokud tam dosud ĹľĂˇdnĂ˝ platnĂ˝ stav nenĂ­, a ovÄ›Ĺ™Ă­ jeho dostupnost.
+ * Zapíše čistý nový stav (prázdný event log + snapshot) pod verzované klíče,
+ * pokud tam dosud žádný platný stav není, a ověří jeho dostupnost.
  *
- * VracĂ­ `true`, je-li po dokonÄŤenĂ­ pod verzovanĂ˝mi klĂ­ÄŤi platnĂ˝ stav; `false`
- * pĹ™i jakĂ©koli chybÄ› I/O (â‡’ nekonzistentnĂ­ ĂşloĹľiĹˇtÄ›, Req 14.6).
+ * Vrací `true`, je-li po dokončení pod verzovanými klíči platný stav; `false`
+ * při jakékoli chybě I/O (⇒ nekonzistentní úložiště, Req 14.6).
  */
 function ensureCleanState(storage: Storage): boolean {
   try {
@@ -205,7 +256,7 @@ function ensureCleanState(storage: Storage): boolean {
       storage.setItem(KEY_EVENTS, "[]");
       storage.setItem(KEY_STATE, JSON.stringify(snapshot));
     }
-    // OvÄ›Ĺ™enĂ­: stav musĂ­ bĂ˝t po zĂˇpisu skuteÄŤnÄ› dostupnĂ˝ (ÄŤitelnĂ˝).
+    // Ověření: stav musí být po zápisu skutečně dostupný (čitelný).
     return hasNewState(storage);
   } catch {
     return false;
@@ -213,35 +264,43 @@ function ensureCleanState(storage: Storage): boolean {
 }
 
 /**
- * Provede inicializaÄŤnĂ­ krok 1â€“2 (migrace + ovÄ›Ĺ™enĂ­ stavu) dle designu.
+ * Provede inicializační krok 1–2 (migrace + ověření stavu) dle designu.
  *
- *   - `runMigration` (idempotentnĂ­): migruje legacy data nebo nahlĂˇsĂ­
+ *   - `runMigration` (idempotentní): migruje legacy data nebo nahlásí
  *     `clean`/`failed`.
- *   - Pro `migrated`/`noop` ovÄ›Ĺ™Ă­ pĹ™Ă­tomnost novĂ©ho stavu; chybĂ­-li, inicializuje
- *     ÄŤistĂ˝ stav.
- *   - Pro `clean` inicializuje ÄŤistĂ˝ novĂ˝ stav.
- *   - Pro `failed` ponechĂˇ legacy beze zmÄ›ny a inicializuje ÄŤistĂ˝ novĂ˝ stav
- *     (Req 14.3); nelze-li to, signalizuje nekonzistentnĂ­ ĂşloĹľiĹˇtÄ› (Req 14.6).
+ *   - Pro `migrated`/`noop` ověří přítomnost nového stavu; chybí-li, inicializuje
+ *     čistý stav.
+ *   - Pro `clean` inicializuje čistý nový stav.
+ *   - Pro `failed` ponechá legacy beze změny a inicializuje čistý nový stav
+ *     (Req 14.3); nelze-li to, signalizuje nekonzistentní úložiště (Req 14.6).
  */
 function initializeStorage(storage: Storage): StorageInit {
   const migration = runMigration(storage);
 
   switch (migration.status) {
     case "failed": {
-      // Req 14.3: migrace selhala â‡’ legacy beze zmÄ›ny, ÄŤistĂ˝ novĂ˝ stav.
+      // Req 14.3: migrace selhala ⇒ legacy beze změny, čistý nový stav.
       const ok = ensureCleanState(storage);
       return { ok, migration, startedEmpty: ok };
     }
     case "clean": {
-      // Ĺ˝ĂˇdnĂˇ legacy data â‡’ ÄŤistĂ˝ start.
+      // Žádná legacy data ⇒ čistý start.
       const ok = ensureCleanState(storage);
       return { ok, migration, startedEmpty: false };
     }
     case "migrated":
     case "noop":
     default: {
-      // Po migraci/idempotentnĂ­m noopu by mÄ›l stav existovat; pojistka pro
-      // pĹ™Ă­pad nastavenĂ©ho pĹ™Ă­znaku migrace bez stavu.
+      // Legacy data existovala, ale nešla přečíst: stats začínají prázdné a hráč
+      // to musí vědět. Bez tohoto vypadal takový běh jako běžná úspěšná migrace
+      // hráče, který prostě žádnou historii neměl - přestože jeho data v
+      // úložišti dál leží a jsou obnovitelná.
+      if (migration.legacyEventsUnreadable === true) {
+        const okUnreadable = hasNewState(storage) || ensureCleanState(storage);
+        return { ok: okUnreadable, migration, startedEmpty: true };
+      }
+      // Po migraci/idempotentním noopu by měl stav existovat; pojistka pro
+      // případ nastaveného příznaku migrace bez stavu.
       const ok = hasNewState(storage) || ensureCleanState(storage);
       return { ok, migration, startedEmpty: false };
     }
@@ -252,31 +311,31 @@ function initializeStorage(storage: Storage): StorageInit {
 // Bootstrap
 // ---------------------------------------------------------------------------
 
-/** VolitelnĂ© parametry bootstrapu (injektovatelnĂ© pro testy). */
+/** Volitelné parametry bootstrapu (injektovatelné pro testy). */
 export interface BootstrapOptions {
-  /** KoĹ™enovĂ˝ element aplikace (vĂ˝chozĂ­ `#app`). */
+  /** Kořenový element aplikace (výchozí `#app`). */
   root?: HTMLElement | null;
-  /** LokĂˇlnĂ­ ĂşloĹľiĹˇtÄ› (vĂ˝chozĂ­ `localStorage`, je-li dostupnĂ©). */
+  /** Lokální úložiště (výchozí `localStorage`, je-li dostupné). */
   storage?: Storage;
-  /** Zaregistrovat Service Worker? (vĂ˝chozĂ­: jen v produkÄŤnĂ­m buildu). */
+  /** Zaregistrovat Service Worker? (výchozí: jen v produkčním buildu). */
   registerSw?: boolean;
 }
 
 /**
- * SestavĂ­ aplikaci a propojĂ­ vĹˇechny komponenty.
+ * Sestaví aplikaci a propojí všechny komponenty.
  *
- * IdempotentnĂ­ vĹŻÄŤi `root`: pĹ™ed vykreslenĂ­m koĹ™en vyprĂˇzdnĂ­. CelĂ© tÄ›lo je
- * obaleno `try/catch` (Req 12.3) â€” neoÄŤekĂˇvanĂˇ chyba vyĂşstĂ­ v ÄŤeskou chybovou
- * zprĂˇvu v DOM, nikoli v tichĂ˝ pĂˇd.
+ * Idempotentní vůči `root`: před vykreslením kořen vyprázdní. Celé tělo je
+ * obaleno `try/catch` (Req 12.3) — neočekávaná chyba vyústí v českou chybovou
+ * zprávu v DOM, nikoli v tichý pád.
  *
- * @param options VolitelnĂ© injektovatelnĂ© zĂˇvislosti (root, storage, SW).
+ * @param options Volitelné injektovatelné závislosti (root, storage, SW).
  */
 export function bootstrap(options: BootstrapOptions = {}): void {
   const root =
     options.root ?? (typeof document !== "undefined" ? document.getElementById("app") : null);
   if (!root) return;
 
-  // GlobĂˇlnĂ­ error boundary (Req 12.3) â€” i mimo synchronnĂ­ tok bootstrapu.
+  // Globální error boundary (Req 12.3) — i mimo synchronní tok bootstrapu.
   installGlobalErrorBoundary(root);
 
   try {
@@ -291,23 +350,31 @@ export function bootstrap(options: BootstrapOptions = {}): void {
 }
 
 /**
- * HlavnĂ­ vykreslenĂ­ aplikace: app shell (zĂˇloĹľky), inicializace ĂşloĹľiĹˇtÄ›,
- * ovÄ›Ĺ™enĂ­ Range_Store a propojenĂ­ trĂ©ninkovĂ© smyÄŤky, statistik a HH importu.
+ * Hlavní vykreslení aplikace: app shell (záložky), inicializace úložiště,
+ * ověření Range_Store a propojení tréninkové smyčky, statistik a HH importu.
  */
 function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   root.innerHTML = "";
 
   const storage: Storage | null =
     options.storage ?? (typeof localStorage !== "undefined" ? localStorage : null);
+  initializeAppLanguage(storage);
+  if (typeof document !== "undefined") {
+    document.documentElement.lang = getAppLanguage() === "EN" ? "en" : "cs";
+  }
 
-  // --- App shell: hlaviÄŤka, zĂˇloĹľky, panely, banner upozornÄ›nĂ­ ---
-  const shell = buildAppShell(root);
+  // --- App shell: hlavička, záložky, panely, banner upozornění ---
+  const shell = buildAppShell(root, (language) => {
+    if (language === getAppLanguage()) return;
+    setAppLanguage(language, storage);
+    renderApp(root, options);
+  });
 
-  // --- Krok 1â€“2: migrace + ovÄ›Ĺ™enĂ­ stavu (Req 14) ---
+  // --- Krok 1–2: migrace + ověření stavu (Req 14) ---
   if (!storage) {
-    // Bez ĂşloĹľiĹˇtÄ› nelze zaruÄŤit konzistentnĂ­ stav â‡’ Req 14.6.
+    // Bez úložiště nelze zaručit konzistentní stav ⇒ Req 14.6.
     renderStorageError(shell.trainingPanel);
-    // HH import nezĂˇvisĂ­ na ĂşloĹľiĹˇti â€” nechĂˇme ho funkÄŤnĂ­.
+    // HH import nezávisí na úložišti — necháme ho funkční.
     renderHHView(shell.hhPanel);
     renderPostflopView(shell.postflopPanel);
     return;
@@ -315,15 +382,15 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
 
   const storageInit = initializeStorage(storage);
   if (!storageInit.ok) {
-    // Req 14.6: nelze zĂ­skat platnĂ˝ stav pod verzovanĂ˝mi klĂ­ÄŤi.
+    // Req 14.6: nelze získat platný stav pod verzovanými klíči.
     renderStorageError(shell.trainingPanel);
     renderHHView(shell.hhPanel);
     renderPostflopView(shell.postflopPanel);
     return;
   }
 
-  // Req 14.3: migrace selhala, ale ÄŤistĂ˝ stav je k dispozici â‡’ nenĂˇsilnĂ©
-  // upozornÄ›nĂ­, Ĺľe trĂ©nink zaÄŤĂ­nĂˇ s prĂˇzdnĂ˝mi statistikami.
+  // Req 14.3: migrace selhala, ale čistý stav je k dispozici ⇒ nenásilné
+  // upozornění, že trénink začíná s prázdnými statistikami.
   if (storageInit.startedEmpty) {
     showNotice(
       shell.notice,
@@ -336,7 +403,11 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   const postflopLineStatsStore = createPostflopLineStatsStore(storage);
   const hhReviewStore = createHHReviewStore(storage);
 
-  // Statistiky (dashboard) a HH import jsou dostupnĂ© nezĂˇvisle na Range_Store.
+  // Nové GUI tréninku je za přepínačem, dokud neprojde E2E (fáze 1 redesignu).
+  // Čte se tady, protože postflopový panel se vykresluje dřív než trénink.
+  const nextUi = isNextUiEnabled(typeof location === "undefined" ? "" : location.search, storage);
+
+  // Statistiky (dashboard) a HH import jsou dostupné nezávisle na Range_Store.
   let sessionCount = 0;
   let currentPostflopProfile: TrainingProfile | undefined;
   let startPreflopFocusSession: ((filters: Filters) => void) | null = null;
@@ -350,6 +421,11 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       renderDashboard({
         store: statsStore,
         sessionCount,
+        // Preflop answers are recorded under the preflop profile whatever street
+        // the trainer is showing, so the street is pinned rather than taken from
+        // the selection - otherwise the dashboard would scope to a profile that
+        // has no preflop answers in it at all.
+        activeProfileId: profileId({ ...getSelectedTrainingProfile(), street: "PREFLOP" }),
         postflopRecords: postflopStatsStore.events(),
         postflopLineRecords: postflopLineStatsStore.events(),
         onStartPreflopFocus: (filters) => {
@@ -412,12 +488,38 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       required: [],
       grants,
     }).active.some((entitlement) => pilotEntitlements.includes(entitlement));
+    // Vyřešený turn obsah se počítá jako pilotní pokrytí, i když v pilotním
+    // katalogu není: má vlastní placený režim a hráč o něm má vědět stejně jako
+    // o flopových pilotech. Bez toho by mu runtime obsah zamkl a hláška by
+    // mluvila o náhledu, tedy o něčem, co se koupit nedá.
+    const hasSolvedTurnCoverage = resolvedProfile?.street === "TURN" &&
+      runtimeSolvedTurnPacks.length > 0;
+    const hasSolvedTurnEntitlement = hasSolvedTurnCoverage && evaluateEntitlementAccess({
+      required: [SOLVED_TURN_PILOT_ENTITLEMENT],
+      grants,
+    }).active.includes(SOLVED_TURN_PILOT_ENTITLEMENT);
+
+    // Dodané rodiny nesou vlastní důvěru; dokud je celá LOW, nikdo je nečetl.
+    // Až první projde review, tahle věta z hlášky sama zmizí.
+    const unreviewedContent = hasSolvedTurnCoverage &&
+      runtimeSolvedTurnPacks.every((pack) => pack.confidence === "LOW");
+
     const runtimeNotice = postflopRuntimeNotice({
-      hasScopedPilotCoverage,
-      hasActivePilotEntitlement,
+      // Preflop se sem nedostane, ale typ to neví; hláška je postflopová.
+      street: resolvedProfile?.street === "PREFLOP" ? undefined : resolvedProfile?.street,
+      unreviewedContent,
+      hasScopedPilotCoverage: hasScopedPilotCoverage || hasSolvedTurnCoverage,
+      hasActivePilotEntitlement: hasActivePilotEntitlement || hasSolvedTurnEntitlement,
       productionReady: capability?.status === "PRODUCTION",
+      coverage: postflopIntent
+        ? {
+          potType: postflopIntent.potType,
+          spr: Math.round((postflopIntent.effectiveStackBB / postflopIntent.potBB) * 10) / 10,
+        }
+        : null,
     });
     const requiresExactRuntime = (
+      (hasSolvedTurnCoverage && hasSolvedTurnEntitlement) ||
       (hasScopedPilotCoverage && hasActivePilotEntitlement) ||
       capability?.status === "PRODUCTION"
     );
@@ -436,11 +538,24 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       initialPotBB: postflopIntent?.potBB,
       initialEffectiveStackBB: postflopIntent?.effectiveStackBB,
       autoGenerate: options.autoGenerate === true,
+      nextUi,
       runtimeNotice,
       strategyResolver: runtimeProfileForView
         ? (input) => postflopRuntime?.resolver?.(input) ?? null
         : undefined,
       allowFallback: requiresExactRuntime ? false : capability?.allowHeuristicFallback ?? true,
+      // Linka prochází flop, turn i river. Když je obsah vyřešený jen na části
+      // z nich, běží linka s heuristikou tam, kde vyřešená není - jednotlivý spot
+      // zůstává přísný.
+      //
+      // Dřív se v takovém případě linka vypínala úplně, a to mělo absurdní
+      // důsledek: hráč, který si vyřešený turn zaplatil, o celý režim přišel.
+      // Zaplatit za obsah a přijít o funkci je nejhorší možný tvar paywallu.
+      lineModeAvailable: true,
+      lineAllowFallback: !(resolvedProfile !== undefined && resolvedProfile !== null
+        && POSTFLOP_LINE_STREETS.every((street) => (
+          trainingCapabilityForProfile({ ...resolvedProfile, street }).status === "PRODUCTION"
+        ))),
       beforeGenerate: runtimeProfileForView
         ? async (mode) => {
           const { buildMttPostflopTrainingRuntime } = await import("./data/ranges/mttPostflopTrainingRuntime");
@@ -456,6 +571,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
               }))
               .filter((profileKey): profileKey is string => profileKey !== null);
             await mttProductionLazyLoader.loadProfiles(profileKeys);
+            await loadSolvedTurnPacksForProfiles(profileKeys);
           }
         }
         : undefined,
@@ -502,6 +618,11 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
           .map((street) => mttProductionProfileKey({ ...selected, street }))
           .filter((profileKey): profileKey is string => profileKey !== null);
         await mttProductionLazyLoader.loadProfiles(profileKeys);
+        // Started, not waited on. Reviewing a hand history does not depend on
+        // solved turn content - the chain falls through to the heuristic without
+        // it - and nine families is several megabytes that would otherwise sit
+        // between the player pressing analyse and seeing anything.
+        void loadSolvedTurnPacksForProfiles(profileKeys);
         if (
           selectedFamily ===
           mttProductionProfileFamilyKey(getSelectedTrainingProfile())
@@ -557,13 +678,22 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       const profile = getSelectedTrainingProfile();
       const capability = trainingCapabilityForProfile(profile);
       if (!isFlowAllowed(capability, "HH_REVIEW")) {
-        return "Produkční HH review vyžaduje tréninkový profil MTT.";
+        return localizedText(
+          "Production HH review requires an MTT training profile.",
+          "Produkční HH review vyžaduje tréninkový profil MTT.",
+        );
       }
       if (result.fields.tableFormat !== profile.tableFormat) {
-        return "Importovaná handa a vybraný profil používají jiný formát stolu.";
+        return localizedText(
+          "The imported hand and selected profile use different table formats.",
+          "Importovaná handa a vybraný profil používají jiný formát stolu.",
+        );
       }
       if (profile.ante !== (result.fields.ante ?? "OFF")) {
-        return "Importovaná handa a vybraný profil používají jiný režim ante.";
+        return localizedText(
+          "The imported hand and selected profile use different ante modes.",
+          "Importovaná handa a vybraný profil používají jiný režim ante.",
+        );
       }
       return null;
     },
@@ -572,7 +702,10 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       if (!save.ok) {
         showNotice(
           shell.notice,
-          "HH review se nepodařilo uložit. Statistiky tréninku nebyly změněny.",
+          localizedText(
+            "The HH review could not be saved. Training stats were not changed.",
+            "HH review se nepodařilo uložit. Statistiky tréninku nebyly změněny.",
+          ),
         );
       }
       return save.ok;
@@ -580,7 +713,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   });
   renderPostflopPanel();
 
-  // --- Krok 3: filtry + trĂ©ninkovĂˇ smyÄŤka (Req 13.4) ---
+  // --- Krok 3: filtry + tréninková smyčka (Req 13.4) ---
   const trainingController = setupTraining(shell, statsStore, {
     onAnswered: () => {
       sessionCount += 1;
@@ -601,7 +734,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       refreshDashboard();
       shell.selectTab("postflop");
     },
-  });
+  }, nextUi);
   startPreflopFocusSession = trainingController.startPreflopFocusSession;
   getSelectedTrainingProfile = trainingController.getProfile;
 
@@ -610,10 +743,10 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
 }
 
 // ---------------------------------------------------------------------------
-// App shell (zĂˇloĹľky TrĂ©nink / Statistiky / Import HH)
+// App shell (záložky Trénink / Statistiky / Import HH)
 // ---------------------------------------------------------------------------
 
-/** Reference na klĂ­ÄŤovĂ© ÄŤĂˇsti app shellu. */
+/** Reference na klíčové části app shellu. */
 interface AppShell {
   notice: HTMLElement;
   trainingPanel: HTMLElement;
@@ -623,38 +756,58 @@ interface AppShell {
   selectTab: (id: TabId) => void;
 }
 
-/** IdentifikĂˇtory zĂˇloĹľek. */
+/** Identifikátory záložek. */
 type TabId = "training" | "stats" | "hh" | "postflop";
 
 /**
- * SestavĂ­ statickou kostru aplikace: hlaviÄŤku s nĂˇzvem, navigaci zĂˇloĹľek,
- * tĹ™i panely (TrĂ©nink / Statistiky / Import HH) a banner pro nenĂˇsilnĂˇ
- * upozornÄ›nĂ­. VrĂˇtĂ­ reference na panely a banner.
+ * Sestaví statickou kostru aplikace: hlavičku s názvem, navigaci záložek,
+ * tři panely (Trénink / Statistiky / Import HH) a banner pro nenásilná
+ * upozornění. Vrátí reference na panely a banner.
  */
-function buildAppShell(root: HTMLElement): AppShell {
-  root.appendChild(appStyles());
+function buildAppShell(
+  root: HTMLElement,
+  onLanguageChange: (language: AppLanguage) => void,
+): AppShell {
 
   const app = el("div", "app");
 
-  // HlaviÄŤka.
+  // Hlavička.
   const header = el("header", "app__header");
-  header.appendChild(el("h1", "app__title", CS.app.title));
-  header.appendChild(
+  const headerCopy = el("div", "app__header-copy");
+  headerCopy.appendChild(el("h1", "app__title", CS.app.title));
+  headerCopy.appendChild(
     el(
       "p",
       "app__subtitle",
       CS.app.subtitle,
     ),
   );
+  header.appendChild(headerCopy);
+
+  const languageSwitch = el("div", "language-switch");
+  languageSwitch.setAttribute("role", "group");
+  languageSwitch.setAttribute("aria-label", "Language");
+  for (const language of ["EN", "CZ"] as const) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "language-switch__option";
+    button.textContent = language;
+    const selected = getAppLanguage() === language;
+    button.classList.toggle("language-switch__option--active", selected);
+    button.setAttribute("aria-pressed", String(selected));
+    button.addEventListener("click", () => onLanguageChange(language));
+    languageSwitch.appendChild(button);
+  }
+  header.appendChild(languageSwitch);
   app.appendChild(header);
 
-  // Banner upozornÄ›nĂ­ (Req 12.4, 14.3) â€” nenĂˇsilnĂ˝, skrytĂ˝ dokud nenĂ­ potĹ™eba.
+  // Banner upozornění (Req 12.4, 14.3) — nenásilný, skrytý dokud není potřeba.
   const notice = el("div", "app__notice");
   notice.setAttribute("role", "status");
   notice.hidden = true;
   app.appendChild(notice);
 
-  // Navigace zĂˇloĹľek.
+  // Navigace záložek.
   const nav = el("nav", "app__tabs");
   nav.setAttribute("aria-label", CS.app.primarySections);
   nav.setAttribute("role", "tablist");
@@ -725,25 +878,25 @@ function buildAppShell(root: HTMLElement): AppShell {
 
   root.appendChild(app);
 
-  // VĂ˝chozĂ­ zĂˇloĹľka: TrĂ©nink.
+  // Výchozí záložka: Trénink.
   selectTab("training");
 
   return { notice, trainingPanel, statsPanel, hhPanel, postflopPanel, selectTab };
 }
 
 // ---------------------------------------------------------------------------
-// TrĂ©ninkovĂˇ smyÄŤka (Req 13.4, 13.6, 7, 9, 10)
+// Tréninková smyčka (Req 13.4, 13.6, 7, 9, 10)
 // ---------------------------------------------------------------------------
 
-/** Callbacky propojujĂ­cĂ­ trĂ©ninkovou smyÄŤku se stavem relace v `main.ts`. */
+/** Callbacky propojující tréninkovou smyčku se stavem relace v `main.ts`. */
 interface TrainingHooks {
-  /** ZavolĂˇ se po kaĹľdĂ©m vyhodnocenĂ­ odpovÄ›di (inkrement poÄŤtu spotĹŻ relace). */
+  /** Zavolá se po každém vyhodnocení odpovědi (inkrement počtu spotů relace). */
   onAnswered: () => void;
-  /** VrĂˇtĂ­ aktuĂˇlnĂ­ poÄŤet spotĹŻ relace (Req 9.5). */
+  /** Vrátí aktuální počet spotů relace (Req 9.5). */
   getSessionCount: () => number;
-  /** Vynuluje poÄŤet spotĹŻ relace (pĹ™i novĂ©m startu). */
+  /** Vynuluje počet spotů relace (při novém startu). */
   resetSession: () => void;
-  /** PĹ™ekreslĂ­ dashboard statistik. */
+  /** Překreslí dashboard statistik. */
   refreshDashboard: () => void;
   startPostflopFlow: (
     seed: number,
@@ -765,43 +918,128 @@ function runtimeProfile(profile: TrainingProfile, filters: Filters): TrainingPro
   };
 }
 
-function postflopRuntimeNotice(input: {
+/** The streets a hand line walks; all three need content for it to run. */
+const POSTFLOP_LINE_STREETS = ["FLOP", "TURN", "RIVER"] as const;
+
+export function postflopRuntimeNotice(input: {
   hasScopedPilotCoverage: boolean;
   hasActivePilotEntitlement: boolean;
   productionReady: boolean;
+  coverage?: { potType: PostflopPotType; spr: number } | null;
+  /**
+   * Ulice, pro kterou se hláška píše.
+   *
+   * Text o pilotech mluvil vždycky o flopu, protože jiné piloty neexistovaly.
+   * Vyřešený turn obsah má teď vlastní placený režim a hráči, který si vybral
+   * turn, by věta o flopových situacích neřekla nic užitečného - a to je zrovna
+   * hláška, podle které se rozhoduje, jestli si něco koupí.
+   */
+  street?: PostflopStreet;
+  /** Pravda, dokud žádná z dodaných rodin neprošla čtením hráče. */
+  unreviewedContent?: boolean;
 }): PostflopRuntimeNotice | null {
+  // Nepřečtený obsah to musí říct právě tady.
+  //
+  // Pack má důvěru LOW a ve svých `assumptions` napsáno, že ho zatím nikdo
+  // nečetl - jenže to hráč nevidí. Na obrazovce stálo jen „úzký pilot, ne plné
+  // pokrytí", což čte jako rozsah, ne jako míru ověření. Platícímu člověku pak
+  // servírujeme solverová data s tichým předpokladem, že solverové znamená
+  // prověřené. Neznamená: brána kontroluje tvar solvu, ne jestli je strategie
+  // dobrá.
+  const unreviewed = input.unreviewedContent === true
+    ? localizedText(
+      " Nobody has reviewed this content yet, so it is shipped content, not verified content.",
+      " Tenhle obsah zatím nikdo neprošel, takže je dodaný, ne ověřený.",
+    )
+    : "";
+  // Každá ulice vyjmenovaná, žádná přes `else`.
+  //
+  // Dřív tu byl turn a všechno ostatní spadlo na „flopové situace" - takže river
+  // by hráči tvrdil, že jde o flop. Je to potřetí, co stejný tvar udělal chybu:
+  // pravidlo psané pro jednu ulici mlčky pohltí ty ostatní. Vyjmenovat je stojí
+  // řádek navíc a ušetří ten objev.
+  const pilotSubject = input.street === "TURN"
+    ? localizedText("solved turn boards", "vyřešené turnové desky")
+    : input.street === "RIVER"
+      ? localizedText("solved river boards", "vyřešené riverové desky")
+      : localizedText("selected flop situations", "vybrané flopové situace");
+  // When an active scoped pilot is the runtime but the player has selected a stack
+  // depth past every solved band - a deep single-raised pot at SPR 25, say - say
+  // so first. Otherwise the "solver pilot is active" notice below would be
+  // actively misleading for exactly the spot they are about to see refused. The
+  // coverage bands are derived from the pilots, so this applies only to the pilot
+  // runtime; a future full production model would carry its own, wider coverage,
+  // and its own notice must not be overridden by pilot-derived bands. Only warn
+  // when the pot type has some coverage at all, so it is a depth edge, not the
+  // general preview state the PREVIEW notice already describes.
+  //
+  // Pásma se počítají z flopových pilotů, takže platí pro flop a pro nic jiného.
+  // Vyřešený turn je zpřístupnil i turnu - `hasScopedPilotCoverage` je teď
+  // pravda i pro něj - a hráč by u turnového spotu dostal varování odvozené z
+  // rozsahů, které se ho netýkají. Varování odvozené ze špatných dat je horší
+  // než žádné: hráč podle něj změní hloubku a nic se nezlepší.
+  const usesPilotCoverage = !input.productionReady &&
+    input.street !== "TURN" &&
+    input.hasScopedPilotCoverage && input.hasActivePilotEntitlement;
+  if (
+    usesPilotCoverage &&
+    input.coverage != null &&
+    maxCoveredSprForPotType(input.coverage.potType) !== null &&
+    !isPostflopSprCovered(input.coverage.potType, input.coverage.spr)
+  ) {
+    const maxSpr = maxCoveredSprForPotType(input.coverage.potType);
+    return {
+      kind: "DEEP_STACK_UNCOVERED",
+      text: localizedText(
+        `This stack depth is past the solved SPR range (up to SPR ${maxSpr}) for this pot type, so no solver-backed strategy is available here. Choose a shallower stack for solver coverage.`,
+        `Tato hloubka stacku je za solvenutým rozsahem SPR (do SPR ${maxSpr}) pro tento typ potu, takže zde není dostupná solverem podložená strategie. Pro solverové pokrytí zvolte mělčí stack.`,
+      ),
+    };
+  }
   if (input.productionReady) {
     return {
       kind: "PRODUCTION",
-      text: "Produkční postflop model je aktivní. Trénink běží bez náhledového fallbacku.",
+      text: localizedText(
+        "The production postflop model is active. Training runs without preview fallback.",
+        "Produkční postflop model je aktivní. Trénink běží bez náhledového fallbacku.",
+      ),
     };
   }
   if (input.hasScopedPilotCoverage && input.hasActivePilotEntitlement) {
     return {
       kind: "SCOPED_PILOT",
-      text: "Solverový pilot je aktivní pro vybrané flop situace. Jde o úzký pilotní režim, ne kompletní postflop production coverage.",
+      text: localizedText(
+        `A solver pilot is active for ${pilotSubject}. This is a narrow pilot, not complete postflop production coverage.${unreviewed}`,
+        `Solverový pilot je aktivní pro ${pilotSubject}. Jde o úzký pilotní režim, ne kompletní produkční pokrytí.${unreviewed}`,
+      ),
     };
   }
   if (input.hasScopedPilotCoverage) {
     return {
       kind: "LOCKED_PILOT",
-      text: "Pro tento profil existují placené solverové piloty. Bez aktivní pilot licence běží pouze náhledový režim, ne plná produkční strategie.",
+      text: localizedText(
+        `Paid solver content exists for ${pilotSubject}. Without an active licence only preview mode runs, not the solved strategy.`,
+        `Pro ${pilotSubject} existuje placený solverový obsah. Bez aktivní licence běží jen náhledový režim, ne vyřešená strategie.`,
+      ),
     };
   }
   return {
     kind: "PREVIEW",
-    text: "Postflop běží v náhledovém režimu bez kompletní solverové coverage. Spoty jsou použitelné pro trénink flow, ne jako plně ověřený produkční model.",
+    text: localizedText(
+      "Postflop runs in preview mode without complete solver coverage. Spots support training flow but are not a fully reviewed production model.",
+      "Postflop běží v náhledovém režimu bez kompletní solverové coverage. Spoty jsou použitelné pro trénink flow, ne jako plně ověřený produkční model.",
+    ),
   };
 }
 
 function candidateProfileLabel(profile: TrainingProfile): string {
   if (profile.gameVariant === "SNG") {
-    return `SNG ${evModelLabel(profile.evModel)} náhled`;
+    return `SNG ${evModelLabel(profile.evModel)} preview`;
   }
   if (profile.gameVariant === "CASH") {
-    return `Cash ${profile.rakeMode === "RAKE" ? "rake" : "bez rake"} náhled`;
+    return `Cash ${profile.rakeMode === "RAKE" ? "rake" : "no rake"} preview`;
   }
-  return `${profile.gameVariant} ${profile.tableFormat === "FULL_RING_9" ? "9-max" : "6-max"} preflop ${evModelLabel(profile.evModel)} náhled`;
+  return `${profile.gameVariant} ${profile.tableFormat === "FULL_RING_9" ? "9-max" : "6-max"} preflop ${evModelLabel(profile.evModel)} preview`;
 }
 
 function profileGateMessage(profile: TrainingProfile, filters: Filters): string {
@@ -833,25 +1071,6 @@ function profileGateMessage(profile: TrainingProfile, filters: Filters): string 
 
 }
 
-function preflopRangePackForStart(
-  profile: TrainingProfile,
-  capability: TrainingCapability,
-): RangePack | undefined {
-  const pack = mttPreflopRangePackForProfile(profile);
-  const readiness = capability.mttReadiness;
-  if (capability.status === "PRODUCTION" && readiness?.productionReady === true) {
-    return pack?.id === readiness.packId ? pack : undefined;
-  }
-  if (
-    capability.status === "PREVIEW" &&
-    isPlayableMttPreflopPreview(profile) &&
-    pack &&
-    pack.records.length > 0
-  ) {
-    return pack;
-  }
-  return undefined;
-}
 
 function mttProductionProfileKey(
   profile: TrainingProfile,
@@ -897,26 +1116,27 @@ function mttProfileLabel(profile: TrainingProfile): string {
 }
 
 /**
- * SestavĂ­ trĂ©ninkovou sekci: filtry (se strĂˇĹľĂ­ explicitnĂ­ho startu, Req 13.4) a
- * hernĂ­ oblast (stĹŻl + akce + vĂ˝sledek + range matice). GenerovĂˇnĂ­ spotĹŻ zaÄŤne
- * **aĹľ** po kliknutĂ­ na Start ve filtrech.
+ * Sestaví tréninkovou sekci: filtry (se stráží explicitního startu, Req 13.4) a
+ * herní oblast (stůl + akce + výsledek + range matice). Generování spotů začne
+ * **až** po kliknutí na Start ve filtrech.
  */
 function setupTraining(
   shell: AppShell,
   statsStore: StatsStore,
   hooks: TrainingHooks,
+  nextUi: boolean,
 ): TrainingController {
   const panel = shell.trainingPanel;
   panel.innerHTML = "";
 
-  // Kontejner filtrĹŻ + hernĂ­ oblast.
+  // Kontejner filtrů + herní oblast.
   const filtersBox = el("div", "training__filters");
   const gameBox = el("div", "training__game");
-  gameBox.hidden = true; // dokud uĹľivatel nespustĂ­ relaci (Req 13.4).
+  gameBox.hidden = true; // dokud uživatel nespustí relaci (Req 13.4).
   panel.appendChild(filtersBox);
   panel.appendChild(gameBox);
 
-  // HernĂ­ sub-oblasti.
+  // Herní sub-oblasti.
   const sessionBar = el("div", "training__session-bar");
   const sessionInfo = el("div", "training__session-info");
   const sessionTitle = el("div", "training__session-title", CS.training.question);
@@ -927,7 +1147,43 @@ function setupTraining(
   changeSituationBtn.textContent = CS.training.changeSituation;
   sessionInfo.appendChild(sessionTitle);
   sessionInfo.appendChild(sessionMeta);
+
+  /**
+   * How this session is going, on the bar above the table.
+   *
+   * The trainer graded every answer and then forgot it until the dashboard. A
+   * player working through spots had nothing in front of them that moved, which
+   * is the difference between practising and playing. The streak is the part
+   * that pulls - it is the number you do not want to reset - and the tally is
+   * the part that keeps it honest, because a streak alone hides a bad session.
+   *
+   * Session-scoped and deliberately not persisted: this is the run you are in,
+   * not your record. The dashboard already owns the long view.
+   */
+  const scoreboard = el("div", "training__scoreboard");
+  const streakChip = el("div", "training__streak");
+  const tallyChip = el("div", "training__tally");
+  scoreboard.appendChild(streakChip);
+  scoreboard.appendChild(tallyChip);
+
+  // Sekvence spotů, vyhodnocení, záznam do statistik i skóre relace jsou
+  // v řadiči, který používá i nové GUI (Agents/ui-redesign-plan.md, fáze 1).
+  // Tady zůstává jen vykreslení.
+  const session = createPreflopSession(statsStore);
+
+  function renderScoreboard(): void {
+    const sessionScore = session.score;
+    streakChip.dataset.streak = String(sessionScore.streak);
+    streakChip.textContent = CS.training.streak(sessionScore.streak);
+    streakChip.classList.toggle("training__streak--hot", isHotStreak(sessionScore));
+    tallyChip.textContent = sessionScore.answered === 0
+      ? CS.training.tallyEmpty
+      : CS.training.tally(sessionScore.correct, sessionScore.answered, sessionScore.bestStreak);
+  }
+
+  renderScoreboard();
   sessionBar.appendChild(sessionInfo);
+  sessionBar.appendChild(scoreboard);
   sessionBar.appendChild(changeSituationBtn);
   const tableContainer = el("div", "training__table");
   const actionsContainer = el("div", "training__actions");
@@ -939,13 +1195,36 @@ function setupTraining(
   gameBox.appendChild(resultContainer);
   gameBox.appendChild(matrixContainer);
 
-  // Stav bÄ›ĹľĂ­cĂ­ relace (iterĂˇtor sekvence).
-  let iterator: Iterator<Spot> | null = null;
-  let activeRangeStore: RangeStore = rangeStore;
-  let activeTrainingProfile: TrainingProfile | null = null;
-  let activeRangePack: RangePack | null = null;
-  let answered = false; // bylo uĹľ na aktuĂˇlnĂ­ spot odpovÄ›zeno?
-  let activeQuestionStartedAt = 0;
+  // Nová obrazovka tréninku za přepínačem (Agents/ui-redesign-plan.md, fáze 1).
+  // Bere tutéž relaci jako starý pohled; ten zůstává, dokud nové GUI neprojde E2E.
+  const trainerView = nextUi
+    ? createPreflopTrainerView(document, {
+      session,
+      title: spotTitle,
+      onAnswered: () => {
+        hooks.onAnswered();
+        hooks.refreshDashboard();
+      },
+      onChangeSituation: () => changeSituation(),
+      onSessionEnded: () => {
+        gameBox.hidden = true;
+      },
+    })
+    : null;
+  if (trainerView) gameBox.replaceChildren(trainerView.element);
+
+  // The equity table prices the action buttons. It is fetched rather than bundled
+  // - 115 KB has no business on the install path - and the fetch starts here, at
+  // boot, rather than when a session starts. Gating the start on it was the first
+  // attempt and it was wrong twice over: it turned a synchronous click into a
+  // deferred one, which the mobile smoke tests caught immediately, and it made
+  // every postflop session wait for a table postflop never reads.
+  //
+  // Booting it here means it is in flight while the player picks filters, so by
+  // the click it has landed. If it somehow has not, the first spot of the session
+  // carries no EV and the rest carry it - spots are generated one at a time as
+  // the player advances, so only the first can be early enough to miss.
+  void loadPreflopEquity();
 
   const filtersView: FiltersView = renderFilters(filtersBox, {
     onStart: (filters: Filters, seed: number | null, profile) => {
@@ -969,7 +1248,7 @@ function setupTraining(
           );
           return;
         }
-        const pack = preflopRangePackForStart(resolvedProfile, capability);
+        const pack = startableMttPreflopRangePack(resolvedProfile, capability);
         if (!pack) {
           gameBox.hidden = true;
           filtersView.showEmptyResult(profileGateMessage(profile, filters));
@@ -980,9 +1259,11 @@ function setupTraining(
 
       mttProductionLazyLoader.cancelPendingProfileLoads();
       const profileKey = mttProductionProfileKey(resolvedProfile);
+      const initialCapability = trainingCapabilityForProfile(resolvedProfile);
       if (
         (
-          profile.street === "PREFLOP" &&
+          resolvedProfile.street === "PREFLOP" &&
+          initialCapability.status === "PREVIEW" &&
           isPlayableMttPreflopPreview(resolvedProfile)
         ) ||
         profileKey === null ||
@@ -1002,14 +1283,15 @@ function setupTraining(
     },
   });
 
-  changeSituationBtn.addEventListener("click", () => {
-    iterator = null;
-    answered = false;
+  function changeSituation(): void {
+    session.stop();
     clearActiveQuestion();
     gameBox.hidden = true;
     filtersBox.hidden = false;
     focusElement(filtersBox.querySelector<HTMLElement>(".profile-variant"));
-  });
+  }
+
+  changeSituationBtn.addEventListener("click", () => changeSituation());
 
   function startPostflopSession(
     filters: Filters,
@@ -1021,6 +1303,7 @@ function setupTraining(
     filtersView.setSeed(resolvedSeed);
     hooks.resetSession();
     filtersView.clearWarning();
+    session.stop();
     clearActiveQuestion();
     gameBox.hidden = true;
     filtersBox.hidden = false;
@@ -1028,9 +1311,9 @@ function setupTraining(
   }
 
   /**
-   * SpustĂ­ relaci pro zvolenĂ© filtry a seed (Req 13.4 â€” pouze pĹ™es explicitnĂ­
-   * start). SestavĂ­ deterministickou sekvenci; je-li prĂˇzdnĂˇ (Req 13.6),
-   * zobrazĂ­ upozornÄ›nĂ­ a relaci nespustĂ­.
+   * Spustí relaci pro zvolené filtry a seed (Req 13.4 — pouze přes explicitní
+   * start). Sestaví deterministickou sekvenci; je-li prázdná (Req 13.6),
+   * zobrazí upozornění a relaci nespustí.
    */
   function startSession(
     filters: Filters,
@@ -1038,15 +1321,11 @@ function setupTraining(
     profile: TrainingProfile,
     pack: RangePack,
   ): void {
-    // Req 6.7: vyĹ™eĹˇ a zpĹ™Ă­stupni platnĂ˝ seed (aby Ĺˇel zopakovat).
-    const resolvedSeed = resolveSeed(seed);
-    filtersView.setSeed(resolvedSeed);
+    // Req 6.7: řadič vyřeší platný seed; zpřístupni ho, aby šel zopakovat.
+    const started = session.start(filters, seed, profile, pack);
+    filtersView.setSeed(started.seed);
 
-    const cfg: SessionConfig = { seed: resolvedSeed, filters };
-
-    // Sestav sekvenci a zjisti, zda obsahuje alespoĹ jeden spot.
-    const profileRangeStore = createRangeStoreFromRangePack(pack);
-    if (!profileRangeStore.isLoaded()) {
+    if (started.kind === "RANGES_UNAVAILABLE") {
       clearActiveQuestion();
       gameBox.hidden = true;
       filtersView.showEmptyResult(
@@ -1054,30 +1333,33 @@ function setupTraining(
       );
       return;
     }
-    const seq = spotSequence(cfg, profileRangeStore);
-    const it = seq[Symbol.iterator]();
-    const first = it.next();
 
-    if (first.done) {
-      // Req 13.6: prĂˇzdnĂ˝ prĹŻnik filtrĹŻ â‡’ upozornÄ›nĂ­, relaci nespouĹˇtÄ›j.
+    if (started.kind === "EMPTY") {
+      // Říct, co funguje, ne jen že nic nefunguje.
+      //
+      // Nabídka je širší než obsah: push/fold se nabízí na 5 až 25 BB a knihovna
+      // ho má na 5 a 10, takže relace „push/fold, 20 BB" rozdá nula spotů.
+      // Obecná hláška to svádí číst jako chybu výběru, přitom je to naše mezera.
+      // Req 13.6: prázdný průnik filtrů ⇒ upozornění, relaci nespouštěj.
       clearActiveQuestion();
       gameBox.hidden = true;
-      filtersView.showEmptyResult();
+      filtersView.showEmptyResult(
+        started.workingDepths.length > 0 ? CS.filters.emptyDepths(started.workingDepths) : undefined,
+      );
       return;
     }
 
-    // NovĂˇ relace: vynuluj poÄŤet spotĹŻ relace (Req 9.5) a vyÄŤisti vĂ˝sledek.
+    // Nová relace: vynuluj počet spotů relace (Req 9.5) a vyčisti výsledek.
+    // Skóre relace vynuloval řadič při startu.
     hooks.resetSession();
+    renderScoreboard();
     hooks.refreshDashboard();
     filtersView.clearWarning();
 
-    activeRangeStore = profileRangeStore;
-    activeTrainingProfile = profile;
-    activeRangePack = pack;
-    iterator = it;
     filtersBox.hidden = true;
     gameBox.hidden = false;
-    showSpot(first.value, filters);
+    if (trainerView) trainerView.show(started.spot);
+    else showSpot(started.spot, filters);
   }
 
   function startPreflopFocusSession(filters: Filters): void {
@@ -1090,7 +1372,7 @@ function setupTraining(
     filtersView.setFilters(filters);
     const resolvedProfile = runtimeProfile(profile, filters);
     const capability = trainingCapabilityForProfile(resolvedProfile);
-    const pack = preflopRangePackForStart(resolvedProfile, capability);
+    const pack = startableMttPreflopRangePack(resolvedProfile, capability);
     if (!pack) {
       gameBox.hidden = true;
       filtersView.showEmptyResult(profileGateMessage(profile, filters));
@@ -1099,7 +1381,7 @@ function setupTraining(
     startSession(filters, null, resolvedProfile, pack);
   }
 
-  /** ZobrazĂ­ spot: vykreslĂ­ stĹŻl a nabĂ­dku akcĂ­, vyÄŤistĂ­ pĹ™edchozĂ­ vĂ˝sledek. */
+  /** Zobrazí spot: vykreslí stůl a nabídku akcí, vyčistí předchozí výsledek. */
   function clearActiveQuestion(): void {
     sessionTitle.textContent = CS.training.question;
     sessionMeta.textContent = "";
@@ -1107,26 +1389,23 @@ function setupTraining(
     actionsContainer.innerHTML = "";
     resultContainer.innerHTML = "";
     matrixContainer.innerHTML = "";
-    activeQuestionStartedAt = 0;
+    trainerView?.clear();
   }
 
   function showSpot(spot: Spot, filters: Filters): void {
-    answered = false;
-    activeQuestionStartedAt = nowMs();
-
-    sessionTitle.textContent = `${actionContextLabel(spot.context)} - ${spot.heroPos} - ${spot.hand}`;
+    sessionTitle.textContent = spotTitle(spot);
     sessionMeta.textContent =
       `${spot.effStack} BB - ${filters.ante === "ON" ? "ante ON" : "ante OFF"} - ` +
       `seed ${filtersView.getSeed() ?? CS.filters.random}`;
     renderTable(spot, filters.ante, tableContainer);
     resultContainer.innerHTML = "";
     matrixContainer.innerHTML = "";
-    renderActions(spot, filters.scoringMode);
+    renderActions(spot);
     focusElement(actionsContainer.querySelector<HTMLButtonElement>(".action-btn"));
   }
 
-  /** VykreslĂ­ tlaÄŤĂ­tka nabĂ­zenĂ˝ch akcĂ­ (Req 3.12 â€” 1 klĂ­ÄŤ na akci). */
-  function renderActions(spot: Spot, mode: ScoringMode): void {
+  /** Vykreslí tlačítka nabízených akcí (Req 3.12 — 1 klíč na akci). */
+  function renderActions(spot: Spot): void {
     actionsContainer.innerHTML = "";
 
     const heading = el("div", "training__actions-title", CS.app.actionsTitle);
@@ -1138,83 +1417,94 @@ function setupTraining(
       btn.type = "button";
       btn.className = "action-btn";
       btn.dataset.action = answer.key;
-      btn.textContent = answer.label;
-      btn.addEventListener("click", () => handleAnswer(spot, answer.key, mode));
+      // The same colour this action wears in the range matrix, so pressing a
+      // button and reading the grid afterwards are visibly the same decision.
+      // Applied as an accent rather than a fill: eleven saturated backgrounds
+      // behind white text would be a colour test, not a poker trainer.
+      const accent = colorForActionKey(answer.key);
+      btn.style.setProperty("--action-accent", accent);
+      setActionEvButtonContent(btn, answer.label);
+      btn.addEventListener("click", () => handleAnswer(answer.key));
       row.appendChild(btn);
     }
     actionsContainer.appendChild(row);
   }
 
   /**
-   * VyhodnotĂ­ zvolenou akci (Req 7), zobrazĂ­ sprĂˇvnost + zdĹŻvodnÄ›nĂ­ +
-   * doporuÄŤenĂ© klĂ­ÄŤe, vykreslĂ­ range matici (Req 10), zaznamenĂˇ vĂ˝sledek do
-   * Stats_Store PĹED dalĹˇĂ­m spotem (Req 9.1) a nabĂ­dne tlaÄŤĂ­tko â€žDalĹˇĂ­".
+   * Vyhodnotí zvolenou akci (Req 7), zobrazí správnost + zdůvodnění +
+   * doporučené klíče, vykreslí range matici (Req 10), zaznamená výsledek do
+   * Stats_Store PŘED dalším spotem (Req 9.1) a nabídne tlačítko „Další".
    */
-  function handleAnswer(spot: Spot, chosen: ActionKey, mode: ScoringMode): void {
-    if (answered) return; // jedna odpovÄ›ÄŹ na spot.
-    answered = true;
+  function handleAnswer(chosen: ActionKey): void {
+    // Řadič vyhodnotí odpověď a zapíše ji do statistik PŘED dalším spotem
+    // (Req 9.1); druhou odpověď na tentýž spot odmítne.
+    const outcome = session.answer(chosen);
+    const store = session.rangeStore;
+    if (!outcome || !store) return;
+    const { spot, grade: result } = outcome;
 
-    // Zablokuj tlaÄŤĂ­tka akcĂ­ a zvĂ˝razni zvolenĂ©.
+    // Zablokuj tlačítka akcí a zvýrazni zvolené.
     const buttons = actionsContainer.querySelectorAll<HTMLButtonElement>(".action-btn");
     buttons.forEach((b) => {
       b.disabled = true;
       if (b.dataset.action === chosen) b.classList.add("action-btn--chosen");
+      if (result.recommended.includes(b.dataset.action as ActionKey)) {
+        b.classList.add("action-btn--recommended");
+      }
     });
+    revealActionEvButtonBubbles(buttons, spot.actionEvs, result.actionEv);
+    // Cena vedle EV, ne místo ní. EV říká, co akce vynese; cena, kolik musí
+    // vydělat, aby se zaplatila - a je jich víc: přesnou EV má 33,1 % spotů,
+    // aspoň jednu cenu 100 %.
+    revealActionPriceLines(buttons, preflopDecisionPrices(spot, store));
 
-    // VyhodnocenĂ­ (ÄŤistĂ© jĂˇdro).
-    const result = grade(spot, chosen, mode);
-    const responseMs = elapsedMs(activeQuestionStartedAt);
-
-    // ZĂˇznam vĂ˝sledku PĹED dalĹˇĂ­m spotem (Req 9.1); selhĂˇnĂ­ â‡’ upozornÄ›nĂ­ (Req 9.6).
-    if (!activeTrainingProfile || !activeRangePack) {
-      throw new Error("Active preflop profile identity is missing.");
-    }
-    const record = buildProfileAwarePreflopResultRecord({
-      spot,
-      chosen,
-      correct: result.correct,
-      profile: activeTrainingProfile,
-      rangePack: activeRangePack,
-      scoringMode: mode,
-      ts: Date.now(),
-      responseMs,
-    });
-    const save = statsStore.record(record);
-
-    // Inkrement poÄŤtu spotĹŻ relace + pĹ™ekreslenĂ­ dashboardu (Req 9.5).
+    // Inkrement počtu spotů relace + překreslení dashboardu (Req 9.5).
     hooks.onAnswered();
     hooks.refreshDashboard();
 
-    // ZobrazenĂ­ vĂ˝sledku, zdĹŻvodnÄ›nĂ­ a doporuÄŤenĂ­.
-    renderResult(spot, result, save.ok);
+    // Skóre počítá řadič podle toho, co rozhodl hodnotitel: EQUIVALENT
+    // a ACCEPTABLE se netrestají jako chyba, stejně jako to říká verdikt.
+    renderScoreboard();
 
-    // Range matice pro danĂ˝ spot (Req 10) + legacy parity modal.
+    // Zobrazení výsledku, zdůvodnění a doporučení; selhání záznamu ⇒
+    // upozornění (Req 9.6).
+    renderResult(spot, result, outcome.saved, session.filters);
+
+    // Range matice pro daný spot (Req 10) + legacy parity modal.
     matrixContainer.innerHTML = "";
-    renderRangeModalButton(spot, activeRangeStore, matrixContainer);
+    renderRangeModalButton(spot, store, matrixContainer);
     const inlineMatrix = el("div", "training__matrix-inline");
     matrixContainer.appendChild(inlineMatrix);
-    renderMatrix(spot, activeRangeStore, inlineMatrix);
+    renderMatrix(spot, store, inlineMatrix);
   }
 
-  /** VykreslĂ­ indikaci sprĂˇvnosti, zdĹŻvodnÄ›nĂ­ a doporuÄŤenĂ© AkÄŤnĂ­_klĂ­ÄŤe (Req 7.4). */
+  /** Vykreslí indikaci správnosti, zdůvodnění a doporučené Akční_klíče (Req 7.4). */
   function renderResult(
     spot: Spot,
     result: ReturnType<typeof grade>,
     saveOk: boolean,
+    filters: Filters | null,
   ): void {
     resultContainer.innerHTML = "";
 
     const box = el("div", "result");
     box.classList.add(result.correct ? "result--correct" : "result--wrong");
 
+    const verdictText = result.actionEv?.outcome === "EQUIVALENT"
+      ? CS.training.equivalent
+      : result.actionEv?.outcome === "ACCEPTABLE"
+        ? CS.training.acceptable
+        : result.correct
+          ? CS.training.correct
+          : CS.training.incorrect;
     const verdict = el(
       "div",
       "result__verdict",
-      result.correct ? CS.training.correct : CS.training.incorrect,
+      verdictText,
     );
     box.appendChild(verdict);
 
-    // DoporuÄŤenĂ© AkÄŤnĂ­_klĂ­ÄŤe z Range_Store (Req 7.4 / 7.7).
+    // Doporučené Akční_klíče z Range_Store (Req 7.4 / 7.7).
     if (result.recommended.length > 0) {
       const rec = el(
         "div",
@@ -1223,18 +1513,25 @@ function setupTraining(
       );
       box.appendChild(rec);
     }
+    box.appendChild(renderPreflopActionEv(spot, result));
 
-    // ZdĹŻvodnÄ›nĂ­ (Req 7.4); pĹ™i nedostupnosti zobraz nĂˇhradnĂ­ text (Req 7.5).
+    // What the decision cost, derived from the pot and the stack rather than
+    // looked up, so every all-in spot can be priced whether or not a pack ships
+    // a number for it.
+    const price = filters === null ? null : renderDecisionPrice(document, spot, filters);
+    if (price !== null) box.appendChild(price);
+
+    // Zdůvodnění (Req 7.4); při nedostupnosti zobraz náhradní text (Req 7.5).
     const explanation = el("div", "result__explanation");
     if (result.explanationAvailable) {
-      explanation.textContent = spot.explanation;
+      explanation.textContent = buildPreflopExplanationForSpot(spot, getAppLanguage());
     } else {
       explanation.textContent = CS.training.explanationUnavailable;
       explanation.classList.add("result__explanation--unavailable");
     }
     box.appendChild(explanation);
 
-    // Req 9.6: vĂ˝sledek se nepodaĹ™ilo uloĹľit â‡’ upozornÄ›nĂ­, ale pokraÄŤujeme.
+    // Req 9.6: výsledek se nepodařilo uložit ⇒ upozornění, ale pokračujeme.
     if (!saveOk) {
       const warn = el(
         "div",
@@ -1244,7 +1541,7 @@ function setupTraining(
       box.appendChild(warn);
     }
 
-    // TlaÄŤĂ­tko â€žDalĹˇĂ­" â€” zobrazĂ­ dalĹˇĂ­ spot ze sekvence.
+    // Tlačítko „Další" — zobrazí další spot ze sekvence.
     const nextBtn = document.createElement("button");
     nextBtn.type = "button";
     nextBtn.className = "result__next";
@@ -1256,17 +1553,55 @@ function setupTraining(
     focusElement(nextBtn);
   }
 
-  /** Posune sekvenci na dalĹˇĂ­ spot (Req 6.6 â€” sekvence cyklĂ­ deterministicky). */
+  /** Posune sekvenci na další spot (Req 6.6 — sekvence cyklí deterministicky). */
+  function renderPreflopActionEv(
+    spot: Spot,
+    result: ReturnType<typeof grade>,
+  ): HTMLElement {
+    const section = el("section", "action-ev");
+    section.dataset.available = result.actionEv ? "true" : "false";
+    section.appendChild(el("div", "action-ev__title", CS.training.actionEv.title));
+
+    if (!result.actionEv || !spot.actionEvs) {
+      section.appendChild(el("p", "action-ev__unavailable", CS.training.actionEv.unavailable));
+      return section;
+    }
+
+    const list = el("div", "action-ev__list");
+    const sorted = [...spot.actionEvs.values].sort((left, right) => right.evBb - left.evBb);
+    for (const item of sorted) {
+      const lossBb = Math.max(0, result.actionEv.bestEvBb - item.evBb);
+      const row = el("div", "action-ev__row");
+      row.classList.toggle("action-ev__row--chosen", item.action === result.actionEv.chosenAction);
+      row.classList.toggle("action-ev__row--best", result.actionEv.bestActions.includes(item.action));
+      row.dataset.action = item.action;
+      row.dataset.evBb = String(item.evBb);
+      row.append(
+        el("span", "action-ev__action", actionKeyLabel(item.action)),
+        el("span", "action-ev__value", `${formatActionEvBb(item.evBb)} BB`),
+        el(
+          "span",
+          "action-ev__delta",
+          lossBb <= 1e-9 ? CS.training.actionEv.best : `${formatActionEvBb(-lossBb)} BB`,
+        ),
+      );
+      list.appendChild(row);
+    }
+    section.appendChild(list);
+    section.appendChild(el("p", "action-ev__note", CS.training.actionEv.note));
+    return section;
+  }
+
   function advance(): void {
-    if (!iterator) return;
-    const next = iterator.next();
-    if (next.done) {
-      // Pojistka: neprĂˇzdnĂˇ sekvence cyklĂ­ donekoneÄŤna, sem bychom se nemÄ›li
-      // dostat. DefenzivnÄ› relaci ukonÄŤĂ­me.
+    if (!session.spot) return;
+    const next = session.next();
+    if (!next) {
+      // Pojistka: neprázdná sekvence cyklí donekonečna, sem bychom se neměli
+      // dostat. Řadič relaci ukončil, skryjeme ji i tady.
       gameBox.hidden = true;
       return;
     }
-    showSpot(next.value, filtersView.getFilters());
+    showSpot(next, filtersView.getFilters());
   }
 
   return {
@@ -1276,10 +1611,10 @@ function setupTraining(
 }
 
 // ---------------------------------------------------------------------------
-// ChybovĂ© stavy a upozornÄ›nĂ­ (Req 4.6, 12.4, 14.6)
+// Chybové stavy a upozornění (Req 4.6, 12.4, 14.6)
 // ---------------------------------------------------------------------------
 
-/** VykreslĂ­ blok chyby do panelu (relaci nespouĹˇtÄ›t). */
+/** Vykreslí blok chyby do panelu (relaci nespouštět). */
 function renderBlockingError(panel: HTMLElement, title: string, message: string): void {
   panel.innerHTML = "";
   const box = el("div", "fatal");
@@ -1289,7 +1624,7 @@ function renderBlockingError(panel: HTMLElement, title: string, message: string)
   panel.appendChild(box);
 }
 
-/** Req 14.6: nekonzistentnĂ­ lokĂˇlnĂ­ ĂşloĹľiĹˇtÄ› â€” relaci nespouĹˇtÄ›t. */
+/** Req 14.6: nekonzistentní lokální úložiště — relaci nespouštět. */
 function renderStorageError(panel: HTMLElement): void {
   renderBlockingError(
     panel,
@@ -1298,7 +1633,28 @@ function renderStorageError(panel: HTMLElement): void {
   );
 }
 
-/** ZobrazĂ­ nenĂˇsilnĂ© upozornÄ›nĂ­ v banneru (Req 12.4, 14.3). */
+/** Zobrazí nenásilné upozornění v banneru (Req 12.4, 14.3). */
+/**
+ * Fetch solved turn content alongside the production packs, without gating on it.
+ *
+ * A failed chunk must not stop a session starting. The resolver chain already
+ * falls through to the chart-derived turn packs and then to the heuristic model
+ * when no solved pack is present, so the cost of a failed download is content
+ * that is a grade less specific - not a trainer that refuses to deal a hand.
+ */
+async function loadSolvedTurnPacksForProfiles(profileKeys: readonly string[]): Promise<void> {
+  await Promise.all(profileKeys.flatMap((profileKey) => [
+    loadSolvedTurnPacks(profileKey).catch(() => []),
+    // Riverový obsah jde stejnou cestou a se stejnou tolerancí k selhání. Kdyby
+    // se nenačetl, resolver na riveru prostě nic nenajde a řetězec propadne níž
+    // - stejně jako když ta rodina ještě neexistuje.
+    loadSolvedRiverPacks(profileKey).catch(() => []),
+    // Flop stejnou cestou. Když se nenačte, odpoví texturní agregát jako dřív -
+    // tedy o stupeň méně přesně, ne vůbec.
+    loadSolvedFlopPacks(profileKey).catch(() => []),
+  ]));
+}
+
 function showNotice(notice: HTMLElement, message: string): void {
   notice.hidden = false;
   const line = el("div", "app__notice-line", message);
@@ -1306,14 +1662,14 @@ function showNotice(notice: HTMLElement, message: string): void {
 }
 
 /**
- * VykreslĂ­ fatĂˇlnĂ­ chybu (globĂˇlnĂ­ error boundary). Pokud uĹľ je v DOM app shell,
- * pĹ™idĂˇ nenĂˇsilnĂ© upozornÄ›nĂ­; jinak nahradĂ­ obsah koĹ™ene chybovĂ˝m blokem.
+ * Vykreslí fatální chybu (globální error boundary). Pokud už je v DOM app shell,
+ * přidá nenásilné upozornění; jinak nahradí obsah kořene chybovým blokem.
  */
 function showFatalError(root: HTMLElement, message: string, err?: unknown): void {
   if (typeof console !== "undefined") {
     console.error("MTT Preflop Trainer - error:", message, err);
   }
-  // Pokud existuje banner upozornÄ›nĂ­, pouĹľij ho (nenĂˇsilnÄ›); jinak nahraÄŹ koĹ™en.
+  // Pokud existuje banner upozornění, použij ho (nenásilně); jinak nahraď kořen.
   const notice = root.querySelector<HTMLElement>(".app__notice");
   if (notice) {
     notice.hidden = false;
@@ -1328,10 +1684,10 @@ function showFatalError(root: HTMLElement, message: string, err?: unknown): void
 // ---------------------------------------------------------------------------
 
 /**
- * DefenzivnÄ› zaregistruje Service Worker (pokud je to vhodnĂ©). PĹ™i selhĂˇnĂ­
- * nakeĹˇovĂˇnĂ­ zobrazĂ­ nenĂˇsilnĂ© ÄŤeskĂ© upozornÄ›nĂ­ (Req 12.4) a aplikaci
- * neblokuje. Ve vĂ˝chozĂ­m stavu se registruje jen v produkÄŤnĂ­m buildu
- * (`import.meta.env.PROD`), aby nepĹ™ekĂˇĹľel ve vĂ˝voji/testech.
+ * Defenzivně zaregistruje Service Worker (pokud je to vhodné). Při selhání
+ * nakešování zobrazí nenásilné české upozornění (Req 12.4) a aplikaci
+ * neblokuje. Ve výchozím stavu se registruje jen v produkčním buildu
+ * (`import.meta.env.PROD`), aby nepřekážel ve vývoji/testech.
  */
 function maybeRegisterServiceWorker(notice: HTMLElement, force?: boolean): void {
   const shouldRegister =
@@ -1349,15 +1705,15 @@ function maybeRegisterServiceWorker(notice: HTMLElement, force?: boolean): void 
 }
 
 // ---------------------------------------------------------------------------
-// GlobĂˇlnĂ­ error boundary (Req 12.3)
+// Globální error boundary (Req 12.3)
 // ---------------------------------------------------------------------------
 
-/** PĹ™Ă­znak, aby se posluchaÄŤe registrovaly jen jednou. */
+/** Příznak, aby se posluchače registrovaly jen jednou. */
 let errorBoundaryInstalled = false;
 
 /**
- * Zaregistruje globĂˇlnĂ­ posluchaÄŤe `error` a `unhandledrejection`, kterĂ©
- * vykreslĂ­ ÄŤeskou chybovou zprĂˇvu do DOM mĂ­sto tichĂ©ho pĂˇdu (Req 12.3).
+ * Zaregistruje globální posluchače `error` a `unhandledrejection`, které
+ * vykreslí českou chybovou zprávu do DOM místo tichého pádu (Req 12.3).
  */
 function installGlobalErrorBoundary(root: HTMLElement): void {
   if (errorBoundaryInstalled || typeof window === "undefined") return;
@@ -1366,7 +1722,7 @@ function installGlobalErrorBoundary(root: HTMLElement): void {
   window.addEventListener("error", (event: ErrorEvent) => {
     showFatalError(
       root,
-      "Do\u0161lo k neo\u010dek\u00e1van\u00e9 chyb\u011b aplikace. \u010c\u00e1st funkc\u00ed nemus\u00ed fungovat spr\u00e1vn\u011b.",
+      CS.system.runtimeError,
       event.error ?? event.message,
     );
   });
@@ -1374,153 +1730,19 @@ function installGlobalErrorBoundary(root: HTMLElement): void {
   window.addEventListener("unhandledrejection", (event: PromiseRejectionEvent) => {
     showFatalError(
       root,
-      "Do\u0161lo k neo\u010dek\u00e1van\u00e9 chyb\u011b p\u0159i asynchronn\u00ed operaci. \u010c\u00e1st funkc\u00ed nemus\u00ed " +
-        "fungovat spr\u00e1vn\u011b.",
+      CS.system.asyncError,
       event.reason,
     );
   });
 }
 
 // ---------------------------------------------------------------------------
-// Styly app shellu (sobÄ›staÄŤnĂ©, aby aplikace fungovala i bez externĂ­ho CSS)
+// Auto-start (mimo testovací prostředí)
 // ---------------------------------------------------------------------------
 
-function appStyles(): HTMLStyleElement {
-  const style = document.createElement("style");
-  style.textContent = `
-:root{color-scheme:dark;}
-body{margin:0;background:
-  radial-gradient(circle at 18% -8%,rgba(43,213,118,.14),rgba(43,213,118,0) 28%),
-  radial-gradient(circle at 88% 4%,rgba(123,211,255,.11),rgba(123,211,255,0) 30%),
-  linear-gradient(180deg,#090f18,#060a11 58%,#05080e);
-  color:#e8ecf7;font-family:Inter,ui-sans-serif,system-ui,Arial,sans-serif;}
-.app{width:min(100% - 32px,1120px);margin:0 auto;padding:28px 0 56px;}
-.app__header{margin-bottom:18px;padding:4px 0 2px;}
-.app__title{margin:0;font-size:28px;font-weight:950;letter-spacing:0;color:#f8fbff;
-  text-shadow:0 10px 30px rgba(0,0,0,.35);}
-.app__subtitle{margin:6px 0 0;font-size:14px;color:#a8b7d5;}
-.app__notice{margin:10px 0;padding:10px 12px;border-radius:10px;
-  background:rgba(255,209,91,.14);border:1px solid rgba(255,209,91,.45);
-  color:#ffd15b;font-size:13px;}
-.app__notice-line+.app__notice-line{margin-top:6px;}
-.app__tabs{display:flex;gap:8px;border-bottom:1px solid rgba(148,163,184,.16);
-  margin-bottom:18px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:#7bd3ff transparent;}
-.app__tab{appearance:none;border:1px solid transparent;background:transparent;color:#9fb0cf;
-  font-size:14px;font-weight:850;padding:11px 18px;cursor:pointer;border-radius:10px 10px 0 0;
-  border-bottom:3px solid transparent;white-space:nowrap;}
-.app__tab:hover{color:#e8ecf7;background:rgba(255,255,255,.035);}
-.app__tab--active{color:#f8fbff;border-color:rgba(148,163,184,.16);
-  border-bottom-color:#2bd576;background:linear-gradient(180deg,rgba(21,30,45,.92),rgba(13,19,30,.72));
-  box-shadow:0 10px 24px rgba(0,0,0,.18);}
-.app__panel{outline:none;}
-.training__filters{background:linear-gradient(180deg,rgba(18,25,38,.98),rgba(10,15,24,.98));
-  border:1px solid rgba(148,163,184,.16);border-radius:16px;padding:18px 20px;margin-bottom:18px;
-  box-shadow:0 24px 70px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.05);}
-.profile-selector{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));
-  gap:12px 14px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid
-  rgba(148,163,184,.14);}
-.profile-selector__title{grid-column:1/-1;font-size:14px;font-weight:950;color:#f8fbff;}
-.profile-selector__field{display:grid;gap:6px;font-size:12px;color:#a8b7d5;font-weight:750;}
-.profile-selector__field select,.filter-scoring,.filter-seed{box-sizing:border-box;min-width:0;background:#151f31;color:#f8fbff;
-  border:1px solid rgba(148,163,184,.24);border-radius:10px;padding:9px 11px;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);}
-.profile-selector__field select:focus,.filter-scoring:focus,.filter-seed:focus{outline:2px solid rgba(43,213,118,.42);
-  outline-offset:1px;border-color:#2bd576;}
-.profile-selector__note{grid-column:1/-1;font-size:12px;color:#b5c3df;line-height:1.4;
-  overflow-wrap:anywhere;border-radius:10px;padding:9px 11px;background:rgba(123,211,255,.06);
-  border:1px solid rgba(123,211,255,.14);}
-.profile-selector__note--production{background:rgba(43,213,118,.08);border-color:rgba(43,213,118,.2);}
-.profile-selector__note--candidate{background:rgba(255,209,91,.08);border-color:rgba(255,209,91,.2);}
-.profile-selector__note--missing{background:rgba(226,59,59,.08);border-color:rgba(226,59,59,.28);}
-.filter-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.filter-section-title{color:#f8fbff;}
-.filter-bulk{display:inline-flex;gap:5px;margin-left:0!important;}
-.filter-bulk-all,.filter-bulk-none{appearance:none;border:1px solid rgba(148,163,184,.22);
-  border-radius:8px;background:linear-gradient(180deg,#2a3448,#182235);color:#e8ecf7;
-  font-size:12px;font-weight:850;padding:5px 9px;cursor:pointer;}
-.filter-bulk-all:hover,.filter-bulk-none:hover{border-color:#2bd576;}
-.filter-group{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;}
-.filter-position-item,.filter-bucket-item,.filter-context-item,.filter-ante-item,
-.filter-scoring-item,.filter-seed-item{border-radius:999px;background:rgba(255,255,255,.035);
-  border:1px solid rgba(148,163,184,.13);padding:5px 8px;margin-right:0!important;
-  color:#edf3ff;}
-.filter-group--config .filter-scoring-item,.filter-group--config .filter-seed-item{border-radius:10px;}
-.filter-position,.filter-bucket,.filter-context,.filter-ante{accent-color:#2bd576;}
-.training__game{display:flex;flex-direction:column;gap:16px;}
-.training__session-bar{display:flex;align-items:center;justify-content:space-between;
-  gap:12px;}
-.training__session-info{min-width:0;display:grid;gap:3px;}
-.training__session-title{font-size:15px;font-weight:900;color:#e8ecf7;}
-.training__session-meta{font-size:12px;font-weight:700;color:#9aa6c2;
-  overflow-wrap:anywhere;}
-.training__change-situation{appearance:none;border:1px solid rgba(148,163,184,.24);
-  background:linear-gradient(180deg,#202a3e,#151d2d);color:#e8ecf7;border-radius:10px;font-size:13px;
-  font-weight:850;padding:9px 13px;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.18);}
-.training__change-situation:hover{border-color:#2bd576;}
-.training__actions-title{font-weight:700;font-size:14px;margin-bottom:8px;}
-.training__actions-row{display:flex;flex-wrap:wrap;gap:8px;}
-.action-btn{appearance:none;border:1px solid rgba(148,163,184,.24);
-  background:linear-gradient(180deg,#202a3f,#141d2f);color:#e8ecf7;font-size:14px;font-weight:900;
-  padding:10px 16px;border-radius:10px;cursor:pointer;box-shadow:0 10px 20px rgba(0,0,0,.18),
-  inset 0 1px 0 rgba(255,255,255,.06);}
-.action-btn:hover:not(:disabled){border-color:#2bd576;}
-.action-btn:disabled{opacity:.55;cursor:default;}
-.action-btn--chosen{outline:2px solid #2bd576;outline-offset:1px;}
-.result{border-radius:12px;padding:14px 16px;}
-.result--correct{background:rgba(43,213,118,.12);border:1px solid rgba(43,213,118,.5);}
-.result--wrong{background:rgba(226,59,59,.12);border:1px solid rgba(226,59,59,.5);}
-.result__verdict{font-size:18px;font-weight:900;margin-bottom:6px;}
-.result__recommended{font-size:14px;font-weight:700;margin-bottom:6px;}
-.result__explanation{font-size:13px;color:#cdd5e6;}
-.result__explanation--unavailable{font-style:italic;color:#9aa6c2;}
-.result__save-warning{margin-top:8px;font-size:12px;color:#ffd15b;}
-.result__next{margin-top:12px;appearance:none;border:0;border-radius:10px;
-  background:#2bd576;color:#0c3526;font-weight:800;font-size:14px;
-  padding:9px 18px;cursor:pointer;}
-.fatal{background:rgba(226,59,59,.12);border:1px solid rgba(226,59,59,.5);
-  border-radius:12px;padding:16px 18px;}
-.fatal__title{font-size:16px;font-weight:900;margin-bottom:6px;color:#ffb4b4;}
-.fatal__message{font-size:13px;color:#e8ecf7;line-height:1.5;}
-.filter-start{appearance:none;border:0;border-radius:12px;background:linear-gradient(180deg,#45e58c,#20bd65);
-  color:#082817;min-height:42px;box-shadow:0 14px 28px rgba(43,213,118,.22),
-  inset 0 1px 0 rgba(255,255,255,.35);}
-.filter-start:hover{filter:brightness(1.04);transform:translateY(-1px);}
-@media (max-width:720px){
-  .app{width:min(100% - 20px,1120px);padding:18px 0 40px;}
-  .app__title{font-size:25px;}
-  .app__subtitle{font-size:13px;}
-  .app__tabs{gap:4px;margin-left:-2px;margin-right:-2px;}
-  .app__tab{padding:10px 13px;font-size:13px;}
-  .training__filters{padding:14px 12px;border-radius:14px;}
-  .profile-selector{grid-template-columns:1fr;gap:10px;}
-  .filter-row{align-items:flex-start;justify-content:space-between;}
-  .filter-group{gap:7px;}
-  .filter-position-item,.filter-bucket-item,.filter-context-item{min-height:32px;}
-  .filter-group--config{align-items:stretch!important;gap:10px!important;}
-  .filter-ante-item,.filter-scoring-item,.filter-seed-item{width:100%;box-sizing:border-box;
-    justify-content:space-between;}
-  .filter-scoring,.filter-seed{width:min(56%,220px);}
-  .filter-start{width:100%;font-size:15px!important;}
-  .training__session-bar{flex-direction:column;align-items:stretch;}
-  .training__change-situation,.action-btn,.result__next{width:100%;}
-  .training__actions-row{display:grid;grid-template-columns:1fr;}
-}
-@media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;
-    animation-duration:.01ms!important;animation-iteration-count:1!important;}
-  .filter-start:hover{filter:none;transform:none;}
-}
-`;
-  return style;
-}
-
-// ---------------------------------------------------------------------------
-// Auto-start (mimo testovacĂ­ prostĹ™edĂ­)
-// ---------------------------------------------------------------------------
-
-// V prohlĂ­ĹľeÄŤi spustĂ­me bootstrap automaticky. V testech (importem modulu)
-// se `bootstrap` volĂˇ ruÄŤnÄ› s injektovanĂ˝mi zĂˇvislostmi, takĹľe auto-start
-// pĹ™eskoÄŤĂ­me, pokud nenĂ­ dostupnĂ˝ `document`.
+// V prohlížeči spustíme bootstrap automaticky. V testech (importem modulu)
+// se `bootstrap` volá ručně s injektovanými závislostmi, takže auto-start
+// přeskočíme, pokud není dostupný `document`.
 if (typeof document !== "undefined") {
   bootstrap();
 }

@@ -1,11 +1,10 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { classifyBoard, type BoardTexture } from "../src/core/postflopGenerator.ts";
 import type { Card, Rank, Suit } from "../src/core/types.ts";
 
 const DEFAULT_MANIFEST =
   "Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-v2-manifest.json";
-const DEFAULT_OUTPUT =
   "artifacts/texas-solver-scenario-audit/report.json";
 
 type SprBand = "LOW" | "MID" | "HIGH";
@@ -65,6 +64,7 @@ interface ScenarioAuditRow {
     hasBuildTree: boolean;
     hasStartSolve: boolean;
     hasUseIsomorphism: boolean;
+    unsupportedConsoleDirectives: readonly string[];
     flopIpBetSizes: readonly number[];
     flopOopBetSizes: readonly number[];
     flopIpRaiseSizes: readonly number[];
@@ -232,6 +232,9 @@ function auditFile(
   const warnings = [
     "TexasSolver console parameters do not declare game mode explicitly; audit infers Texas Hold'em from two-range holdem syntax and 52-card board ranks.",
     ...(actual.hasUseIsomorphism ? [] : ["set_use_isomorphism 1 is recommended for board coverage batches."]),
+    ...actual.unsupportedConsoleDirectives.map((directive) => (
+      `${directive} is not recognized by the installed TexasSolver v0.2.0 console and will be ignored.`
+    )),
   ];
 
   return {
@@ -274,6 +277,7 @@ function emptyRow(
       hasBuildTree: false,
       hasStartSolve: false,
       hasUseIsomorphism: false,
+      unsupportedConsoleDirectives: [],
       flopIpBetSizes: [],
       flopOopBetSizes: [],
       flopIpRaiseSizes: [],
@@ -290,7 +294,7 @@ function expectedFromTags(tags: readonly string[]): ScenarioAuditRow["expected"]
     : tags.includes("SINGLE_RAISED") || tags.includes("SINGLE_RAISED_POT_CBET")
       ? "SINGLE_RAISED"
       : null;
-  const actionNode: ActionNode | null = tags.includes("FLOP_FACING_BET")
+  const actionNode: ActionNode | null = tags.includes("FLOP_FACING_BET") || tags.includes("FACING_BET")
     ? "FLOP_FACING_BET"
     : tags.includes("THREE_BET_POT_CBET")
       ? "THREE_BET_POT_CBET"
@@ -330,11 +334,17 @@ function parseParameterFile(text: string): ScenarioAuditRow["actual"] {
     hasBuildTree: /^build_tree\s*$/m.test(text),
     hasStartSolve: /^start_solve\s*$/m.test(text),
     hasUseIsomorphism: /^set_use_isomorphism\s+1\s*$/m.test(text),
+    unsupportedConsoleDirectives: unsupportedConsoleDirectives(text),
     flopIpBetSizes: betSizes(text, "ip", "bet"),
     flopOopBetSizes: betSizes(text, "oop", "bet"),
     flopIpRaiseSizes: betSizes(text, "ip", "raise"),
     flopOopRaiseSizes: betSizes(text, "oop", "raise"),
   };
+}
+
+function unsupportedConsoleDirectives(text: string): string[] {
+  // Confirmed against the bundled v0.2.0 command-line sample and local solver logs.
+  return /^set_raise_limit\b/m.test(text) ? ["set_raise_limit"] : [];
 }
 
 function numberLine(text: string, command: string): number | null {

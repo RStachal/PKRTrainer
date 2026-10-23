@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 
 import { grade } from "../../src/core/scoring";
+import type { ActionEvSet } from "../../src/core/actionEv";
 import type { ActionKey, Card, Spot, TableState } from "../../src/core/types";
 
 const heroCards: [Card, Card] = [
@@ -11,6 +12,7 @@ const heroCards: [Card, Card] = [
 const tableState: TableState = {
   heroPos: "BTN",
   pushFold: false,
+  effectiveStackBB: 100,
   limpsBefore: 0,
   callsBefore: 0,
   facing: "OPEN",
@@ -21,6 +23,7 @@ function spotWith(
   strictCorrect: ActionKey[],
   correctKeys: ActionKey[],
   explanation = "Testovací zdůvodnění.",
+  actionEvs?: ActionEvSet<ActionKey>,
 ): Spot {
   return {
     id: "VS_OPEN|BTN|25|AKo|OFF",
@@ -40,6 +43,7 @@ function spotWith(
     correctKeys,
     strictCorrect,
     explanation,
+    ...(actionEvs ? { actionEvs } : {}),
   };
 }
 
@@ -59,5 +63,44 @@ describe("scoring - rezimy a zduvodneni", () => {
     expect(result.correct).toBe(false);
     expect(result.explanationAvailable).toBe(false);
     expect(result.recommended).toEqual(["3BET"]);
+  });
+
+  it("uzna vice EV-rovnocennych akci ve strict rezimu a malou odchylku jen v lenient", () => {
+    const actionEvs: ActionEvSet<ActionKey> = {
+      source: "SOLVER",
+      unit: "BB",
+      equivalentThresholdBb: 0.01,
+      acceptableThresholdBb: 0.05,
+      values: [
+        { action: "FOLD", evBb: 0.1 },
+        { action: "CALL", evBb: 0.204 },
+        { action: "3BET", evBb: 0.21 },
+      ],
+    };
+    const spot = spotWith(["3BET"], ["3BET"], "Solver EV comparison.", actionEvs);
+
+    expect(grade(spot, "CALL", "STRICT")).toMatchObject({
+      correct: true,
+      strict: ["CALL", "3BET"],
+      recommended: ["CALL", "3BET"],
+      actionEv: { outcome: "EQUIVALENT" },
+    });
+    expect(grade(spot, "FOLD", "LENIENT")).toMatchObject({
+      correct: false,
+      actionEv: { outcome: "MISTAKE" },
+    });
+
+    const acceptableSet: ActionEvSet<ActionKey> = {
+      ...actionEvs,
+      values: actionEvs.values.map((item) => (
+        item.action === "FOLD" ? { ...item, evBb: 0.17 } : item
+      )),
+    };
+    const acceptableSpot = spotWith(["3BET"], ["3BET"], "Solver EV comparison.", acceptableSet);
+    expect(grade(acceptableSpot, "FOLD", "STRICT").correct).toBe(false);
+    expect(grade(acceptableSpot, "FOLD", "LENIENT")).toMatchObject({
+      correct: true,
+      actionEv: { outcome: "ACCEPTABLE" },
+    });
   });
 });

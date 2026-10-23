@@ -1,5 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { solvedFamilyCountsByProfile } from "./lib/solvedFamilyCounts.mts";
 import {
   MTT_POSTFLOP_PRODUCTION_POSITION_PATTERNS,
   type PostflopPositionPattern,
@@ -29,6 +30,7 @@ import {
   buildTurnProductionCoverageReport,
   type TurnProductionStrategyPack,
 } from "../src/data/ranges/turnProductionStrategyPack.ts";
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 import {
   turnProductionStrategyPacks,
 } from "../src/data/ranges/turnProductionStrategyResolver.ts";
@@ -104,6 +106,7 @@ function usage(): string {
 
 try {
   const args = parseArgs(process.argv.slice(2));
+  await loadCompleteMttProductionRegistry();
   const report = buildPostflopProductionCoverageReport();
   if (args.outputPath !== null) {
     mkdirSync(dirname(args.outputPath), { recursive: true });
@@ -149,7 +152,10 @@ function parseLimit(value: string): number {
 }
 
 function buildPostflopProductionCoverageReport(): PostflopProductionCoverageReport {
-  const profileRows = buildMttCompletionReadinessReport().rows
+  // Počet vyřešených rodin **musí** jít dovnitř - viz `solvedFamilyCounts`.
+  const profileRows = buildMttCompletionReadinessReport({
+    solvedFamilyCounts: solvedFamilyCountsByProfile(),
+  }).rows
     .filter((row): row is MttCompletionReadinessRow & { street: PostflopStreet } => row.street !== "PREFLOP");
   const rows = profileRows.flatMap(targetsForProfile);
   return {
@@ -448,5 +454,3 @@ function renderPostflopProductionCoverageReport(
 function formatCount(count: { total: number; covered: number; blocked: number }): string {
   return `${count.covered}/${count.total} covered, ${count.blocked} blocked`;
 }
-import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
-await loadCompleteMttProductionRegistry();

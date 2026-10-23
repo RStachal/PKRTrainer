@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   POSTFLOP_POSITION_CONTEXTS,
+  canonicalPostflopPositionPattern,
   isPostflopPositionPattern,
+  postflopPositionPatternMatches,
   classifyBoard,
   classifyRiverRunout,
   classifyTurnCard,
@@ -115,6 +117,12 @@ describe("postflopGenerator", () => {
       "ace-high",
       "straight-possible",
     ]));
+
+    expect(classifyBoard([
+      { rank: "A", suit: "s" },
+      { rank: "5", suit: "h" },
+      { rank: "3", suit: "d" },
+    ])).toEqual(expect.arrayContaining(["ace-high", "connected", "straight-possible"]));
   });
 
   it("klasifikuje turn kartu pro production turn resolver", () => {
@@ -273,6 +281,7 @@ describe("postflopGenerator", () => {
           explanation: "Resolver rozhodl.",
           source: {
             kind: "STRATEGY_PACK",
+            provenance: "SOLVER_BACKED",
             packId: "test-pack",
             packVersion: "test-v1",
             packVerifiedAt: "2026-06-02",
@@ -311,6 +320,7 @@ describe("postflopGenerator", () => {
     });
     expect(fromResolver.strategySource).toEqual({
       kind: "STRATEGY_PACK",
+      provenance: "SOLVER_BACKED",
       packId: "test-pack",
       packVersion: "test-v1",
       packVerifiedAt: "2026-06-02",
@@ -350,3 +360,40 @@ function contextKey(context: {
     context.positionPattern,
   ].join("|");
 }
+
+/**
+ * Překlad dvojího zápisu téže dvojice sedaček.
+ *
+ * Do 2. 9. 2026 žila tahle znalost ve třech rozcházejících se kopiích: flopová
+ * produkční znala tři jména (a produkčních packů je nula), pilotní runtime dvě
+ * a vyřešené resolvery, kde leží všech 48 rodin, ani jedno.
+ */
+describe("kanonický zápis dvojice sedaček", () => {
+  it("přeloží všechna tři legacy jména, která sedačky pojmenovávají", () => {
+    expect(canonicalPostflopPositionPattern("BTN_VS_BB")).toBe("SRP_BTN_VS_BB");
+    expect(canonicalPostflopPositionPattern("SB_VS_BB")).toBe("SRP_SB_VS_BB");
+    expect(canonicalPostflopPositionPattern("EP_VS_BB")).toBe("SRP_UTG_VS_BB");
+  });
+
+  it("nechá být ta dvě, která žádné sedačky nejmenují", () => {
+    // Uhodnout, kterou dvojici myslela, by bylo přesně to vymýšlení, kterému se
+    // překladem předchází - takže zůstávají nepřeložená a nesednou na nic.
+    for (const pattern of ["OOP_RAISER_VS_IP_CALLER", "OOP_CALLER_VS_IP_3BETTOR"]) {
+      expect(canonicalPostflopPositionPattern(pattern)).toBe(pattern);
+      expect(postflopPositionPatternMatches(pattern, "SRP_BTN_VS_BB")).toBe(false);
+    }
+  });
+
+  it("porovnává v obou směrech", () => {
+    // Oba pravopisy jsou v oběhu na obou stranách; jedním směrem by se spravila
+    // jen polovina dotazů.
+    expect(postflopPositionPatternMatches("BTN_VS_BB", "SRP_BTN_VS_BB")).toBe(true);
+    expect(postflopPositionPatternMatches("SRP_BTN_VS_BB", "BTN_VS_BB")).toBe(true);
+  });
+
+  it("nesplete dvě různé dvojice dohromady", () => {
+    expect(postflopPositionPatternMatches("BTN_VS_BB", "SRP_CO_VS_BB")).toBe(false);
+    expect(postflopPositionPatternMatches("EP_VS_BB", "SRP_BTN_VS_BB")).toBe(false);
+    expect(postflopPositionPatternMatches("SB_VS_BB", "SRP_SB_VS_BTN")).toBe(false);
+  });
+});

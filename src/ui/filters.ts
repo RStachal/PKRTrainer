@@ -67,6 +67,7 @@ import {
   type ScoringMode,
   type StackBucket,
 } from "../core/types";
+import type { OpponentStyleId } from "../core/opponentStyle";
 import {
   positionsForFormat,
   type TableFormat,
@@ -98,14 +99,14 @@ const CONTEXT_ORDER: ActionContext[] = [
 /** Český popisek akčního kontextu pro UI (Req 13.3, 12.3). */
 const CONTEXT_LABEL: Record<ActionContext, string> = {
   RFI: "RFI / Open",
-  VS_LIMP: "Proti limpu (iso-raise)",
-  VS_OPEN: "Proti openu",
-  VS_3BET: "Proti 3-betu",
-  VS_4BET: "Proti 4-betu",
+  VS_LIMP: "Vs limp (iso-raise)",
+  VS_OPEN: "Vs open",
+  VS_3BET: "Vs 3-bet",
+  VS_4BET: "Vs 4-bet",
   SQUEEZE: "Squeeze",
   BVB: "Blind vs blind",
   PUSH_FOLD: "Push / Fold",
-  VS_ALLIN: "Proti all-inu (call-jam)",
+  VS_ALLIN: "Vs all-in (call-jam)",
 };
 
 /** Mez 32-bit unsigned seedu (4 294 967 295), tj. 2^32 − 1 (Req 6.1). */
@@ -220,6 +221,240 @@ function sectionTitle(doc: Document, text: string): HTMLElement {
   return h;
 }
 
+/**
+ * A filter group that folds away, with its selection stated on the header.
+ *
+ * Three groups of checkboxes - nine positions, thirteen depths, five contexts -
+ * fill most of a phone screen before a single hand is dealt. Collapsed, each is
+ * one line that says what is selected, and opening one is a tap.
+ *
+ * The checkboxes themselves are untouched inside `body`: same classes, same data
+ * attributes, present in the DOM whether the group is open or shut. Nothing that
+ * reads the filter state needs to know this exists.
+ */
+/**
+ * Předvolba: pojmenovaná skupina souvisejících hodnot v jedné dimenzi.
+ *
+ * Filtr má jedenatřicet zaškrtávátek - devět pozic, třináct hloubek, devět
+ * situací - a než hráč rozdá první ruku, musí se prokousat všemi. Skládanka je
+ * to zbytečná, protože se skoro vždycky vybírá souvislá skupina: rané pozice,
+ * krátké stacky, obrana proti openu.
+ *
+ * Zaškrtávátka **zůstávají**, a to schválně ze dvou důvodů. Za prvé na jejich
+ * počty a `data-` atributy spoléhá kontrakt DOM testů. Za druhé předvolba pokrývá
+ * běžný případ, ne každý: kdo chce přesně UTG a button, musí mít pořád jak si to
+ * naklikat. Rozbalovátko je zkratka, ne náhrada.
+ */
+interface FilterPreset<K> {
+  id: string;
+  label: string;
+  /** Které klíče předvolba vybírá z těch, co zrovna existují. */
+  matches: (key: K) => boolean;
+}
+
+/**
+ * Rozbalovátko, které zaškrtne celou skupinu najednou.
+ *
+ * Drží se v obou směrech: výběr předvolby zaškrtne její hodnoty, a ruční změna
+ * zaškrtávátka přepne rozbalovátko na „vlastní výběr", pokud stav žádné
+ * předvolbě neodpovídá. Bez té druhé půlky by rozbalovátko tvrdilo „rané pozice"
+ * nad výběrem, který rané pozice není - a to je horší než žádná zkratka.
+ */
+function makePresetSelect<K>(
+  doc: Document,
+  className: string,
+  presets: readonly FilterPreset<K>[],
+  inputs: Map<K, HTMLInputElement>,
+  onApply: () => void,
+): { root: HTMLSelectElement; sync: () => void } {
+  const select = doc.createElement("select");
+  select.className = className;
+  select.style.fontSize = "12px";
+
+  const custom = doc.createElement("option");
+  custom.value = "";
+  custom.textContent = CS.filters.presetCustom;
+  select.appendChild(custom);
+  for (const preset of presets) {
+    const option = doc.createElement("option");
+    option.value = preset.id;
+    option.textContent = preset.label;
+    select.appendChild(option);
+  }
+
+  select.addEventListener("change", () => {
+    const preset = presets.find((item) => item.id === select.value);
+    if (preset === undefined) return;
+    for (const [key, input] of inputs) input.checked = preset.matches(key);
+    onApply();
+  });
+
+  const sync = () => {
+    const checked = [...inputs].filter(([, input]) => input.checked).map(([key]) => key);
+    const match = presets.find((preset) => {
+      const wanted = [...inputs.keys()].filter((key) => preset.matches(key));
+      return wanted.length === checked.length
+        && wanted.every((key) => checked.includes(key));
+    });
+    select.value = match?.id ?? "";
+  };
+  return { root: select, sync };
+}
+
+/** Obal, aby předvolba a hromadné přepínače seděly v hlavičce vedle sebe. */
+function withPreset(doc: Document, preset: HTMLElement, bulk: HTMLElement): HTMLElement {
+  const row = el(doc, "div", "filter-group__shortcuts");
+  row.style.display = "flex";
+  row.style.alignItems = "center";
+  row.style.gap = "6px";
+  // Zalomit, když se to vedle sebe nevejde. Bez tohohle přetékala **celá
+  // stránka o 39 px** na mobilu 360 px: rozbalovátko předvolby a tři hromadné
+  // přepínače se do řádku nevejdou a `flex` je bez tohohle nezalomí, takže
+  // roztáhnou rodiče. Chytila to až E2E kontrola přetečení, ne oko.
+  row.style.flexWrap = "wrap";
+  // A samotné rozbalovátko se musí umět zúžit; `select` má vlastní vnitřní
+  // šířku, kterou by jinak vnutil řádku.
+  row.style.minWidth = "0";
+  row.appendChild(preset);
+  row.appendChild(bulk);
+  return row;
+}
+
+const POSITION_PRESETS: readonly FilterPreset<Position>[] = [
+  { id: "all", label: "Vše", matches: () => true },
+  {
+    id: "early",
+    label: "Rané pozice",
+    matches: (key) => key === "UTG" || key === "UTG+1" || key === "UTG+2",
+  },
+  { id: "middle", label: "Střední pozice", matches: (key) => key === "LJ" || key === "HJ" },
+  { id: "late", label: "Pozdní pozice", matches: (key) => key === "CO" || key === "BTN" },
+  { id: "blinds", label: "Blindy", matches: (key) => key === "SB" || key === "BB" },
+];
+
+/**
+ * Hranice hloubek jsou tytéž, kterými se řídí obsah.
+ *
+ * Krátký stack je tam, kde se hraje push/fold, hluboký tam, kde zbývá prostor na
+ * víc než jednu sázku. Kdyby si rozbalovátko zvolilo vlastní dělení, hráč by
+ * trénoval jinak rozdělené skupiny, než jak je rozdělená strategie.
+ */
+const BUCKET_PRESETS: readonly FilterPreset<StackBucket>[] = [
+  { id: "all", label: "Vše", matches: () => true },
+  { id: "short", label: "Krátké (≤ 20 BB)", matches: (key) => key <= 20 },
+  { id: "mid", label: "Střední (25–50 BB)", matches: (key) => key >= 25 && key <= 50 },
+  { id: "deep", label: "Hluboké (≥ 60 BB)", matches: (key) => key >= 60 },
+];
+
+const CONTEXT_PRESETS: readonly FilterPreset<ActionContext>[] = [
+  { id: "all", label: "Vše", matches: () => true },
+  { id: "open", label: "Otevírání", matches: (key) => key === "RFI" || key === "VS_LIMP" },
+  {
+    id: "vs-open",
+    label: "Proti otevření",
+    matches: (key) => key === "VS_OPEN" || key === "VS_3BET"
+      || key === "VS_4BET" || key === "SQUEEZE",
+  },
+  { id: "bvb", label: "Blind proti blindu", matches: (key) => key === "BVB" },
+  {
+    id: "short",
+    label: "Krátký stack",
+    matches: (key) => key === "PUSH_FOLD" || key === "VS_ALLIN",
+  },
+];
+
+interface FilterDisclosure {
+  /** The element to append to the form. */
+  root: HTMLElement;
+  /** Where the group's controls go. */
+  body: HTMLElement;
+  /** Re-reads the inputs and rewrites the header summary. */
+  refresh: () => void;
+}
+
+function makeDisclosure(
+  doc: Document,
+  title: string,
+  summarise: () => string,
+  bulk: HTMLElement,
+  startOpen: boolean,
+): FilterDisclosure {
+  const root = el(doc, "section", "filter-disclosure");
+  root.dataset.open = startOpen ? "true" : "false";
+
+  const header = el(doc, "div", "filter-disclosure__header");
+  header.style.display = "flex";
+  header.style.alignItems = "center";
+  header.style.gap = "8px";
+
+  const toggle = doc.createElement("button");
+  toggle.type = "button";
+  toggle.className = "filter-disclosure__toggle";
+  toggle.setAttribute("aria-expanded", startOpen ? "true" : "false");
+  toggle.style.display = "flex";
+  toggle.style.alignItems = "baseline";
+  toggle.style.gap = "8px";
+  toggle.style.flex = "1";
+  toggle.style.textAlign = "left";
+  toggle.style.cursor = "pointer";
+
+  const caret = doc.createElement("span");
+  caret.className = "filter-disclosure__caret";
+  caret.setAttribute("aria-hidden", "true");
+  caret.textContent = startOpen ? "\u25be" : "\u25b8";
+
+  const name = doc.createElement("span");
+  name.className = "filter-disclosure__name";
+  name.textContent = title;
+  name.style.fontWeight = "700";
+  name.style.fontSize = "13px";
+
+  const summary = doc.createElement("span");
+  summary.className = "filter-disclosure__summary";
+  summary.style.fontSize = "12px";
+  summary.style.opacity = ".78";
+
+  toggle.appendChild(caret);
+  toggle.appendChild(name);
+  toggle.appendChild(summary);
+  header.appendChild(toggle);
+  header.appendChild(bulk);
+
+  const body = el(doc, "div", "filter-group");
+  body.hidden = !startOpen;
+
+  const refresh = () => {
+    summary.textContent = summarise();
+  };
+
+  toggle.addEventListener("click", () => {
+    const open = root.dataset.open !== "true";
+    root.dataset.open = open ? "true" : "false";
+    body.hidden = !open;
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    caret.textContent = open ? "\u25be" : "\u25b8";
+  });
+
+  root.appendChild(header);
+  root.appendChild(body);
+  refresh();
+  return { root, body, refresh };
+}
+
+/**
+ * "Vse (9)", "Zadna", or the picks themselves while they still fit on the line.
+ *
+ * Listing the selection matters more than counting it - "LJ, HJ, CO" tells a
+ * player what they are drilling, where "3 z 9" makes them open the group to find
+ * out. Past four picks the list stops being readable and the count is better.
+ */
+function summariseSelection(labels: string[], total: number): string {
+  if (labels.length === 0) return CS.filters.noneSelected;
+  if (labels.length === total) return CS.filters.allSelected(total);
+  if (labels.length <= 4) return labels.join(", ");
+  return CS.filters.someSelected(labels.length, total);
+}
+
 /** Vykreslí dvojici přepínačů „Vše" / „Žádné" pro hromadnou (de)selekci. */
 function makeBulkToggles(
   doc: Document,
@@ -311,92 +546,141 @@ export function renderFilters(
   }
 
   // --- Sekce: Pozice (Req 13.1) ---
-  const posTitleRow = el(doc, "div", "filter-row");
-  const posTitle = sectionTitle(doc, CS.filters.positions);
-  posTitleRow.appendChild(posTitle);
-  posTitleRow.appendChild(
-    makeBulkToggles(
-      doc,
-      CS.filters.positions.toLowerCase(),
-      () => {
-        for (const inp of positionInputs.values()) inp.checked = true;
-        hideWarning();
-      },
-      () => {
-        for (const inp of positionInputs.values()) inp.checked = false;
-        hideWarning();
-      },
-    ),
+  const posBulk = makeBulkToggles(
+    doc,
+    CS.filters.positions.toLowerCase(),
+    () => {
+      for (const inp of positionInputs.values()) inp.checked = true;
+      hideWarning();
+      posGroup.refresh();
+    },
+    () => {
+      for (const inp of positionInputs.values()) inp.checked = false;
+      hideWarning();
+      posGroup.refresh();
+    },
   );
-  wrap.appendChild(posTitleRow);
-
-  const posBox = el(doc, "div", "filter-group filter-group--positions");
+  const posPreset = makePresetSelect(
+    doc, "filter-position-preset", POSITION_PRESETS, positionInputs,
+    () => { hideWarning(); posGroup.refresh(); },
+  );
+  const posGroup = makeDisclosure(
+    doc,
+    CS.filters.positions,
+    () => {
+      // Pozice se překreslují při změně formátu stolu, takže se předvolba
+      // porovnává s tím, co zrovna existuje - ne s pevným seznamem devíti.
+      posPreset.sync();
+      return summariseSelection(
+        [...positionInputs].filter(([, inp]) => inp.checked).map(([pos]) => pos),
+        positionInputs.size,
+      );
+    },
+    withPreset(doc, posPreset.root, posBulk),
+    false,
+  );
+  const posBox = el(doc, "div", "filter-group--positions");
+  posGroup.body.appendChild(posBox);
   renderPositionControls(profileSelector.getProfile().tableFormat);
-  wrap.appendChild(posBox);
+  wrap.appendChild(posGroup.root);
 
   // --- Sekce: Hloubkové koše (Req 13.2) ---
-  const bucketTitleRow = el(doc, "div", "filter-row");
-  const bucketTitle = sectionTitle(doc, CS.filters.stackDepths);
-  bucketTitleRow.appendChild(bucketTitle);
-  bucketTitleRow.appendChild(
-    makeBulkToggles(
-      doc,
-      CS.filters.stackDepths.toLowerCase(),
-      () => {
-        for (const inp of bucketInputs.values()) inp.checked = true;
-        hideWarning();
-      },
-      () => {
-        for (const inp of bucketInputs.values()) inp.checked = false;
-        hideWarning();
-      },
-    ),
+  const bucketBulk = makeBulkToggles(
+    doc,
+    CS.filters.stackDepths.toLowerCase(),
+    () => {
+      for (const inp of bucketInputs.values()) inp.checked = true;
+      hideWarning();
+      bucketGroup.refresh();
+    },
+    () => {
+      for (const inp of bucketInputs.values()) inp.checked = false;
+      hideWarning();
+      bucketGroup.refresh();
+    },
   );
-  wrap.appendChild(bucketTitleRow);
-
-  const bucketBox = el(doc, "div", "filter-group filter-group--buckets");
+  const bucketPreset = makePresetSelect(
+    doc, "filter-bucket-preset", BUCKET_PRESETS, bucketInputs,
+    () => { hideWarning(); bucketGroup.refresh(); },
+  );
+  const bucketGroup = makeDisclosure(
+    doc,
+    CS.filters.stackDepths,
+    () => {
+      bucketPreset.sync();
+      return summariseSelection(
+        [...bucketInputs].filter(([, inp]) => inp.checked).map(([bb]) => `${bb} BB`),
+        bucketInputs.size,
+      );
+    },
+    withPreset(doc, bucketPreset.root, bucketBulk),
+    false,
+  );
+  const bucketBox = el(doc, "div", "filter-group--buckets");
+  bucketGroup.body.appendChild(bucketBox);
   for (const bucket of STACK_BUCKETS) {
     const { label, input } = makeCheckbox(doc, "filter-bucket", String(bucket), {
       name: "bucket",
       value: String(bucket),
     });
-    input.addEventListener("change", hideWarning);
+    input.addEventListener("change", () => {
+      hideWarning();
+      bucketGroup.refresh();
+    });
     bucketInputs.set(bucket, input);
     bucketBox.appendChild(label);
   }
-  wrap.appendChild(bucketBox);
+  bucketGroup.refresh();
+  wrap.appendChild(bucketGroup.root);
 
   // --- Sekce: Akční kontexty (Req 13.3) ---
-  const ctxTitleRow = el(doc, "div", "filter-row");
-  const ctxTitle = sectionTitle(doc, CS.filters.actionContext);
-  ctxTitleRow.appendChild(ctxTitle);
-  ctxTitleRow.appendChild(
-    makeBulkToggles(
-      doc,
-      CS.filters.actionContext.toLowerCase(),
-      () => {
-        for (const inp of contextInputs.values()) inp.checked = true;
-        hideWarning();
-      },
-      () => {
-        for (const inp of contextInputs.values()) inp.checked = false;
-        hideWarning();
-      },
-    ),
+  const ctxBulk = makeBulkToggles(
+    doc,
+    CS.filters.actionContext.toLowerCase(),
+    () => {
+      for (const inp of contextInputs.values()) inp.checked = true;
+      hideWarning();
+      ctxGroup.refresh();
+    },
+    () => {
+      for (const inp of contextInputs.values()) inp.checked = false;
+      hideWarning();
+      ctxGroup.refresh();
+    },
   );
-  wrap.appendChild(ctxTitleRow);
-
-  const ctxBox = el(doc, "div", "filter-group filter-group--contexts");
+  const ctxPreset = makePresetSelect(
+    doc, "filter-context-preset", CONTEXT_PRESETS, contextInputs,
+    () => { hideWarning(); ctxGroup.refresh(); },
+  );
+  const ctxGroup = makeDisclosure(
+    doc,
+    CS.filters.actionContext,
+    () => {
+      ctxPreset.sync();
+      return summariseSelection(
+        [...contextInputs].filter(([, inp]) => inp.checked).map(([ctx]) => CONTEXT_LABEL[ctx]),
+        contextInputs.size,
+      );
+    },
+    withPreset(doc, ctxPreset.root, ctxBulk),
+    false,
+  );
+  const ctxBox = el(doc, "div", "filter-group--contexts");
+  ctxGroup.body.appendChild(ctxBox);
   for (const ctx of CONTEXT_ORDER) {
     const { label, input } = makeCheckbox(doc, "filter-context", CONTEXT_LABEL[ctx], {
       name: "context",
       value: ctx,
     });
-    input.addEventListener("change", hideWarning);
+    input.addEventListener("change", () => {
+      hideWarning();
+      ctxGroup.refresh();
+    });
     contextInputs.set(ctx, input);
     ctxBox.appendChild(label);
   }
-  wrap.appendChild(ctxBox);
+  ctxGroup.refresh();
+  wrap.appendChild(ctxGroup.root);
 
   // --- Sekce: Konfigurace (ante, scoring, seed) ---
   wrap.appendChild(sectionTitle(doc, CS.filters.configuration));
@@ -447,6 +731,41 @@ export function renderFilters(
   scoringLabel.appendChild(scoringText);
   scoringLabel.appendChild(scoringSelect);
   configBox.appendChild(scoringLabel);
+
+  // Who the hero is up against.
+  //
+  // The shipped ranges are a GTO baseline against nobody in particular, and that
+  // stays the default and stays the answer. Naming an opponent does not swap in a
+  // second set of ranges - there is no second set, and inventing one would be
+  // inventing poker. It supplies one number, the folds that opponent gives, and
+  // the result panel prices the decision against it. See core/opponentStyle for
+  // where the two measured anchors come from and where the interpolation starts.
+  const opponentLabel = doc.createElement("label");
+  opponentLabel.className = "filter-opponent-item";
+  opponentLabel.style.display = "inline-flex";
+  opponentLabel.style.alignItems = "center";
+  opponentLabel.style.gap = "4px";
+  opponentLabel.style.fontSize = "13px";
+  const opponentText = doc.createElement("span");
+  opponentText.textContent = CS.filters.opponent;
+  const opponentSelect = doc.createElement("select");
+  opponentSelect.className = "filter-opponent";
+  for (const [value, label] of [
+    ["", CS.filters.opponentUnknown],
+    ["TIGHT_AGGRESSIVE", CS.filters.opponentTightAggressive],
+    ["TIGHT_PASSIVE", CS.filters.opponentTightPassive],
+    ["LOOSE_AGGRESSIVE", CS.filters.opponentLooseAggressive],
+    ["LOOSE_PASSIVE", CS.filters.opponentLoosePassive],
+  ] as const) {
+    const option = doc.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    opponentSelect.appendChild(option);
+  }
+  opponentSelect.value = "";
+  opponentLabel.appendChild(opponentText);
+  opponentLabel.appendChild(opponentSelect);
+  configBox.appendChild(opponentLabel);
 
   // Seed (Req 6.7 — prázdné = engine vygeneruje).
   const seedLabel = doc.createElement("label");
@@ -524,16 +843,23 @@ export function renderFilters(
         value: pos,
       });
       input.checked = selected.has(pos);
-      input.addEventListener("change", hideWarning);
+      input.addEventListener("change", () => {
+        hideWarning();
+        posGroup.refresh();
+      });
       positionInputs.set(pos, input);
       posBox.appendChild(label);
     }
+    posGroup.refresh();
   }
 
   function getFilters(): Filters {
     const ante: AnteMode = anteInput.checked ? "ON" : "OFF";
     const scoringMode: ScoringMode =
       scoringSelect.value === "STRICT" ? "STRICT" : "LENIENT";
+    const opponentStyle = opponentSelect.value === ""
+      ? undefined
+      : opponentSelect.value as OpponentStyleId;
     const positionOrder = positionsForFormat(profileSelector.getProfile().tableFormat);
     return {
       positions: collect(positionOrder, positionInputs),
@@ -541,6 +867,7 @@ export function renderFilters(
       contexts: collect(CONTEXT_ORDER, contextInputs),
       ante,
       scoringMode,
+      opponentStyle,
     };
   }
 
@@ -591,6 +918,7 @@ export function renderFilters(
       setCheckedValues(contextInputs, filters.contexts);
       anteInput.checked = filters.ante === "ON";
       scoringSelect.value = filters.scoringMode;
+      opponentSelect.value = filters.opponentStyle ?? "";
       hideWarning();
     },
     getProfile(): TrainingProfile {

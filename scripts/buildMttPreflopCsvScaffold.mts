@@ -1,9 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { ALL_HAND_CLASSES } from "../src/core/poker.ts";
-import { STACK_BUCKETS } from "../src/core/types.ts";
-import { positionsForFormat } from "../src/core/trainingProfile.ts";
-import { mttProductionImportIdentityFromPackId } from "../src/data/ranges/mttImportSlotNaming.ts";
+import { buildMttPreflopCsvScaffoldDocument } from "../src/data/ranges/mttPreflopCsvScaffold.ts";
 
 interface CliArgs {
   packId: string;
@@ -13,38 +10,6 @@ interface CliArgs {
   reviewedAt: string;
   sourceReferenceId: string;
 }
-
-const ACTION_CONTEXTS = [
-  "RFI",
-  "VS_LIMP",
-  "VS_OPEN",
-  "VS_3BET",
-  "VS_4BET",
-  "SQUEEZE",
-  "BVB",
-  "PUSH_FOLD",
-  "VS_ALLIN",
-] as const;
-
-const HEADER = [
-  "rowKind",
-  "packId",
-  "tableFormat",
-  "blindSpeed",
-  "ante",
-  "evModel",
-  "position",
-  "sourceStackBB",
-  "bucket",
-  "context",
-  "handClass",
-  "strictActions",
-  "lenientActions",
-  "sourceReferenceId",
-  "reviewer",
-  "reviewedAt",
-  "notes",
-];
 
 function usage(): string {
   return [
@@ -131,61 +96,23 @@ function parseArgs(argv: readonly string[]): CliArgs {
 
 function run(): void {
   const args = parseArgs(process.argv.slice(2));
-  const identity = mttProductionImportIdentityFromPackId(args.packId);
-  if (identity === null || identity.street !== "PREFLOP") {
-    throw new Error(`Pack id is not a legal MTT preflop production slot: ${args.packId}`);
-  }
-
-  const rows: string[][] = [HEADER];
-  let emitted = 0;
-  for (const position of positionsForFormat(identity.tableFormat)) {
-    for (const bucket of STACK_BUCKETS) {
-      for (const context of ACTION_CONTEXTS) {
-        for (const handClass of ALL_HAND_CLASSES) {
-          if (args.maxRows !== null && emitted >= args.maxRows) break;
-          rows.push([
-            "HAND_CLASS_DECISION",
-            args.packId,
-            identity.tableFormat,
-            identity.blindSpeed,
-            identity.ante,
-            identity.evModel,
-            position,
-            String(bucket),
-            String(bucket),
-            context,
-            handClass,
-            "",
-            "",
-            args.sourceReferenceId,
-            args.reviewer,
-            args.reviewedAt,
-            "fill strictActions and lenientActions from reviewed source",
-          ]);
-          emitted += 1;
-        }
-        if (args.maxRows !== null && emitted >= args.maxRows) break;
-      }
-      if (args.maxRows !== null && emitted >= args.maxRows) break;
-    }
-    if (args.maxRows !== null && emitted >= args.maxRows) break;
-  }
+  const scaffold = buildMttPreflopCsvScaffoldDocument(args.packId, {
+    maxRows: args.maxRows,
+    reviewer: args.reviewer,
+    reviewedAt: args.reviewedAt,
+    sourceReferenceId: args.sourceReferenceId,
+  });
 
   mkdirSync(dirname(args.outputPath), { recursive: true });
-  writeFileSync(args.outputPath, `${rows.map((row) => row.map(csvCell).join(",")).join("\n")}\n`, "utf8");
+  writeFileSync(args.outputPath, scaffold.document, "utf8");
   console.log([
     "MTT preflop CSV scaffold",
     `packId: ${args.packId}`,
     `output: ${args.outputPath}`,
-    `rows: ${emitted}`,
-    `completeSlotRows: ${positionsForFormat(identity.tableFormat).length * STACK_BUCKETS.length * ACTION_CONTEXTS.length * ALL_HAND_CLASSES.length}`,
+    `rows: ${scaffold.rows}`,
+    `completeSlotRows: ${scaffold.completeSlotRows}`,
     "strategyValues: none",
   ].join("\n"));
-}
-
-function csvCell(value: string): string {
-  if (!/[",\r\n]/.test(value)) return value;
-  return `"${value.replaceAll('"', '""')}"`;
 }
 
 function parsePositiveInt(value: string, flag: string): number {

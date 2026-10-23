@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { stylesheet } from "../stylesheets";
 import { renderRangeModalButton } from "../../src/ui/rangeModal";
 import type { RangeStore } from "../../src/data/rangeStore";
 import type { Card, Spot, TableState } from "../../src/core/types";
@@ -13,6 +14,7 @@ const heroCards: [Card, Card] = [
 const tableState: TableState = {
   heroPos: "BTN",
   pushFold: false,
+  effectiveStackBB: 100,
   limpsBefore: 0,
   callsBefore: 0,
   facing: "NONE",
@@ -67,31 +69,35 @@ describe("rangeModal - DOM", () => {
 
     expect(document.querySelector(".range-modal")).not.toBeNull();
     expect(root.querySelector<HTMLButtonElement>(".range-modal-open")?.textContent)
-      .toContain("Zobrazit range");
+      .toContain("Show range");
     expect(document.querySelectorAll(".range-modal .matrix-cell")).toHaveLength(169);
     expect(document.querySelector<HTMLElement>(".range-modal .matrix-cell--hero")?.dataset.hand)
       .toBe("AKs");
     expect(model?.textContent).toContain("Model range");
     expect(model?.textContent).toContain("chipEV");
+    expect(model?.textContent).toContain("ante OFF");
+    expect(model?.textContent).not.toContain("ante zapnuto");
+    expect(model?.textContent).not.toContain("bez ante");
     expect(model?.textContent).toContain("Předpoklady:");
     expect(document.querySelector<HTMLElement>(".range-modal .range-matrix-title")?.textContent)
-      .toBe("Preflop matice range");
+      .toBe("Preflop range matrix");
     expect(document.querySelectorAll(".range-modal .legend-count").length)
       .toBeGreaterThan(1);
     expect(document.querySelector<HTMLElement>(".range-modal .legend-item")?.dataset.count)
       .toMatch(/^\d+$/);
     expect(document.querySelector<HTMLElement>(".range-modal .legend-item")?.dataset.share)
-      .toMatch(/^\d+%$/);
+      .toMatch(/^\d+,\d %$/);
     expect(document.querySelector<HTMLElement>(".range-modal .legend-count")?.textContent)
-      .toMatch(/\d+\/169 \(\d+%\)/);
+      // Combinations out of 1326, not classes out of 169: a class is 6, 4 or 12
+      // combos, so a class count is not a range width.
+      .toMatch(/\d+ (kombinací|komb\.) /);
     expect(model?.textContent).not.toContain("Zdroje:");
     expect(model?.textContent).not.toContain("RangePack");
     expect(model?.textContent).not.toContain("mtt-full-ring");
     expect(document.querySelectorAll(".range-modal__evidence a")).toHaveLength(0);
-    expect(document.querySelector(".range-modal style")?.textContent)
-      .toContain("prefers-reduced-motion");
-    expect(document.querySelector(".range-modal style")?.textContent)
-      .toContain("transform:none");
+    // Styl dialogu je od 22. 10. 2026 v CSS souboru, ne vložený v dialogu.
+    expect(stylesheet("legacy/range-modal.css")).toContain("prefers-reduced-motion");
+    expect(stylesheet("legacy/range-modal.css")).toContain("transform:none");
 
     document.querySelector<HTMLButtonElement>(".range-modal__close")?.click();
     expect(document.querySelector(".range-modal")).toBeNull();
@@ -109,7 +115,7 @@ describe("rangeModal - DOM", () => {
     expect(document.querySelector<HTMLElement>(".range-modal__matrix")?.textContent)
       .toContain("AKs");
     expect(document.querySelector<HTMLButtonElement>(".range-modal__close")?.textContent)
-      .toBe("Zavřít");
+      .toBe("Close");
 
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
 

@@ -123,6 +123,70 @@ MTT postflop slot paths use:
 
 Postflop production inputs (`flop-production`, `turn-production`, `river-production`) must declare profile coverage in `dimensions.blindSpeeds` and `dimensions.antes`. The MTT completion gate only treats a pack as covering rows whose `tableFormat`, `evModel`, `street`, `blindSpeed` and `ante` are all explicitly declared.
 
+## RYE refined records (vsSeat) - the flow that ran 9.-17. 9. 2026
+
+Owner-purchased RYE Rangeviewer charts reach the product as **refined records** (`vsSeat` = the
+seat that opened) layered on top of the pack's general records, not as a replacement pack. The
+answers files in this folder are the audit trail of that path.
+
+1. `npm run mtt:rye-import -- --source=<RYE db path> --write` builds `artifacts/rye-import/draft.json`.
+2. `npm run mtt:rye-review` renders the draft as grids (`artifacts/rye-import/review.html`); the
+   owner fills in verdicts and the page emits a `DRILLEV-REVIEW-V2 ...` token (index in draft,
+   never page position).
+3. Save the token as `odpovedi-YYYY-MM-DD.txt` here and translate it to grid identity:
+   `npm run mtt:rye-answers -- --answers-file=Agents/range-intake/odpovedi-YYYY-MM-DD.txt --out=Agents/range-intake/answers-YYYY-MM-DD.json`.
+   Answer files stack: the newest verdict per `sourceFile` wins, and a verdict goes stale when the
+   grid's content hash or question changes.
+4. `npm run mtt:rye-candidate -- --base=Agents/range-intake/raw/<packId>/normalized.json --out=artifacts/rye-import/candidate/<packId>/normalized.json --write`
+   for each chipEV pack (regular/turbo x ante OFF/ON; reuse into ante ON and turbo is the owner's
+   scope decision of 17. 9. 2026). It is idempotent: the base is the pack's general part, refined
+   records are rebuilt from today's draft and answers. Refuses ICM grids (no $EV pack), push/fold
+   (no opener), actions the drill does not offer, and duplicate cells - each reason is counted.
+5. Copy the candidate over `raw/<packId>/normalized.json`, then `validate:range-import` and
+   `build:range-module --force` as above. `permission.json` must list the source under
+   `additionalSources` (owner acknowledged RYE on 16. 9. 2026).
+6. Measure delivery, not production: `npm run mtt:refined-delivery` - share of dealt spots whose
+   answer is a refined record, per profile. Read its doc-comment before trusting any other CLI
+   number about production packs: without lazy-loader registration a CLI measures the legacy pack.
+
+State on 17. 9. 2026: 110 of 118 grids approved, 61 refined records in all four chipEV packs,
+VS_OPEN 30,4 % / SQUEEZE 2,4 % of dealt spots refined (diary 253-256). Push/fold 10 bb: the 8 approved
+RYE grids replace the pack's own general records (owner's decision 17. 9., `selectPushFoldOverrides`).
+
+The base under the RYE layer is the legacy pack staged through the P1 pipeline
+(`mtt:p1-preflop-drafts`, then `mtt:p1-stage-reviewed-preflop --pack-id <packId> --permission raw/<packId>/permission.json --write --confirm=STAGE_REVIEWED_MTT_P1_PREFLOP`).
+It went stale for two months once (diary 257); `npm run mtt:preflop-drift` (in `verify:block`) fails when
+production general records differ from the legacy pack. After any legacy range change: restage, then
+step 4 onwards.
+
+## RYE ICM grids - the $EV preview layer (owner's decisions 3a, 4a, 5b of 22. 9. 2026)
+
+ICM grids carry a **scenario**: the stack distribution the range was solved for. Two grids of the
+same cell and the same opener differ by nothing else (diary 256), so the scenario is part of the
+key, not a note. They do **not** belong in a chipEV pack - a different EV model with no way to tell.
+
+1. Same draft and answers as above; ICM grids are the ones whose `stackSetupId` starts with `ICM`,
+   and the importer reads the scenario tables from the corpus navigation (`readIcmScenarios`).
+2. `npm run mtt:rye-icm-candidate -- --write --module=src/data/ranges/mttIcmPreviewRangePack.generated.ts`
+   builds the candidate in `artifacts/rye-import/icm-candidate/<packId>/normalized.json` and renders
+   the preview module. Same sieve as the refined records (approved over today's grid, dealt seat and
+   depth, actions the drill offers, one grid per cell) plus: both seats must exist six-handed, and
+   the scenario must name at least two seats the table can draw.
+3. Register the module in `mttPreflopRangePacks.ts`. Nothing else is needed: the profile picks it up
+   through `mttPreflopRangePackForProfile` and `isPlayableMttPreflopPreview` already allows
+   SIX_MAX / $EV / REGULAR.
+
+**This path never reaches production, by construction.** `build:range-module` requires
+`productionReady` (every seat x depth x context) and a matching import slot; a layer that answers
+only where it knows will never have either. `renderPreviewMttPreflopRangePackModule` renders the same
+module without a permission fingerprint and refuses anything not labelled `LOW` or failing validation.
+Where a pack may be played is still decided by `startableMttPreflopRangePack` against measured
+readiness, so a preview module cannot become production by existing.
+
+State on 22. 9. 2026: 31 of 40 approved ICM grids ship in 6 scenarios; 451 dealt spots in a seeded
+run, all 31 records asked for, 0 priced (decision 5b). The 9 that did not ship all teach a jam over a
+3-bet, which the drill does not offer facing a 3-bet - an owner question, not a gate to loosen.
+
 ## Required Permission Manifest Fields
 
 - `packId`

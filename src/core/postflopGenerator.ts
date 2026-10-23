@@ -3,6 +3,17 @@ import { RANKS, SUITS, rankValue } from "./poker";
 import { mulberry32 } from "./rng";
 import type { PostflopActionNode, PostflopTrainingSpot } from "./postflopTrainingSpot";
 import { positionsForFormat, type TableFormat } from "./trainingProfile";
+import type { ActionEvSet } from "./actionEv";
+import type { SprFidelity } from "./postflopSprFidelity";
+import { heroRangeWeight } from "../data/ranges/postflopRangeWeights.generated";
+import { familyIdFromRuleId } from "../data/ranges/postflopSolvedSpr";
+import {
+  bestActionsForActionEv,
+  cloneActionEvSet,
+  highestEvAction,
+  DISPLAYABLE_ACTION_EV_SOURCES,
+  isActionEvSetUsable,
+} from "./actionEv";
 
 export type PostflopStreet = "FLOP" | "TURN" | "RIVER";
 export const POSTFLOP_ACTIONS = [
@@ -33,6 +44,26 @@ export type BoardTexture =
   | "flush-draw-heavy"
   | "disconnected";
 
+/**
+ * Every texture in the taxonomy, so a rule that declares all of them can be
+ * recognised as covering any board rather than matching a particular one.
+ */
+export const ALL_BOARD_TEXTURES: readonly BoardTexture[] = [
+  "paired",
+  "monotone",
+  "two-tone",
+  "rainbow",
+  "connected",
+  "dry",
+  "ace-high",
+  "broadway-high",
+  "low",
+  "medium",
+  "straight-possible",
+  "flush-draw-heavy",
+  "disconnected",
+];
+
 export type PostflopPositionPattern =
   | "EP_VS_BB"
   | "BTN_VS_BB"
@@ -60,6 +91,54 @@ export const LEGACY_POSTFLOP_POSITION_PATTERNS = [
   "OOP_RAISER_VS_IP_CALLER",
   "OOP_CALLER_VS_IP_3BETTOR",
 ] as const satisfies readonly PostflopPositionPattern[];
+
+/**
+ * Kanonické jméno pro dvojí zápis téže situace.
+ *
+ * Dva pravopisy jedné věci jsou v oběhu od začátku: generátor vydá `BTN_VS_BB`,
+ * pravidla nesou `SRP_BTN_VS_BB`. Přejmenovat všechno by znamenalo sáhnout na
+ * generátor, packy, už zapsané statistiky pod starými jmény i na citační
+ * politiku, která oba tvary vypisuje - a splést se v tom znamená tiše označit
+ * vyřešený obsah za heuristiku nebo naopak. Číst jedno jméno jako druhé stojí
+ * jedno vyhledání a splést se v tom nedá.
+ *
+ * `EP_VS_BB` ukazuje na UTG, protože to je sedačka, na kterou byl
+ * ranněpoziční pilot odsolvený. Zbylá dvě legacy jména,
+ * `OOP_RAISER_VS_IP_CALLER` a `OOP_CALLER_VS_IP_3BETTOR`, nejmenují žádné
+ * sedačky a schválně zůstávají nepřeložená: hádat, kterou dvojici myslela, by
+ * bylo přesně to vymýšlení, kterému se tímhle předchází.
+ *
+ * **Proč to bydlí tady a ne v resolveru.** Do 2. 9. 2026 existovaly tři různé
+ * kopie téhle znalosti a každá uměla něco jiného: flopová produkční znala
+ * všechna tři jména, ale produkčních packů je registrováno nula; pilotní
+ * runtime znal dvě z tří a na `EP_VS_BB` zapomněl, ačkoli UTG pilot existuje;
+ * a vyřešené resolvery - tedy celá knihovna 48/48 rodin - neznaly žádné.
+ * Změřeno na 2 400 dotazech volnou cestou generátoru: 230 z nich (9,6 %) míří
+ * na `BTN_VS_BB`, `SB_VS_BB` nebo `EP_VS_BB`, a vyřešený obsah pro ně existuje
+ * pod druhým jménem. Vypadalo to jako chybějící obsah a byl to překlad.
+ */
+export const LEGACY_POSTFLOP_PATTERN_EQUIVALENT: Readonly<Record<string, PostflopPositionPattern>> = {
+  BTN_VS_BB: "SRP_BTN_VS_BB",
+  SB_VS_BB: "SRP_SB_VS_BB",
+  EP_VS_BB: "SRP_UTG_VS_BB",
+};
+
+/** Jméno v kanonickém tvaru; co překlad nemá, se vrací beze změny. */
+export function canonicalPostflopPositionPattern(pattern: string): string {
+  return LEGACY_POSTFLOP_PATTERN_EQUIVALENT[pattern] ?? pattern;
+}
+
+/**
+ * Jmenují ta dvě jména tutéž dvojici sedaček?
+ *
+ * Porovnává se v obou směrech, ne jen dotaz proti pravidlu: v oběhu jsou oba
+ * pravopisy na obou stranách a jedním směrem by to spravilo jen polovinu.
+ * **Typ potu se tím neřeší** - ten si každý resolver kontroluje zvlášť, takže
+ * se pravidlo pro 3bet pot na dotaz o SRP nechytne ani po překladu.
+ */
+export function postflopPositionPatternMatches(left: string, right: string): boolean {
+  return canonicalPostflopPositionPattern(left) === canonicalPostflopPositionPattern(right);
+}
 
 const POSITION_PATTERN_TOKENS = [
   "UTG",
@@ -97,6 +176,18 @@ export type PostflopStrategyPositionPattern =
   | PostflopPositionPattern
   | "IP_OR_RANGE_ADVANTAGE"
   | "OOP_OR_DYNAMIC_BOARD"
+  /**
+   * Spots where the player out of position is the one who called, not raised.
+   *
+   * `OOP_OR_DYNAMIC_BOARD` sounds like it covers this and does not: it selects
+   * spots where the *raiser* is out of position, which is the small blind's
+   * situation and nobody else's. The big blind defending a cutoff open is out of
+   * position too and matches none of the existing tokens, so rules written for
+   * the caller's turn silently matched nothing.
+   *
+   * The token names which spot; the action node names whose decision inside it.
+   */
+  | "OOP_CALLER_VS_IP_RAISER"
   | "EP_VS_BLINDS_OR_STRONG_RANGE_ADVANTAGE";
 
 export type PostflopCallerType =
@@ -133,6 +224,8 @@ export interface PostflopSpot {
   textures: BoardTexture[];
   actions: readonly PostflopAction[];
   recommendedAction: PostflopAction;
+  actionEvs?: ActionEvSet<PostflopAction>;
+  comboEvs?: readonly PostflopComboEv[];
   explanation: string;
   strategySource: PostflopRecommendationSource;
   trainingSpot?: PostflopTrainingSpot;
@@ -146,16 +239,54 @@ export interface PostflopStrategyInput {
   potBB: number;
   effectiveStackBB: number;
   positionPattern: PostflopPositionPattern;
+  /**
+   * Na které straně stolu sedí hrdina.
+   *
+   * `positionPattern` to neříká: `SRP_CO_VS_BB` jmenuje, kdo otevřel a kdo
+   * dorovnal, a platí pro obě sedačky u toho stolu. Dokud vyřešený obsah držel
+   * jen rozhodnutí hráče mimo pozici, nescházelo to - uzel sám stranu určoval.
+   * Jakmile přibude obsah pro obě strany, je `SRP_CO_VS_BB` + „čelí sázce" dvěma
+   * různým hráčům stejný klíč, a resolver by mezi nimi vybíral pořadím.
+   *
+   * Volitelné, aby nástroje a testy nemusely vědět všechno; kdo to ale neuvede,
+   * dostane od vyřešeného resolveru odpověď jen tam, kde je odpověď jediná.
+   */
+  heroOutOfPosition?: boolean;
   actionNode?: PostflopActionNode;
   heroHand?: HandLabel;
+  /**
+   * Konkrétní dvě karty hrdiny, když je volající zná.
+   *
+   * `heroHand` je třída, a EV se po třídách rozchází až o čtrnáct blindů -
+   * průměr přes třídu by hráči lhal. Vyřešená EV je proto po kombinacích a bez
+   * karet ji vydat nejde.
+   */
+  heroCards?: readonly [Card, Card];
   priorFlopAction?: PostflopAction;
   turnCardClass?: PostflopTurnCardClass;
   priorTurnAction?: PostflopAction;
   riverRunoutClass?: PostflopRiverRunoutClass;
 }
 
+/**
+ * EV akcí pro jednu konkrétní kombinaci karet.
+ *
+ * Vedle `ActionEvSet`, které platí pro hrdinovu ruku, tohle nese celou tabulku:
+ * matice ukazuje 169 tříd a hráč po odpovědi chce vidět i to, co by stálo držet
+ * jinou ruku. Průměr přes třídu se sem nesmí - uvnitř jedné třídy se EV rozchází
+ * až o čtrnáct blindů, takže by to nebylo číslo žádné konkrétní ruky.
+ */
+export interface PostflopComboEv {
+  /** Dvě karty tak, jak je zapisuje obsah: `"AhKh"`. */
+  combo: string;
+  values: readonly { action: PostflopAction; evBb: number }[];
+}
+
 export interface PostflopRecommendation {
   action: PostflopAction;
+  actionEvs?: ActionEvSet<PostflopAction>;
+  /** EV po kombinacích pro tenhle uzel, když je obsah drží. */
+  comboEvs?: readonly PostflopComboEv[];
   explanation: string;
   source?: PostflopRecommendationSource;
 }
@@ -166,9 +297,31 @@ export interface PostflopOpponentPolicyBranch {
   facingHeroRaise: Extract<PostflopAction, "CALL" | "FOLD">;
 }
 
+/**
+ * Whether a recommendation came from solved content or from the public
+ * heuristic model. The product must never present a heuristic answer as
+ * solver-backed, so this has to be a structural property of the recommendation
+ * rather than something inferred from free-text metadata.
+ */
+export type PostflopStrategyProvenance = "SOLVER_BACKED" | "PUBLIC_HEURISTIC";
+
+/**
+ * Velikost sázky, kterou solve za tlačítkem skutečně hrál.
+ *
+ * `ratio` je podíl potu; u all-inu 1 a `allIn: true`. `merged` říká, kolik
+ * vyřešených velikostí se pod tím tlačítkem slilo - trenažér má dvě, solve jich
+ * míval tři i čtyři.
+ */
+export interface PostflopSolvedBetSizing {
+  ratio: number;
+  allIn: boolean;
+  merged: number;
+}
+
 export type PostflopRecommendationSource =
   | {
       kind: "STRATEGY_PACK";
+      provenance: PostflopStrategyProvenance;
       packId: string;
       packVersion: string;
       packVerifiedAt: string;
@@ -183,8 +336,41 @@ export type PostflopRecommendationSource =
       selectionScore: number;
       tieBreak: "RULE_SCORE_THEN_PACK_ORDER";
       rangeBuckets?: readonly PostflopRangeBucket[];
+      /**
+       * Kolik stojí dorovnat sázku, které hrdina čelí, v blindech.
+       *
+       * Ze skutečné linie vyřešeného pravidla, ne z modelu. Chybí tam, kde
+       * hrdina sázce nečelí.
+       */
+      facingBetBB?: number;
+      /** Pot uzlu z vyřešeného pravidla, v blindech. */
+      nodePotBB?: number;
+      /**
+       * Velikosti hrdinových sázek, které solver v **tomhle uzlu** hrál, podle
+       * tlačítka. Nese je vyřešené pravidlo (flop, turn i river z rozkladu);
+       * pilot je má v tabulce rodin. Chybějící tlačítko uzel nenabízí a velikost
+       * se pak bere z modelu.
+       */
+      heroBetSizes?: Partial<Record<"BET_SMALL" | "BET_BIG", PostflopSolvedBetSizing>>;
       heroRangeBucket?: PostflopHeroRangeBucket;
       opponentPolicy?: PostflopOpponentPolicyBranch;
+      /**
+       * How far the shown SPR sits from the SPR this family was solved at. Absent
+       * when the family's solved SPR is unknown or the shown SPR is not positive.
+       */
+      sprFidelity?: SprFidelity;
+      /**
+       * Whether this rule's content was aggregated over one solver tree or two.
+       * Present only when it is two, since that is the case worth saying out loud.
+       */
+      treeIntegrity?: "MIXED_TREES";
+      /**
+       * How many of the taxonomy's board textures this rule covers. A rule
+       * covering all of them applies to any board, so the textures it "matched"
+       * only describe the board that was dealt. Reported as a fraction rather
+       * than a flag so a nearly-universal rule cannot claim a match either.
+       */
+      textureCoverage?: { covered: number; total: number };
     }
   | {
       kind: "FALLBACK";
@@ -211,6 +397,13 @@ export interface PostflopRangeBucket {
   handClasses: readonly HandLabel[];
   features: readonly string[];
   actionMix?: readonly PostflopActionFrequency[];
+  actionEvs?: ActionEvSet<PostflopAction>;
+  /**
+   * How often the hero's preflop range holds this bucket, as a percentage. Packs
+   * do not carry it yet; when one does it wins over the generated weight table,
+   * so populating it in the pipeline is enough to make it take effect.
+   */
+  weightPct?: number;
 }
 
 export interface PostflopHeroRangeBucket {
@@ -220,6 +413,7 @@ export interface PostflopHeroRangeBucket {
   handClass: HandLabel;
   features: readonly string[];
   actionMix?: readonly PostflopActionFrequency[];
+  actionEvs?: ActionEvSet<PostflopAction>;
 }
 
 export interface PostflopConfig {
@@ -282,7 +476,11 @@ export const POSTFLOP_POSITION_CONTEXTS = [
     callerPosition: "BTN",
     inPosition: false,
     callerType: "IN_POSITION_CALLER",
-    positionPattern: "OOP_RAISER_VS_IP_CALLER",
+    // By seat. This entry names the hijack and the button in every other field
+    // and then spelled the pattern by role, which is the one field a solved pack
+    // is matched on - so a pack for this pairing could never be reached. The
+    // same defect as in postflopIntent, in the generator's own default list.
+    positionPattern: "SRP_HJ_VS_BTN",
   },
 ] as const satisfies readonly PostflopPositionContext[];
 
@@ -370,34 +568,136 @@ export const POSTFLOP_FULL_RING_POSITION_CONTEXTS = uniquePositionContexts([
   ...postflopPositionContextsForFormat("FULL_RING_9", "SINGLE_RAISED"),
 ]);
 
+/**
+ * The defender's side of a single-raised pot, which the product did not have.
+ *
+ * Every single-raised context is written from the raiser's side: `SRP_CO_VS_BB`
+ * seats hero at the cutoff, in position, holding the initiative. The big blind
+ * who called and now has to act first on the turn has no context at all - so a
+ * spot built for that decision seated the player at the cutoff and handed them
+ * the big blind's strategy, which is the presentation-layer twin of the data bug
+ * that named those solves after the wrong player.
+ *
+ * The pattern is unchanged, because a pattern names the spot: `SRP_CO_VS_BB` is
+ * the same pot from either chair. What changes is who is sitting in it.
+ */
+export function postflopDefenderContextsForFormat(
+  format: TableFormat,
+): PostflopPositionContext[] {
+  const positions = positionsForFormat(format);
+  if (!positions.includes("BB")) return [];
+  const contexts: PostflopPositionContext[] = [];
+  for (const opener of positions) {
+    if (opener === "BB") continue;
+    contexts.push({
+      heroPosition: "BB",
+      villainPosition: opener,
+      aggressorPosition: opener,
+      callerPosition: "BB",
+      // The big blind acts first on every street after the flop, against every
+      // seat. The small blind is the one exception and acts before them.
+      inPosition: opener === "SB",
+      callerType: "BIG_BLIND",
+      positionPattern: `SRP_${opener.replace("+", "_")}_VS_BB` as PostflopPositionPattern,
+    });
+  }
+  return uniquePositionContexts(contexts);
+}
+
+/**
+ * Every full-ring context, three-bet pots included.
+ *
+ * The list above is single-raised only, which is right for dealing a random spot
+ * - most postflop pots are single-raised, and a random draw should look like
+ * that. But it is the wrong list for asking "can this solved spot be dealt at
+ * all": three solved families are three-bet pots, and against the single-raised
+ * list they answered no, so several hundred solved turns were unreachable for a
+ * reason that had nothing to do with the strategy in them.
+ */
+export const POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS = uniquePositionContexts([
+  ...POSTFLOP_FULL_RING_POSITION_CONTEXTS,
+  ...postflopPositionContextsForFormat("FULL_RING_9", "THREE_BET_POT"),
+  ...postflopDefenderContextsForFormat("FULL_RING_9"),
+]);
+
+/**
+ * Seatings where hero called the last raise and is out of position.
+ *
+ * The only seatings in which "lead or check, first to act, without the
+ * initiative" is a decision that can occur. Drawn from anywhere else, the same
+ * node describes a hand that cannot be dealt: the out-of-position player made
+ * the last raise, so acting first is a continuation bet, not a lead.
+ */
+/** The three streets' version of "hero called, is out of position, acts first". */
+export const OOP_LEAD_NODES: ReadonlySet<PostflopActionNode> = new Set([
+  "FLOP_OOP_LEAD",
+  "TURN_OOP_LEAD",
+  "RIVER_OOP_LEAD",
+]);
+
+export const OOP_CALLER_POSITION_CONTEXTS = POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS.filter(
+  (context) => !context.inPosition && context.heroPosition !== context.aggressorPosition,
+);
+
 export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
   const rng = mulberry32(config.seed);
-  const heroCards = config.heroCards ?? dealCards(rng, fullDeck(), 2) as [Card, Card];
-  const deck = fullDeck().filter((card) => !sameCard(card, heroCards[0]) && !sameCard(card, heroCards[1]));
+  const dealtHeroCards = config.heroCards ?? dealCards(rng, fullDeck(), 2) as [Card, Card];
+  const deck = fullDeck().filter((card) => (
+    !sameCard(card, dealtHeroCards[0]) && !sameCard(card, dealtHeroCards[1])
+  ));
   const street = config.street ?? randomStreet(rng);
   const board = config.board?.slice(0, boardLength(street)) ?? dealCards(rng, deck, boardLength(street));
   const textures = classifyBoard(board);
   const potType = config.potType ?? "SINGLE_RAISED";
   const potBB = config.potBB ?? defaultPotBB(potType);
   const effectiveStackBB = config.effectiveStackBB ?? 40;
-  const positionContext = config.positionContext ?? randomPositionContext(rng);
   const actionNode = config.actionNode ?? defaultActionNode(street, potType);
+  const positionContext = config.positionContext ?? randomPositionContext(rng, actionNode);
   const actions = actionsForActionNode(actionNode);
+
+  const strategyInput = {
+    street,
+    textures,
+    board,
+    potType,
+    potBB,
+    effectiveStackBB,
+    positionPattern: positionContext.positionPattern,
+    // Stranu stolu zná jen tenhle kontext a dál se dosud nepředávala, takže
+    // resolver ji neměl jak zjistit.
+    heroOutOfPosition: !positionContext.inPosition,
+    actionNode,
+    priorFlopAction: street === "TURN" ? config.priorFlopAction ?? "BET_SMALL" : config.priorFlopAction,
+    turnCardClass: street === "TURN" ? config.turnCardClass ?? classifyTurnCard(board) : config.turnCardClass,
+    priorTurnAction: street === "RIVER" ? config.priorTurnAction ?? "BET_SMALL" : config.priorTurnAction,
+    riverRunoutClass: street === "RIVER" ? config.riverRunoutClass ?? classifyRiverRunout(board) : config.riverRunoutClass,
+  } satisfies Omit<PostflopStrategyInput, "heroHand">;
+
+  // Keep the hero inside the range the solver actually analysed for this spot.
+  // A freely dealt hand is usually one the preflop raiser would never hold here
+  // - on the BTN vs BB c-bet pilot only 19 percent of random combinations are in
+  // range - and such a hand has no bucket, so its recommendation would fall back
+  // to the rule-wide action. Rule selection does not depend on the hero hand, so
+  // the pack can be probed with the dealt hand and the hero re-dealt only when
+  // that hand is out of range. Spots without a pack range keep the plain deal.
+  // The probe deliberately omits the hero hand. Rule selection does not depend on
+  // it, and a production resolver refuses a per-hand answer for a hand outside
+  // the solved range, which would hide the very range this needs to draw from.
+  const heroCards = config.heroCards
+    ?? redealHeroIntoStrategyRange(
+      rng,
+      dealtHeroCards,
+      config.strategyResolver?.(strategyInput) ?? null,
+      board,
+    );
+
   const resolvedRecommendation =
     config.strategyResolver?.({
-      street,
-      textures,
-      board,
-      potType,
-      potBB,
-      effectiveStackBB,
-      positionPattern: positionContext.positionPattern,
-      actionNode,
+      ...strategyInput,
       heroHand: postflopHandClassFromCards(heroCards),
-      priorFlopAction: street === "TURN" ? config.priorFlopAction ?? "BET_SMALL" : config.priorFlopAction,
-      turnCardClass: street === "TURN" ? config.turnCardClass ?? classifyTurnCard(board) : config.turnCardClass,
-      priorTurnAction: street === "RIVER" ? config.priorTurnAction ?? "BET_SMALL" : config.priorTurnAction,
-      riverRunoutClass: street === "RIVER" ? config.riverRunoutClass ?? classifyRiverRunout(board) : config.riverRunoutClass,
+      // Konkrétní karty, ne jen třída: vyřešená EV je po kombinacích, protože
+      // uvnitř třídy se rozchází až o čtrnáct blindů.
+      heroCards,
     });
   const fallbackRecommendation = recommendPostflopActionForNode(actionNode, street, textures);
   const validResolvedRecommendation = (
@@ -410,6 +710,17 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
     throw new PostflopStrategyUnavailableError();
   }
   const recommendation = validResolvedRecommendation ?? fallbackRecommendation;
+  // Doporučení může nést EV dopočítanou za běhu z vyřešeného stromu, ne jen
+  // prověřený export z packu; zobrazovací seznam obojí pustí, import ne.
+  const actionEvs = isActionEvSetUsable(
+    recommendation.actionEvs, actions, DISPLAYABLE_ACTION_EV_SOURCES,
+  )
+    ? cloneActionEvSet(recommendation.actionEvs)
+    : undefined;
+  const equivalentBestActions = actionEvs ? bestActionsForActionEv(actionEvs) : [];
+  const recommendedAction = actionEvs && !equivalentBestActions.includes(recommendation.action)
+    ? (highestEvAction(actionEvs) ?? recommendation.action)
+    : recommendation.action;
 
   return {
     seed: config.seed >>> 0,
@@ -429,16 +740,39 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
     actionNode,
     textures,
     actions,
-    recommendedAction: recommendation.action,
+    recommendedAction,
+    ...(actionEvs ? { actionEvs } : {}),
+    // Jen když je i `actionEvs`: tabulka bez hrdinovy vlastní hodnoty by
+    // znamenala, že se v matici čísla ukážou a u tlačítek ne.
+    ...(actionEvs && recommendation.comboEvs ? { comboEvs: recommendation.comboEvs } : {}),
     explanation: recommendation.explanation,
     strategySource: recommendation.source ?? fallbackStrategySource(),
   };
 }
 
-function randomPositionContext(rng: () => number): PostflopPositionContext {
-  return POSTFLOP_FULL_RING_POSITION_CONTEXTS[
-    Math.floor(rng() * POSTFLOP_FULL_RING_POSITION_CONTEXTS.length)
-  ];
+/**
+ * A seating the requested decision can actually happen in.
+ *
+ * Drawing seats and a decision independently produces hands that contradict
+ * themselves. `TURN_OOP_LEAD` is the player who called the last raise, out of
+ * position, acting first - so in a spot where the out-of-position player is the
+ * raiser, the same decision is a continuation bet and the hand as dealt cannot
+ * occur. Roughly three quarters of randomly seated lead spots were that
+ * contradiction, and the strategy model was right to refuse them.
+ *
+ * Only this one node needs filtering today, because it is the only one whose
+ * name commits to a role. The others are stated from the aggressor's side and
+ * every seating admits them.
+ */
+function randomPositionContext(
+  rng: () => number,
+  actionNode?: PostflopActionNode,
+): PostflopPositionContext {
+  const pool = actionNode !== undefined && OOP_LEAD_NODES.has(actionNode)
+    ? OOP_CALLER_POSITION_CONTEXTS
+    : POSTFLOP_FULL_RING_POSITION_CONTEXTS;
+  const candidates = pool.length > 0 ? pool : POSTFLOP_FULL_RING_POSITION_CONTEXTS;
+  return candidates[Math.floor(rng() * candidates.length)];
 }
 
 function defaultPotBB(potType: PostflopPotType): number {
@@ -474,7 +808,10 @@ function actionsForActionNode(actionNode: PostflopActionNode): readonly Postflop
       return ["FOLD", "CALL", "RAISE"];
     case "SINGLE_RAISED_POT_CBET":
     case "THREE_BET_POT_CBET":
+    case "FLOP_OOP_LEAD":
     case "TURN_BARREL":
+    case "TURN_OOP_LEAD":
+    case "RIVER_OOP_LEAD":
     case "RIVER_PRESSURE":
       return ["CHECK", "BET_SMALL", "BET_BIG"];
   }
@@ -536,7 +873,8 @@ export function classifyTurnCard(board: readonly Card[]): PostflopTurnCardClass 
   if (flopRanks.includes(turn.rank)) return "BOARD_PAIRING";
 
   const flushCompleting = flop.filter((card) => card.suit === turn.suit).length >= 2;
-  const straightCompleting = isStraightPossible(allValues) && !isStraightPossible(flopValues);
+  const straightCompleting = isRunoutStraightPossible(allValues)
+    && !isRunoutStraightPossible(flopValues);
   if (flushCompleting && straightCompleting) return "DYNAMIC";
   if (flushCompleting) return "FLUSH_COMPLETING";
   if (straightCompleting) return "STRAIGHT_COMPLETING";
@@ -566,7 +904,8 @@ export function classifyRiverRunout(board: readonly Card[]): PostflopRiverRunout
   const riverSuitCountAfter = suitsAfter.get(river.suit) ?? 0;
   const flushCompleting = riverSuitCountBefore === 2 && riverSuitCountAfter >= 3;
   const fourFlush = riverSuitCountAfter >= 4;
-  const straightCompleting = isStraightPossible(allValues) && !isStraightPossible(priorValues);
+  const straightCompleting = isRunoutStraightPossible(allValues)
+    && !isRunoutStraightPossible(priorValues);
   const fourStraight = maxStraightWindowCount(allValues) >= 4;
 
   if ((flushCompleting || fourFlush) && (straightCompleting || fourStraight)) return "DYNAMIC";
@@ -596,7 +935,31 @@ function recommendPostflopActionForNode(
     case "TURN_BARREL":
     case "RIVER_PRESSURE":
       return recommendPostflopAction(street, textures);
+    case "FLOP_OOP_LEAD":
+    case "TURN_OOP_LEAD":
+    case "RIVER_OOP_LEAD":
+      return recommendOopLeadAction();
   }
+}
+
+/**
+ * The fallback for the out-of-position caller's first turn decision.
+ *
+ * Not the barrel heuristic. Betting into the player who took the lead preflop
+ * and on the flop is the exception, and the same rule that says "keep betting
+ * with the range that bet" would tell a caller to lead most of their range -
+ * the opposite of the spot. Without a model, checking to the aggressor is the
+ * answer that is wrong least often, and it is offered as a fallback rather than
+ * as a claim about the right frequency.
+ */
+function recommendOopLeadAction(): PostflopRecommendation {
+  return {
+    action: "CHECK",
+    explanation:
+      "Bez modelu pro tuto situaci hráč mimo pozici kontroluje na agresora: "
+      + "vedení do soupeře, který držel iniciativu, je výjimka, ne pravidlo.",
+    source: fallbackStrategySource(),
+  };
 }
 
 function recommendFacingBetAction(
@@ -662,6 +1025,74 @@ function fullDeck(): Card[] {
     }
   }
   return deck;
+}
+
+function deckWithout(board: readonly Card[]): Card[] {
+  return fullDeck().filter((card) => !board.some((used) => sameCard(card, used)));
+}
+
+/**
+ * Replace the hero hand when the strategy pack does not contain it.
+ *
+ * Enumerating concrete combinations rather than picking a hand class first keeps
+ * the natural combinatorial weighting: a pair has six combinations and a suited
+ * hand four, and cards already on the board are unavailable. The dealt hand is
+ * returned untouched when it is already in range or when there is no pack range
+ * to draw from, so spots backed by the heuristic model are unaffected.
+ */
+function redealHeroIntoStrategyRange(
+  rng: () => number,
+  dealt: readonly [Card, Card],
+  recommendation: PostflopRecommendation | null,
+  board: readonly Card[],
+): [Card, Card] {
+  const source = recommendation?.source;
+  if (source?.kind !== "STRATEGY_PACK") return [dealt[0], dealt[1]];
+  const handClasses = new Set(source.rangeBuckets?.flatMap((bucket) => bucket.handClasses) ?? []);
+  if (handClasses.size === 0) return [dealt[0], dealt[1]];
+  if (handClasses.has(postflopHandClassFromCards(dealt))) return [dealt[0], dealt[1]];
+
+  // Draw in proportion to how often the solve's range actually holds each class.
+  // Three families open part of their range part of the time - the button opens
+  // 55 a quarter of the time - and dealing uniformly practised those hands up to
+  // four times too often. The advice shown for them was right; the frequency the
+  // player met them was not.
+  const family = familyIdFromRuleId(source.ruleId);
+  // A pack that states its own weights is believed over the table recovered from
+  // the solve inputs. Nothing populates weightPct today, and this is what stops
+  // that becoming a trap: whoever fills it in the pipeline gets the effect they
+  // expect rather than a second source of truth that is silently ignored.
+  const bucketWeights = new Map<HandLabel, number>();
+  for (const bucket of source.rangeBuckets ?? []) {
+    if (bucket.weightPct === undefined || !Number.isFinite(bucket.weightPct)) continue;
+    const weight = Math.max(0, Math.min(100, bucket.weightPct)) / 100;
+    for (const handClass of bucket.handClasses) bucketWeights.set(handClass, weight);
+  }
+  const deck = deckWithout(board);
+  const combos: Array<[Card, Card]> = [];
+  const weights: number[] = [];
+  let totalWeight = 0;
+  for (let i = 0; i < deck.length; i += 1) {
+    for (let j = i + 1; j < deck.length; j += 1) {
+      const pair: [Card, Card] = [deck[i], deck[j]];
+      const handClass = postflopHandClassFromCards(pair);
+      if (!handClasses.has(handClass)) continue;
+      const weight = bucketWeights.get(handClass) ?? heroRangeWeight(family, handClass);
+      if (weight <= 0) continue;
+      combos.push(pair);
+      weights.push(weight);
+      totalWeight += weight;
+    }
+  }
+  if (combos.length === 0) return [dealt[0], dealt[1]];
+
+  let target = rng() * totalWeight;
+  for (let index = 0; index < combos.length; index += 1) {
+    target -= weights[index];
+    if (target < 0) return combos[index];
+  }
+  // Only reachable through floating-point drift at the very top of the range.
+  return combos[combos.length - 1];
 }
 
 function dealCards(rng: () => number, deck: Card[], count: number): Card[] {
@@ -854,17 +1285,18 @@ function postflopHandClassFromCards(cards: readonly [Card, Card]): HandLabel {
 function isConnected(ranks: readonly Rank[]): boolean {
   const values = [...new Set(ranks.map(rankValue))].sort((a, b) => b - a);
   if (values.length < 3) return false;
-  for (let i = 0; i <= values.length - 3; i += 1) {
-    if (values[i] - values[i + 2] <= 4) return true;
-  }
-  if (values.includes(14) && values.includes(5) && values.includes(4)) return true;
-  return false;
+  return maxStraightWindowCount(values) >= 3;
 }
 
 function isStraightPossible(values: readonly number[]): boolean {
   if (values.length < 3) return false;
-  for (let i = 0; i <= values.length - 3; i += 1) {
-    if (values[i] - values[i + 2] <= 4) return true;
+  return maxStraightWindowCount(values) >= 3;
+}
+
+function isRunoutStraightPossible(values: readonly number[]): boolean {
+  if (values.length < 3) return false;
+  for (let index = 0; index <= values.length - 3; index += 1) {
+    if (values[index] - values[index + 2] <= 4) return true;
   }
   return values.includes(14) && values.includes(5) && values.includes(4);
 }

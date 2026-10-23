@@ -25,6 +25,7 @@ describe("MTT postflop pilot gate", () => {
       rangeBuckets: HANDS.length,
       runtimeSmokeSamples: 1,
     });
+    expect(report.provenanceFamilyIds).toEqual([]);
     expect(report.warnings).toContain("Pilot pack is intentionally narrower than full flop-production coverage.");
   });
 
@@ -40,6 +41,27 @@ describe("MTT postflop pilot gate", () => {
 
     expect(report.valid).toBe(false);
     expect(report.errors).toContain("pilot-btn-bb-srp: BTN vs BB SRP pilot only allows SRP_BTN_VS_BB.");
+  });
+
+  it("odmitne BTN vs BB pilot s provenance z nekompatibilni solver family", () => {
+    const pack = {
+      ...pilotPack(),
+      sourceEvidence: [{
+        ...pilotPack().sourceEvidence[0],
+        url: "file:///MTT9_150BB_CO_BTN_3BP_HIGHSPR/strategy-export.CHECK.review.json",
+        methodology: "Aggregated TexasSolver review for MTT9_150BB_CO_BTN_3BP_HIGHSPR.",
+      }, pilotPack().sourceEvidence[1]],
+      assumptions: [
+        "MTT9_150BB_CO_BTN_3BP_HIGHSPR is mapped to FULL_RING_9 SRP_BTN_VS_BB SINGLE_RAISED SINGLE_RAISED_POT_CBET training context.",
+      ],
+    } satisfies FlopProductionStrategyPack;
+    const report = buildMttPostflopPilotGateReport(pack, permissionFor(pack.id));
+
+    expect(report.valid).toBe(false);
+    expect(report.provenanceFamilyIds).toEqual(["MTT9_150BB_CO_BTN_3BP_HIGHSPR"]);
+    expect(report.errors).toContain(
+      "BTN vs BB SRP pilot provenance references incompatible solver family MTT9_150BB_CO_BTN_3BP_HIGHSPR.",
+    );
   });
 
   it("pusti UTG vs BB SRP scoped pilot s explicitnim scopem", () => {

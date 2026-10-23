@@ -10,7 +10,7 @@ describe("mtt:slots CLI", () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("MTT preflop legal import slots");
-    expect(result.stdout).toContain("slots: 16");
+    expect(result.stdout).toContain("slots: 12");
     expect(result.stdout).toContain("MTT postflop legal import slots");
     expect(result.stdout).toContain("slots: 48");
     expect(result.stdout).toContain("SIX_MAX|TURBO|DOLAR_EV|PREFLOP|OFF");
@@ -86,8 +86,8 @@ describe("mtt:slots CLI", () => {
         postflopSlots: unknown[];
       };
       expect(parsed.kind).toBe("all");
-      expect(parsed.counts).toEqual({ preflop: 16, postflop: 48, total: 64 });
-      expect(parsed.preflopSlots).toHaveLength(16);
+      expect(parsed.counts).toEqual({ preflop: 12, postflop: 48, total: 60 });
+      expect(parsed.preflopSlots).toHaveLength(12);
       expect(parsed.postflopSlots).toHaveLength(48);
     } finally {
       rmSync(directory, { recursive: true, force: true });

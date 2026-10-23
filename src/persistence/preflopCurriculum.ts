@@ -24,6 +24,14 @@ export interface PreflopCurriculumOptions {
   seed?: number;
   repetitionLimit?: number;
   recentWindowSize?: number;
+  language?: "EN" | "CZ";
+  /**
+   * The training profile the plan is for. A leak is only worth showing if it was
+   * measured where the player will train it, and the leak dimensions - context,
+   * position, stack - carry no profile of their own, so the scope has to come
+   * from outside. Omitted, the plan follows the profile of the newest answer.
+   */
+  profileId?: string;
 }
 
 export interface PreflopCurriculumFocus {
@@ -59,7 +67,15 @@ export interface PreflopStudyRecommendation extends PreflopCurriculumFocus {
   reason: string;
 }
 
+/** Which profile the plan was measured in, and what that left out. */
+export interface PreflopCurriculumScope {
+  profileId: string | null;
+  records: number;
+  setAside: number;
+}
+
 export interface PreflopCurriculumPlan {
+  scope: PreflopCurriculumScope;
   available: boolean;
   reason: string;
   focus: PreflopCurriculumFocus | null;
@@ -75,12 +91,37 @@ export function buildPreflopCurriculumPlan(
   records: readonly ResultRecordV2[],
   options: PreflopCurriculumOptions = {},
 ): PreflopCurriculumPlan {
-  const preflopRecords = records.filter((record) => record.street === "PREFLOP");
+  const allPreflop = records.filter((record) => record.street === "PREFLOP");
+  // Pooling profiles produced a percentage that was nobody's percentage: a
+  // player strong at the ante table and weak away from it was shown the average
+  // of the two, attached to a button that drills it wherever they happen to be
+  // sitting. So the analysis runs inside exactly one profile.
+  const scopeProfileId = options.profileId ?? newestProfileId(allPreflop);
+  const preflopRecords = scopeProfileId === null
+    ? allPreflop
+    : allPreflop.filter((record) => record.profileId === scopeProfileId);
+  const scope: PreflopCurriculumScope = {
+    profileId: scopeProfileId,
+    records: preflopRecords.length,
+    setAside: allPreflop.length - preflopRecords.length,
+  };
+  const language = options.language ?? "CZ";
   const sessionGoal = buildSessionGoal(options);
   if (preflopRecords.length === 0) {
     return {
+      scope,
       available: false,
-      reason: "Zatím nejsou žádné preflop odpovědi.",
+      reason: scope.setAside > 0
+        ? localize(
+          language,
+          `No preflop answers in this profile yet (${scope.setAside} in others).`,
+          `V tomto profilu zatím nejsou preflop odpovědi (${scope.setAside} v jiných).`,
+        )
+        : localize(
+          language,
+          "No preflop answers yet.",
+          "Zatím nejsou žádné preflop odpovědi.",
+        ),
       focus: null,
       alternates: [],
       recommendations: [],
@@ -100,8 +141,9 @@ export function buildPreflopCurriculumPlan(
   });
   if (preflopRecords.length < kpi.minLeakSample) {
     return {
+      scope,
       available: false,
-      reason: volumeGoalReason(preflopRecords.length, kpi.minLeakSample),
+      reason: volumeGoalReason(preflopRecords.length, kpi.minLeakSample, language),
       focus: null,
       alternates: [],
       recommendations: [],
@@ -112,15 +154,25 @@ export function buildPreflopCurriculumPlan(
 
   const focuses = kpi.leakCandidates
     .filter(isCurriculumLeakCandidate)
-    .map((candidate) => focusFromLeakCandidate(candidate, preflopRecords, options.scoringMode ?? "LENIENT"));
+    .map((candidate) => focusFromLeakCandidate(
+      candidate,
+      preflopRecords,
+      options.scoringMode ?? "LENIENT",
+    ));
   const recommendations = buildPreflopStudyRecommendations(focuses, preflopRecords, {
     recentWindowSize: options.recentWindowSize ?? 20,
+    language,
   });
 
   if (focuses.length === 0) {
     return {
+      scope,
       available: false,
-      reason: `Žádná slabina s ${kpi.minLeakSample}+ vzorky pod ${kpi.leakRateThreshold} %.`,
+      reason: localize(
+        language,
+        `No leak with ${kpi.minLeakSample}+ samples is below ${kpi.leakRateThreshold}%.`,
+        `Žádná slabina s ${kpi.minLeakSample}+ vzorky pod ${kpi.leakRateThreshold} %.`,
+      ),
       focus: null,
       alternates: [],
       recommendations: [],
@@ -131,8 +183,13 @@ export function buildPreflopCurriculumPlan(
 
   const focus = recommendations[0] ?? focuses[0];
   return {
+    scope,
     available: true,
-    reason: "Zaměřte se na nejdůležitější preflop slabinu s dostatečným vzorkem.",
+    reason: localize(
+      language,
+      "Focus on the highest-priority preflop leak with a sufficient sample.",
+      "Zaměřte se na nejdůležitější preflop slabinu s dostatečným vzorkem.",
+    ),
     focus,
     alternates: recommendations.slice(1, 4),
     recommendations,
@@ -196,10 +253,24 @@ export function buildPreflopSpacedRepetitionQueue(
   return queue.slice(0, options.limit ?? 8);
 }
 
+/**
+ * The profile of the most recent answer. Used when no caller said which profile
+ * the plan is for: the newest answer is the table the player last sat at, and
+ * following it keeps the plan inside one profile rather than falling back to the
+ * pooled behaviour this replaced.
+ */
+function newestProfileId(records: readonly ResultRecordV2[]): string | null {
+  let newest: ResultRecordV2 | null = null;
+  for (const record of records) {
+    if (newest === null || record.ts >= newest.ts) newest = record;
+  }
+  return newest === null ? null : newest.profileId;
+}
+
 function buildPreflopStudyRecommendations(
   focuses: readonly PreflopCurriculumFocus[],
   records: readonly ResultRecordV2[],
-  options: { recentWindowSize: number },
+  options: { recentWindowSize: number; language: "EN" | "CZ" },
 ): PreflopStudyRecommendation[] {
   const recentWindowSize = normalizePositiveInt(options.recentWindowSize, 20);
   const recentRecords = [...records]
@@ -216,7 +287,12 @@ function buildPreflopStudyRecommendations(
         priority: recommendationPriority(focus, recentMatches.length, recentMistakes),
         recentTotal: recentMatches.length,
         recentMistakes,
-        reason: recommendationReason(focus, recentMatches.length, recentMistakes),
+        reason: recommendationReason(
+          focus,
+          recentMatches.length,
+          recentMistakes,
+          options.language,
+        ),
         order,
       };
     })
@@ -245,22 +321,35 @@ function recommendationReason(
   focus: PreflopCurriculumFocus,
   recentTotal: number,
   recentMistakes: number,
+  language: "EN" | "CZ",
 ): string {
   if (recentTotal > 0 && recentMistakes > 0) {
-    return `${recentMistakes}/${recentTotal} chyb v posledním vzorku, celkem ${formatRateForReason(focus.rate)}`;
+    return localize(
+      language,
+      `${recentMistakes}/${recentTotal} mistakes in the recent sample, ${formatRateForReason(focus.rate, language)} overall`,
+      `${recentMistakes}/${recentTotal} chyb v posledním vzorku, celkem ${formatRateForReason(focus.rate, language)}`,
+    );
   }
   if (recentTotal > 0) {
-    return `Bez nedávné chyby, celkem ${formatRateForReason(focus.rate)} za ${focus.total} spotů`;
+    return localize(
+      language,
+      `No recent mistake, ${formatRateForReason(focus.rate, language)} over ${focus.total} spots overall`,
+      `Bez nedávné chyby, celkem ${formatRateForReason(focus.rate, language)} za ${focus.total} spotů`,
+    );
   }
-  return `Celkem ${formatRateForReason(focus.rate)} za ${focus.total} spotů`;
+  return localize(
+    language,
+    `${formatRateForReason(focus.rate, language)} over ${focus.total} spots overall`,
+    `Celkem ${formatRateForReason(focus.rate, language)} za ${focus.total} spotů`,
+  );
 }
 
 function focusMatchesRecord(focus: PreflopCurriculumFocus, record: ResultRecordV2): boolean {
   return String(record[focus.dim]) === focus.key;
 }
 
-function formatRateForReason(rate: number | null): string {
-  if (rate === null) return "bez úspěšnosti";
+function formatRateForReason(rate: number | null, language: "EN" | "CZ"): string {
+  if (rate === null) return localize(language, "no accuracy available", "bez úspěšnosti");
   return `${rate.toFixed(1)}%`;
 }
 
@@ -273,10 +362,24 @@ function buildSessionGoal(options: PreflopCurriculumOptions): PreflopSessionGoal
   };
 }
 
-function volumeGoalReason(currentSample: number, minSample: number): string {
+function volumeGoalReason(
+  currentSample: number,
+  minSample: number,
+  language: "EN" | "CZ",
+): string {
   const remaining = Math.max(0, minSample - currentSample);
-  if (remaining === 0) return `Doplňte alespoň ${minSample} preflop spotů pro doporučení slabin.`;
-  return `Doplňte ještě ${remaining} preflop spotů pro doporučení slabin.`;
+  if (remaining === 0) {
+    return localize(
+      language,
+      `Complete at least ${minSample} preflop spots to receive leak recommendations.`,
+      `Doplňte alespoň ${minSample} preflop spotů pro doporučení slabin.`,
+    );
+  }
+  return localize(
+    language,
+    `Complete ${remaining} more preflop spots to receive leak recommendations.`,
+    `Doplňte ještě ${remaining} preflop spotů pro doporučení slabin.`,
+  );
 }
 
 function focusFromLeakCandidate(
@@ -316,9 +419,9 @@ function filtersForFocus(
 function focusLabel(dim: PreflopCurriculumFocus["dim"], key: string): string {
   switch (dim) {
     case "context":
-      return `Situace: ${contextLabel(key)}`;
+      return `Situation: ${contextLabel(key)}`;
     case "position":
-      return `Pozice: ${key}`;
+      return `Position: ${key}`;
     case "bucket":
       return `Stack: ${key} BB`;
   }
@@ -329,21 +432,21 @@ function contextLabel(key: string): string {
     case "RFI":
       return "RFI / Open";
     case "VS_LIMP":
-      return "Proti limpu";
+      return "Vs limp";
     case "VS_OPEN":
-      return "Proti openu";
+      return "Vs open";
     case "VS_3BET":
-      return "Proti 3-betu";
+      return "Vs 3-bet";
     case "VS_4BET":
-      return "Proti 4-betu";
+      return "Vs 4-bet";
     case "SQUEEZE":
       return "Squeeze";
     case "BVB":
-      return "Blind proti blindu";
+      return "Blind vs blind";
     case "PUSH_FOLD":
       return "Push / Fold";
     case "VS_ALLIN":
-      return "Proti all-inu";
+      return "Vs all-in";
     default:
       return key;
   }
@@ -373,4 +476,8 @@ function normalizeRate(value: number | undefined, fallback: number): number {
 
 function roundOne(value: number): number {
   return Math.round(value * 10) / 10;
+}
+
+function localize(language: "EN" | "CZ", english: string, czech: string): string {
+  return language === "EN" ? english : czech;
 }

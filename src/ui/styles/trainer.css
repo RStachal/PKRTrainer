@@ -1,0 +1,348 @@
+/*
+ * Nová obrazovka tréninku (src/ui/trainer, Agents/ui-redesign-plan.md, fáze 1).
+ * Jen tokeny z tokens.css - vlastní barvy sem nepatří, hlídá to
+ * tests/unit/designTokens.test.ts.
+ *
+ * Desktop: stůl vlevo, akce a vyhodnocení vpravo, aby verdikt byl vidět bez
+ * posouvání. Mobil: akce a vyhodnocení přilepené dole, palcem na dosah.
+ */
+
+.dx-trainer {
+  display: grid;
+  gap: var(--dx-space-4);
+  padding: var(--dx-space-4);
+  border-radius: var(--dx-radius-lg);
+}
+
+.dx-trainer__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dx-space-3) var(--dx-space-4);
+}
+
+.dx-trainer__spot {
+  display: flex;
+  flex: 1 1 260px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--dx-space-2) var(--dx-space-3);
+  min-width: 0;
+}
+
+.dx-trainer__title {
+  margin: 0;
+  font-size: var(--dx-text-xl);
+  font-weight: var(--dx-weight-bold);
+  line-height: 1.25;
+}
+
+.dx-trainer__meta {
+  margin: 0;
+  color: var(--dx-text-muted);
+  font-size: var(--dx-text-sm);
+}
+
+.dx-trainer__score {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dx-space-2);
+  color: var(--dx-text-muted);
+  font-size: var(--dx-text-sm);
+}
+
+.dx-trainer__streak {
+  padding: 2px 10px;
+  border: 1px solid var(--dx-border-strong);
+  border-radius: var(--dx-radius-pill);
+  color: var(--dx-text);
+  font-weight: var(--dx-weight-bold);
+  font-variant-numeric: var(--dx-numeric);
+}
+
+.dx-trainer__streak[data-hot="true"] {
+  border-color: transparent;
+  background: var(--dx-accent);
+  color: var(--dx-on-accent);
+}
+
+.dx-trainer__table {
+  min-width: 0;
+}
+
+.dx-trainer__dock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dx-space-3);
+  min-width: 0;
+}
+
+.dx-trainer__prompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dx-space-2);
+  margin: 0;
+  font-weight: var(--dx-weight-medium);
+}
+
+/* Otazník patří hned za poslední kartu, ne o rozestup dál. */
+.dx-trainer__qmark {
+  margin-left: calc(var(--dx-space-2) * -1 + 2px);
+}
+
+.dx-trainer__actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--dx-space-2);
+}
+
+/* Zkratka jde pod název akce: v rohu se s delším názvem překrývala. */
+.dx-trainer__actions .dx-kbd {
+  height: 18px;
+  min-width: 18px;
+}
+
+/* Doporučená akce po odpovědi: obrys v akcentu, ať je vidět i u vypnutých tlačítek. */
+.dx-trainer__actions .dx-btn[data-recommended="true"] {
+  opacity: 1;
+  box-shadow: 0 0 0 2px var(--dx-accent);
+}
+
+.dx-trainer__actions .dx-btn[aria-pressed="true"] {
+  opacity: 1;
+}
+
+.dx-trainer__feedback {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dx-space-3);
+  padding: var(--dx-space-5);
+  border: 1px solid var(--dx-border-strong);
+  border-radius: var(--dx-radius-lg);
+  background: var(--dx-surface);
+}
+
+.dx-trainer__verdict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dx-space-3);
+}
+
+.dx-trainer__loss {
+  font-size: var(--dx-text-xl);
+  font-weight: var(--dx-weight-bold);
+  font-variant-numeric: var(--dx-numeric);
+}
+
+.dx-trainer__choice,
+.dx-trainer__note,
+.dx-trainer__plan {
+  margin: 0;
+  color: var(--dx-text-secondary);
+  font-size: var(--dx-text-sm);
+}
+
+.dx-trainer__choice strong {
+  color: var(--dx-text);
+}
+
+/* Postflop: co soupeř udělal před otázkou, na vlastním řádku nad ní. */
+.dx-trainer__situation {
+  flex-basis: 100%;
+  color: var(--dx-text-secondary);
+  font-size: var(--dx-text-sm);
+  font-weight: var(--dx-weight-regular);
+}
+
+.dx-trainer__price {
+  margin: 0;
+  color: var(--dx-text-secondary);
+  font-size: var(--dx-text-sm);
+  font-variant-numeric: var(--dx-numeric);
+}
+
+.dx-trainer__strategy {
+  display: grid;
+  gap: var(--dx-space-2);
+}
+
+.dx-trainer__strategy-title {
+  margin: 0;
+  color: var(--dx-text-muted);
+  font-size: var(--dx-text-xs);
+  font-weight: var(--dx-weight-medium);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.dx-trainer__hands-title {
+  margin: 0 0 var(--dx-space-1);
+  color: var(--dx-text);
+  font-size: var(--dx-text-sm);
+  font-weight: var(--dx-weight-bold);
+}
+
+.dx-trainer__notes {
+  margin: 0;
+  padding-left: var(--dx-space-4);
+  color: var(--dx-text-secondary);
+  font-size: var(--dx-text-sm);
+}
+
+.dx-trainer__ev {
+  display: grid;
+  gap: var(--dx-space-1);
+}
+
+.dx-trainer__ev-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dx-space-3);
+  padding: 6px var(--dx-space-2);
+  border-radius: var(--dx-radius-sm);
+  font-size: var(--dx-text-sm);
+  font-variant-numeric: var(--dx-numeric);
+}
+
+.dx-trainer__ev-row[data-chosen="true"] {
+  background: var(--dx-surface-raised);
+}
+
+.dx-trainer__ev-row[data-best="true"] .dx-trainer__ev-value {
+  color: var(--dx-accent);
+  font-weight: var(--dx-weight-bold);
+}
+
+.dx-trainer__ev-name {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.dx-trainer__ev-dot {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  margin-right: var(--dx-space-2);
+  border-radius: 3px;
+  background: var(--action-accent, var(--dx-text-subtle));
+}
+
+.dx-trainer__ev-tag {
+  color: var(--dx-text-muted);
+  font-weight: var(--dx-weight-regular);
+}
+
+.dx-trainer__more summary {
+  display: flex;
+  align-items: center;
+  gap: var(--dx-space-2);
+  min-height: var(--dx-touch);
+  color: var(--dx-text-muted);
+  cursor: pointer;
+  list-style: none;
+}
+
+.dx-trainer__more summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Vlastní šipka: display:flex na summary vlastní značku prohlížeče skryje. */
+.dx-trainer__more summary::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform var(--dx-duration-fast) var(--dx-ease);
+}
+
+.dx-trainer__more[open] summary::before {
+  transform: rotate(45deg);
+}
+
+.dx-trainer__more summary:focus-visible {
+  outline: none;
+  box-shadow: var(--dx-focus-ring);
+  border-radius: var(--dx-radius-sm);
+}
+
+.dx-trainer__more p {
+  margin: 0 0 var(--dx-space-3);
+  color: var(--dx-text-secondary);
+  font-size: var(--dx-text-sm);
+}
+
+.dx-trainer__warning {
+  margin: 0;
+  color: var(--dx-outcome-acceptable);
+  font-size: var(--dx-text-sm);
+}
+
+.dx-trainer__next-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--dx-space-2);
+}
+
+.dx-trainer__next {
+  flex: 1 1 auto;
+}
+
+@media (min-width: 1024px) {
+  .dx-trainer {
+    grid-template-columns: minmax(0, 1fr) 380px;
+    grid-template-areas:
+      "head head"
+      "table dock";
+    align-items: start;
+  }
+
+  .dx-trainer__head {
+    grid-area: head;
+  }
+
+  .dx-trainer__table {
+    grid-area: table;
+  }
+
+  .dx-trainer__dock {
+    grid-area: dock;
+    position: sticky;
+    top: var(--dx-space-4);
+  }
+}
+
+@media (max-width: 719px) {
+  .dx-trainer__dock {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    max-height: 75vh;
+    margin: 0 calc(-1 * var(--dx-space-4)) calc(-1 * var(--dx-space-4));
+    padding: var(--dx-space-3) var(--dx-space-4) var(--dx-space-4);
+    overflow-y: auto;
+    border-top: 1px solid var(--dx-border);
+    background: var(--dx-surface-sunken);
+  }
+
+  .dx-trainer__actions {
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  }
+
+  .dx-trainer__feedback {
+    padding: var(--dx-space-4);
+  }
+
+  /* Klávesové zkratky na dotykovém displeji nic neznamenají. */
+  .dx-trainer .dx-kbd {
+    display: none;
+  }
+}

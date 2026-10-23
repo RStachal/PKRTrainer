@@ -1,7 +1,24 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.setConfig({ testTimeout: 30000 });
+import { appStylesheet } from "../stylesheets";
+
+/**
+ * Zvednuto z 30 s na 90 s dne 25. 8. 2026, a je to potřetí ze stejného důvodu:
+ * **vyrostl obsah, ne pomalost kódu.**
+ *
+ * Naměřeno: soubor projde celý za 37 s, ale test, který se k dashboardu dostane
+ * první, platí jeho studený překlad a trvá **31,6 s** - proti stropu 30 s. Ten
+ * samý test po předehřátí trvá **3,4 s**. Nebyla to tedy pomalá cesta, ale
+ * překlad, který s knihovnou roste.
+ *
+ * Ověřeno, že to není moje regrese: se změnami i bez nich padal stejně
+ * (1 failed, 2 passed, 36 s v obou případech).
+ *
+ * Strop není kontrola správnosti, jen pojistka proti zaseknutí. Rozbitý test
+ * spadne na tvrzení, ne na čase.
+ */
+vi.setConfig({ testTimeout: 90000 });
 
 class MemoryStorage implements Storage {
   protected readonly data = new Map<string, string>();
@@ -80,7 +97,7 @@ describe("mobile / Android WebView smoke", () => {
 
     const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
     expect(warning?.hidden).toBe(false);
-    expect(warning?.textContent).toContain("Cash rake náhled");
+    expect(warning?.textContent).toContain("Cash rake preview");
     expect(warning?.textContent).not.toContain("https://");
     expect(warning?.textContent?.toLowerCase()).not.toContain("zdroj");
     expect(root.querySelector(".poker-table")).toBeNull();
@@ -123,9 +140,7 @@ describe("mobile / Android WebView smoke", () => {
     expect(exported).toContain("postflopRecords");
     expect(exported).not.toContain("https://");
 
-    const cssText = Array.from(document.querySelectorAll("style"))
-      .map((style) => style.textContent ?? "")
-      .join("\n");
+    const cssText = appStylesheet();
     expect(cssText.match(/prefers-reduced-motion/g)?.length ?? 0).toBeGreaterThanOrEqual(3);
     expect(cssText).toContain("transform:none");
   });
@@ -205,9 +220,19 @@ describe("mobile / Android WebView smoke", () => {
 });
 
 async function waitForDashboard(root: HTMLElement): Promise<void> {
+  // Dashboard se načítá dynamickým importem, takže se při prvním otevření musí
+  // celý přeložit. V plné sadě ho stihne předehřát jiný soubor a čekání je
+  // krátké; při samostatném spuštění jde o studený překlad a výchozí limit
+  // `vi.waitFor` na něj nestačí.
+  //
+  // Test tím procházel jen díky sousedům. To je horší než test, který padá:
+  // tvrdí, že mobilní workflow funguje, a přitom se nikdy sám neověřil.
+  //
+  // Z 15 s na 45 s dne 25. 8. 2026: studený překlad dashboardu je dnes kolem
+  // třiceti vteřin, takže patnáct byla mez pod naměřenou skutečností.
   await vi.waitFor(() => {
     expect(root.querySelector(".stats-export")).not.toBeNull();
-  });
+  }, { timeout: 45000 });
 }
 
 async function importFreshMain(): Promise<typeof import("../../src/main")> {

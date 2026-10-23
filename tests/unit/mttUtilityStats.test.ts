@@ -69,8 +69,8 @@ describe("mttUtilityStats", () => {
     expect(report.valid).toBe(true);
     expect(report.total).toBe(2);
     expect(report.sourceQualityCounts).toEqual({
-      PRODUCTION: 0,
-      PREVIEW: 2,
+      PRODUCTION: 2,
+      PREVIEW: 0,
       FALLBACK: 0,
       LEGACY_UNKNOWN: 0,
     });
@@ -91,7 +91,7 @@ describe("mttUtilityStats", () => {
       qid: "VS_OPEN|BB|15|A5s|ON|1",
       misses: 1,
       evLossBbTotal: 0.42,
-      sourceQuality: "PREVIEW",
+      sourceQuality: "PRODUCTION",
     });
     expect(report.repetitionQueue[0].reason).toContain("BB EV loss");
   });

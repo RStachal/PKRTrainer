@@ -133,6 +133,7 @@ describe("statsRecordV2", () => {
       tableState: {
         heroPos: "BTN",
         pushFold: false,
+        effectiveStackBB: 100,
         limpsBefore: 0,
         callsBefore: 0,
         facing: "NONE",
@@ -193,6 +194,7 @@ describe("statsRecordV2", () => {
       tableState: {
         heroPos: "BTN",
         pushFold: false,
+        effectiveStackBB: 100,
         limpsBefore: 0,
         callsBefore: 0,
         facing: "NONE",

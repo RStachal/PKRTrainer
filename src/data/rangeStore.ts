@@ -32,12 +32,15 @@ import type {
   Position,
   StackBucket,
 } from "../core/types";
+import type { ActionEvSet } from "../core/actionEv";
 import {
   getRangeRecord,
   isRangeDataLoaded,
+  refinementFallbackChain,
+  type RangeRefinement,
 } from "./ranges";
 import type { RangeRecord } from "./ranges/schema";
-import type { RangePack } from "./ranges/rangePack";
+import type { RangePack, RangeStackSetup } from "./ranges/rangePack";
 import { validateRangePack } from "./ranges/rangePack";
 
 // ---------------------------------------------------------------------------
@@ -54,6 +57,33 @@ export interface RangeKey {
   bucket: StackBucket;
   context: ActionContext;
   ante: AnteMode;
+  /**
+   * Sedačka, která jednala před hrdinou - osa otvírače (bod 234, rozhodnuto
+   * 14. 9. 2026).
+   *
+   * Range proti otevření z UTG a z BTN se liší, a bez téhle osy je z koupené
+   * knihovny dosažitelná ~desetina. Klíč bez ní vrací dnešní záznam beze změny;
+   * s ní se zkusí přesnější záznam a když není, **vrátí se obecný** - týž pád
+   * jako v `getRangeRecord`. Dnešní obsah, uložená historie ani Question_ID
+   * se tím nehnou.
+   */
+  vsSeat?: Position;
+  /**
+   * Kdo otevření dorovnal, zkratkami zdroje a v pořadí akce - osa
+   * dorovnávajícího (rozhodnutí 4a, 1. 10. 2026).
+   *
+   * Chová se jako ostatní osy: zkusí se přesnější záznam, a když není, spadne
+   * se na obecnější. Klíč bez téhle osy se chová jako dřív, takže dnešní obsah
+   * ani Question_ID se nehnou. Prázdný seznam je totéž jako osa nepředaná -
+   * „otevření nikdo nedorovnal" je přesně to, co znamená `vsSeat` sám.
+   */
+  flatCallers?: readonly string[];
+  /**
+   * Scénář - rozložení stacků u stolu (ICM). Zkusí se záznam pro sedačku
+   * i scénář, pak pro sedačku, pak obecný; klíč bez scénáře se chová jako
+   * dřív. Katalog scénářů nese pack (`RangeStore.stackSetups`).
+   */
+  stackSetupId?: string;
 }
 
 /**
@@ -69,6 +99,25 @@ export interface RangeEntry {
   actions: Record<HandLabel, ActionKey[]>;
   /** Přesné doporučené akce vč. sizingu (mapování ruka → akce) — STRICT množina. */
   strict: Record<HandLabel, ActionKey[]>;
+  actionEvs?: Partial<Record<HandLabel, ActionEvSet<ActionKey>>>;
+  /**
+   * Sedačka, proti které záznam platí; chybí u obecného záznamu.
+   *
+   * Klíč se sedačkou může dostat obecný záznam (pád v `lookup`), a volající
+   * musí poznat, který z těch dvou dostal: jen zpřesněná odpověď mění
+   * Question_ID (viz `questionId`).
+   */
+  vsSeat?: Position;
+  /** Scénář, pro který záznam platí; chybí u záznamů bez scénáře. Viz `vsSeat`. */
+  stackSetupId?: string;
+  /**
+   * Dorovnávající, pro které záznam platí; chybí u záznamů bez té osy.
+   *
+   * Volající to musí umět poznat ze stejného důvodu jako u `vsSeat`: klíč
+   * s dorovnávajícími může dostat obecnější záznam (pád v `lookup`), a jen
+   * zpřesněná odpověď mění Question_ID.
+   */
+  flatCallers?: readonly string[];
 }
 
 /** Lookup API nad referenčními ranges (čtení; žádné I/O). */
@@ -84,6 +133,27 @@ export interface RangeStore {
   lookup(key: RangeKey): RangeEntry | undefined;
   /** True, pokud jsou data konzistentně načtena jako celek (Req 4.6). */
   isLoaded(): boolean;
+  /**
+   * Katalog scénářů packu (id → stacky u stolu), prázdný u úložišť bez
+   * scénářů. Drill z něj losuje scénář buňky a stůl z něj kreslí stacky.
+   */
+  stackSetups?: Readonly<Record<string, RangeStackSetup>>;
+  /**
+   * Kombinace dorovnávajících, pro které má pack v té buňce záznam.
+   *
+   * Drill z toho losuje, kdo otevření dorovnal - a **jen z toho**, přesně jako
+   * u otvírače a scénáře: losovat libovolnou sedačku před hrdinou by znamenalo,
+   * že otázka řekne „CO dorovnal" a odpověď se vezme z range proti MP, takže by
+   * hráč odpovídal na jinou otázku než range (tatáž vada jako bod 234).
+   *
+   * Proč katalog a ne zkoušení jednotlivých sedaček: **dvanáct ze čtyřiceti
+   * čtyř** záznamů korpusu má dorovnávající **dva** (`@BU+SB`, změřeno
+   * 7. 10. 2026), takže by je zkoušení po jedné minulo, a procházet všechny
+   * podmnožiny sedaček znamená 128 dotazů na jeden spot.
+   *
+   * Chybí u úložišť, která tu osu neumí; drill se pak chová jako dřív.
+   */
+  flatCallerSets?(key: Omit<RangeKey, "flatCallers">): readonly (readonly string[])[];
 }
 
 // ---------------------------------------------------------------------------
@@ -101,6 +171,10 @@ function toRangeEntry(record: RangeRecord): RangeEntry {
   return {
     actions: record.lenient,
     strict: record.strict,
+    ...(record.actionEvs ? { actionEvs: record.actionEvs } : {}),
+    ...(record.vsSeat ? { vsSeat: record.vsSeat } : {}),
+    ...(record.stackSetupId ? { stackSetupId: record.stackSetupId } : {}),
+    ...(record.flatCallers?.length ? { flatCallers: record.flatCallers } : {}),
   };
 }
 
@@ -121,6 +195,7 @@ export interface RangeStoreDeps {
     position: Position,
     bucket: StackBucket,
     context: ActionContext,
+    refinement?: RangeRefinement,
   ) => RangeRecord | undefined;
   /** Signál celkové načtenosti dat (Req 4.6). */
   isLoaded: () => boolean;
@@ -145,6 +220,13 @@ export function createRangeStore(deps: RangeStoreDeps = DEFAULT_DEPS): RangeStor
         key.position,
         key.bucket,
         key.context,
+        key.vsSeat === undefined && key.stackSetupId === undefined && !key.flatCallers?.length
+          ? undefined
+          : {
+            ...(key.vsSeat === undefined ? {} : { vsSeat: key.vsSeat }),
+            ...(key.stackSetupId === undefined ? {} : { stackSetupId: key.stackSetupId }),
+            ...(key.flatCallers?.length ? { flatCallers: key.flatCallers } : {}),
+          },
       );
       return record === undefined ? undefined : toRangeEntry(record);
     },
@@ -164,7 +246,10 @@ export function createRangeStoreFromRangePack(pack: RangePack): RangeStore {
   const errors = validateRangePack(pack);
 
   for (const record of pack.records) {
-    const key = packRecordKey(record.position, record.bucket, record.context);
+    const key = packRecordKey(
+      record.position, record.bucket, record.context,
+      record.vsSeat, record.stackSetupId, record.flatCallers,
+    );
     if (records.has(key)) {
       errors.push(`Duplicate RangePack runtime key: ${key}.`);
       continue;
@@ -175,6 +260,14 @@ export function createRangeStoreFromRangePack(pack: RangePack): RangeStore {
       context: record.context,
       lenient: record.lenient,
       strict: record.strict,
+      ...(record.vsSeat ? { vsSeat: record.vsSeat } : {}),
+      ...(record.stackSetupId ? { stackSetupId: record.stackSetupId } : {}),
+      // Osa musí projít **i do uloženého záznamu**, ne jen do klíče. Bez toho
+      // `lookup` záznam našel, ale `entry.flatCallers` zůstalo `undefined`, takže
+      // volající nepoznal, že dostal zpřesněnou odpověď - a drill tu osu zahodil
+      // jako nedostupnou. Tatáž past jako u `vsSeat` o řádek výš.
+      ...(record.flatCallers?.length ? { flatCallers: record.flatCallers } : {}),
+      ...(record.actionEvs ? { actionEvs: record.actionEvs } : {}),
     });
   }
 
@@ -182,15 +275,50 @@ export function createRangeStoreFromRangePack(pack: RangePack): RangeStore {
   return {
     lookup(key: RangeKey): RangeEntry | undefined {
       if (!loaded || key.ante !== pack.dimensions.ante) return undefined;
-      const record = records.get(packRecordKey(
-        key.position,
-        key.bucket,
-        key.context,
-      ));
-      return record === undefined ? undefined : toRangeEntry(record);
+      // Od nejpřesnějšího k obecnému, stejně jako `getRangeRecord`: scénář a
+      // sedačka, pak scénář sám, pak sedačka, pak obecný záznam. Scénář stojí
+      // výš než sedačka: pod jiným rozložením stacků platí jiná range i proti
+      // témuž otvírači, a pack se scénáři obecné záznamy nemá.
+      const { position, bucket, context } = key;
+      /*
+       * Řetěz pádu je **týž jako v `getRangeRecord`** a schválně odtud, ne vlastní.
+       *
+       * Do 7. 10. 2026 si ho tahle cesta skládala sama a už se rozešly: zkoušela
+       * `{scénář}` bez sedačky (krok, na který v žádném packu není záznam) a
+       * naopak **neznala osu dorovnávajícího**, takže by u záznamu s `@…` našla
+       * obecný a měřicí skripty by hlásily jinou odpověď, než jakou pack doručí.
+       */
+      for (const attempt of refinementFallbackChain({
+        ...(key.vsSeat === undefined ? {} : { vsSeat: key.vsSeat }),
+        ...(key.stackSetupId === undefined ? {} : { stackSetupId: key.stackSetupId }),
+        ...(key.flatCallers?.length ? { flatCallers: key.flatCallers } : {}),
+      })) {
+        const record = records.get(packRecordKey(
+          position, bucket, context, attempt.vsSeat, attempt.stackSetupId, attempt.flatCallers,
+        ));
+        if (record !== undefined) return toRangeEntry(record);
+      }
+      return undefined;
     },
     isLoaded(): boolean {
       return loaded;
+    },
+    stackSetups: pack.stackSetups ?? {},
+    flatCallerSets(key): readonly (readonly string[])[] {
+      // Odvozuje se z **dat packu**, ne z vlastního katalogu v souboru: seznam
+      // kombinací je informace, kterou záznamy už nesou, a druhý seznam vedle
+      // nich by se s nimi rozešel.
+      const seen = new Map<string, readonly string[]>();
+      for (const record of pack.records) {
+        if (!record.flatCallers?.length) continue;
+        if (record.position !== key.position || record.bucket !== key.bucket) continue;
+        if (record.context !== key.context) continue;
+        if (key.vsSeat !== undefined && record.vsSeat !== key.vsSeat) continue;
+        seen.set(record.flatCallers.join("+"), record.flatCallers);
+      }
+      return [...seen.values()].sort((left, right) => (
+        left.join("+").localeCompare(right.join("+"))
+      ));
     },
   };
 }
@@ -199,8 +327,17 @@ function packRecordKey(
   position: Position,
   bucket: StackBucket,
   context: ActionContext,
+  vsSeat?: Position,
+  stackSetupId?: string,
+  flatCallers?: readonly string[],
 ): string {
-  return `${position}|${bucket}|${context}`;
+  // Zpřesnění se připojuje jen když je - klíč obecného záznamu zůstává týž.
+  // Pořadí částí musí sedět na `rangeIndexKey`, jinak by se týž záznam v každé
+  // cestě hledal pod jiným jménem.
+  return `${position}|${bucket}|${context}`
+    + `${vsSeat === undefined ? "" : `|vs${vsSeat}`}`
+    + `${stackSetupId === undefined ? "" : `|#${stackSetupId}`}`
+    + `${flatCallers?.length ? `|@${flatCallers.join("+")}` : ""}`;
 }
 
 // ---------------------------------------------------------------------------

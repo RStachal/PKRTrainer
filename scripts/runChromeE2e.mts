@@ -1,4 +1,4 @@
-import { spawn, spawnSync, type ChildProcess } from "node:child_process";
+import { spawnSync, type ChildProcess } from "node:child_process";
 import {
   existsSync,
   mkdirSync,
@@ -10,20 +10,18 @@ import {
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-interface Viewport {
-  name: string;
-  width: number;
-  height: number;
-  mobile: boolean;
-}
-
-interface CdpMessage {
-  id?: number;
-  method?: string;
-  params?: unknown;
-  result?: unknown;
-  error?: { message?: string };
-}
+import {
+  CdpClient,
+  createTarget,
+  evaluate,
+  findChromePath,
+  launchHeadlessChrome,
+  navigate,
+  reload,
+  waitForDevToolsPort,
+  waitForSelector,
+} from "./lib/chromeCdp.mts";
+import { QA_VIEWPORTS as VIEWPORTS, type Viewport } from "./lib/viewports.mts";
 
 interface ContrastAuditEntry {
   selector: string;
@@ -33,12 +31,6 @@ interface ContrastAuditEntry {
   fontWeight: string;
 }
 
-const VIEWPORTS: readonly Viewport[] = [
-  { name: "desktop-1280", width: 1280, height: 900, mobile: false },
-  { name: "mobile-360", width: 360, height: 800, mobile: true },
-  { name: "mobile-390", width: 390, height: 844, mobile: true },
-  { name: "mobile-412", width: 412, height: 915, mobile: true },
-];
 const activeViewports = process.env.MTT_E2E_VIEWPORTS === "desktop"
   ? [VIEWPORTS[0]]
   : VIEWPORTS;
@@ -63,89 +55,18 @@ const VALID_HH = [
   "*** SUMMARY ***",
 ].join("\n");
 
-class CdpClient {
-  private socket: WebSocket | null = null;
-  private nextId = 1;
-  private readonly pending = new Map<number, {
-    resolve: (value: unknown) => void;
-    reject: (error: Error) => void;
-  }>();
-  private readonly listeners = new Map<string, Array<(params: unknown) => void>>();
-
-  constructor(private readonly url: string) {}
-
-  async connect(): Promise<void> {
-    this.socket = new WebSocket(this.url);
-    this.socket.addEventListener("message", (event) => {
-      const message = JSON.parse(String(event.data)) as CdpMessage;
-      if (message.id !== undefined) {
-        const pending = this.pending.get(message.id);
-        if (!pending) return;
-        this.pending.delete(message.id);
-        if (message.error) pending.reject(new Error(message.error.message ?? "CDP command failed"));
-        else pending.resolve(message.result);
-        return;
-      }
-      if (message.method) {
-        for (const listener of this.listeners.get(message.method) ?? []) {
-          listener(message.params);
-        }
-      }
-    });
-    await new Promise<void>((resolvePromise, reject) => {
-      this.socket?.addEventListener("open", () => resolvePromise(), { once: true });
-      this.socket?.addEventListener("error", () => reject(new Error("Chrome CDP connection failed")), {
-        once: true,
-      });
-    });
-  }
-
-  send(method: string, params: Record<string, unknown> = {}): Promise<unknown> {
-    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-      return Promise.reject(new Error("Chrome CDP is not connected"));
-    }
-    const id = this.nextId++;
-    return new Promise((resolvePromise, reject) => {
-      this.pending.set(id, { resolve: resolvePromise, reject });
-      this.socket?.send(JSON.stringify({ id, method, params }));
-    });
-  }
-
-  on(method: string, listener: (params: unknown) => void): void {
-    const listeners = this.listeners.get(method) ?? [];
-    listeners.push(listener);
-    this.listeners.set(method, listeners);
-  }
-
-  waitFor(method: string, timeoutMs = 15_000): Promise<unknown> {
-    return new Promise((resolvePromise, reject) => {
-      const timer = setTimeout(() => reject(new Error(`Timed out waiting for ${method}`)), timeoutMs);
-      const listener = (params: unknown) => {
-        clearTimeout(timer);
-        const listeners = this.listeners.get(method) ?? [];
-        this.listeners.set(method, listeners.filter((item) => item !== listener));
-        resolvePromise(params);
-      };
-      this.on(method, listener);
-    });
-  }
-
-  close(): void {
-    this.socket?.close();
-  }
-}
-
 const targetUrl = process.env.MTT_E2E_URL ?? "http://127.0.0.1:4173/";
 const artifactDirectory = resolve(process.env.MTT_E2E_ARTIFACTS ?? "artifacts/e2e-chrome");
 const buildDirectory = resolve(process.env.MTT_E2E_DIST ?? "dist");
-const expectedPreflop = process.env.MTT_E2E_EXPECT_PREFLOP === "production"
-  ? "production"
-  : process.env.MTT_E2E_EXPECT_PREFLOP === "blocked"
-    ? "blocked"
-    : "preview";
+const expectedPreflop = process.env.MTT_E2E_EXPECT_PREFLOP === "blocked"
+  ? "blocked"
+  : process.env.MTT_E2E_EXPECT_PREFLOP === "preview"
+    ? "preview"
+    : "production";
 const expectedPostflopPackId = process.env.MTT_E2E_EXPECT_POSTFLOP_PACK_ID ?? "";
 const expectedTurnPackId = process.env.MTT_E2E_EXPECT_TURN_PACK_ID ?? "";
 const expectedRiverPackId = process.env.MTT_E2E_EXPECT_RIVER_PACK_ID ?? "";
+const expectActionEv = process.env.MTT_E2E_EXPECT_ACTION_EV === "true";
 const expectedPostflopPackIds = [
   expectedPostflopPackId,
   expectedTurnPackId,
@@ -159,21 +80,7 @@ let cdp: CdpClient | null = null;
 
 try {
   mkdirSync(artifactDirectory, { recursive: true });
-  chrome = spawn(chromePath, [
-    "--headless=new",
-    "--remote-debugging-port=0",
-    `--user-data-dir=${profileDirectory}`,
-    "--no-first-run",
-    "--no-default-browser-check",
-    "--disable-background-networking",
-    "--disable-component-update",
-    "--disable-sync",
-    "--hide-scrollbars",
-    "about:blank",
-  ], {
-    stdio: ["ignore", "ignore", "pipe"],
-    windowsHide: true,
-  });
+  chrome = launchHeadlessChrome(chromePath, profileDirectory);
 
   const port = await waitForDevToolsPort(profileDirectory);
   const target = await createTarget(port, "about:blank");
@@ -212,7 +119,7 @@ try {
   }> = [];
   for (const viewport of activeViewports) {
     if (expectedPreflop === "production") {
-      console.log(`Production fixture viewport: ${viewport.name}`);
+      console.log(`Production preflop viewport: ${viewport.name}`);
     }
     browserErrors.length = 0;
     await cdp.send("Emulation.setDeviceMetricsOverride", {
@@ -232,6 +139,37 @@ try {
     await waitForSelector(cdp, ".filter-start");
     await ensureServiceWorkerControl(cdp);
 
+    await activate(cdp, ".language-switch__option:nth-child(1)", viewport.mobile ? "touch" : "keyboard");
+    await waitForSelector(cdp, ".filter-start");
+    const englishLanguage = await evaluate(cdp, `(() => ({
+      lang: document.documentElement.lang,
+      stored: localStorage.getItem("pkrtrainer.ui.language.v1"),
+      start: document.querySelector(".filter-start")?.textContent ?? "",
+      subtitle: document.querySelector(".app__subtitle")?.textContent ?? ""
+    }))()`);
+    assert(englishLanguage.lang === "en", `${viewport.name}: EN language did not update document.lang`);
+    assert(englishLanguage.stored === "EN", `${viewport.name}: EN language was not persisted`);
+    assert(englishLanguage.start === "Start training", `${viewport.name}: EN control label is incorrect`);
+    assert(
+      englishLanguage.subtitle === "Poker decision trainer for tournament play.",
+      `${viewport.name}: EN explanatory copy is incorrect`,
+    );
+    await activate(cdp, ".language-switch__option:nth-child(2)", viewport.mobile ? "touch" : "keyboard");
+    await waitForSelector(cdp, ".filter-start");
+    const czechLanguage = await evaluate(cdp, `(() => ({
+      lang: document.documentElement.lang,
+      stored: localStorage.getItem("pkrtrainer.ui.language.v1"),
+      start: document.querySelector(".filter-start")?.textContent ?? "",
+      subtitle: document.querySelector(".app__subtitle")?.textContent ?? ""
+    }))()`);
+    assert(czechLanguage.lang === "cs", `${viewport.name}: CZ language did not update document.lang`);
+    assert(czechLanguage.stored === "CZ", `${viewport.name}: CZ language was not persisted`);
+    assert(czechLanguage.start === "Start training", `${viewport.name}: CZ mode translated a control label`);
+    assert(
+      czechLanguage.subtitle !== englishLanguage.subtitle,
+      `${viewport.name}: CZ explanatory copy did not change`,
+    );
+
     const initial = await evaluate(cdp, `(() => ({
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       fatal: document.querySelector(".fatal")?.textContent ?? "",
@@ -244,8 +182,12 @@ try {
       assert(initial.profileStatus === "blocked", `${viewport.name}: unloaded preflop must fail closed`);
     } else if (expectedPreflop === "production") {
       assert(
-        initial.profileStatus === "production" || initial.profileStatus === "preview",
-        `${viewport.name}: production preflop is not marked ready or preview before lazy activation`,
+        initial.profileStatus === "production",
+        `${viewport.name}: bundled production preflop is not marked production before lazy activation`,
+      );
+      assert(
+        initial.profileText.includes("MTT ChipEV Core"),
+        `${viewport.name}: production preflop release label is missing`,
       );
     } else {
       assert(initial.profileStatus === "preview", `${viewport.name}: playable preflop preview is not marked preview`);
@@ -394,6 +336,29 @@ try {
 
     await activate(cdp, ".postflop-action", viewport.mobile ? "touch" : "keyboard");
     await waitForSelector(cdp, ".postflop-result");
+    if (expectActionEv) {
+      const actionEv = await evaluate(cdp, `(() => ({
+        available: document.querySelector(".postflop-result .action-ev")?.getAttribute("data-available"),
+        rows: document.querySelectorAll(".postflop-result .action-ev__row").length,
+        bestRows: document.querySelectorAll(".postflop-result .action-ev__row--best").length,
+        chosenRows: document.querySelectorAll(".postflop-result .action-ev__row--chosen").length,
+        bubbles: document.querySelectorAll(".postflop-action .action-ev-bubble:not([hidden])").length,
+        bestBubbles: document.querySelectorAll(".postflop-action .action-ev-bubble--best").length,
+        chosenBubbles: document.querySelectorAll(".postflop-action .action-ev-bubble--chosen").length,
+        bubbleText: document.querySelector(".postflop-action .action-ev-bubble")?.textContent ?? "",
+        text: document.querySelector(".postflop-result .action-ev")?.textContent ?? ""
+      }))()`);
+      assert(actionEv.available === "true", `${viewport.name}: solver action EV is unavailable`);
+      assert(actionEv.rows === postflop.actions, `${viewport.name}: not every offered action has an EV row`);
+      assert(actionEv.bestRows === 2, `${viewport.name}: equivalent best actions were not both marked`);
+      assert(actionEv.chosenRows === 1, `${viewport.name}: chosen EV action was not marked exactly once`);
+      assert(actionEv.bubbles === postflop.actions, `${viewport.name}: not every action button has an EV bubble`);
+      assert(actionEv.bestBubbles === 2, `${viewport.name}: equivalent best EV bubbles were not both marked`);
+      assert(actionEv.chosenBubbles === 1, `${viewport.name}: chosen EV bubble was not marked exactly once`);
+      assert(actionEv.bubbleText.includes("EV") && actionEv.bubbleText.includes("BB"),
+        `${viewport.name}: action-button EV bubble has the wrong label`);
+      assert(actionEv.text.includes("BB"), `${viewport.name}: action EV values do not show the BB unit`);
+    }
     contrastAudits.push({
       viewport: viewport.name,
       surface: "postflop-result",
@@ -577,6 +542,11 @@ try {
       `document.querySelector(".stats-json-box")?.value ?? ""`,
     );
     assert(exportedStats.includes('"postflopRecords"'), `${viewport.name}: stats export is incomplete`);
+    if (expectActionEv) {
+      assert(exportedStats.includes('"actionEvOutcome"'), `${viewport.name}: action EV outcome was not persisted`);
+      assert(exportedStats.includes('"equivalentBestActions"'), `${viewport.name}: equivalent best actions were not persisted`);
+      assert(exportedStats.includes('"evLossBb"'), `${viewport.name}: action EV loss was not persisted`);
+    }
     if (productionHandLine) {
       assert(
         exportedStats.includes('"postflopLineRecords"'),
@@ -674,6 +644,21 @@ try {
     });
   }
 
+  // Nové GUI tréninku za přepínačem (Agents/ui-redesign-plan.md, fáze 1,
+  // krok 5). Běží na všech šířkách a stejnými vstupy jako zbytek E2E, aby se
+  // přepínač dal otočit na výchozí s důkazem, ne s odhadem.
+  const nextUiResults: Array<{ viewport: string; feedbackMs: number }> = [];
+  const nextUiPostflopResults: Array<{ viewport: string; feedbackMs: number }> = [];
+  for (const viewport of activeViewports) {
+    if (expectedPreflop !== "blocked") {
+      nextUiResults.push(await runNextUiScenario(cdp, viewport, browserErrors, contrastAudits));
+    }
+    nextUiPostflopResults.push(await runNextUiPostflopScenario(cdp, viewport, browserErrors, contrastAudits));
+  }
+  // Zpět na dnešní GUI, ať zbytek běhu zkouší výchozí stav.
+  await navigate(cdp, withUi(targetUrl, "classic"));
+  await waitForSelector(cdp, ".filter-start");
+
   browserErrors.length = 0;
   await cdp.send("Network.emulateNetworkConditions", {
     offline: false,
@@ -770,6 +755,8 @@ try {
     contrastAudits,
     resilience,
     serviceWorkerUpgrade,
+    nextUi: nextUiResults,
+    nextUiPostflop: nextUiPostflopResults,
   };
   writeFileSync(join(artifactDirectory, "report.json"), JSON.stringify(report, null, 2));
   console.log("MTT Chrome E2E");
@@ -784,6 +771,12 @@ try {
   console.log("- resilience: zoom 200% / corrupt storage / quota failure passed");
   console.log(`- contrast: ${contrastAudits.flatMap((audit) => audit.entries).length} checks passed`);
   console.log("- service worker: real upgrade and previous-build chunk rollback passed");
+  for (const result of nextUiResults) {
+    console.log(`- next UI ${result.viewport}: question/feedback/next passed, feedback ${result.feedbackMs} ms`);
+  }
+  for (const result of nextUiPostflopResults) {
+    console.log(`- next UI postflop ${result.viewport}: board/question/feedback/next passed, feedback ${result.feedbackMs} ms`);
+  }
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
@@ -805,15 +798,6 @@ try {
   } catch {
     console.warn(`Chrome profile cleanup deferred: ${profileDirectory}`);
   }
-}
-
-async function navigate(client: CdpClient, url: string): Promise<void> {
-  const loaded = client.waitFor("Page.loadEventFired", 30_000);
-  await client.send("Page.navigate", { url });
-  await Promise.race([
-    loaded,
-    waitForPageReady(client, url, 30_000),
-  ]);
 }
 
 async function ensureServiceWorkerControl(client: CdpClient): Promise<void> {
@@ -856,79 +840,6 @@ async function ensureServiceWorkerControl(client: CdpClient): Promise<void> {
     `navigator.serviceWorker.controller !== null`,
   );
   assert(controlledAfterReload, "Service worker did not control the page after reload");
-}
-
-async function reload(client: CdpClient): Promise<void> {
-  const loaded = client.waitFor("Page.loadEventFired", 30_000);
-  await client.send("Page.reload", { ignoreCache: false });
-  await Promise.race([
-    loaded,
-    waitForPageReady(client, null, 30_000, 100),
-  ]);
-}
-
-async function waitForPageReady(
-  client: CdpClient,
-  expectedUrl: string | null,
-  timeoutMs: number,
-  initialDelayMs = 0,
-): Promise<void> {
-  if (initialDelayMs > 0) await sleep(initialDelayMs);
-  const deadline = Date.now() + timeoutMs;
-  let lastError = "";
-  while (Date.now() < deadline) {
-    try {
-      const state = await evaluate<{
-        href: string;
-        readyState: DocumentReadyState;
-      }>(client, `(() => ({ href: location.href, readyState: document.readyState }))()`);
-      const expectedMatches = expectedUrl === null || state.href === expectedUrl;
-      if (
-        expectedMatches &&
-        (state.readyState === "interactive" || state.readyState === "complete")
-      ) {
-        return;
-      }
-    } catch (error) {
-      lastError = error instanceof Error ? error.message : String(error);
-    }
-    await sleep(100);
-  }
-  throw new Error(
-    `Timed out waiting for page readiness${lastError ? `: ${lastError}` : ""}`,
-  );
-}
-
-async function evaluate<T = any>(client: CdpClient, expression: string): Promise<T> {
-  const response = await client.send("Runtime.evaluate", {
-    expression,
-    awaitPromise: true,
-    returnByValue: true,
-  }) as {
-    result?: { value?: T };
-    exceptionDetails?: { text?: string };
-  };
-  if (response.exceptionDetails) {
-    throw new Error(response.exceptionDetails.text ?? `Browser evaluation failed: ${expression}`);
-  }
-  return response.result?.value as T;
-}
-
-async function waitForSelector(client: CdpClient, selector: string, timeoutMs = 15_000): Promise<void> {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    if (await evaluate<boolean>(client, `Boolean(document.querySelector(${JSON.stringify(selector)}))`)) {
-      return;
-    }
-    await sleep(100);
-  }
-  const debug = await evaluate<{ url: string; text: string }>(client, `(() => ({
-    url: location.href,
-    text: (document.body?.innerText ?? "").slice(0, 500)
-  }))()`);
-  throw new Error(
-    `Timed out waiting for selector: ${selector} at ${debug.url}; body=${debug.text}`,
-  );
 }
 
 async function configureProductionPostflopProfile(
@@ -1020,6 +931,17 @@ async function auditContrast(
   const entries = await evaluate<ContrastAuditEntry[]>(client, `(() => {
     const selectors = ${JSON.stringify(selectors)};
     const parseColor = (value) => {
+      // color-mix() vrací Chrome jako color(srgb r g b / a) se složkami 0..1.
+      const srgb = value.match(/color\\(srgb\\s+([^)]+)\\)/i);
+      if (srgb) {
+        const parts = srgb[1].split(/[ /]+/).filter(Boolean).map(Number);
+        return {
+          r: parts[0] * 255,
+          g: parts[1] * 255,
+          b: parts[2] * 255,
+          a: Number.isFinite(parts[3]) ? parts[3] : 1
+        };
+      }
       const match = value.match(/rgba?\\(([^)]+)\\)/i);
       if (!match) throw new Error("Unsupported computed color: " + value);
       const parts = match[1].split(/[ ,/]+/).filter(Boolean).map(Number);
@@ -1103,6 +1025,280 @@ async function auditContrast(
     )).join(", ")}`,
   );
   return entries;
+}
+
+function withUi(url: string, ui: "next" | "classic"): string {
+  const parsed = new URL(url);
+  parsed.searchParams.set("ui", ui);
+  return parsed.toString();
+}
+
+/**
+ * Nová obrazovka preflopového tréninku: otázka, odpověď, vyhodnocení, další
+ * spot a znovu odpověď - skutečným vstupem (klávesnice, dotyk). Čas od
+ * kliknutí po prvním snímku s vyhodnocením se měří ve stránce, bez latence
+ * protokolu, a jde do reportu, ať je vidět, kdyby rostl.
+ */
+async function runNextUiScenario(
+  client: CdpClient,
+  viewport: Viewport,
+  browserErrors: string[],
+  contrastAudits: Array<{ viewport: string; surface: string; entries: ContrastAuditEntry[] }>,
+): Promise<{ viewport: string; feedbackMs: number }> {
+  const input = viewport.mobile ? "touch" : "keyboard";
+  browserErrors.length = 0;
+  await client.send("Emulation.setDeviceMetricsOverride", {
+    width: viewport.width,
+    height: viewport.height,
+    deviceScaleFactor: 1,
+    mobile: viewport.mobile,
+  });
+  await client.send("Emulation.setTouchEmulationEnabled", {
+    enabled: viewport.mobile,
+    maxTouchPoints: viewport.mobile ? 5 : 1,
+  });
+  await navigate(client, withUi(targetUrl, "next"));
+  await waitForSelector(client, ".filter-start");
+  await activate(client, ".filter-start", input);
+  await waitForSelector(client, ".dx-trainer__actions button");
+
+  const question = await evaluate<{
+    actions: number;
+    cards: number;
+    feedbackHidden: boolean;
+    overflow: number;
+    seats: number;
+    overlaps: string[];
+  }>(client, `(() => {
+    // Štítky sedadel se nesmějí překrývat na žádné šířce - starý stůl to
+    // na 360 px dělal (Agents/ui-redesign-plan.md).
+    const seats = [...document.querySelectorAll(".dx-table__seat")];
+    const boxes = seats.map((seat) => ({ name: seat.dataset.position, box: seat.getBoundingClientRect() }));
+    const overlaps = [];
+    for (let i = 0; i < boxes.length; i += 1) {
+      for (let j = i + 1; j < boxes.length; j += 1) {
+        const a = boxes[i].box;
+        const b = boxes[j].box;
+        if (a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) {
+          overlaps.push(boxes[i].name + "/" + boxes[j].name);
+        }
+      }
+    }
+    return {
+      actions: document.querySelectorAll(".dx-trainer__actions button").length,
+      cards: document.querySelectorAll(".dx-trainer__prompt .dx-card").length,
+      feedbackHidden: document.querySelector(".dx-trainer__feedback")?.hidden === true,
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      seats: seats.length,
+      overlaps
+    };
+  })()`);
+  assert(question.actions >= 2, `${viewport.name} next UI: only ${question.actions} actions`);
+  assert(question.cards === 2, `${viewport.name} next UI: hero cards missing beside the actions`);
+  assert(question.feedbackHidden, `${viewport.name} next UI: feedback visible before an answer`);
+  assert(question.overflow <= 1, `${viewport.name} next UI: page overflow ${question.overflow}px`);
+  assert(question.seats === 9, `${viewport.name} next UI: ${question.seats} seats on the table`);
+  assert(
+    question.overlaps.length === 0,
+    `${viewport.name} next UI: overlapping seats ${question.overlaps.join(", ")}`,
+  );
+  contrastAudits.push({
+    viewport: viewport.name,
+    surface: "next-ui-question",
+    entries: await auditContrast(client, viewport.name, "next UI question", [
+      ".dx-trainer__title",
+      ".dx-trainer__meta",
+      ".dx-trainer__prompt",
+      ".dx-btn--action",
+    ]),
+  });
+
+  const feedbackMs = await evaluate<number>(client, `new Promise((resolve) => {
+    const action = document.querySelector(".dx-trainer__actions button");
+    const feedback = document.querySelector(".dx-trainer__feedback");
+    const started = performance.now();
+    action.click();
+    requestAnimationFrame(() => resolve(feedback && !feedback.hidden ? performance.now() - started : -1));
+  })`);
+  assert(feedbackMs >= 0, `${viewport.name} next UI: feedback did not render after an answer`);
+  // Pojistka proti patologii, ne cíl: běžně jde o jeden snímek.
+  assert(feedbackMs < 1000, `${viewport.name} next UI: feedback took ${Math.round(feedbackMs)} ms`);
+
+  const answered = await evaluate<{ outcome: string; locked: boolean; nextFocused: boolean }>(
+    client,
+    `(() => ({
+      outcome: document.querySelector(".dx-trainer__feedback .dx-chip")?.getAttribute("data-outcome") ?? "",
+      locked: [...document.querySelectorAll(".dx-trainer__actions button")].every((button) => button.disabled),
+      nextFocused: document.activeElement?.classList.contains("dx-trainer__next") ?? false
+    }))()`,
+  );
+  assert(answered.outcome !== "", `${viewport.name} next UI: verdict chip missing`);
+  assert(answered.locked, `${viewport.name} next UI: actions still enabled after an answer`);
+  assert(answered.nextFocused, `${viewport.name} next UI: focus did not move to the next spot`);
+  contrastAudits.push({
+    viewport: viewport.name,
+    surface: "next-ui-feedback",
+    entries: await auditContrast(client, viewport.name, "next UI feedback", [
+      ".dx-trainer__feedback .dx-chip",
+      ".dx-trainer__choice",
+      ".dx-trainer__plan",
+      ".dx-trainer__next",
+    ]),
+  });
+
+  await activate(client, ".dx-trainer__next", input);
+  await waitForSelector(client, ".dx-trainer__feedback[hidden]");
+  await activate(client, ".dx-trainer__actions button", input);
+  await waitForSelector(client, ".dx-trainer__feedback:not([hidden])");
+  assert(browserErrors.length === 0, `${viewport.name} next UI: ${browserErrors.join(" | ")}`);
+  return { viewport: viewport.name, feedbackMs: Math.round(feedbackMs * 10) / 10 };
+}
+
+/**
+ * Nová obrazovka jednoho postflopového spotu (plán redesignu, fáze 1, krok
+ * 3d): start flopu přes dnešní formulář, otázka s deskou, odpověď skutečným
+ * vstupem, vyhodnocení a další spot. Selektory jsou omezené na postflopový
+ * panel, protože preflopová obrazovka zůstává ve skrytém panelu tréninku.
+ */
+async function runNextUiPostflopScenario(
+  client: CdpClient,
+  viewport: Viewport,
+  browserErrors: string[],
+  contrastAudits: Array<{ viewport: string; surface: string; entries: ContrastAuditEntry[] }>,
+): Promise<{ viewport: string; feedbackMs: number }> {
+  const input = viewport.mobile ? "touch" : "keyboard";
+  const scope = ".postflop-output .dx-trainer";
+  browserErrors.length = 0;
+  await client.send("Emulation.setDeviceMetricsOverride", {
+    width: viewport.width,
+    height: viewport.height,
+    deviceScaleFactor: 1,
+    mobile: viewport.mobile,
+  });
+  await client.send("Emulation.setTouchEmulationEnabled", {
+    enabled: viewport.mobile,
+    maxTouchPoints: viewport.mobile ? 5 : 1,
+  });
+  await navigate(client, withUi(targetUrl, "next"));
+  await waitForSelector(client, ".filter-start");
+  await evaluate(client, `(() => {
+    const select = document.querySelector(".profile-street");
+    if (!(select instanceof HTMLSelectElement)) throw new Error("Missing street selector");
+    select.value = "FLOP";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    const seed = document.querySelector(".filter-seed");
+    if (!(seed instanceof HTMLInputElement)) throw new Error("Missing seed input");
+    seed.value = ${JSON.stringify(postflopSeed)};
+    seed.dispatchEvent(new Event("input", { bubbles: true }));
+  })()`);
+  await activate(client, ".filter-start", input);
+  await waitForSelector(client, `${scope} .dx-trainer__actions button`);
+
+  const question = await evaluate<{
+    actions: number;
+    board: number;
+    cards: number;
+    active: number;
+    feedbackHidden: boolean;
+    overflow: number;
+    seats: number;
+    situation: string;
+    overlaps: string[];
+  }>(client, `(() => {
+    const scope = document.querySelector(${JSON.stringify(scope)});
+    // Ani sedadla, ani deska s potem se nesmějí překrývat na žádné šířce.
+    const seats = [...scope.querySelectorAll(".dx-table__seat")];
+    const boxes = seats.map((seat) => ({ name: seat.dataset.position, box: seat.getBoundingClientRect() }));
+    const center = scope.querySelector(".dx-table__center");
+    if (center) boxes.push({ name: "deska", box: center.getBoundingClientRect() });
+    const overlaps = [];
+    for (let i = 0; i < boxes.length; i += 1) {
+      for (let j = i + 1; j < boxes.length; j += 1) {
+        const a = boxes[i].box;
+        const b = boxes[j].box;
+        if (a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) {
+          overlaps.push(boxes[i].name + "/" + boxes[j].name);
+        }
+      }
+    }
+    return {
+      actions: scope.querySelectorAll(".dx-trainer__actions button").length,
+      board: scope.querySelectorAll(".dx-table__board .dx-card").length,
+      cards: scope.querySelectorAll(".dx-trainer__prompt .dx-card").length,
+      active: scope.querySelectorAll('.dx-table__seat[data-folded="false"]').length,
+      feedbackHidden: scope.querySelector(".dx-trainer__feedback")?.hidden === true,
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      seats: seats.length,
+      situation: scope.querySelector(".dx-trainer__situation")?.textContent ?? "",
+      overlaps
+    };
+  })()`);
+  const label = `${viewport.name} next UI postflop`;
+  assert(question.actions >= 2, `${label}: only ${question.actions} actions`);
+  assert(question.board === 3, `${label}: flop shows ${question.board} board cards`);
+  assert(question.cards === 2, `${label}: hero cards missing beside the actions`);
+  assert(question.seats === 9 && question.active === 2, `${label}: table ${question.seats} seats, ${question.active} active`);
+  assert(question.situation !== "", `${label}: villain action before the question is missing`);
+  assert(question.feedbackHidden, `${label}: feedback visible before an answer`);
+  assert(question.overflow <= 1, `${label}: page overflow ${question.overflow}px`);
+  assert(question.overlaps.length === 0, `${label}: overlapping ${question.overlaps.join(", ")}`);
+  contrastAudits.push({
+    viewport: viewport.name,
+    surface: "next-ui-postflop-question",
+    entries: await auditContrast(client, viewport.name, "next UI postflop question", [
+      `${scope} .dx-trainer__title`,
+      `${scope} .dx-trainer__meta`,
+      `${scope} .dx-trainer__situation`,
+      `${scope} .dx-trainer__prompt`,
+      `${scope} .dx-btn--action`,
+      `${scope} .dx-table__pot`,
+    ]),
+  });
+
+  const feedbackMs = await evaluate<number>(client, `new Promise((resolve) => {
+    const scope = document.querySelector(${JSON.stringify(scope)});
+    const action = scope.querySelector(".dx-trainer__actions button");
+    const feedback = scope.querySelector(".dx-trainer__feedback");
+    const started = performance.now();
+    action.click();
+    requestAnimationFrame(() => resolve(feedback && !feedback.hidden ? performance.now() - started : -1));
+  })`);
+  assert(feedbackMs >= 0, `${label}: feedback did not render after an answer`);
+  assert(feedbackMs < 1000, `${label}: feedback took ${Math.round(feedbackMs)} ms`);
+
+  const answered = await evaluate<{ outcome: string; locked: boolean; nextFocused: boolean; text: string }>(
+    client,
+    `(() => {
+      const scope = document.querySelector(${JSON.stringify(scope)});
+      return {
+        outcome: scope.querySelector(".dx-trainer__feedback .dx-chip")?.getAttribute("data-outcome") ?? "",
+        locked: [...scope.querySelectorAll(".dx-trainer__actions button")].every((button) => button.disabled),
+        nextFocused: document.activeElement?.classList.contains("dx-trainer__next") ?? false,
+        text: scope.textContent ?? ""
+      };
+    })()`,
+  );
+  assert(answered.outcome !== "", `${label}: verdict chip missing`);
+  assert(answered.locked, `${label}: actions still enabled after an answer`);
+  assert(answered.nextFocused, `${label}: focus did not move to the next spot`);
+  assertSourceFree(answered.text, label);
+  contrastAudits.push({
+    viewport: viewport.name,
+    surface: "next-ui-postflop-feedback",
+    entries: await auditContrast(client, viewport.name, "next UI postflop feedback", [
+      `${scope} .dx-trainer__feedback .dx-chip`,
+      `${scope} .dx-trainer__choice`,
+      `${scope} .dx-trainer__plan`,
+      `${scope} .dx-trainer__next`,
+    ]),
+  });
+
+  await activate(client, `${scope} .dx-trainer__next`, input);
+  await waitForSelector(client, `${scope} .dx-trainer__feedback[hidden]`);
+  await activate(client, `${scope} .dx-trainer__actions button`, input);
+  await waitForSelector(client, `${scope} .dx-trainer__feedback:not([hidden])`);
+  assert(browserErrors.length === 0, `${label}: ${browserErrors.join(" | ")}`);
+  return { viewport: viewport.name, feedbackMs: Math.round(feedbackMs * 10) / 10 };
 }
 
 async function runServiceWorkerUpgradeScenario(
@@ -1244,52 +1440,6 @@ async function runServiceWorkerUpgradeScenario(
     previousChunkRollback: "passed",
     stableAssetIsolation: "passed",
   };
-}
-
-async function waitForDevToolsPort(directory: string): Promise<number> {
-  const path = join(directory, "DevToolsActivePort");
-  const deadline = Date.now() + 15_000;
-  while (Date.now() < deadline) {
-    if (existsSync(path)) {
-      try {
-        const port = Number(readFileSync(path, "utf8").split(/\r?\n/)[0]);
-        if (Number.isInteger(port) && port > 0) return port;
-      } catch {
-        // Chrome can briefly lock DevToolsActivePort while finishing startup.
-      }
-    }
-    await sleep(100);
-  }
-  throw new Error("Chrome did not expose a DevTools port");
-}
-
-async function createTarget(
-  port: number,
-  url: string,
-): Promise<{ webSocketDebuggerUrl: string }> {
-  const response = await fetch(
-    `http://127.0.0.1:${port}/json/new?${encodeURIComponent(url)}`,
-    { method: "PUT" },
-  );
-  if (!response.ok) throw new Error(`Chrome target creation failed: HTTP ${response.status}`);
-  return response.json() as Promise<{ webSocketDebuggerUrl: string }>;
-}
-
-function findChromePath(): string {
-  const candidates = [
-    process.env.CHROME_PATH,
-    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-    "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
-    "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
-    "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
-    "/usr/bin/google-chrome",
-    "/usr/bin/chromium",
-    "/usr/bin/chromium-browser",
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  ].filter((value): value is string => Boolean(value));
-  const path = candidates.find(existsSync);
-  if (!path) throw new Error("Chrome/Edge executable was not found; set CHROME_PATH.");
-  return path;
 }
 
 function assertSourceFree(text: string, surface: string): void {

@@ -421,6 +421,7 @@ describe("postflopLineSimulator", () => {
       explanation: "Resolver policy fixture.",
       source: {
         kind: "STRATEGY_PACK",
+        provenance: "SOLVER_BACKED",
         packId: "fixture-pack",
         packVersion: "1",
         packVerifiedAt: "2026-06-19",

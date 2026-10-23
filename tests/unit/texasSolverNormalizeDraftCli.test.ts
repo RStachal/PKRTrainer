@@ -55,6 +55,9 @@ describe("mtt:texas-solver-normalize-draft CLI", () => {
         `--output-dir=${outputDir}`,
         "--action-node=FLOP_FACING_BET",
         "--pot-type=SINGLE_RAISED",
+        // Synthetic family, so no solver parameter file supplies the pot. The
+        // bet split is a fraction of it, so the caller has to say what it is.
+        "--pot-chips=50",
         "--position-pattern=SRP_BTN_VS_BB",
         "--write",
       );
@@ -89,6 +92,136 @@ describe("mtt:texas-solver-normalize-draft CLI", () => {
       expect([...allMixActions]).not.toContain("CHECK");
       expect([...allMixActions]).not.toContain("BET_SMALL");
       expect([...allMixActions]).not.toContain("BET_BIG");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("odmitne draft, kdyz nezna pot, misto aby vsechny sazky slil do BET_SMALL", () => {
+    // The bet split is a fraction of the pot. With no pot the first attempt at
+    // this quietly answered BET_SMALL for everything, which erases the big-bet
+    // branch - a quieter and worse failure than the mislabelling it replaced.
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-texas-normalize-nopot-"));
+    const reviewPath = join(directory, "strategy-export.review.json");
+    const outputDir = join(directory, "draft");
+    mkdirSync(outputDir, { recursive: true });
+    writeFileSync(
+      reviewPath,
+      JSON.stringify({
+        valid: true,
+        familyId: "TEST_FAMILY_WITH_NO_PARAMETER_FILE",
+        nodeHistory: [],
+        files: [{
+          boardId: "A72r",
+          handClasses: {
+            "43s": { comboCount: 4, averageByAction: { CHECK: 0.6, BET_25: 0.4 }, dominantAction: "CHECK" },
+          },
+        }],
+        anomalies: [],
+        blockers: [],
+      }),
+      "utf8",
+    );
+
+    try {
+      const result = runNormalize(
+        `--review=${reviewPath}`,
+        `--output-dir=${outputDir}`,
+        "--action-node=SINGLE_RAISED_POT_CBET",
+        "--pot-type=SINGLE_RAISED",
+        "--position-pattern=SRP_SB_VS_BB",
+        "--write",
+      );
+
+      expect(result.status).not.toBe(0);
+      expect(`${result.stdout}${result.stderr}`).toContain("Cannot resolve the pot");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("zachovava dominantni CHECK u mixed c-bet bucketu bez vymysleni bet akce", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-texas-normalize-cbet-"));
+    const reviewPath = join(directory, "strategy-export.review.json");
+    const outputDir = join(directory, "draft");
+    mkdirSync(outputDir, { recursive: true });
+    writeFileSync(
+      reviewPath,
+      JSON.stringify({
+        valid: true,
+        familyId: "TEST_SB_BB_CBET",
+        nodeHistory: [],
+        files: [
+          {
+            boardId: "A72r",
+            handClasses: {
+              "43s": {
+                averageByAction: { CHECK: 0.602, BET_25: 0.394, BET_100: 0.004 },
+                dominantAction: "CHECK",
+                dominantFrequency: 0.602,
+              },
+              "65s": {
+                averageByAction: { CHECK: 0.2, BET_25: 0.7, BET_100: 0.1 },
+                dominantAction: "BET_25",
+                dominantFrequency: 0.7,
+              },
+              QJo: {
+                averageByAction: { CHECK: 0.3, BET_25: 0.7 },
+                dominantAction: "BET_25",
+                dominantFrequency: 0.7,
+              },
+            },
+          },
+        ],
+        anomalies: [],
+        blockers: [],
+      }),
+      "utf8",
+    );
+
+    try {
+      const result = runNormalize(
+        `--review=${reviewPath}`,
+        `--output-dir=${outputDir}`,
+        "--action-node=SINGLE_RAISED_POT_CBET",
+        "--pot-type=SINGLE_RAISED",
+        // Synthetic family, so no solver parameter file supplies the pot. The
+        // bet split is a fraction of it, so the caller has to say what it is.
+        "--pot-chips=50",
+        "--position-pattern=SRP_SB_VS_BB",
+        "--write",
+      );
+
+      expect(result.status).toBe(0);
+      const normalized = JSON.parse(readFileSync(join(outputDir, "normalized.candidate.json"), "utf8")) as {
+        rules: Array<{
+          rangeBuckets: Array<{
+            lane: string;
+            action: string;
+            handClasses: string[];
+            actionMix: Array<{ action: string; frequencyPct: number }>;
+          }>;
+        }>;
+      };
+      const buckets = normalized.rules[0]?.rangeBuckets ?? [];
+      const checkBucket = buckets.find((bucket) => bucket.handClasses.includes("43s"));
+
+      expect(checkBucket).toMatchObject({ lane: "CHECK", action: "CHECK" });
+      expect(checkBucket?.actionMix).toEqual([
+        { action: "CHECK", frequencyPct: 60.2, visibility: "EXACT" },
+        { action: "BET_SMALL", frequencyPct: 39.4, visibility: "EXACT" },
+        { action: "BET_BIG", frequencyPct: 0.4, visibility: "EXACT" },
+      ]);
+      // Lanes are judged against the board. On A72r neither betting hand is
+      // made: 65s and QJo are both pressure, so no VALUE lane exists here. The
+      // earlier rank-only heuristic promoted QJo to VALUE purely because it
+      // starts with a queen.
+      expect(new Set(buckets.map((bucket) => bucket.lane))).toEqual(
+        new Set(["CHECK", "BLUFF"]),
+      );
+      expect(buckets.find((bucket) => bucket.handClasses.includes("QJo"))).toMatchObject({
+        lane: "BLUFF",
+      });
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

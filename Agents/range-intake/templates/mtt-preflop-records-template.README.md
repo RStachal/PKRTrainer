@@ -33,6 +33,9 @@ Use one row per `(packId, position, sourceStackBB, bucket, context, handClass)`.
 | `handClass` | One of the 169 preflop classes, for example pair/suited/offsuit notation from the app model. |
 | `strictActions` | Pipe-separated action keys for strict scoring, for example `OPEN_25X` or `CALL|3BET`. |
 | `lenientActions` | Pipe-separated action keys for lenient scoring; it must include every strict action. |
+| `actionEvsBb` | Optional reviewed solver EV for every offered action, for example `FOLD=0|CALL=0.204|3BET=0.210`. Frequencies are not EV. |
+| `equivalentThresholdBb` | Maximum EV loss still treated as an equally good action; must come from the reviewed intake policy. |
+| `acceptableThresholdBb` | Maximum EV loss accepted only in lenient scoring; must be greater than or equal to the equivalent threshold. |
 | `sourceReferenceId` | Internal source-free evidence id that can be matched in `permission.json`. |
 | `reviewer` | Human or internal review owner for this row batch. |
 | `reviewedAt` | ISO date of the review. |
@@ -53,6 +56,8 @@ For each production slot:
 - every listed action context must be covered;
 - every resulting record must contain all 169 hand classes in both
   `strictActions` and `lenientActions`;
+- EV-ready records must contain finite solver EV in BB for every action offered
+  at the decision node; partial EV rows are rejected at runtime;
 - full ring requires at least 1,053 records before hand-class expansion
   (`9 positions * 13 buckets * 9 contexts`);
 - 6-max requires at least 702 records before hand-class expansion
@@ -86,6 +91,19 @@ inspected in `artifacts/`, but they must not be copied into
 
 The scaffold command creates empty rows only. It intentionally leaves
 `strictActions` and `lenientActions` blank so no strategy values are inferred.
+
+For one of the four exact six-max CHIP_EV workbenches, a reviewed subset can be
+merged without constructing a full-size replacement CSV:
+
+```powershell
+npm run mtt:sixmax-preflop-merge-chunk -- --pack-id=<packId> --chunk=<reviewed-chunk.csv> --summary
+npm run mtt:sixmax-preflop-merge-chunk -- --pack-id=<packId> --chunk=<reviewed-chunk.csv> --write --confirm=MERGE_REVIEWED_MTT_SIXMAX_PREFLOP_CHUNK
+```
+
+The first command is read-only. The confirmed command fills only blank editable
+cells, accepts identical values as already applied and rejects the whole chunk
+on any conflict or immutable-row mismatch. It does not build or promote a
+`normalized.json`.
 
 The compatible filename `permission.json` means production provenance/audit
 metadata in this project. It is not the user subscription/payment permission

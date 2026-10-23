@@ -6,6 +6,7 @@ import type {
   Position,
   StackBucket,
 } from "../../core/types";
+import type { ActionEvSet } from "../../core/actionEv";
 import type {
   BlindSpeed,
   EvModel,
@@ -44,8 +45,47 @@ export interface RangePackRecord {
   position: Position;
   bucket: StackBucket;
   context: ActionContext;
+  /**
+   * Sedačka, která jednala před hrdinou; chybí u obecného záznamu.
+   *
+   * **Nezapočítává se do úplnosti.** Pack, který má jen zpřesněné záznamy, na
+   * obecnou otázku „co s tím na BTN proti otevření" neodpoví, takže by prohlásit
+   * ho za pokrytý znamenalo tvrdit odpověď, kterou hráč nedostane. Zpřesnění
+   * je nadstavba nad obecnou odpovědí, ne její náhrada.
+   */
+  vsSeat?: Position;
+  /** Rozložení stacků u stolu, pro které záznam platí. Viz `vsSeat`. */
+  stackSetupId?: string;
+  /**
+   * Kdo otevření dorovnal, zkratkami zdroje a v pořadí akce - osa
+   * dorovnávajícího (rozhodnutí 4a). Viz `vsSeat`: taky se nezapočítává do
+   * úplnosti, protože je to nadstavba nad obecnou odpovědí.
+   */
+  flatCallers?: readonly string[];
+  /**
+   * Odkud záznam je, když to není odkud je celý pack (zdroj, soubor, kdy a
+   * kým schváleno). Pack nese jeden `licenseKind`; záznam z jiného zdroje to
+   * říká sám. Produkt z toho nic neodvozuje.
+   */
+  provenance?: string;
   lenient: Record<HandLabel, ActionKey[]>;
   strict: Record<HandLabel, ActionKey[]>;
+  actionEvs?: Partial<Record<HandLabel, ActionEvSet<ActionKey>>>;
+}
+
+/**
+ * Scénář: rozložení stacků u stolu, pod kterým zpřesněné záznamy platí.
+ *
+ * ICM range se liší podle toho, jak je stůl rozdaný (bod 256: šest buněk se
+ * sráží jen o scénář). Katalog žije v packu, aby stůl uměl nakreslit, pod čím
+ * range platí, a Question_ID neslo, na co se ptalo (`questionId` má
+ * `stackSetupId` od 16. 9. 2026, žádný pack ho do 22. 9. nenesl).
+ */
+export interface RangeStackSetup {
+  /** Čitelný popis: „UTG 75 / HJ 45 / CO 60 / BTN 30 / SB 18 / BB 22 bb". */
+  label: string;
+  /** Stacky po sedačkách v bb. Sedačka mimo katalog stůl nekreslí. */
+  stacksBB: Partial<Record<Position, number>>;
 }
 
 export interface RangePack {
@@ -60,6 +100,8 @@ export interface RangePack {
   sourceEvidence: RangeSourceEvidence[];
   icmContext?: SngIcmContext;
   icmSpotTypes?: readonly IcmSpotType[];
+  /** Scénáře, na které se odkazují záznamy přes `stackSetupId`. */
+  stackSetups?: Readonly<Record<string, RangeStackSetup>>;
   records: RangePackRecord[];
 }
 
@@ -92,16 +134,90 @@ export function validateRangePack(pack: RangePack): string[] {
     errors.push(...validateRangeRecord(rangePackRecordToRangeRecord(record)));
   }
 
+  errors.push(...validateStackSetups(pack));
+
   return errors;
 }
 
+/**
+ * Záznam se scénářem musí mít scénář v katalogu, a katalog musí umět stůl
+ * nakreslit. Bez toho by spot nesl klíč, ke kterému stůl nemá stacky - hráč by
+ * viděl range pro rozložení, které mu nikdo neukázal.
+ */
+function validateStackSetups(pack: RangePack): string[] {
+  const errors: string[] = [];
+  const catalog = pack.stackSetups ?? {};
+  for (const [id, setup] of Object.entries(catalog)) {
+    if (setup.label.trim().length === 0) errors.push(`stackSetups.${id}.label is required.`);
+    const seats = Object.entries(setup.stacksBB).filter(([, bb]) => typeof bb === "number" && bb > 0);
+    if (seats.length < 2) errors.push(`stackSetups.${id} must list at least two seats with positive stacks.`);
+  }
+  for (const record of pack.records) {
+    if (record.stackSetupId !== undefined && catalog[record.stackSetupId] === undefined) {
+      errors.push(`${record.position}/${record.bucket}/${record.context} references unknown stackSetupId ${record.stackSetupId}.`);
+    }
+  }
+  return errors;
+}
+
+/**
+ * Osy, podle kterých se zpřesněný záznam **klíčuje** - a jeden jejich seznam.
+ *
+ * ## Proč je to konstanta, a ne vyjmenování na každém místě
+ *
+ * Protože vyjmenování se rozešlo, a stálo to osu. Měřeno 9. 10. 2026: osa
+ * dorovnávajícího (`flatCallers`) prošla parserem, draftem, kandidátem i
+ * `raw/normalized.json`, ale `rangeModuleBuilder` ji do dodávaného packu
+ * **nezakódoval** - vyjmenovával `vsSeat | stackSetupId | provenance`. Kandidát
+ * nesl 70 záznamů s osou, dodávané packy **nula**, a nic nespadlo: záznam
+ * v packu zůstal, jen bez osy, takže se z něj stala druhá obecná odpověď.
+ *
+ * Tatáž vada tam byla už 16. 9. u osy otvírače (bod 234) a doplnila se tehdy
+ * vyjmenováním - čímž byl návrh připravený to zopakovat u každé další osy.
+ * Stalo se to u první, která přišla.
+ *
+ * Příští osa se proto přidá **sem** a projde všude, nebo neprojde nikde. To
+ * druhé je pořád lepší než projít jen někam, protože se to pozná.
+ */
+export const REFINEMENT_AXES = ["vsSeat", "stackSetupId", "flatCallers"] as const;
+
+/**
+ * Co ze záznamu tvoří zpřesnění **v packu**: osy a k nim původ.
+ *
+ * `provenance` není osa - neklíčuje se podle ní - ale do modulu patří ze
+ * stejného důvodu: pack s uznaným zdrojem by z modulu vyšel jako pack bez něj.
+ * `RangeRecord` ji nemá, proto má `rangePackRecordToRangeRecord` jen `REFINEMENT_AXES`.
+ */
+export const PACK_REFINEMENT_KEYS = [...REFINEMENT_AXES, "provenance"] as const;
+
+/** Hodnota osy, která se má zapsat - prázdné pole znamená totéž co chybějící. */
+export function refinementValueOf(
+  record: RangePackRecord,
+  key: typeof PACK_REFINEMENT_KEYS[number],
+): unknown {
+  const value = record[key];
+  // Prázdný seznam dorovnávajících je „nikdo nedorovnal", a to je týž klíč jako
+  // bez osy - zapsat ho by znamenalo dva zápisy pro jednu odpověď.
+  if (Array.isArray(value)) return value.length > 0 ? value : undefined;
+  return value === "" ? undefined : value;
+}
+
 export function rangePackRecordToRangeRecord(record: RangePackRecord): RangeRecord {
+  const axes: Record<string, unknown> = {};
+  // Zpřesnění musí projít i sem, jinak by se dva legitimní záznamy slily do
+  // jednoho klíče a validace by je hlásila jako duplicitu.
+  for (const key of REFINEMENT_AXES) {
+    const value = refinementValueOf(record, key);
+    if (value !== undefined) axes[key] = value;
+  }
   return {
     position: record.position,
     bucket: record.bucket,
     context: record.context,
     lenient: record.lenient,
     strict: record.strict,
+    ...axes,
+    ...(record.actionEvs ? { actionEvs: record.actionEvs } : {}),
   };
 }
 
@@ -111,6 +227,11 @@ export function rangePackToRangeFile(pack: RangePack): RangeFile {
     ante: pack.dimensions.ante,
     entries: pack.records.map(rangePackRecordToRangeRecord),
   };
+}
+
+/** Stacky scénáře, na který spot ukazuje; `undefined`, když pack katalog nemá. */
+export function stackSetupOf(pack: Pick<RangePack, "stackSetups">, id: string | undefined): RangeStackSetup | undefined {
+  return id === undefined ? undefined : pack.stackSetups?.[id];
 }
 
 function isHttpUrl(url: string): boolean {

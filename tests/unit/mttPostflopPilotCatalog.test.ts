@@ -17,8 +17,8 @@ import {
 describe("MTT postflop pilot catalog", () => {
   it("drzi vsechny READY piloty oddelene od full production", () => {
     expect(validateMttPostflopPilotCatalog()).toEqual([]);
-    expect(MTT_POSTFLOP_PILOT_CATALOG).toHaveLength(6);
-    expect(readyMttPostflopPilots()).toHaveLength(6);
+    expect(MTT_POSTFLOP_PILOT_CATALOG).toHaveLength(7);
+    expect(readyMttPostflopPilots()).toHaveLength(7);
     expect(MTT_POSTFLOP_PILOT_CATALOG.every((entry) => entry.fullProductionReady === false))
       .toBe(true);
   });
@@ -27,6 +27,7 @@ describe("MTT postflop pilot catalog", () => {
     expect(requiredEntitlementsForMttPostflopPilotScopes([
       "BTN_vs_BB_SRP_FLOP_CBET",
       "UTG_vs_BB_SRP_FLOP_CBET",
+      "CO_vs_BB_SRP_FLOP_CBET",
       "BTN_vs_CO_3BP_FLOP_CBET",
       "SB_vs_BB_SRP_OOP_FLOP_CBET",
       "BTN_vs_CO_3BP_FLOP_FACING_BET",
@@ -36,6 +37,7 @@ describe("MTT postflop pilot catalog", () => {
       "mtt.postflop.flop.3bp_btn_co.facing_bet.pilot",
       "mtt.postflop.flop.srp_btn_bb.cbet.pilot",
       "mtt.postflop.flop.srp_btn_bb.facing_bet.pilot",
+      "mtt.postflop.flop.srp_co_bb.cbet.pilot",
       "mtt.postflop.flop.srp_sb_bb_oop.cbet.pilot",
       "mtt.postflop.flop.srp_utg_bb.cbet.pilot",
     ]);
@@ -85,7 +87,7 @@ describe("MTT postflop pilot catalog", () => {
     try {
       const output = join(dir, "report.json");
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/checkMttPostflopPilotCatalog.mts",
         "--output",
         "--summary",
@@ -99,7 +101,7 @@ describe("MTT postflop pilot catalog", () => {
       expect(result.stdout).toContain("MTT postflop pilot catalog");
 
       const explicit = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/checkMttPostflopPilotCatalog.mts",
         `--output=${output}`,
         "--json",
@@ -117,8 +119,9 @@ describe("MTT postflop pilot catalog", () => {
         requiredEntitlements: string[];
       };
       expect(report.valid).toBe(true);
-      expect(report.ready).toBe(6);
+      expect(report.ready).toBe(7);
       expect(report.requiredEntitlements).toContain("mtt.postflop.flop.srp_btn_bb.facing_bet.pilot");
+      expect(report.requiredEntitlements).toContain("mtt.postflop.flop.srp_co_bb.cbet.pilot");
       expect(report.requiredEntitlements).toContain("mtt.postflop.flop.srp_sb_bb_oop.cbet.pilot");
     } finally {
       rmSync(dir, { recursive: true, force: true });

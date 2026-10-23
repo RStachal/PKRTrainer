@@ -50,6 +50,56 @@ export const STACK_BUCKETS: StackBucket[] = [
 /** Horní hranice (včetně) pro režim Push/Fold v BB (Req 2.3). */
 export const PUSH_FOLD_MAX = 12;
 
+/**
+ * Horní hranice (včetně) pro re-jam přes open v BB.
+ *
+ * Nad Push/Fold, ale stále krátký stack: mezi 12 a 30 BB je shove přes open
+ * reálná odpověď a majitelovy charty pro ni dávají prahy po jednotlivých rukách.
+ * Třicet je nejhlubší práh, který jeho listy kreslí. RYE (reference od 16. 9.
+ * 2026) jamuje přes otevření ještě na 40 BB (`F3B-40BB-BB-vs-BTN`: 22-77,
+ * AJo, ATo) a od 22. 9. 2026 se ten shove cení proti dorovnávací range
+ * odvozené z equity (rozhodnutí 8a), protože list na 40 BB neexistuje.
+ * Na 50 BB RYE přímý jam nekreslí, takže tam hranice končí.
+ */
+export const RE_JAM_MAX = 40;
+
+/**
+ * Hloubka (včetně), do které se re-jam nabízí každému: nejhlubší práh
+ * vlastníkových listů. Nad ní (do `RE_JAM_MAX`) se shove nabízí jen tam, kde
+ * ho učí range spotu (`TableState.jamTaught`) - RYE ho kreslí na 40 BB jen u
+ * BB proti BTN a nabízet ho všem by znamenalo tlačítko, které žádná ruka
+ * nedoporučí a které se nedá ocenit (dorovnávací range se odvozuje z jamovací).
+ */
+export const RE_JAM_SHEET_MAX = 30;
+
+/**
+ * Horní hranice (včetně) pro open-shove místo open-raisu, v BB.
+ *
+ * Listy 10-20BB kreslí nejhlubší práh na dvaceti, takže na 20 BB už každá ruka
+ * raisuje a shove se nabízí jen na mělčích koších. Je to jiná hranice než
+ * `RE_JAM_MAX` a splynutí obou vedlo k tomu, že se shove nabízel na 25 BB, kde
+ * pro něj žádná ruka není.
+ */
+export const OPEN_SHOVE_MAX = 15;
+
+/**
+ * Hloubka (včetně), do které se open-shove nabízí tam, kde ho **range spotu
+ * učí** (`TableState.jamTaught`), nad listy vlastníka. RYE kreslí `OpenJam` na
+ * 20 bb u části rukou (`OP-20BB-*`: BTN 7 tříd); nabízet ho všem by na 20 bb
+ * znamenalo tlačítko bez range, nenabízet ho nikomu by range RYE nešla učit.
+ * Táž konstrukce jako `RE_JAM_MAX` proti `RE_JAM_SHEET_MAX` (rozhodnutí 6a a
+ * 8a, 22. 9. 2026).
+ */
+export const OPEN_SHOVE_TAUGHT_MAX = 20;
+
+/**
+ * Horní hranice (včetně) pro shove přes limp, v BB.
+ *
+ * Chart BB vs SB limp shovuje v pásmech 15-20 a 20-25 BB; od 30 BB výš žádný
+ * shove nekreslí.
+ */
+export const LIMP_SHOVE_MAX = 25;
+
 // ---------------------------------------------------------------------------
 // Ante (Req 5)
 // ---------------------------------------------------------------------------
@@ -133,17 +183,68 @@ export type FacingAction = "NONE" | "OPEN" | "3BET" | "4BET" | "ALLIN";
 export interface TableState {
   heroPos: Position;
   pushFold: boolean; // eff <= 12 BB
+  /**
+   * Efektivní stack v BB.
+   *
+   * Nahradil dřívější `shortStack: boolean`. Majitelovy charty mají tři různé
+   * hloubky, ve kterých shove končí - open-shove na 20, shove přes limp na 25,
+   * re-jam na 30 - a jediný příznak je slučoval, takže se shove nabízel i tam,
+   * kde pro něj žádná ruka není. Strom si porovnání dělá sám.
+   */
+  effectiveStackBB: number;
   limpsBefore: number; // 0..8
   callsBefore: number; // 0..7
   facing: FacingAction;
   isBvB: boolean;
+  /**
+   * Sedačka, která jednala proti hrdinovi: otvírač u `VS_OPEN` a `SQUEEZE`,
+   * tříbetující u `VS_3BET`. Osa otvírače (bod 234, rozhodnuto 14. 9. 2026).
+   *
+   * Do 15. 9. 2026 spot věděl jen, že hrdina čelí otevření, ne od koho; obrázek
+   * dával otvírače na sedačku těsně před hrdinou, EV počítala s jinou
+   * (`REJAM_EV_OPENER_BY_HERO`) a range platila proti třetí. Chybí u kontextů
+   * bez protihráče a u spotů, u kterých ho nikdo neurčil - ty se kreslí i
+   * počítají jako dřív.
+   */
+  vsSeat?: Position;
+  /**
+   * Range, kterou spot učí, obsahuje shove. Rozhoduje o nabídce jamu mezi
+   * `RE_JAM_SHEET_MAX` a `RE_JAM_MAX` (od 22. 9. 2026, rozhodnutí 8a): pod
+   * listy vlastníka se shove nabízí každému, hlouběji jen tam, kde ho range
+   * doopravdy kreslí. Chybí u stavů postavených bez záznamu (validace importu,
+   * kandidát draftu si ho doplňuje z mřížky).
+   */
+  jamTaught?: boolean;
+  /**
+   * Scénář - rozložení stacků u stolu, pod kterým range spotu platí (ICM).
+   * Losuje se jen mezi scénáři, pro které má knihovna záznam v té buňce
+   * (`scenarioCandidates`), stejně jako `vsSeat`; chybí u packů bez
+   * katalogu scénářů, a spot se pak chová jako dřív. Od 22. 9. 2026
+   * (rozhodnutí 3a, 4a).
+   */
+  stackSetupId?: string;
+  /**
+   * Kdo otevření dorovnal, zkratkami zdroje a v pořadí akce - osa
+   * dorovnávajícího (rozhodnutí vlastníka 4a, 1. 10. 2026).
+   *
+   * Losuje se jen mezi kombinacemi, pro které má knihovna v té buňce záznam
+   * (`flatCallerCandidates`), stejně jako `vsSeat` a `stackSetupId`. Chybí
+   * u packů, které tu osu nenesou, a spot se pak chová jako dřív.
+   *
+   * `callsBefore` z toho **vychází**: počet dorovnávajících musí sedět na jejich
+   * jména, jinak by stůl nakreslil tři callery k range, která platí pro dva.
+   */
+  flatCallers?: readonly string[];
 }
 
 // ---------------------------------------------------------------------------
 // Spot a odpovědi (Req 3.12, 7)
 // ---------------------------------------------------------------------------
 
-/** Jedna nabízená odpověď: 1 Akční_klíč + český popisek. */
+import type { ActionEvSet } from "./actionEv";
+import type { OpponentStyleId } from "./opponentStyle";
+
+/** Jedna nabízená odpověď: 1 Akční_klíč + popisek. */
 export interface Answer {
   key: ActionKey;
   label: string; // český text
@@ -159,9 +260,16 @@ export interface Spot {
   hand: HandLabel;
   heroCards: [Card, Card]; // konkrétní karty pro vykreslení
   tableState: TableState; // pro render + odvození nabídky akcí
+  /**
+   * Stacky sedaček podle scénáře (sedačka → bb), když spot scénář nese. Stůl
+   * je kreslí místo jednotné efektivní hloubky; bez scénáře chybí.
+   */
+  seatStacks?: Partial<Record<Position, number>>;
   answers: Answer[]; // nabízené možnosti (1 ActionKey každá)
   correctKeys: ActionKey[]; // LENIENT (Req 7.3)
   strictCorrect: ActionKey[]; // STRICT (Req 7.2)
+  /** Solver EV for every offered action; absent until a reviewed export provides it. */
+  actionEvs?: ActionEvSet<ActionKey>;
   explanation: string; // české zdůvodnění
   hint?: string;
   /**
@@ -187,6 +295,16 @@ export interface Filters {
   contexts: ActionContext[]; // [] = neomezeno
   ante: AnteMode;
   scoringMode: ScoringMode;
+  /**
+   * Who the hero is up against, when the player says.
+   *
+   * Absent means unknown, which is what the shipped ranges actually describe -
+   * they are a GTO baseline against no one in particular. Naming an opponent does
+   * not swap in a second set of ranges; it supplies one number, the folds that
+   * opponent gives, and the trainer prices the decision against it. See
+   * `core/opponentStyle`.
+   */
+  opponentStyle?: OpponentStyleId;
 }
 
 export interface SessionConfig {

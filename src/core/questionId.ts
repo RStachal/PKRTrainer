@@ -23,16 +23,54 @@ export interface QuestionIdParams {
   hand: HandLabel;
   /** Režim ante ("ON" | "OFF"). */
   ante: AnteMode;
+  /**
+   * Sedačka, která jednala před hrdinou; jen když spot dostal zpřesněnou
+   * odpověď. Bez ní se ID nemění.
+   */
+  vsSeat?: Position;
+  /** Rozložení stacků u stolu, pro které odpověď platí. Viz `vsSeat`. */
+  stackSetupId?: string;
+  /**
+   * Kdo otevření dorovnal; jen když spot dostal odpověď zpřesněnou o tuhle osu
+   * (rozhodnutí 4a). Bez ní se ID nemění.
+   *
+   * Musí v ID být ze stejného důvodu jako `vsSeat`: je to jiná otázka. Změřeno,
+   * že BTN na 100 bb squeezuje 67 kombinací proti flatu z EP a 102 proti CO -
+   * kdyby obě spadly pod jedno ID, statistika by sčítala úspěšnost ve dvou
+   * různých situacích a hráč by v obou viděl smyšlený průměr.
+   */
+  flatCallers?: readonly string[];
 }
 
 /**
  * Stabilní ID Spotu z jeho parametrů. Čistá deterministická funkce.
  *
- * Formát: `${context}|${heroPos}|${effStack}|${hand}|${ante}`.
+ * Formát: `${context}|${heroPos}|${effStack}|${hand}[|vsSEAT][|#SETUP]|${ante}`.
+ *
+ * ## Proč zpřesnění stojí **před** ante
+ *
+ * `parseAnteFromQuestionId` čte **poslední** segment a čeká `ON`/`OFF`.
+ * Připojit zpřesnění na konec by tichounce rozbilo ante u každého uloženého
+ * výsledku - dashboard by přestal rozlišovat ante a nikdo by nepoznal proč.
+ * Ante proto zůstává poslední a zpřesnění se vsouvá před něj.
+ *
+ * ## Proč se ID bez zpřesnění nemění
+ *
+ * Spot, který zpřesněnou odpověď nedostal, má ID **bajt po bajtu stejné** jako
+ * dřív. Uložená historie hráče tím zůstává platná, což je tvrdé pravidlo o
+ * migraci: změnit Question_ID plošně by znamenalo, že lidem zmizí statistiky.
+ *
+ * Nové ID vznikne jen tam, kde odpověď doopravdy závisí na tom, kdo jednal před
+ * hrdinou - a tam je to správně jiná otázka, takže si zaslouží jiné ID.
  *
  * @param p Parametry Spotu (kontext, pozice, efektivní stack, ruka, ante).
  * @returns Stabilní Question_ID jako řetězec.
  */
 export function questionId(p: QuestionIdParams): string {
-  return `${p.context}|${p.heroPos}|${p.effStack}|${p.hand}|${p.ante}`;
+  const versus = p.vsSeat ? `|vs${p.vsSeat}` : "";
+  const setup = p.stackSetupId ? `|#${p.stackSetupId}` : "";
+  // Prázdný seznam nepřipojuje nic - stejně jako v klíči packu. Jinak by se ID
+  // změnilo i tam, kde se odpověď nezpřesnila, a rozešlo by se s historií.
+  const flat = p.flatCallers?.length ? `|@${p.flatCallers.join("+")}` : "";
+  return `${p.context}|${p.heroPos}|${p.effStack}|${p.hand}${versus}${setup}${flat}|${p.ante}`;
 }

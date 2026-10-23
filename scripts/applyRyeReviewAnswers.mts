@@ -1,0 +1,295 @@
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
+
+import { gridContentHash, gridQuestion } from "./lib/ryeAnswerHistory.mts";
+import {
+  type DraftFile,
+  type DraftRecord,
+  impactOf,
+  loadProductionStoreForImpact,
+  seatCollisions,
+} from "./lib/ryeDraftImpact.mts";
+
+/**
+ * Co majitel u draftu odpověděl, přeložené do rozhodnutí.
+ *
+ *   npm run mtt:rye-answers -- --answers="DRILLEV-REVIEW-V2 36o 38x24 0?"
+ *   npm run mtt:rye-answers -- --answers-file=odpovedi.txt
+ *
+ * ## Proč identifikátory, a ne pozice
+ *
+ * Stránka řadí mřížky podle dopadu a ten se mění s obsahem - noc přidá rodinu
+ * a pořadí se přeskládá. Poziční export by po přegenerování sedl na jiné
+ * mřížky, tedy tiše přiřadil verdikt cizí range. Token proto nese **index
+ * v draftu**, který se nemění.
+ *
+ * ## Co skript dělá a co ne
+ *
+ * Shrne odpovědi a vypíše, co z nich plyne. **Nic nezapisuje do `src/`.**
+ * Schválená mřížka je vstup do importu, ne import sám; mezi tím stojí ještě
+ * rozhodnutí, jestli se ta buňka vůbec rozdává (bod 140) a jak se přeloží
+ * ztracená rozlišení.
+ */
+
+const FLAG_LABEL: Record<string, string> = {
+  "1": "moc široké",
+  "2": "moc těsné",
+  "3": "špatné ruce",
+  "4": "špatný mix",
+  "5": "sloučení akcí vadí",
+};
+
+const VERDICT_LABEL: Record<string, string> = {
+  o: "sedí",
+  x: "nesedí",
+  "?": "nevím",
+  s: "přeskočeno",
+};
+
+const draftPath = process.argv.find((arg) => arg.startsWith("--draft="))?.split("=")[1]
+  ?? "artifacts/rye-import/draft.json";
+const answersArg = process.argv.find((arg) => arg.startsWith("--answers="))?.split("=").slice(1).join("=");
+const answersFile = process.argv.find((arg) => arg.startsWith("--answers-file="))?.split("=")[1];
+
+const raw = answersFile !== undefined ? readFileSync(answersFile, "utf8") : answersArg;
+if (raw === undefined) {
+  console.error('Usage: npm run mtt:rye-answers -- --answers="DRILLEV-REVIEW-V2 36o 38x24" | --answers-file=<soubor>');
+  process.exit(2);
+}
+
+const draft = JSON.parse(readFileSync(draftPath, "utf8")) as DraftFile;
+// Dopad se měří proti produkčnímu packu, ne legacy indexu (bod 256).
+await loadProductionStoreForImpact();
+
+/**
+ * Soubor s odpověďmi rozdělený na varianty.
+ *
+ * Majitel 9. 9. 2026 poslal soubor se **dvěma** tokeny a komentářem mezi nimi:
+ * hlavní odpověď a citlivostní variantu. Do té chvíle skript odřízl jen první
+ * předponu a zbytek četl dál, takže obě varianty **splynuly v jeden součet** -
+ * mřížka schválená v jedné a zamítnutá v druhé se započítala dvakrát a nikde by
+ * to nebylo vidět. Komentář by navíc skončil mezi nepřečtenými tokeny.
+ */
+const variants = raw
+  .split(/\r?\n/)
+  .filter((line) => !line.trimStart().startsWith("#"))
+  .join("\n")
+  .split(/DRILLEV-REVIEW-V\d+\s*/)
+  .map((part) => part.trim())
+  .filter((part) => part.length > 0);
+
+const variantArg = process.argv.find((arg) => arg.startsWith("--variant="))?.split("=")[1];
+if (variants.length > 1 && variantArg === undefined) {
+  console.error(`Soubor nese ${variants.length} variant odpovědí. Vyber jednu: --variant=1 az ${variants.length}.`);
+  for (const [index, part] of variants.entries()) {
+    console.error(`  ${index + 1}: ${part.slice(0, 72)}…`);
+  }
+  process.exit(2);
+}
+
+const body = variants[variantArg === undefined ? 0 : Number(variantArg) - 1] ?? "";
+if (body.length === 0) {
+  console.log("Odpovědi jsou prázdné - nic k vyhodnocení.");
+  process.exit(0);
+}
+
+const byVerdict = new Map<string, DraftRecord[]>();
+const flagCounts = new Map<string, number>();
+const unknown: string[] = [];
+const resolved: {
+  sourceFile: string; verdict: string; flags: string[]; contentHash: string; question: string;
+}[] = [];
+
+for (const token of body.split(/\s+/)) {
+  const match = /^(\d+)([ox?s])([1-5]*)$/.exec(token);
+  if (match === null) { unknown.push(token); continue; }
+  const record = draft.records[Number(match[1])];
+  if (record === undefined) { unknown.push(token); continue; }
+  byVerdict.set(match[2], [...(byVerdict.get(match[2]) ?? []), record]);
+  for (const flag of match[3]) flagCounts.set(flag, (flagCounts.get(flag) ?? 0) + 1);
+  resolved.push({
+    sourceFile: record.sourceFile,
+    verdict: VERDICT_LABEL[match[2]] ?? match[2],
+    flags: [...match[3]].map((flag) => FLAG_LABEL[flag] ?? flag),
+    // Otisk toho, nad čím se odpovídalo. Bez něj se dá jen odhadovat, jestli
+    // odpověď ještě platí - a odhad z 9. 9. 2026 poslal majitele číst znovu
+    // 29 mřížek, které se od jeho čtení nezměnily.
+    contentHash: gridContentHash(record),
+    // A otázka, na kterou mřížka odpovídala. Otisk hlídá jen obrázek; kontext
+    // se může změnit i pod stejnými barvami (15. 9. 2026: devět push/fold
+    // mřížek, které byly jamy proti otevření).
+    question: gridQuestion(record),
+  });
+}
+
+/**
+ * Odpovědi přepsané z pozice na identitu mřížky.
+ *
+ * Token nese index v draftu, a ten je stabilní jen dokud se draft skládá ze
+ * stejných stránek. Jakmile jedna vypadne - třeba proto, že ji nově shodí
+ * nepřeložitelná barva - všechny další se posunou a odpovědi sednou na cizí
+ * mřížku, aniž by to bylo poznat. Vyřeší se to jednou: token se přeloží proti
+ * draftu, **nad kterým se četlo**, a uloží se pod jménem zdrojového souboru.
+ * Ten se s přeimportováním nemění.
+ */
+const outPath = process.argv.find((arg) => arg.startsWith("--out="))?.split("=")[1];
+if (outPath !== undefined) {
+  mkdirSync(dirname(outPath), { recursive: true });
+  writeFileSync(outPath, `${JSON.stringify({
+    schemaVersion: "PKRTRAINER_RYE_ANSWERS_V1",
+    draftCreatedAt: draft.createdAt,
+    draftRecordCount: draft.records.length,
+    answers: [...resolved].sort((left, right) => left.sourceFile.localeCompare(right.sourceFile)),
+  }, null, 2)}\n`, "utf8");
+  console.log(`Odpovědi přepsané na identitu mřížky: ${outPath} (${resolved.length})`);
+  console.log("");
+}
+
+const answered = [...byVerdict.values()].reduce((sum, list) => sum + list.length, 0);
+console.log("Odpovědi k draftu");
+console.log("");
+console.log(`zodpovězeno: ${answered} z ${draft.records.length}`);
+for (const [verdict, label] of Object.entries(VERDICT_LABEL)) {
+  const list = byVerdict.get(verdict) ?? [];
+  console.log(`  ${label.padEnd(12)} ${String(list.length).padStart(4)}`);
+}
+if (flagCounts.size > 0) {
+  console.log("");
+  console.log("co bylo u „nesedí“ vytčeno:");
+  for (const [flag, count] of [...flagCounts].sort((left, right) => right[1] - left[1])) {
+    console.log(`  ${(FLAG_LABEL[flag] ?? flag).padEnd(20)} ${count}x`);
+  }
+}
+if (unknown.length > 0) {
+  console.log("");
+  console.log(`nepřečtené tokeny (${unknown.length}): ${unknown.slice(0, 8).join(", ")}`);
+}
+
+/**
+ * Co ze schváleného může dnes dojít k hráči.
+ *
+ * ## Proč to tady přibylo
+ *
+ * Do 4. 9. 2026 skript vypsal, kolik mřížek je schválených - a to je číslo o
+ * vyrobené práci, ne o doručení. Pravidlo 4 říká opak: měří se, co dojde
+ * k hráči. Rozdíl je tu velký a měřitelný, protože schválení samo o sobě
+ * nestačí ani jednou ze tří stran:
+ *
+ * 1. **Buňka se nemusí rozdávat.** Obranu proti otevření trenažér rozdává až
+ *    od lojacku, takže mřížka pro UTG+1 po schválení nezmění nic.
+ * 2. **Kombinace může být dnes prázdná** - schválení je pak to nejcennější, co
+ *    se může stát: odpověď nebude přesnější, ona vůbec bude.
+ * 3. **Dvě mřížky můžou mířit do jedné buňky.** Do 16. 9. 2026 proto, že se
+ *    lišily jen otvíračem a produkt tu osu neměl (bod 140); osa otvírače
+ *    (bod 253) to rozpustila. Zbývá rozložení stacků - scénář ICM - a to je
+ *    jediná část, která se importem vyřešit nedá (bod 256).
+ */
+function reportDelivery(approved: readonly DraftRecord[]): void {
+  let landing = 0;
+  let unlocking = 0;
+  let notDrilled = 0;
+  let changedClasses = 0;
+  let newCells = 0;
+  for (const record of approved) {
+    const impact = impactOf(record);
+    if (impact.notDrilled) { notDrilled += 1; continue; }
+    if (impact.unlocksEmpty) unlocking += 1;
+    if (impact.newCell) newCells += 1;
+    changedClasses += impact.changed;
+    landing += 1;
+  }
+
+  console.log("");
+  console.log("co z toho může dnes dojít k hráči:");
+  console.log(`  rozdává se to                     ${String(landing).padStart(4)}`);
+  console.log(`    z toho rozsvítí prázdnou relaci ${String(unlocking).padStart(4)}`);
+  console.log(`    z toho buňka, kterou nemáme     ${String(newCells).padStart(4)}`);
+  console.log(`  tříd, kde by se odpověď změnila   ${String(changedClasses).padStart(4)}`);
+  console.log(`  nerozdává se, takže nezmění nic   ${String(notDrilled).padStart(4)}`);
+
+  const collisions = seatCollisions(approved);
+  if (collisions.length === 0) return;
+
+  const disagreeing = collisions.reduce((sum, row) => sum + row.disagreeing, 0);
+  const resolved = collisions.filter((row) => row.resolved);
+  const open = collisions.filter((row) => !row.resolved);
+
+  console.log("");
+  console.log(`sráží se o rozložení stacků: ${collisions.length} buněk, ${disagreeing} tříd v rozporu`);
+  console.log(`  chipEV mřížka přistane sama      ${String(resolved.length).padStart(4)}`);
+  console.log(`  zůstává na tobě                  ${String(open.length).padStart(4)}`);
+
+  if (resolved.length > 0) {
+    console.log("");
+    console.log("v chipEV packu přistane jediná chipEV mřížka v buňce, ICM čekají na $EV pack:");
+    for (const row of resolved.slice(0, 8)) {
+      console.log(
+        `  ${row.cell.padEnd(26)} bereme ${String(row.chipEvSetup).padEnd(4)}`
+        + ` (z ${row.setups.length} rozložení) → ${row.disagreeing} tříd`,
+      );
+    }
+    if (resolved.length > 8) console.log(`  … a dalších ${resolved.length - 8}`);
+  }
+
+  if (open.length > 0) {
+    console.log("");
+    console.log("bez chipEV mřížky (samé ICM) nebo s dvěma, takže se nerozhoduje odhadem:");
+    for (const row of open.slice(0, 8)) {
+      console.log(
+        `  ${row.cell.padEnd(26)} ${row.setups.join(", ").padEnd(24)} ${row.disagreeing} tříd`,
+      );
+    }
+    if (open.length > 8) console.log(`  … a dalších ${open.length - 8}`);
+  }
+
+  // Dvě různé příčiny, dvě různá vysvětlení. Do 1. 10. 2026 se obojí vysvětlovalo
+  // rozložením stacků, přestože u srážky uvnitř jednoho rozložení jde o něco
+  // jiného - a hlavně: řádek „chipEV mřížka přistane sama" tvrdil u šesti buněk
+  // něco, co neplatilo, protože se počítala rozložení místo mřížek.
+  const sameSetup = open.filter((row) => row.chipEvGrids > 1);
+  console.log("");
+  console.log(
+    "Otvírač je od 16. 9. 2026 v klíči (bod 253), takže mřížky lišící se jen\n"
+    + "otvíračem se už nesráží. Co zbývá, jsou dvě různé věci.",
+  );
+  if (sameSetup.length > 0) {
+    console.log("");
+    console.log(
+      `Do ${sameSetup.length} buněk míří víc chipEV mřížek **téhož** rozložení. Rodina MUL\n`
+      + "nese v názvu i toho, kdo otevření dorovnal (EP_CO, EP_MP, EP_SB…), a ten se\n"
+      + "do klíče nedostane - takže se ty mřížky nedají rozlišit a která přistane,\n"
+      + "neurčuje žádné napsané pravidlo. Dvě cesty: dát dorovnávajícího do klíče,\n"
+      + "nebo u srážky vybírat deterministicky a to pravidlo napsat.",
+    );
+  }
+  console.log("");
+  console.log(
+    "Zbytek se liší rozložením stacků - hloubkou protihráče nebo scénářem ICM -\n"
+    + "a tu osu klíč packu nemá. Pro chipEV pack to nevadí: ICM mřížka do něj nejde\n"
+    + "vůbec. Srážka to bude pro $EV pack, až bude, a řeší se scénářem v klíči\n"
+    + "(`RangeRefinement.stackSetupId`).",
+  );
+}
+
+const approved = byVerdict.get("o") ?? [];
+if (approved.length > 0) {
+  console.log("");
+  console.log("schváleno k dalšímu kroku:");
+  const byContext = new Map<string, number>();
+  for (const record of approved) {
+    byContext.set(record.context, (byContext.get(record.context) ?? 0) + 1);
+  }
+  for (const [context, count] of [...byContext].sort((left, right) => right[1] - left[1])) {
+    console.log(`  ${context.padEnd(12)} ${count}`);
+  }
+  const mixes = approved.reduce((sum, record) => sum + Object.keys(record.mix ?? {}).length, 0);
+  console.log(`  rukou s mixem v tom, co je schválené: ${mixes}`);
+  reportDelivery(approved);
+}
+
+console.log("");
+console.log(
+  "Nic se nezapsalo. Schválená mřížka je vstup do importu, ne import sám -\n"
+  + "mezi tím stojí rozhodnutí, jestli se ta buňka vůbec rozdává, a jak se\n"
+  + "přeloží rozlišení, která produkt nemá.",
+);

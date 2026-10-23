@@ -9,7 +9,13 @@ import {
   type PostflopPotType,
 } from "../src/core/postflopGenerator.ts";
 import type { PostflopActionNode } from "../src/core/postflopTrainingSpot.ts";
+import {
+  representativeFlopForBoardId as representativeBoard,
+} from "../src/core/texasSolverBoardCatalog.ts";
+import { aggregateBettingLaneForHand } from "../src/core/flopHandCategory.ts";
 import type { Card, HandLabel, Rank, Suit } from "../src/core/types.ts";
+import { BIG_BET_POT_FRACTION, betActionFor } from "./lib/postflopBetActionMapping.mts";
+import { familyTreeEconomics } from "./lib/solverFamilyParams.mts";
 
 const DEFAULT_REVIEW =
   "artifacts/texas-solver-review-integration/reviews/MTT9_50BB_BTN_BB_SRP/CHECK.review-report.json";
@@ -17,8 +23,9 @@ const DEFAULT_OUTPUT_DIR = "artifacts/texas-solver-review-integration/normalized
 const DEFAULT_PACK_ID = "mtt-full-ring-9-regular-flop-chip-ev-ante-off-production-v1";
 const CREATED_AT = "2026-07-01";
 const RANKS = "AKQJT98765432";
+const SUITS: readonly Suit[] = ["s", "h", "d", "c"];
 const STRONG_RANKS = new Set(["A", "K", "Q", "J", "T"]);
-const MIN_MIXED_BET_FREQUENCY_FOR_ACTIVE_BUCKET = 25;
+const MIN_MIXED_RAISE_FREQUENCY_FOR_ACTIVE_BUCKET = 25;
 
 interface CliArgs {
   actionNode: Extract<PostflopActionNode, "SINGLE_RAISED_POT_CBET" | "THREE_BET_POT_CBET" | "FLOP_FACING_BET">;
@@ -29,6 +36,8 @@ interface CliArgs {
   packId: string;
   positionPattern: PostflopPositionPattern;
   potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">;
+  /** Pot in chips, when the caller states it rather than letting the family's parameter file supply it. */
+  potChipsOverride?: number;
   reviewPath: string;
   sprMax: number;
   sprMin: number;
@@ -59,6 +68,8 @@ interface DraftRuleFile {
   boardId: string;
   boardTextures: BoardTexture[];
   board: [Card, Card, Card];
+  /** Every flop the rule aggregates; lane classification needs all of them. */
+  boards: [Card, Card, Card][];
   handClasses: Record<string, ReviewHandClassStrategy>;
 }
 
@@ -95,6 +106,7 @@ try {
 }
 
 function parseArgs(argv: readonly string[]): CliArgs {
+  let potChipsOverride: number | undefined;
   let actionNode: CliArgs["actionNode"] = "SINGLE_RAISED_POT_CBET";
   let blindSpeeds = ["REGULAR"];
   let evModel: "CHIP_EV" | "DOLAR_EV" = "CHIP_EV";
@@ -145,6 +157,14 @@ function parseArgs(argv: readonly string[]): CliArgs {
     if (item === "--pot-type") {
       potType = parsePotType(nextArg(argv, index, "--pot-type"));
       index += 1;
+      continue;
+    }
+    if (item.startsWith("--pot-chips=")) {
+      potChipsOverride = parseNumber(requiredInlineValue(item, "--pot-chips"), "--pot-chips");
+      continue;
+    }
+    if (item === "--pot-chips") {
+      potChipsOverride = parseNumber(nextArg(argv, index, "--pot-chips"), "--pot-chips");
       continue;
     }
     if (item.startsWith("--pot-type=")) {
@@ -231,6 +251,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     packId,
     positionPattern,
     potType,
+    ...(potChipsOverride === undefined ? {} : { potChipsOverride }),
     reviewPath,
     sprMax,
     sprMin,
@@ -246,6 +267,9 @@ function usage(): string {
     "  npm run mtt:texas-solver-normalize-draft -- --review artifacts/.../CHECK.review-report.json --pack-id mtt-full-ring-9-regular-flop-chip-ev-ante-off-production-v1 --write",
     "  npm run mtt:texas-solver-normalize-draft -- --review artifacts/.../LOWSPR/CHECK.review-report.json --spr-min=0 --spr-max=3 --output-dir artifacts/.../LOWSPR --write",
     "  npm run mtt:texas-solver-normalize-draft -- --review artifacts/.../3BP/CHECK.review.json --pot-type=THREE_BET_POT --action-node=THREE_BET_POT_CBET --position-pattern=3BP_BTN_VS_CO --write",
+    "",
+    "  --pot-chips=N   Pot in chips. Taken from the family's solver parameter file when omitted;",
+    "                  required when no such file exists, because the bet mapping is a fraction of it.",
     "",
     "Builds a review-only canonical flop-production draft from a TexasSolver review report.",
     "The output is written to artifacts/ by default and must still pass human poker review before promotion.",
@@ -330,18 +354,28 @@ function parseNumber(value: string, flag: string): number {
 function buildDraft(args: CliArgs): DraftResult {
   const review = JSON.parse(readFileSync(args.reviewPath, "utf8")) as ReviewReport;
   const familyId = stringValue(review.familyId, "UNKNOWN_FAMILY");
+  // The bet/small split is a fraction of this family's pot, so the pot has to be
+  // known. Guessing one would put the mapping back to describing something it
+  // cannot see, which is the defect being corrected.
+  const potChips = args.potChipsOverride ?? familyTreeEconomics(familyId)?.potChips ?? Number.NaN;
   const nodeHistory = stringArray(review.nodeHistory);
   const files = normalizeFiles(review.files);
   const blockers = [
     ...stringArray(review.blockers),
     ...review.valid === true ? [] : ["TexasSolver review report is not valid."],
+    // Without the pot there is no fraction to split bets on, and defaulting them
+    // all to BET_SMALL would erase the big-bet branch entirely - a quieter and
+    // worse failure than the mislabelling this replaced. Refuse instead.
+    ...Number.isFinite(potChips) && potChips > 0
+      ? []
+      : [`Cannot resolve the pot for ${familyId}; pass --pot-chips or add its solver parameter file. The bet mapping is a fraction of the pot.`],
   ];
   const warnings = [
     ...stringArray(review.anomalies).map((item) => `Review anomaly: ${item}`),
     "Draft was generated from solver review aggregation and still needs human poker review.",
     "Draft intentionally covers one family/node only, so production coverage is expected to remain incomplete.",
   ];
-  const rules = [buildRule(args, familyId, nodeHistory, aggregateFiles(args.actionNode, files))];
+  const rules = [buildRule(args, familyId, nodeHistory, aggregateFiles(args.actionNode, files, potChips), potChips)];
   const bucketCount = rules.reduce((count, rule) => count + rule.rangeBuckets.length, 0);
   const normalizedPath = resolve(args.outputDir, "normalized.candidate.json");
   const permissionPath = resolve(args.outputDir, "permission.candidate.json");
@@ -393,7 +427,7 @@ function buildDraft(args: CliArgs): DraftResult {
       `${nodeHistory.join(" > ") || "ROOT"} node is treated as the hero decision node selected for review.`,
     args.actionNode === "FLOP_FACING_BET"
       ? "TexasSolver FOLD/CALL/RAISE labels are mapped to the facing-bet action space."
-      : "TexasSolver BET 25 is mapped to BET_SMALL; larger/all-in bet labels are mapped to BET_BIG.",
+      : `bet-action-rule=POT_FRACTION: TexasSolver bets above ${Math.round(BIG_BET_POT_FRACTION * 100)} percent of the pot, including the all-in, are mapped to BET_BIG and the rest to BET_SMALL.`,
       "Board ids from the review file are converted to representative physical cards only for texture/card-removal validation.",
       "This draft is not sufficient production coverage by itself.",
     ],
@@ -509,11 +543,12 @@ function normalizeActionMix(value: unknown): Record<string, number> {
   return result;
 }
 
-function aggregateFiles(actionNode: CliArgs["actionNode"], files: readonly ReviewFile[]): DraftRuleFile {
+function aggregateFiles(actionNode: CliArgs["actionNode"], files: readonly ReviewFile[], potChips: number): DraftRuleFile {
   if (files.length === 0) {
     return {
       boardId: "empty",
       board: representativeBoard("A72r"),
+      boards: [representativeBoard("A72r")],
       boardTextures: ["ace-high", "rainbow", "disconnected", "dry"],
       handClasses: {},
     };
@@ -543,7 +578,7 @@ function aggregateFiles(actionNode: CliArgs["actionNode"], files: readonly Revie
         sum + (strategy.averageByAction[action] ?? 0)
       ), 0) / strategies.length;
     }
-    const actionMix = normalizeMappedActionMix(actionNode, averageByAction);
+    const actionMix = normalizeMappedActionMix(actionNode, averageByAction, potChips);
     const dominantAction = mappedDominantAction(actionMix);
     handClasses[handClass] = {
       averageByAction,
@@ -555,18 +590,20 @@ function aggregateFiles(actionNode: CliArgs["actionNode"], files: readonly Revie
   return {
     boardId: files.map((file) => file.boardId).join("_"),
     board: boards[0],
+    boards,
     boardTextures: [...boardTextures],
     handClasses,
   };
 }
 
-function buildRule(args: CliArgs, familyId: string, nodeHistory: readonly string[], file: DraftRuleFile) {
-  const board = file.board;
+function buildRule(args: CliArgs, familyId: string, nodeHistory: readonly string[], file: DraftRuleFile, potChips: number) {
   const boardTextures = file.boardTextures;
   const buckets = Object.entries(file.handClasses)
     .sort(([left], [right]) => left.localeCompare(right))
-    .map(([handClass, strategy]) => buildBucket(args.actionNode, handClass as HandLabel, strategy));
+    .map(([handClass, strategy]) => buildBucket(args.actionNode, handClass as HandLabel, strategy, file.boards, potChips));
   const recommendedAction = mostCommonBucketAction(buckets);
+  const rangeHands = buckets.flatMap((bucket) => bucket.handClasses) as HandLabel[];
+  const board = cardRemovalSampleBoard(file, rangeHands);
   const sampleHand = buckets[0]?.handClasses[0] as HandLabel | undefined;
 
   return {
@@ -594,11 +631,54 @@ function buildRule(args: CliArgs, familyId: string, nodeHistory: readonly string
   };
 }
 
-function buildBucket(actionNode: CliArgs["actionNode"], handClass: HandLabel, strategy: ReviewHandClassStrategy) {
-  const actionMix = normalizeMappedActionMix(actionNode, strategy.averageByAction);
-  const dominantAction = primaryBucketAction(actionNode, handClass, actionMix);
+/**
+ * Pick the flop used for the card-removal sample.
+ *
+ * A rule aggregates several boards, and the sample only proves that card
+ * removal is handled correctly. A paired or trips board can leave an aggregated
+ * range hand with no combos at all - `55` has none on `5s 5h 5d` - which is a
+ * property of that one board rather than a defect in the range. Prefer a board
+ * on which every range hand still has a combo, and fall back to the first board
+ * so behaviour stays deterministic when no board qualifies.
+ */
+function cardRemovalSampleBoard(
+  file: DraftRuleFile,
+  rangeHands: readonly HandLabel[],
+): [Card, Card, Card] {
+  const usable = file.boards.find((candidate) => (
+    rangeHands.every((hand) => handClassComboCount(hand, candidate) > 0)
+  ));
+  return usable ?? file.board;
+}
+
+/** Combos of an aggregated hand class that survive the board's card removal. */
+function handClassComboCount(handClass: HandLabel, board: readonly Card[]): number {
+  const high = handClass[0];
+  const low = handClass[1];
+  const available = (rank: string): number => 4 - board.filter((card) => card.rank === rank).length;
+  if (high === low) {
+    const remaining = available(high);
+    return (remaining * (remaining - 1)) / 2;
+  }
+  const suitedCombos = SUITS.filter((suit) => (
+    !board.some((card) => card.rank === high && card.suit === suit) &&
+    !board.some((card) => card.rank === low && card.suit === suit)
+  )).length;
+  if (handClass.endsWith("s")) return suitedCombos;
+  return available(high) * available(low) - suitedCombos;
+}
+
+function buildBucket(
+  actionNode: CliArgs["actionNode"],
+  handClass: HandLabel,
+  strategy: ReviewHandClassStrategy,
+  boards: readonly (readonly Card[])[],
+  potChips: number,
+) {
+  const actionMix = normalizeMappedActionMix(actionNode, strategy.averageByAction, potChips);
+  const dominantAction = primaryBucketAction(actionNode, actionMix);
   return {
-    lane: laneForHand(actionNode, handClass, dominantAction),
+    lane: laneForHand(actionNode, handClass, dominantAction, boards),
     label: `${handClass} · ${dominantAction}`,
     action: dominantAction,
     handClasses: [handClass],
@@ -624,6 +704,7 @@ function fallbackActionForNode(actionNode: CliArgs["actionNode"]): PostflopActio
 function normalizeMappedActionMix(
   actionNode: CliArgs["actionNode"],
   source: Record<string, number>,
+  potChips: number,
 ): Record<PostflopAction, number> {
   const legalActions = actionsForActionNode(actionNode);
   const mapped: Record<PostflopAction, number> = {
@@ -635,7 +716,7 @@ function normalizeMappedActionMix(
     FOLD: 0,
   };
   for (const [action, frequency] of Object.entries(source)) {
-    const mappedAction = mapSolverAction(actionNode, action);
+    const mappedAction = mapSolverAction(actionNode, action, potChips);
     if (mappedAction === null) continue;
     mapped[mappedAction] += Math.max(0, frequency);
   }
@@ -659,30 +740,23 @@ function normalizeMappedActionMix(
 
 function primaryBucketAction(
   actionNode: CliArgs["actionNode"],
-  handClass: string,
   actionMix: Record<PostflopAction, number>,
 ): PostflopAction {
   const dominantAction = mappedDominantAction(actionMix);
   if (actionNode === "FLOP_FACING_BET") {
     const raiseFrequency = actionMix.RAISE ?? 0;
-    if (dominantAction !== "RAISE" && raiseFrequency >= MIN_MIXED_BET_FREQUENCY_FOR_ACTIVE_BUCKET) {
+    if (dominantAction !== "RAISE" && raiseFrequency >= MIN_MIXED_RAISE_FREQUENCY_FOR_ACTIVE_BUCKET) {
       return "RAISE";
     }
-    return dominantAction;
   }
-  const betFrequency = (actionMix.BET_SMALL ?? 0) + (actionMix.BET_BIG ?? 0);
-  const isNaturalBluffCandidate = !isPair(handClass) && !STRONG_RANKS.has(handClass[0]);
-  if (
-    dominantAction !== "CHECK" ||
-    !isNaturalBluffCandidate ||
-    betFrequency < MIN_MIXED_BET_FREQUENCY_FOR_ACTIVE_BUCKET
-  ) {
-    return dominantAction;
-  }
-  return (actionMix.BET_BIG ?? 0) > (actionMix.BET_SMALL ?? 0) ? "BET_BIG" : "BET_SMALL";
+  return dominantAction;
 }
 
-function mapSolverAction(actionNode: CliArgs["actionNode"], action: string): PostflopAction | null {
+function mapSolverAction(
+  actionNode: CliArgs["actionNode"],
+  action: string,
+  potChips: number,
+): PostflopAction | null {
   if (actionNode === "FLOP_FACING_BET") {
     if (action === "FOLD") return "FOLD";
     if (action === "CALL") return "CALL";
@@ -691,8 +765,11 @@ function mapSolverAction(actionNode: CliArgs["actionNode"], action: string): Pos
   }
   if (action === "CHECK") return "CHECK";
   if (action.startsWith("BET_")) {
-    const amount = Number(action.slice("BET_".length));
-    return Number.isFinite(amount) && amount > 75 ? "BET_BIG" : "BET_SMALL";
+    // As a fraction of this family's pot, not an absolute chip count. The chip
+    // threshold that preceded it made a half-pot bet BET_SMALL in a pot-50 family
+    // and BET_BIG in a pot-157 one, so the same label described two different
+    // bets. Shared with the bet-sizing table so they cannot drift.
+    return betActionFor(Number(action.slice("BET_".length)), potChips, "POT_FRACTION");
   }
   return null;
 }
@@ -707,19 +784,26 @@ function mostCommonBucketAction(buckets: Array<{ action: PostflopAction }>): Pos
   return [...counts.entries()].sort((left, right) => right[1] - left[1])[0]?.[0] ?? "CHECK";
 }
 
+/**
+ * Lane for one aggregated hand class.
+ *
+ * VALUE versus BLUFF is a hand-versus-board judgement, so it is decided by the
+ * shared board-aware classifier rather than by the hand's own rank. Ranking a
+ * hand by its high card alone made every ace a value bet, so A2s betting as an
+ * ace-high blocker on K83r was taught as value while an underpair that bets was
+ * too. Both are pressure, not value.
+ *
+ * Hands that do not put money in stay in the CHECK lane.
+ */
 function laneForHand(
   actionNode: CliArgs["actionNode"],
   handClass: string,
   action: PostflopAction,
+  boards: readonly (readonly Card[])[],
 ): "VALUE" | "BLUFF" | "CHECK" {
-  if (actionNode === "FLOP_FACING_BET") {
-    if (action !== "RAISE") return "CHECK";
-    if (isPair(handClass) || STRONG_RANKS.has(handClass[0])) return "VALUE";
-    return "BLUFF";
-  }
-  if (action === "CHECK") return "CHECK";
-  if (isPair(handClass) || STRONG_RANKS.has(handClass[0])) return "VALUE";
-  return "BLUFF";
+  const aggressiveAction = actionNode === "FLOP_FACING_BET" ? action === "RAISE" : action !== "CHECK";
+  if (!aggressiveAction) return "CHECK";
+  return aggregateBettingLaneForHand(handClass as HandLabel, boards);
 }
 
 function featuresForHand(handClass: string, action: PostflopAction): string[] {
@@ -749,19 +833,6 @@ function featureForAction(action: PostflopAction): string {
 
 function isPair(handClass: string): boolean {
   return handClass.length === 2 && handClass[0] === handClass[1];
-}
-
-function representativeBoard(boardId: string): [Card, Card, Card] {
-  const match = /^([AKQJT98765432])([AKQJT98765432])([AKQJT98765432])(mono|tt|r)?$/i.exec(boardId);
-  if (match === null) throw new Error(`Unsupported board id: ${boardId}`);
-  const ranks = [match[1], match[2], match[3]].map((rank) => rank.toUpperCase() as Rank);
-  const texture = match[4] ?? "r";
-  const suits: Suit[] = texture === "mono"
-    ? ["s", "s", "s"]
-    : texture === "tt"
-      ? ["s", "s", "h"]
-      : ["s", "h", "d"];
-  return ranks.map((rank, index) => ({ rank, suit: suits[index] })) as [Card, Card, Card];
 }
 
 function representativeHeroCards(handClass: HandLabel, board: readonly Card[]): [Card, Card] {

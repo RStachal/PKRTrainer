@@ -197,9 +197,12 @@ function describeProfileStatus(profile: TrainingProfile): {
 } {
   const capability = trainingCapabilityForProfile(profile);
   if (capability.status === "PRODUCTION") {
+    const releaseLabel = isMttChipEvCoreProfile(profile)
+      ? `${CS.profile.mttChipEvCore}. `
+      : "";
     return {
       status: "production",
-      text: `${CS.profile.production}: ${mttProfileLabel(profile)}. ${CS.profile.productionOffline}`,
+      text: `${releaseLabel}${CS.profile.production}: ${mttProfileLabel(profile)}. ${CS.profile.productionOffline}`,
     };
   }
   if (
@@ -207,9 +210,19 @@ function describeProfileStatus(profile: TrainingProfile): {
     profile.gameVariant === "MTT" &&
     profile.street === "PREFLOP"
   ) {
+    // Odvozené profily řeknou, odkud jejich range jsou. Obecná hláška mluví o
+    // hraní z historických dat, což platí pro devítistolový chipEV a pro nic
+    // dalšího: šestistolové záznamy jsou devítistolové přeznačené podle počtu
+    // hráčů za sebou, a $EV range vznikly posunem podle bubble faktoru pro jednu
+    // konkrétní situaci. Hráč to má vědět od začátku, ne to zjistit u stolu.
+    const previewNote = profile.evModel === "DOLAR_EV"
+      ? CS.profile.mttIcmDerivedPreview
+      : profile.tableFormat === "SIX_MAX"
+        ? CS.profile.mttSixMaxDerivedPreview
+        : CS.profile.mttPreflopPreview;
     return {
       status: "preview",
-      text: `Náhled: ${mttProfileLabel(profile)}. ${CS.profile.mttPreflopPreview}`,
+      text: `Preview: ${mttProfileLabel(profile)}. ${previewNote}`,
     };
   }
   if (capability.status === "PREVIEW") {
@@ -220,7 +233,7 @@ function describeProfileStatus(profile: TrainingProfile): {
         : "";
       return {
         status: "preview",
-        text: `Náhled: ${mttProfileLabel(profile)}. ${CS.profile.postflopPreview}${pilotNote}`,
+        text: `Preview: ${mttProfileLabel(profile)}. ${CS.profile.postflopPreview}${pilotNote}`,
       };
     }
     return {
@@ -248,14 +261,24 @@ function describeProfileStatus(profile: TrainingProfile): {
   };
 }
 
+function isMttChipEvCoreProfile(profile: TrainingProfile): boolean {
+  return (
+    profile.gameVariant === "MTT" &&
+    profile.tableFormat === "FULL_RING_9" &&
+    profile.street === "PREFLOP" &&
+    profile.evModel === "CHIP_EV" &&
+    profile.rakeMode === "NONE"
+  );
+}
+
 function candidateProfileLabel(profile: TrainingProfile): string {
   if (profile.gameVariant === "SNG") {
-    return `SNG ${evModelLabel(profile.evModel)} náhled`;
+    return `SNG ${evModelLabel(profile.evModel)} preview`;
   }
   if (profile.gameVariant === "CASH") {
-    return `Cash ${profile.rakeMode === "RAKE" ? "rake" : "bez rake"} náhled`;
+    return `Cash ${profile.rakeMode === "RAKE" ? "rake" : "no rake"} preview`;
   }
-  return `${profile.gameVariant} ${tableFormatLabel(profile.tableFormat)} preflop ${evModelLabel(profile.evModel)} ${anteLabel(profile.ante)} náhled`;
+  return `${profile.gameVariant} ${tableFormatLabel(profile.tableFormat)} preflop ${evModelLabel(profile.evModel)} ${anteLabel(profile.ante)} preview`;
 }
 
 function tableFormatLabel(format: TableFormat): string {
@@ -280,7 +303,7 @@ function mttProfileLabel(profile: TrainingProfile): string {
 }
 
 function anteLabel(ante: AnteMode): string {
-  return ante === "ON" ? "ante zapnuto" : "bez ante";
+  return ante === "ON" ? "ante on" : "ante off";
 }
 
 function streetLabel(street: TrainingStreet): string {

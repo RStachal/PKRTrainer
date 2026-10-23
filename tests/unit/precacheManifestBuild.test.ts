@@ -9,6 +9,7 @@ import {
   buildPrecacheManifest,
   injectPrecacheManifest,
   isLazyMttProductionAsset,
+  isDeferredAsset,
   mttProductionChunkNameForModuleId,
 } from "../../src/pwa/precacheManifestBuild";
 
@@ -79,6 +80,106 @@ describe("precache build manifest", () => {
     expect(mttProductionChunkNameForModuleId(
       "/repo/src/data/ranges/flopProductionStrategyPack.ts",
     )).toBeNull();
+  });
+
+  it("dá vyřešené turn rodině jméno, které precache pozná jako odložené", () => {
+    // Tohle se jednou rozbilo tiše. Rodiny se emitují jako `.json`, protože jako
+    // TypeScript stály dvanáct vteřin transformace v každém běhu sady - jenže
+    // pravidlo hlídalo `.generated.ts`, po převodu přestalo platit, chunky
+    // dostaly jméno podle souboru a precache je přestal poznávat. Rozpočet
+    // vyskočil z 362 kB na 4,4 MB: celý solverový obsah se ocitl na instalační
+    // cestě. Chytil to až rozpočet, ne test.
+    for (const path of [
+      "/repo/src/data/ranges/turn/mtt9-40bb-utg-bb-srp.generated.json",
+      "C:\\repo\\src\\data\\ranges\\turn\\mtt9-40bb-utg-bb-srp.generated.json",
+    ]) {
+      const name = mttProductionChunkNameForModuleId(path);
+      expect(name).toBe("mtt-turn-solved-mtt9-40bb-utg-bb-srp");
+      expect(isDeferredAsset(`assets/${name}-AbCd1234.js`)).toBe(true);
+    }
+  });
+
+  it("stejné pravidlo platí pro river, ne jen pro turn", () => {
+    // Riverové rodiny jsou stejně velké a emitují se stejně. Kdyby je pravidlo
+    // nepoznalo, zopakoval by se tentýž skok rozpočtu o ulici dál - a znovu by to
+    // nechytil test, ale až rozpočet.
+    for (const path of [
+      "/repo/src/data/ranges/river/mtt9-20bb-btn-bb-srp-lowspr.generated.json",
+      "C:\\repo\\src\\data\\ranges\\river\\mtt9-20bb-btn-bb-srp-lowspr.generated.json",
+    ]) {
+      const name = mttProductionChunkNameForModuleId(path);
+      expect(name).toBe("mtt-river-solved-mtt9-20bb-btn-bb-srp-lowspr");
+      expect(isDeferredAsset(`assets/${name}-AbCd1234.js`)).toBe(true);
+    }
+  });
+
+  it("tabulka EV se pozná taky, přestože leží vedle rodin", () => {
+    // `/ranges/river-ev/` neobsahuje `/ranges/river/`, takže naivní pořadí
+    // podmínek by ji nepoznalo vůbec: chunk by dostal jméno podle souboru,
+    // precache by ho vzal za nutný a půl megabajtu EV by přistálo na instalační
+    // cestě i tomu, kdo si otevře jen preflopový dril.
+    for (const path of [
+      "/repo/src/data/ranges/river-ev/mtt9-20bb-btn-bb-srp-lowspr.generated.json",
+      "C:\\repo\\src\\data\\ranges\\river-ev\\mtt9-20bb-btn-bb-srp-lowspr.generated.json",
+    ]) {
+      const name = mttProductionChunkNameForModuleId(path);
+      expect(name).toBe("mtt-river-ev-solved-mtt9-20bb-btn-bb-srp-lowspr");
+      expect(isDeferredAsset(`assets/${name}-AbCd1234.js`)).toBe(true);
+    }
+    // A rodina se nesmí schovat pod EV: jsou to dva různé chunky.
+    expect(mttProductionChunkNameForModuleId(
+      "/repo/src/data/ranges/river/mtt9-20bb-btn-bb-srp-lowspr.generated.json",
+    )).toBe("mtt-river-solved-mtt9-20bb-btn-bb-srp-lowspr");
+  });
+
+  it("turnová tabulka EV a její manifest jsou taky odložené", () => {
+    // Potřetí tatáž past, a tentokrát změřená dřív, než ta data vznikla:
+    // `/ranges/turn-ev/` v pravidle chybělo, takže 48 tabulek dostalo jméno
+    // podle souboru a instalační cesta vyskočila z 386 KiB na **20,7 MB raw /
+    // 3,95 MB gzip** (bod 230). Zaplatil by to každý hráč při instalaci.
+    for (const path of [
+      "/repo/src/data/ranges/turn-ev/mtt9-20bb-btn-bb-srp-lowspr.generated.json",
+      "C:\\repo\\src\\data\\ranges\\turn-ev\\mtt9-20bb-btn-bb-srp-lowspr.generated.json",
+    ]) {
+      const name = mttProductionChunkNameForModuleId(path);
+      expect(name).toBe("mtt-turn-ev-solved-mtt9-20bb-btn-bb-srp-lowspr");
+      expect(isDeferredAsset(`assets/${name}-AbCd1234.js`)).toBe(true);
+    }
+    // Rodina se nesmí schovat pod EV ani tady.
+    expect(mttProductionChunkNameForModuleId(
+      "/repo/src/data/ranges/turn/mtt9-20bb-btn-bb-srp-lowspr.generated.json",
+    )).toBe("mtt-turn-solved-mtt9-20bb-btn-bb-srp-lowspr");
+    // Manifest je seznam, podle kterého se tabulky stahují - nesmí být na
+    // instalační cestě dřív než ony.
+    const manifest = mttProductionChunkNameForModuleId(
+      "/repo/src/data/ranges/turnEvManifest.generated.ts",
+    );
+    expect(manifest).toBe("mtt-manifest-turn-ev");
+    expect(isDeferredAsset(`assets/${manifest}-AbCd1234.js`)).toBe(true);
+  });
+
+  it("data načtená přes `?raw` dostanou totéž odložené jméno jako dřív", () => {
+    // Od 15. 10. 2026 manifesty načítají `…generated.json?raw`, aby data
+    // nečetl TypeScript. Vite pak dává do id i dotaz, a kdyby se neodřízl,
+    // přípona by nesedla, chunk by dostal jméno podle souboru a precache by
+    // vzal všech 84 MB solverových dat za nutná - počtvrté tatáž past.
+    for (const [dir, street] of [
+      ["flop", "flop"],
+      ["turn", "turn"],
+      ["turn-ev", "turn-ev"],
+      ["river", "river"],
+      ["river-ev", "river-ev"],
+    ] as const) {
+      const name = mttProductionChunkNameForModuleId(
+        `/repo/src/data/ranges/${dir}/mtt9-40bb-hj-bb-srp.generated.json?raw`,
+      );
+      expect(name, dir).toBe(`mtt-${street}-solved-mtt9-40bb-hj-bb-srp`);
+      expect(isDeferredAsset(`assets/${name}-AbCd1234.js`), dir).toBe(true);
+    }
+    // A bez dotazu se nemění nic.
+    expect(mttProductionChunkNameForModuleId(
+      "/repo/src/data/ranges/turn-ev/mtt9-40bb-hj-bb-srp.generated.json",
+    )).toBe("mtt-turn-ev-solved-mtt9-40bb-hj-bb-srp");
   });
 
   it("realny Vite build emituje production modul jako lazy chunk mimo precache", async () => {

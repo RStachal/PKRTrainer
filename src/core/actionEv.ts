@@ -1,0 +1,207 @@
+/**
+ * Where an EV set came from, which is never a detail.
+ *
+ * `SOLVER` is a reviewed export and is the only source a shipped range pack may
+ * carry - `validateActionEvSet` still insists on it, because that validator
+ * guards imports. `ALL_IN_EQUITY` is computed at runtime from the generated
+ * preflop equity table for the two contexts where the spot fixes a price, and it
+ * is a weaker claim: exact arithmetic over a sampled table, ignoring card removal
+ * between ranges. Keeping the two apart means nobody has to guess which they are
+ * looking at.
+ */
+export type ActionEvSource = "SOLVER" | "ALL_IN_EQUITY" | "SOLVED_TREE";
+
+/**
+ * Zdroje, které se hráči smějí ukázat.
+ *
+ * Přísný seznam patří na import packů, ne na zobrazení. Dokud to bylo jedno a
+ * totéž, platilo `source must be SOLVER` i pro čísla dopočítaná za běhu -
+ * takže se **žádná EV typu `ALL_IN_EQUITY` nikdy neukázala**, přestože se
+ * počítala, ukládala do spotu a **známkovalo se podle ní**. Aplikace tím
+ * hodnotila hráče podle čísel, která před ním schovávala.
+ */
+export const DISPLAYABLE_ACTION_EV_SOURCES: readonly ActionEvSource[] = [
+  "SOLVER",
+  "ALL_IN_EQUITY",
+  "SOLVED_TREE",
+];
+export type ActionEvUnit = "BB";
+
+export interface ActionEvValue<Action extends string> {
+  action: Action;
+  evBb: number;
+}
+
+/**
+ * Solver counterfactual values for every action offered at one decision node.
+ * Frequencies are intentionally kept out of this contract: a mixed strategy
+ * does not, by itself, prove the EV of any action.
+ */
+export interface ActionEvSet<Action extends string> {
+  source: ActionEvSource;
+  unit: ActionEvUnit;
+  values: readonly ActionEvValue<Action>[];
+  equivalentThresholdBb: number;
+  acceptableThresholdBb: number;
+}
+
+export type ActionEvOutcome = "BEST" | "EQUIVALENT" | "ACCEPTABLE" | "MISTAKE";
+
+export interface ActionEvEvaluation<Action extends string> {
+  chosenAction: Action;
+  chosenEvBb: number;
+  bestEvBb: number;
+  evLossBb: number;
+  bestActions: readonly Action[];
+  outcome: ActionEvOutcome;
+}
+
+const FLOAT_EPSILON = 1e-9;
+
+export function evaluateActionEv<Action extends string>(
+  set: ActionEvSet<Action>,
+  chosenAction: Action,
+): ActionEvEvaluation<Action> | null {
+  const chosen = set.values.find((item) => item.action === chosenAction);
+  if (!chosen || set.values.length === 0) return null;
+
+  const bestEvBb = Math.max(...set.values.map((item) => item.evBb));
+  const evLossBb = Math.max(0, bestEvBb - chosen.evBb);
+  const bestActions = set.values
+    .filter((item) => bestEvBb - item.evBb <= set.equivalentThresholdBb + FLOAT_EPSILON)
+    .map((item) => item.action);
+
+  let outcome: ActionEvOutcome;
+  if (evLossBb <= FLOAT_EPSILON) outcome = "BEST";
+  else if (evLossBb <= set.equivalentThresholdBb + FLOAT_EPSILON) outcome = "EQUIVALENT";
+  else if (evLossBb <= set.acceptableThresholdBb + FLOAT_EPSILON) outcome = "ACCEPTABLE";
+  else outcome = "MISTAKE";
+
+  return {
+    chosenAction,
+    chosenEvBb: chosen.evBb,
+    bestEvBb,
+    evLossBb,
+    bestActions,
+    outcome,
+  };
+}
+
+export function bestActionsForActionEv<Action extends string>(
+  set: ActionEvSet<Action>,
+): readonly Action[] {
+  if (set.values.length === 0) return [];
+  const bestEvBb = Math.max(...set.values.map((item) => item.evBb));
+  return set.values
+    .filter((item) => bestEvBb - item.evBb <= set.equivalentThresholdBb + FLOAT_EPSILON)
+    .map((item) => item.action);
+}
+
+export function highestEvAction<Action extends string>(
+  set: ActionEvSet<Action>,
+): Action | null {
+  let best: ActionEvValue<Action> | undefined;
+  for (const item of set.values) {
+    if (!best || item.evBb > best.evBb + FLOAT_EPSILON) best = item;
+  }
+  return best?.action ?? null;
+}
+
+/**
+ * Je sada úplná pro tenhle uzel?
+ *
+ * `allowedSources` je schválně přísné ve výchozím stavu: většina volajících je
+ * import packu, kde smí projít jen prověřený export. Zobrazovací cesty si musí
+ * volnější seznam vyžádat, a je pak na jednom řádku vidět, že to dělají.
+ */
+export function isActionEvSetComplete<Action extends string>(
+  set: ActionEvSet<Action> | undefined,
+  legalActions: readonly Action[],
+  allowedSources: readonly ActionEvSource[] = ["SOLVER"],
+): set is ActionEvSet<Action> {
+  return set !== undefined && validateActionEvSet(set, legalActions, allowedSources).length === 0;
+}
+
+/**
+ * Je sada použitelná k zobrazení, i když nepokrývá všechny nabízené akce?
+ *
+ * Úplnost je správný požadavek na import packu a **špatný na zobrazení.**
+ * Změřeno 23. 8. 2026 na 300 riverových spotech: EV se ukázala jen ve 20 %, a
+ * největší díl chyběl proto, že trenažér nabízí akce, které solve neobsahuje -
+ * typicky zvýšení na uzlu, kde solver žádnou větev se zvýšením nepočítal. Trvat
+ * na úplnosti tam znamená zatajit i ta čísla, která **máme**.
+ *
+ * Co se nesmí ztratit: hráč musí u akce bez hodnoty vidět, že hodnota chybí, ne
+ * prázdné místo. Prázdno vedle čísel se čte jako „tahle akce nemá cenu", a to je
+ * nepravda jiného druhu.
+ */
+export function isActionEvSetUsable<Action extends string>(
+  set: ActionEvSet<Action> | undefined,
+  legalActions: readonly Action[],
+  allowedSources: readonly ActionEvSource[] = ["SOLVER"],
+): set is ActionEvSet<Action> {
+  if (set === undefined) return false;
+  const errors = validateActionEvSet(set, legalActions, allowedSources)
+    // Jediná uvolněná podmínka je úplnost. Cizí akce, duplicita, nekonečno ani
+    // nepovolený zdroj neprojdou dál - sada, která tvrdí nesmysl, se nezobrazí.
+    .filter((error) => !/is missing an EV$/.test(error));
+  // Jedna hodnota nedokáže nic seřadit, takže není co ukazovat.
+  return errors.length === 0 && set.values.length >= 2;
+}
+
+export function validateActionEvSet<Action extends string>(
+  set: ActionEvSet<Action>,
+  legalActions: readonly Action[],
+  allowedSources: readonly ActionEvSource[] = ["SOLVER"],
+): string[] {
+  const errors: string[] = [];
+  const legal = new Set<string>(legalActions);
+  const seen = new Set<string>();
+
+  if (!allowedSources.includes(set.source)) {
+    errors.push(`source must be one of ${allowedSources.join(", ")}`);
+  }
+  if (set.unit !== "BB") errors.push("unit must be BB");
+  if (!isNonNegativeFinite(set.equivalentThresholdBb)) {
+    errors.push("equivalentThresholdBb must be a non-negative finite number");
+  }
+  if (!isNonNegativeFinite(set.acceptableThresholdBb)) {
+    errors.push("acceptableThresholdBb must be a non-negative finite number");
+  }
+  if (
+    Number.isFinite(set.equivalentThresholdBb) &&
+    Number.isFinite(set.acceptableThresholdBb) &&
+    set.acceptableThresholdBb < set.equivalentThresholdBb
+  ) {
+    errors.push("acceptableThresholdBb must be greater than or equal to equivalentThresholdBb");
+  }
+  if (!Array.isArray(set.values) || set.values.length === 0) {
+    errors.push("values must contain at least one action EV");
+    return errors;
+  }
+
+  for (const item of set.values) {
+    if (!legal.has(item.action)) errors.push(`action ${item.action} is not offered at this node`);
+    if (seen.has(item.action)) errors.push(`action ${item.action} is duplicated`);
+    seen.add(item.action);
+    if (!Number.isFinite(item.evBb)) errors.push(`action ${item.action} evBb must be finite`);
+  }
+  for (const action of legalActions) {
+    if (!seen.has(action)) errors.push(`action ${action} is missing an EV`);
+  }
+
+  return errors;
+}
+
+export function cloneActionEvSet<Action extends string>(
+  set: ActionEvSet<Action>,
+): ActionEvSet<Action> {
+  return {
+    ...set,
+    values: set.values.map((item) => ({ ...item })),
+  };
+}
+
+function isNonNegativeFinite(value: number): boolean {
+  return Number.isFinite(value) && value >= 0;
+}

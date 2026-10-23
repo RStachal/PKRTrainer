@@ -205,15 +205,17 @@ Required fields:
 - `licenseKind`
 - `allowedRedistributionScope`
 - `sourceMaterialLocation`
-- `evidence`
+- `evidence` for third-party/public-permission inputs; optional for an owner-confirmed `OWNED_SOLVER_EXPORT`
 - `notes`
 
 Reuse fields:
 
 - `reusePolicy` is required whenever one source/manifest is used across more than one `blindSpeed` or more than one `evModel`.
 - `reusePolicy.allowedDimensions` must explicitly list `BLIND_SPEED`, `EV_MODEL`, or both.
-- `reusePolicy.reviewedAt`, `reusePolicy.reviewer`, `reusePolicy.rationale` and `reusePolicy.sourceMaterialReferenceIds` are required.
-- Each `reusePolicy.sourceMaterialReferenceIds` item must point to an `evidence.referenceId`.
+- `reusePolicy.reviewedAt`, `reusePolicy.reviewer` and `reusePolicy.rationale` are required.
+- `reusePolicy.sourceMaterialReferenceIds` are required for third-party/public-permission inputs.
+- For an owner-confirmed `OWNED_SOLVER_EXPORT`, `reusePolicy.sourceMaterialReferenceIds` may be empty.
+- Each provided `reusePolicy.sourceMaterialReferenceIds` item must point to an `evidence.referenceId`.
 
 Accepted `allowedRedistributionScope` for production:
 
@@ -224,7 +226,7 @@ Rejected scopes:
 - `PKRTRAINER_INTERNAL_REVIEW_ONLY`
 - `NO_REDISTRIBUTION`
 
-The manifest must use internal `referenceId` evidence instead of URL fields. The CLI report is intentionally source-free and prints only pack id, license kind, redistribution scope, reviewer, rights owner and evidence count.
+When evidence is present, the manifest must use internal `referenceId` values instead of URL fields. The CLI report is intentionally source-free and prints only pack id, license kind, redistribution scope, reviewer, rights owner and evidence count.
 
 Example files:
 

@@ -13,6 +13,7 @@ describe("mtt:completion CLI", () => {
     expect(result.stdout).toContain("mode: PRODUCTION");
     expect(result.stdout).toContain("valid: false");
     expect(result.stdout).toContain("total rows: 64");
+    expect(result.stdout).toContain("productionReady rows: 4");
     expect(result.stdout).not.toContain("MTT completion readiness");
   });
 
@@ -81,7 +82,7 @@ describe("mtt:completion CLI", () => {
       valid: true,
       mode: "PREVIEW",
       totalRows: 64,
-      productionReadyRows: 0,
+      productionReadyRows: 4,
     });
     expect(parsed.readiness.rows).toHaveLength(4);
     expect(parsed.readiness.productionRows).toBe(0);

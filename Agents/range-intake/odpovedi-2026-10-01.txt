@@ -1,0 +1,66 @@
+# DrillEV — 1. 10. 2026, čtení 54 mřížek z ranze-nove 2026-10-01 13:08 (draft z 30. 9.)
+# Vyplnil Claude v nejlepší víře z podkladů (PKR, RYE db, draft.json) - návrh, ne vlastníkův zápis.
+# Vlastník ho 1. 10. přeposlal jako svoje čtení se slovy „zde mas vyplnene drafty".
+# Zpracuje: npm run mtt:rye-answers -- --answers-file=<tenhle soubor>
+
+DRILLEV-REVIEW-V2 12o 18o 72o 75o 78o 95o 97o 100x3 121o 122o 123o 124o 125o 126o 127o 128o 129o 130o 131o 132o 133o 135o 136x235 138o 139o 140o 141o 142o 143o 144o 146o 147o 148o 149o 150o 151x235 152o 153o 154x5 155x5 156x5 157x5 158x5 159x5 160x5 161x5 162o 163o 164o 209x2 211o 214o 216o 217o
+
+# -- Co jsem ověřil -----------------------------------------------------------
+#
+# Vlastním parserem jsem přečetl všech 54 zdrojových stránek z RYE db a porovnal je
+# buňku po buňce, včetně vah u mixů, se stránkou ke kontrole: sedí 54 z 54. Barvy jsou
+# přeložené věrně. Níž je tedy jen strategie a to, jak produkt akce pojmenuje.
+#
+# 54 mřížek: 42x ✓, 12x ✗.
+#
+#
+# -- Dvanáct ✗ ----------------------------------------------------------------
+#
+#  154 155 156 157 158 159 160 161   ✗5  (stejná vada překladu, ne strategie)
+#       Na těch osmi stránkách (a taky na 136 a 151) píše zdroj hodnotový squeeze jako
+#       „3bet/call to 9bb" a blaf jako „Bluff Squeeze to 9bb". Slovník SQUEEZE
+#       v ryeActionMapping.mts mapuje „3bet/call" na 3BET, kdežto „squeeze/call" na
+#       SQUEEZE. Ve spotu s otevřením a callem je to přitom jedna a táž akce: navýšení
+#       na 9 bb. Trenažér tam nabízí FOLD, CALL, 3BET i SQUEEZE (actionTree.ts) a hodnotí
+#       přesnou shodou (scoring.ts). Hráč s AA, který zmáčkne SQUEEZE, by dostal chybu,
+#       zatímco s AQo by musel zmáčknout SQUEEZE. Produkční pack (regular i turbo, ante ON)
+#       ve squeeze kontextu 3BET nepoužívá vůbec: 58 záznamů, jen CALL, SQUEEZE a JAM.
+#       Stránky, kde zdroj píše „Squeeze/call to …" (SB, BB, všechny 100bb), mají hodnotu
+#       i blaf jako SQUEEZE. Oprava je jeden řádek ve slovníku SQUEEZE:
+#         ["3bet/call", { action: "SQUEEZE", lost: "zdroj říká, že proti 4betu se dorovnává" }]
+#       Obsah těch osmi jsem prošel a po přemapování ho beru: BTN 40 bb callne 168-190
+#       kombinací, squeezuje 62-74 a jamuje TT, JJ nebo AQs. CO, HJ a LJ jsou úměrně užší.
+#
+#  136 151   ✗235  BB 20 bb a BB 40 bb proti UTG (MUL-20BB-BB-vs-EP_MP, MUL-40BB-BB-vs-EP_MP)
+#       Mřížka i legenda jsou totožné s MUL-40BB-BTN-vs-EP_MP (id156), takže je to range
+#       pro BTN. BB tu callne 190 kombinací (14 %) proti 506-751 na ostatních pěti BB 40bb
+#       stránkách. Squeezuje na 9 bb místo 11 bb jako všech pět sourozenců. Na 20 bb
+#       squeezuje na 9 bb, tedy skoro půl stacku, kde ostatních deset 20bb stránek jen
+#       jamuje nebo callne. Stejný nález jako 24. a 29. 9.
+#
+#  100   ✗3  SB 18 bb proti EP 30 bb (ICM3-sb18bb-ep30bb)
+#       Páry: QQ+ 3bet, JJ-99 jam, 88-66 fold, 55 jam, 44-22 fold. Legenda „Jam 5 % (64 combos)"
+#       pětky počítá (JJ-99 18 + 55 6 + AJs 4 + KJs+ 8 + QJs 4 + AQo+ 24 = 64), takže to
+#       není chyba čtení, ale zdroje. 66 bije 55 a blokerově se neliší. Je to jediná díra
+#       v řadě párů v celé padesátičtyřce.
+#
+#  209   ✗2  BB 40 bb proti UTG (SQU-40BBMais-BB-vs-EP-MP)
+#       Jako squeeze chart je věrná, jako záznam produktu ne. Kreslí jen squeeze (5,7 %
+#       kombinací) a brána „jen jedna větev" ji pustila, protože legenda píše „Squeeze call"
+#       bez lomítka a COMPOUND_RAISE to čte jako pasivní call. Ostatní čtyři SQU stránky
+#       brána drží (211, 214, 216, 217). Bez opravy by se BB na 40, 50, 60 a 75 bb učil
+#       skládat 94 % rukou, kdežto MUL pro týž typ spotu (id150) callne 506 kombinací.
+#
+#
+# -- Proti čtení z 29. 9. (také návrh) jsem jinak u tří míst -------------------
+#
+#  130   ✓ místo ✗5. Zdroj má dvě velikosti squeeze (blaf 11 bb, value 13 bb). U 4x5
+#       z 23. 9. šlo o iso 3,5x proti 4x, a velikosti isa jsou v produktu různé klíče,
+#       takže by se učila špatná velikost. Squeeze žádné velikosti nemá: SQUEEZE je jedna
+#       akce a velikost stojí v poznámce, takže se nic špatně nenaučí. Obsah sedí (flat
+#       TT-55, AQs-AJs, KQs, JTs; squeeze JJ+, AKs, AQo+ a blafy ATs, KJs, KTs, QJs).
+#  143, 144   ✓ místo ?. Výtka „nesedí" z 15. 9. patřila zařazení do PUSH_FOLD. Teď jsou to
+#       squeeze stránky: na 20 bb jam nebo fold přes otevření a call. HJ jamuje 99+, ATs+,
+#       KJs+, AQo+ (6,3 %), LJ o chlup užší (5,7 %). Je to správný tvar a sedí na sousedy:
+#       CO 20 bb má tentýž jam a k tomu pár callů.
+#  154-161   ✗5 místo ✓. Nový nález, popsaný výš.

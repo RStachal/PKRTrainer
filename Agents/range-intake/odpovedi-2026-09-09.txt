@@ -1,0 +1,21 @@
+# Odpovědi majitele na draft ranží, druhé čtení 9. 9. 2026.
+#
+# POZOR: tenhle soubor je archiv, ne zdroj pravdy. Indexy v něm patří draftu
+# o 114 záznamech, nad kterým se četlo. Dnešní draft má 112 - dvě stránky nově
+# shodí nepřeložitelná barva (bod 224) - takže indexy od 79 výš už sedí jinam.
+# Přeložené odpovědi drží `answers-2026-09-09.json`, klíčem je jméno zdrojového
+# souboru, a to se přeimportováním nemění. Pracuj s ním.
+#
+# Takhle ten překlad vznikl, ještě nad draftem se 114 záznamy:
+#   npm run mtt:rye-answers -- --answers-file=Agents/range-intake/odpovedi-2026-09-09.txt \
+#     --variant=1 --out=Agents/range-intake/answers-2026-09-09.json
+#
+# Varianta 1 je odpověď majitele. Zamítnuté jsou 78 a 110: obě mají obrácený
+# význam barvy (all-in ve zdroji, fold v draftu) a k tomu špatně určený kontext.
+DRILLEV-REVIEW-V2 0o 1o 2o 3o 4o 5o 6o 7o 8o 9o 10o 11o 12o 13o 14o 15o 16o 17o 18o 19o 20o 21o 22o 23o 24o 25o 26o 27o 28o 29o 30o 31o 32o 33o 34o 35o 36o 37o 38o 39o 40o 41o 42o 43o 44o 45o 46o 47o 48o 49o 50o 51o 52o 53o 54o 55o 56o 57o 58o 59o 60o 61o 62o 63o 64o 65o 66o 67o 68o 69o 70o 71o 72o 73o 74o 75o 76o 77o 78x235 79o 80o 81o 82o 83o 84o 85o 86o 87o 88o 89o 90o 91o 92o 93o 94o 95o 96o 97o 98o 99o 100o 101o 102o 103o 104o 105o 106o 107o 108o 109o 110x235 111o 112o 113o
+
+# Varianta 2 je citlivostní: mřížky s rozšířenou váhou označené jako „moc široké".
+# Není to druhá odpověď na tutéž otázku - je to odhad, kolik by se změnilo, kdyby
+# se ztracená částečná váha počítala jako vada mřížky. Bod 224 ukázal, že je to
+# vada importu, ne mřížek, takže se řídit má varianta 1.
+DRILLEV-REVIEW-V2 0o 1o 2o 3o 4o 5x1 6o 7x1 8x1 9x1 10x1 11x1 12x1 13x1 14x1 15x1 16x1 17x1 18o 19o 20o 21o 22o 23o 24o 25o 26o 27o 28o 29x1 30x1 31o 32x1 33o 34x1 35o 36x1 37x1 38x1 39o 40o 41o 42o 43o 44o 45o 46x1 47x1 48x1 49x1 50x1 51o 52x1 53x1 54o 55o 56o 57o 58o 59x1 60x1 61o 62x1 63x1 64x1 65x1 66x1 67x1 68x1 69o 70o 71o 72o 73x1 74x1 75x1 76x1 77x1 78x235 79x1 80x1 81x1 82x1 83x1 84x1 85x1 86x1 87x1 88x1 89x1 90x1 91x1 92x1 93x1 94x1 95x1 96x1 97x1 98x1 99x1 100x1 101x1 102o 103x1 104x1 105x1 106x1 107x1 108x1 109o 110x235 111o 112o 113o

@@ -5,12 +5,15 @@ import type {
   PostflopPositionPattern,
   PostflopRecommendationSource,
   PostflopStreet,
+  PostflopStrategyProvenance,
 } from "../core/postflopGenerator";
 import { POSTFLOP_ACTIONS, isPostflopPositionPattern } from "../core/postflopGenerator";
 import type {
   PostflopActionNode,
   PostflopTrainingSpot,
 } from "../core/postflopTrainingSpot";
+import type { ActionEvOutcome } from "../core/actionEv";
+import { gradePostflopAction } from "../core/postflopScoring";
 import {
   DEFAULT_TRAINING_PROFILE,
   profileId,
@@ -25,7 +28,7 @@ import type { AnteMode, Position } from "../core/types";
 
 export const POSTFLOP_RESULT_RECORD_SCHEMA = "postflop_result_record_v1";
 export const POSTFLOP_STATS_V2_BRIDGE_SCHEMA = "postflop_stats_v2_bridge_v1";
-export const POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION = 4;
+export const POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION = 5;
 export const POSTFLOP_SCENARIO_ID_VERSION = "postflop_scenario_v1";
 
 export interface PostflopResultRecord {
@@ -48,8 +51,19 @@ export interface PostflopResultRecord {
   sourceVerifiedAt: string | null;
   sourceRuleId: string;
   sourceConfidence: "LOW" | "MEDIUM" | "HIGH" | null;
+  /**
+   * Whether the answer was graded against solver output or the public heuristic
+   * model. Optional so records written before this field remain valid; absent
+   * means unknown, never "solver".
+   */
+  sourceProvenance?: PostflopStrategyProvenance | null;
   ts: number;
   responseMs?: number;
+  actionEvOutcome?: ActionEvOutcome;
+  chosenEvBb?: number;
+  bestEvBb?: number;
+  evLossBb?: number;
+  equivalentBestActions?: readonly PostflopAction[];
 }
 
 export interface PostflopStatsV2BridgeRecord {
@@ -80,7 +94,13 @@ export interface PostflopStatsV2BridgeRecord {
   strategyVerifiedAt?: string | null;
   strategyRuleId: string;
   confidence: "LOW" | "MEDIUM" | "HIGH" | null;
+  strategyProvenance?: PostflopStrategyProvenance | null;
   responseMs?: number;
+  actionEvOutcome?: ActionEvOutcome;
+  chosenEvBb?: number;
+  bestEvBb?: number;
+  evLossBb?: number;
+  equivalentBestActions?: readonly PostflopAction[];
 }
 
 export type PostflopStatsV2BridgeRecordLike =
@@ -124,12 +144,13 @@ export function buildPostflopResultRecord(
   responseMs?: number,
 ): PostflopResultRecord {
   const source = spot.explanation.source;
+  const grade = gradePostflopAction(spot, chosen);
   return {
     schema: POSTFLOP_RESULT_RECORD_SCHEMA,
     qid: spot.id,
     chosen,
     recommended: spot.recommendedAction,
-    correct: chosen === spot.recommendedAction,
+    correct: grade.correct,
     street: spot.street,
     actionNode: spot.actionNode,
     potType: spot.potType,
@@ -144,8 +165,18 @@ export function buildPostflopResultRecord(
     sourceVerifiedAt: source.kind === "STRATEGY_PACK" ? source.packVerifiedAt : null,
     sourceRuleId: source.ruleId,
     sourceConfidence: source.kind === "STRATEGY_PACK" ? source.confidence : null,
+    sourceProvenance: source.kind === "STRATEGY_PACK" ? source.provenance : null,
     ts,
     ...(isValidResponseMs(responseMs) ? { responseMs } : {}),
+    ...(grade.actionEv
+      ? {
+          actionEvOutcome: grade.actionEv.outcome,
+          chosenEvBb: grade.actionEv.chosenEvBb,
+          bestEvBb: grade.actionEv.bestEvBb,
+          evLossBb: grade.actionEv.evLossBb,
+          equivalentBestActions: [...grade.actionEv.bestActions],
+        }
+      : {}),
   };
 }
 
@@ -158,6 +189,7 @@ export function bridgePostflopResultRecordToStatsV2(
     ...options.profile,
     street: record.street,
   };
+  const actionEv = completePostflopActionEvFields(record);
 
   return {
     schema: POSTFLOP_STATS_V2_BRIDGE_SCHEMA,
@@ -187,7 +219,9 @@ export function bridgePostflopResultRecordToStatsV2(
     strategyVerifiedAt: record.sourceVerifiedAt,
     strategyRuleId: record.sourceRuleId,
     confidence: record.sourceConfidence,
+    strategyProvenance: record.sourceProvenance ?? null,
     ...(isValidResponseMs(record.responseMs) ? { responseMs: record.responseMs } : {}),
+    ...(actionEv ?? {}),
   };
 }
 
@@ -222,7 +256,8 @@ export function isPostflopResultRecord(value: unknown): value is PostflopResultR
       record.sourceConfidence === null) &&
     typeof record.ts === "number" &&
     Number.isFinite(record.ts) &&
-    isOptionalResponseMs(record.responseMs)
+    isOptionalResponseMs(record.responseMs) &&
+    isOptionalActionEvResult(record)
   );
 }
 
@@ -264,19 +299,26 @@ export function isPostflopStatsV2BridgeRecord(
       record.confidence === "MEDIUM" ||
       record.confidence === "HIGH" ||
       record.confidence === null) &&
-    isOptionalResponseMs(record.responseMs)
+    isOptionalResponseMs(record.responseMs) &&
+    isOptionalBridgeActionEvResult(record)
   );
 }
 
 export function normalizePostflopStatsV2BridgeRecord(
   record: PostflopStatsV2BridgeRecordLike,
 ): PostflopStatsV2BridgeRecord {
+  const completeActionEv = completePostflopActionEvFields(record);
   return {
     ...record,
     schemaVersion: isValidSchemaVersion(record.schemaVersion)
       ? Math.floor(record.schemaVersion)
-      : POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION,
+      : hasAnyPostflopActionEvField(record) && !completeActionEv
+        ? 4
+        : POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION,
     ante: record.ante ?? parseAnteFromProfileId(record.profileId),
+    ...(record.equivalentBestActions
+      ? { equivalentBestActions: [...record.equivalentBestActions] }
+      : {}),
   };
 }
 
@@ -369,8 +411,23 @@ function postflopDimKey(
   return String(value);
 }
 
+/**
+ * How much a recorded answer is worth as evidence of progress.
+ *
+ * This used to read `confidence` alone, which is a quality label the pack author
+ * sets - not a statement about where the content came from. The public heuristic
+ * packs happen to carry LOW today, so heuristic answers land in PREVIEW; raise
+ * one to MEDIUM, a plausible edit if that model is ever improved, and a player's
+ * own statistics would start counting heuristic answers as PRODUCTION.
+ *
+ * Provenance is the structural fact, so it decides solver-versus-not and
+ * confidence only grades solver-backed content. Records written before
+ * provenance was stored keep the old classification rather than being
+ * reinterpreted on a guess.
+ */
 function postflopSourceQualityKey(record: PostflopStatsV2BridgeRecord): string {
   if (!record.strategyPackId || record.confidence === null) return "FALLBACK";
+  if (record.strategyProvenance === "PUBLIC_HEURISTIC") return "HEURISTIC";
   if (record.confidence === "LOW") return "PREVIEW";
   return "PRODUCTION";
 }
@@ -391,6 +448,103 @@ function isValidResponseMs(value: unknown): value is number {
 
 function isOptionalResponseMs(value: unknown): boolean {
   return value === undefined || isValidResponseMs(value);
+}
+
+function isOptionalActionEvResult(record: Partial<PostflopResultRecord>): boolean {
+  if (!hasAnyPostflopActionEvField(record)) return true;
+  return completePostflopActionEvFields(record) !== null;
+}
+
+type PostflopActionEvFields = Required<Pick<
+  PostflopResultRecord,
+  | "actionEvOutcome"
+  | "chosenEvBb"
+  | "bestEvBb"
+  | "evLossBb"
+  | "equivalentBestActions"
+>>;
+
+type PostflopActionEvCarrier = Partial<PostflopActionEvFields> & {
+  actionNode?: PostflopActionNode;
+};
+
+function completePostflopActionEvFields(
+  record: PostflopActionEvCarrier,
+): PostflopActionEvFields | null {
+  const equivalentBestActions = record.equivalentBestActions;
+  return (
+    isActionEvOutcome(record.actionEvOutcome) &&
+    typeof record.chosenEvBb === "number" &&
+    Number.isFinite(record.chosenEvBb) &&
+    typeof record.bestEvBb === "number" &&
+    Number.isFinite(record.bestEvBb) &&
+    isFiniteNonNegative(record.evLossBb) &&
+    Array.isArray(equivalentBestActions) &&
+    equivalentBestActions.length > 0 &&
+    areActionsCompatibleWithNode(record.actionNode, ...equivalentBestActions)
+  )
+    ? {
+        actionEvOutcome: record.actionEvOutcome,
+        chosenEvBb: record.chosenEvBb,
+        bestEvBb: record.bestEvBb,
+        evLossBb: record.evLossBb,
+        equivalentBestActions: [...equivalentBestActions],
+      }
+    : null;
+}
+
+function hasAnyPostflopActionEvField(record: PostflopActionEvCarrier): boolean {
+  return [
+    record.actionEvOutcome,
+    record.chosenEvBb,
+    record.bestEvBb,
+    record.evLossBb,
+    record.equivalentBestActions,
+  ].some((value) => value !== undefined);
+}
+
+function isOptionalBridgeActionEvResult(
+  record: Partial<PostflopStatsV2BridgeRecordLike>,
+): boolean {
+  if (!hasAnyPostflopActionEvField(record)) return true;
+
+  if (isValidSchemaVersion(record.schemaVersion) && record.schemaVersion >= 5) {
+    return completePostflopActionEvFields(record) !== null;
+  }
+
+  return (
+    isOptionalActionEvOutcome(record.actionEvOutcome) &&
+    isOptionalFiniteNumber(record.chosenEvBb) &&
+    isOptionalFiniteNumber(record.bestEvBb) &&
+    (record.evLossBb === undefined || isFiniteNonNegative(record.evLossBb)) &&
+    (
+      record.equivalentBestActions === undefined ||
+      (
+        Array.isArray(record.equivalentBestActions) &&
+        record.equivalentBestActions.length > 0 &&
+        areActionsCompatibleWithNode(record.actionNode, ...record.equivalentBestActions)
+      )
+    )
+  );
+}
+
+function isActionEvOutcome(value: unknown): value is ActionEvOutcome {
+  return value === "BEST" ||
+    value === "EQUIVALENT" ||
+    value === "ACCEPTABLE" ||
+    value === "MISTAKE";
+}
+
+function isOptionalActionEvOutcome(value: unknown): value is ActionEvOutcome | undefined {
+  return value === undefined || isActionEvOutcome(value);
+}
+
+function isOptionalFiniteNumber(value: unknown): value is number | undefined {
+  return value === undefined || (typeof value === "number" && Number.isFinite(value));
+}
+
+function isFiniteNonNegative(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0;
 }
 
 function isOptionalNonEmptyString(value: unknown): boolean {
@@ -435,7 +589,10 @@ function actionsForNode(node: PostflopActionNode): readonly PostflopAction[] {
       return ["FOLD", "CALL", "RAISE"];
     case "SINGLE_RAISED_POT_CBET":
     case "THREE_BET_POT_CBET":
+    case "FLOP_OOP_LEAD":
     case "TURN_BARREL":
+    case "TURN_OOP_LEAD":
+    case "RIVER_OOP_LEAD":
     case "RIVER_PRESSURE":
       return ["CHECK", "BET_SMALL", "BET_BIG"];
   }
@@ -451,6 +608,9 @@ function isPostflopActionNode(value: unknown): value is PostflopActionNode {
     value === "THREE_BET_POT_CBET" ||
     value === "FLOP_FACING_BET" ||
     value === "TURN_BARREL" ||
+    value === "TURN_OOP_LEAD" ||
+    value === "FLOP_OOP_LEAD" ||
+    value === "RIVER_OOP_LEAD" ||
     value === "TURN_FACING_BET" ||
     value === "RIVER_PRESSURE" ||
     value === "RIVER_FACING_BET"

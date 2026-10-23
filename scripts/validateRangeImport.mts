@@ -16,6 +16,7 @@ import {
 } from "../src/data/ranges/riverProductionStrategyPack.ts";
 import {
   buildMttPreflopImportReadinessReport,
+  recordProvenanceSources,
   renderMttPreflopImportReadinessReport,
   type MttPreflopRangePackImportInput,
 } from "../src/data/ranges/mttPreflopRangePackImport.ts";
@@ -140,6 +141,7 @@ function run(): void {
         licenseKind: typedInput.licenseKind,
         blindSpeeds: [typedInput.dimensions.blindSpeed],
         evModels: [typedInput.dimensions.evModel],
+        additionalSources: recordProvenanceSources(typedInput.records, typedInput.licenseKind),
       },
     );
     const slotReport = buildMttPreflopImportSlotValidationReport(typedInput);

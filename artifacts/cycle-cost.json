@@ -1,0 +1,303 @@
+[
+  {
+    "at": "z logu",
+    "label": "1/3",
+    "families": 49,
+    "perFamily": 12.5,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "3/3",
+    "families": 26,
+    "perFamily": 4,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "1/3",
+    "families": 49,
+    "perFamily": 23.6,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "3/3",
+    "families": 26,
+    "perFamily": 10,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "1/3",
+    "families": 49,
+    "perFamily": 14.2,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "3/3",
+    "families": 26,
+    "perFamily": 6.2,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "1/3",
+    "families": 49,
+    "perFamily": 13.7,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "3/3",
+    "families": 4,
+    "perFamily": 12.3,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "1/3",
+    "families": 38,
+    "perFamily": 37.1,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "3/3",
+    "families": 11,
+    "perFamily": 5.7,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "1/3",
+    "families": 35,
+    "perFamily": 59.2,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "3/3",
+    "families": 9,
+    "perFamily": 15,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "1/3",
+    "families": 41,
+    "perFamily": 38.8,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "3/3",
+    "families": 6,
+    "perFamily": 7.2,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "1/3",
+    "families": 46,
+    "perFamily": 36.8,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "3/3",
+    "families": 5,
+    "perFamily": 5.2,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "1/3",
+    "families": 49,
+    "perFamily": 34.1,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "3/3",
+    "families": 3,
+    "perFamily": 8,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "1/3",
+    "families": 50,
+    "perFamily": 179.4,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "3/3",
+    "families": 12,
+    "perFamily": 43.5,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "1/3",
+    "families": 54,
+    "perFamily": 225.8,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "3/3",
+    "families": 4,
+    "perFamily": 8.5,
+    "freeGb": 0
+  },
+  {
+    "at": "z logu",
+    "label": "1/3",
+    "families": 58,
+    "perFamily": 46.5,
+    "freeGb": 0
+  },
+  {
+    "at": "2026-10-09T05:41",
+    "label": "1/3",
+    "families": 60,
+    "perFamily": 35.75246666666667,
+    "freeGb": 16.784465789794922
+  },
+  {
+    "at": "2026-10-09T05:41",
+    "label": "3/3",
+    "families": 2,
+    "perFamily": 0.016,
+    "freeGb": 15.747810363769531
+  },
+  {
+    "at": "2026-10-10T05:38",
+    "label": "1/3",
+    "families": 65,
+    "perFamily": 30.81552307692308,
+    "freeGb": 13.040821075439453
+  },
+  {
+    "at": "2026-10-10T05:38",
+    "label": "3/3",
+    "families": 5,
+    "perFamily": 0.003,
+    "freeGb": 12.445316314697266
+  },
+  {
+    "at": "2026-10-11T05:40",
+    "label": "1/3",
+    "families": 69,
+    "perFamily": 30.944971014492754,
+    "freeGb": 16.459590911865234
+  },
+  {
+    "at": "2026-10-11T05:41",
+    "label": "3/3",
+    "families": 4,
+    "perFamily": 0.00975,
+    "freeGb": 15.684371948242188
+  },
+  {
+    "at": "2026-10-13T05:52",
+    "label": "1/3",
+    "families": 73,
+    "perFamily": 38.97565753424657,
+    "freeGb": 13.590152740478516
+  },
+  {
+    "at": "2026-10-13T05:53",
+    "label": "3/3",
+    "families": 4,
+    "perFamily": 0.00725,
+    "freeGb": 11.604034423828125
+  },
+  {
+    "at": "2026-10-14T05:56",
+    "label": "1/3",
+    "families": 76,
+    "perFamily": 40.41297368421053,
+    "freeGb": 14.35824966430664
+  },
+  {
+    "at": "2026-10-14T05:56",
+    "label": "3/3",
+    "families": 3,
+    "perFamily": 0.013333333333333334,
+    "freeGb": 13.290687561035156
+  },
+  {
+    "at": "2026-10-15T05:44",
+    "label": "1/3",
+    "families": 77,
+    "perFamily": 30.403662337662336,
+    "freeGb": 16.08559799194336
+  },
+  {
+    "at": "2026-10-15T05:44",
+    "label": "3/3",
+    "families": 1,
+    "perFamily": 0.024,
+    "freeGb": 15.069942474365234
+  },
+  {
+    "at": "2026-10-16T05:43",
+    "label": "1/3",
+    "families": 79,
+    "perFamily": 28.954417721518986,
+    "freeGb": 14.44253158569336
+  },
+  {
+    "at": "2026-10-16T05:44",
+    "label": "3/3",
+    "families": 2,
+    "perFamily": 25.612,
+    "freeGb": 14.619930267333984
+  },
+  {
+    "at": "2026-10-17T06:12",
+    "label": "1/3",
+    "families": 80,
+    "perFamily": 49.1135875,
+    "freeGb": 7.513069152832031
+  },
+  {
+    "at": "2026-10-17T06:13",
+    "label": "3/3",
+    "families": 1,
+    "perFamily": 29.559,
+    "freeGb": 13.19424057006836
+  },
+  {
+    "at": "2026-10-19T19:52",
+    "label": "1/3",
+    "families": 81,
+    "perFamily": 49.53344444444444,
+    "freeGb": 15.35439682006836
+  },
+  {
+    "at": "2026-10-19T20:34",
+    "label": "3/3",
+    "families": 28,
+    "perFamily": 90.18728571428572,
+    "freeGb": 17.398906707763672
+  },
+  {
+    "at": "2026-10-21T07:48",
+    "label": "3/3",
+    "families": 2,
+    "perFamily": 44.4685,
+    "freeGb": 16.650997161865234
+  },
+  {
+    "at": "2026-10-23T08:28",
+    "label": "3/3",
+    "families": 9,
+    "perFamily": 31.377333333333336,
+    "freeGb": 7.017833709716797
+  }
+]

@@ -1,3 +1,4 @@
+import { ALL_BOARD_TEXTURES } from "../../core/postflopGenerator";
 import type {
   BoardTexture,
   PostflopAction,
@@ -35,6 +36,7 @@ export function createPostflopStrategyResolver(
       explanation: rule.explanation,
       source: {
         kind: "STRATEGY_PACK",
+        provenance: "PUBLIC_HEURISTIC",
         packId: pack.id,
         packVersion: pack.version,
         packVerifiedAt: pack.verifiedAt,
@@ -111,7 +113,17 @@ function isSupportedAction(action: string): action is PostflopAction {
 
 function ruleScore(rule: PostflopStrategyRule, input: PostflopStrategyInput): number {
   const matchedTextureCount = matchedTextures(rule, input).length;
-  const textureSpecificity = matchedTextureCount * 100 - rule.boardTextures.length;
+  // A rule naming the whole taxonomy is a default, not a match.
+  //
+  // Specificity here is counted as matched textures, which rewards breadth: a
+  // rule listing every texture matches all of a board's and outscores any rule
+  // that named one. So the catch-all wins everywhere and the specific rules
+  // never fire - which is the opposite of what a fallback is for. The constant
+  // exists precisely so this shape can be recognised; it just never was.
+  const isCatchAll = ALL_BOARD_TEXTURES.every((texture) => rule.boardTextures.includes(texture));
+  const textureSpecificity = isCatchAll
+    ? 0
+    : matchedTextureCount * 100 - rule.boardTextures.length;
   const sprWidth = Math.max(0, rule.sprMax - rule.sprMin);
   const sprSpecificity = Math.max(0, 50 - sprWidth);
   const positionSpecificity = rule.positionPattern === input.positionPattern ? 25 : 0;

@@ -71,7 +71,7 @@ import {
 } from "../persistence/postflopResultRecord";
 import type { ProductionPermissionManifestReport } from "../data/ranges/productionPermissionManifest";
 import { buildPreflopCurriculumPlan } from "../persistence/preflopCurriculum";
-import { CS } from "./cs";
+import { CS, getAppLanguage, localizedText } from "./cs";
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -87,6 +87,13 @@ export interface DashboardData {
   postflopRecords?: readonly PostflopStatsV2BridgeRecord[];
   postflopLineRecords?: readonly PostflopLineResultRecord[];
   permissionReports?: readonly ProductionPermissionManifestReport[];
+  /**
+   * The preflop profile the player is training. Leak detection and the study
+   * plan are measured inside it; omitted, they follow the newest answer. What
+   * they must not do is pool every profile, which turns a leak into an average
+   * of tables the player is not sitting at.
+   */
+  activeProfileId?: string;
   onStartPreflopFocus?: (filters: Filters) => void;
   onPostflopRecordsImported?: (records: readonly PostflopStatsV2BridgeRecord[]) => boolean | void;
   onPostflopLineRecordsImported?: (records: readonly PostflopLineResultRecord[]) => boolean | void;
@@ -191,53 +198,53 @@ function normalizeCount(n: number): number {
 // ---------------------------------------------------------------------------
 
 const DIM_TITLE: Record<BreakdownDim, string> = {
-  context: "Podle kategorie akce",
-  position: "Podle pozice",
-  bucket: "Podle hloubky stacku",
+  context: "By action context",
+  position: "By position",
+  bucket: "By stack depth",
 };
 
 const PROFILE_DIM_TITLE: Record<StatsV2BreakdownDim, string> = {
-  gameVariant: "Podle varianty hry",
-  tableFormat: "Podle formátu stolu",
-  blindSpeed: "Podle rychlosti blindů",
-  street: "Podle streety",
-  evModel: "Podle modelu",
-  ante: "Podle ante",
-  rakeMode: "Podle rake",
-  rangePackId: "Podle preflop modelu",
-  position: "Podle pozice",
-  bucket: "Podle stacku",
-  context: "Podle situace",
+  gameVariant: "By game variant",
+  tableFormat: "By table format",
+  blindSpeed: "By blind speed",
+  street: "By street",
+  evModel: "By EV model",
+  ante: "By ante",
+  rakeMode: "By rake",
+  rangePackId: "By preflop model",
+  position: "By position",
+  bucket: "By stack depth",
+  context: "By situation",
 };
 
 const CONTEXT_LABEL: Record<ActionContext, string> = {
   RFI: "RFI / Open",
-  VS_LIMP: "Proti limpu (iso-raise)",
-  VS_OPEN: "Proti openu",
-  VS_3BET: "Proti 3-betu",
-  VS_4BET: "Proti 4-betu",
+  VS_LIMP: "Vs limp (iso-raise)",
+  VS_OPEN: "Vs open",
+  VS_3BET: "Vs 3-bet",
+  VS_4BET: "Vs 4-bet",
   SQUEEZE: "Squeeze",
-  BVB: "Blind proti blindu",
+  BVB: "Blind vs blind",
   PUSH_FOLD: "Push / Fold",
-  VS_ALLIN: "Proti all-inu",
+  VS_ALLIN: "Vs all-in",
 };
 
 const POSTFLOP_DIM_TITLE: Record<PostflopStatsBreakdownDim, string> = {
-  gameVariant: "Podle varianty hry",
-  tableFormat: "Podle formátu stolu",
-  blindSpeed: "Podle rychlosti blindů",
-  evModel: "Podle modelu",
-  ante: "Podle ante",
-  rakeMode: "Podle rake",
-  street: "Podle streety",
-  actionNode: "Podle postflop situace",
-  potType: "Podle typu potu",
-  positionPattern: "Podle pozičního vzoru",
-  positionPair: "Podle dvojice pozic",
-  boardTextureKey: "Podle textury boardu",
-  strategyPackId: "Podle postflop modelu",
-  confidence: "Podle spolehlivosti",
-  sourceQuality: "Podle produkčního stavu",
+  gameVariant: "By game variant",
+  tableFormat: "By table format",
+  blindSpeed: "By blind speed",
+  evModel: "By EV model",
+  ante: "By ante",
+  rakeMode: "By rake",
+  street: "By street",
+  actionNode: "By postflop node",
+  potType: "By pot type",
+  positionPattern: "By position pattern",
+  positionPair: "By position pair",
+  boardTextureKey: "By board texture",
+  strategyPackId: "By postflop model",
+  confidence: "By confidence",
+  sourceQuality: "By production status",
 };
 
 type PostflopDashboardBreakdownDim = PostflopStatsBreakdownDim | "flowMode";
@@ -259,7 +266,7 @@ function groupLabel(dim: BreakdownDim | PostflopDashboardBreakdownDim, key: stri
     case "evModel":
       return evModelLabel(key);
     case "ante":
-      return key === "ON" ? "Ante zapnuto" : "Bez ante";
+      return key === "ON" ? "Ante on" : "Ante off";
     case "rakeMode":
       return rakeModeLabel(key);
     case "strategyPackId":
@@ -300,7 +307,7 @@ function profileGroupLabel(dim: StatsV2BreakdownDim, key: string): string {
     case "bucket":
       return `${key} BB`;
     case "ante":
-      return key === "ON" ? "Ante zapnuto" : "Bez ante";
+      return key === "ON" ? "Ante on" : "Ante off";
     case "evModel":
       return evModelLabel(key);
     case "rakeMode":
@@ -357,7 +364,7 @@ function rakeModeLabel(key: string): string {
     case "RAKE":
       return "Rake";
     case "NO_RAKE":
-      return "Bez rake";
+      return "No rake";
     default:
       return key;
   }
@@ -366,11 +373,11 @@ function rakeModeLabel(key: string): string {
 function confidenceLabel(key: string): string {
   switch (key) {
     case "LOW":
-      return "nízká";
+      return "Low";
     case "MEDIUM":
-      return "střední";
+      return "Medium";
     case "HIGH":
-      return "vysoká";
+      return "High";
     default:
       return key;
   }
@@ -379,19 +386,21 @@ function confidenceLabel(key: string): string {
 function postflopActionNodeLabel(key: string): string {
   switch (key) {
     case "SINGLE_RAISED_POT_CBET":
-      return "Flop c-bet v SRP";
+      return "Flop c-bet in SRP";
     case "THREE_BET_POT_CBET":
-      return "Flop c-bet ve 3bet potu";
+      return "Flop c-bet in 3-bet pot";
     case "FLOP_FACING_BET":
-      return "Flop proti betu";
+      return "Flop facing bet";
     case "TURN_BARREL":
       return "Turn barrel";
+    case "TURN_OOP_LEAD":
+      return "Turn lead out of position";
     case "TURN_FACING_BET":
-      return "Turn proti betu";
+      return "Turn facing bet";
     case "RIVER_PRESSURE":
-      return "River tlak";
+      return "River pressure";
     case "RIVER_FACING_BET":
-      return "River proti betu";
+      return "River facing bet";
     default:
       return key;
   }
@@ -404,7 +413,7 @@ function postflopPotTypeLabel(key: string): string {
     case "THREE_BET_POT":
       return "3bet pot";
     case "LIMPED_POT":
-      return "Limpovaný pot";
+      return "Limped pot";
     default:
       return key;
   }
@@ -419,11 +428,13 @@ function positionPairLabel(key: string): string {
 function postflopSourceQualityLabel(key: string): string {
   switch (key) {
     case "PRODUCTION":
-      return "Produkční";
+      return "Production";
     case "PREVIEW":
-      return "Náhled / nízká spolehlivost";
+      return "Preview / low confidence";
+    case "HEURISTIC":
+      return "Heuristic model (not solver-backed)";
     case "FALLBACK":
-      return "Náhradní model";
+      return "Fallback model";
     default:
       return key;
   }
@@ -432,7 +443,7 @@ function postflopSourceQualityLabel(key: string): string {
 function postflopFlowModeLabel(key: string): string {
   switch (key) {
     case "SINGLE_SPOT":
-      return "Jeden spot";
+      return "Single spot";
     case "HAND_LINE":
       return "Hand line";
     default:
@@ -451,31 +462,31 @@ function postflopBoardTextureKeyLabel(key: string): string {
 function boardTextureLabel(key: string): string {
   switch (key) {
     case "paired":
-      return "párovaný";
+      return "paired";
     case "monotone":
-      return "monotónní";
+      return "monotone";
     case "two-tone":
-      return "dvoubarevný";
+      return "two-tone";
     case "rainbow":
       return "rainbow";
     case "connected":
-      return "propojený";
+      return "connected";
     case "dry":
-      return "suchý";
+      return "dry";
     case "ace-high":
       return "A-high";
     case "broadway-high":
       return "broadway high";
     case "low":
-      return "nízký";
+      return "low";
     case "medium":
-      return "střední";
+      return "medium";
     case "straight-possible":
-      return "možná postupka";
+      return "straight possible";
     case "flush-draw-heavy":
-      return "silný flush draw";
+      return "flush-draw heavy";
     case "disconnected":
-      return "nepropojený";
+      return "disconnected";
     default:
       return key;
   }
@@ -526,12 +537,12 @@ function renderSummary(summary: Summary): HTMLElement {
   const box = el("section", "dashboard-summary");
 
   const heading = el("h3", "dashboard-summary__title");
-  heading.textContent = "Souhrn";
+  heading.textContent = "Summary";
   box.appendChild(heading);
 
   const total = el("div", "summary-total");
   total.dataset.total = String(summary.total);
-  total.textContent = `Celkem odpovědí: ${summary.total}`;
+  total.textContent = `Total answers: ${summary.total}`;
   box.appendChild(total);
 
   const rateLine = el("div", "summary-rate-line");
@@ -549,9 +560,10 @@ function renderKpiPanel(
   store: StatsStore,
   postflopRecords: readonly PostflopStatsV2BridgeRecord[] = [],
   onStartPreflopFocus?: (filters: Filters) => void,
+  activeProfileId?: string,
 ): HTMLElement {
   const preflopRecords = migrateResultRecordsToV2(store.events());
-  const model = buildStatsV2KpiModel(preflopRecords);
+  const model = buildStatsV2KpiModel(preflopRecords, { leakProfileId: activeProfileId });
   const avgDecisionMs = averageDecisionMs(preflopRecords, postflopRecords);
   const accuracyTrend = buildAccuracyTrend(preflopRecords, postflopRecords);
   const confidenceWeightedKpi = buildConfidenceWeightedKpi(preflopRecords, postflopRecords);
@@ -577,7 +589,7 @@ function renderKpiPanel(
   const cards = el("div", "dashboard-kpi__cards");
   cards.appendChild(kpiCard(CS.dashboard.lifetimeAccuracy, "lifetimeRate", formatRate(model.lifetimeRate)));
   cards.appendChild(kpiCard(
-    `Posledních ${model.recentWindowSize}`,
+    `Last ${model.recentWindowSize}`,
     "recentRate",
     `${formatRate(model.recentRate)} (${model.recentTotal})`,
   ));
@@ -612,12 +624,19 @@ function renderKpiPanel(
 function renderPreflopCurriculumPanel(
   store: StatsStore,
   onStartPreflopFocus?: (filters: Filters) => void,
+  activeProfileId?: string,
 ): HTMLElement {
   const records = migrateResultRecordsToV2(store.events());
-  const plan = buildPreflopCurriculumPlan(records);
+  const plan = buildPreflopCurriculumPlan(records, {
+    language: getAppLanguage(),
+    profileId: activeProfileId,
+  });
   const box = el("section", "preflop-curriculum");
   box.dataset.available = String(plan.available);
   box.dataset.recommendations = String(plan.recommendations.length);
+  box.dataset.scopeProfileId = plan.scope.profileId ?? "";
+  box.dataset.scopeRecords = String(plan.scope.records);
+  box.dataset.scopeSetAside = String(plan.scope.setAside);
 
   const heading = el("h3", "preflop-curriculum__title");
   heading.textContent = CS.dashboard.trainingFocus;
@@ -625,20 +644,37 @@ function renderPreflopCurriculumPanel(
 
   const summary = el("div", "preflop-curriculum__summary");
   summary.textContent = plan.focus
-    ? `${plan.focus.label} – ${formatRate(plan.focus.rate)}, ${plan.focus.total} spotů`
+    ? `${plan.focus.label} - ${formatRate(plan.focus.rate)}, ${plan.focus.total} spots`
     : plan.reason;
   box.appendChild(summary);
 
   const goals = el("div", "preflop-curriculum__goals");
   goals.textContent =
-    `${plan.sessionGoal.targetSpots} spotů | ` +
-    `cíl ${plan.sessionGoal.targetAccuracy} % | ` +
-    `série ${plan.sessionGoal.streakTarget}`;
+    `${plan.sessionGoal.targetSpots} spots | ` +
+    `target ${plan.sessionGoal.targetAccuracy} % | ` +
+    `streak ${plan.sessionGoal.streakTarget}`;
   box.appendChild(goals);
 
   const due = el("div", "preflop-curriculum__due");
-  due.textContent = `Spoty k opakování: ${plan.repetitionQueue.length}`;
+  due.textContent = `Due for review: ${plan.repetitionQueue.length}`;
   box.appendChild(due);
+
+  // Where the number came from. Without this a player who trains more than one
+  // table sees a percentage with no way to tell which table it describes.
+  if (plan.scope.profileId !== null) {
+    const scope = el("div", "preflop-curriculum__scope");
+    const measured = statsProfileLabel(plan.scope.profileId);
+    scope.textContent = plan.scope.setAside > 0
+      ? localizedText(
+        `Measured in ${measured}: ${plan.scope.records} answers (${plan.scope.setAside} in other profiles are not counted).`,
+        `Měřeno v profilu ${measured}: ${plan.scope.records} odpovědí (${plan.scope.setAside} z jiných profilů se nepočítá).`,
+      )
+      : localizedText(
+        `Measured in ${measured}: ${plan.scope.records} answers.`,
+        `Měřeno v profilu ${measured}: ${plan.scope.records} odpovědí.`,
+      );
+    box.appendChild(scope);
+  }
 
   if (plan.recommendations.length > 0) {
     const recommendations = el("div", "preflop-curriculum__recommendations");
@@ -700,7 +736,10 @@ function renderPermissionAuditPanel(
 
   if (reports.length === 0) {
     const empty = el("div", "permission-audit__empty");
-    empty.textContent = "Nejsou načtené žádné kontrolní reporty.";
+    empty.textContent = localizedText(
+      "No permission audit reports are loaded.",
+      "Nejsou načtené žádné kontrolní reporty.",
+    );
     box.appendChild(empty);
     return box;
   }
@@ -721,11 +760,11 @@ function renderPermissionAuditRow(
   row.dataset.ready = report.valid ? "true" : "false";
 
   const title = el("div", "permission-audit-row__title");
-  title.textContent = `Kontrola ${index + 1}`;
+  title.textContent = `Audit ${index + 1}`;
   row.appendChild(title);
 
   const status = el("div", "permission-audit-row__status");
-  status.textContent = report.valid ? CS.dashboard.ready : `Blokováno (${report.errors.length})`;
+  status.textContent = report.valid ? CS.dashboard.ready : `Blocked (${report.errors.length})`;
   row.appendChild(status);
 
   const license = el("div", "permission-audit-row__license");
@@ -737,7 +776,7 @@ function renderPermissionAuditRow(
   row.appendChild(scope);
 
   const evidence = el("div", "permission-audit-row__evidence");
-  evidence.textContent = `Podklady: ${report.evidenceCount}`;
+  evidence.textContent = `Evidence: ${report.evidenceCount}`;
   row.appendChild(evidence);
 
   return row;
@@ -746,26 +785,26 @@ function renderPermissionAuditRow(
 function permissionLicenseLabel(kind: string): string {
   switch (kind) {
     case "OWNED_SOLVER_EXPORT":
-      return "Vlastní solver export";
+      return "Owned solver export";
     case "PUBLIC_CHART_WITH_PERMISSION":
-      return "Veřejný chart s povolením";
+      return "Public chart with permission";
     case "EXPLICIT_WRITTEN_PERMISSION":
-      return "Písemné povolení";
+      return "Explicit written permission";
     default:
-      return "Chybí povolení";
+      return "Permission missing";
   }
 }
 
 function permissionScopeLabel(scope: string): string {
   switch (scope) {
     case "PKRTRAINER_RUNTIME_BUNDLE":
-      return "Povoleno v aplikačním balíčku";
+      return "Allowed in runtime bundle";
     case "PKRTRAINER_INTERNAL_REVIEW_ONLY":
-      return "Pouze interní kontrola";
+      return "Internal review only";
     case "NO_REDISTRIBUTION":
-      return "Bez další distribuce";
+      return "No redistribution";
     default:
-      return "Chybí rozsah povolení";
+      return "Permission scope missing";
   }
 }
 
@@ -877,7 +916,7 @@ function buildConfidenceWeightedKpi(
     const verified = record.rangePackId.length > 0 && record.sourceVerifiedAt.length > 0;
     add(
       verified ? "preflop-verified" : "preflop-fallback",
-      verified ? "Ověřený preflop" : "Náhradní preflop model",
+      verified ? "Reviewed preflop" : "Fallback preflop model",
       record.correct,
       verified ? 1 : 0.6,
     );
@@ -918,17 +957,17 @@ function postflopConfidenceWeightGroup(record: PostflopStatsV2BridgeRecord): {
   weight: number;
 } {
   if (!record.strategyPackId || record.confidence === null) {
-    return { key: "postflop-fallback", label: "Náhradní postflop model", weight: 0.25 };
+    return { key: "postflop-fallback", label: "Fallback postflop model", weight: 0.25 };
   }
 
   switch (record.confidence) {
     case "HIGH":
-      return { key: "postflop-high", label: "Postflop s vysokou spolehlivostí", weight: 1 };
+      return { key: "postflop-high", label: "High-confidence postflop", weight: 1 };
     case "MEDIUM":
-      return { key: "postflop-medium", label: "Postflop se střední spolehlivostí", weight: 0.75 };
+      return { key: "postflop-medium", label: "Medium-confidence postflop", weight: 0.75 };
     case "LOW":
     default:
-      return { key: "postflop-low", label: "Postflop s nízkou spolehlivostí", weight: 0.5 };
+      return { key: "postflop-low", label: "Low-confidence postflop", weight: 0.5 };
   }
 }
 
@@ -1059,8 +1098,8 @@ function formatDecisionTrendSummary(model: DecisionTimeTrendModel): string {
   if (model.direction === "stable") return CS.dashboard.stable;
   const duration = formatDurationMs(Math.abs(model.deltaMs));
   return model.direction === "faster"
-    ? `Rychlejší o ${duration}`
-    : `Pomalejší o ${duration}`;
+    ? `Faster by ${duration}`
+    : `Slower by ${duration}`;
 }
 
 function kpiCard(labelText: string, key: string, valueText: string): HTMLElement {
@@ -1077,14 +1116,14 @@ function kpiCard(labelText: string, key: string, valueText: string): HTMLElement
 
 function leakFocusText(model: StatsV2KpiModel): string {
   const first = model.leakCandidates[0];
-  if (!first) return `Žádná slabina nad ${model.minLeakSample}+ vzorků`;
+  if (!first) return `No leak above ${model.minLeakSample}+ samples`;
   return `${profileGroupLabel(first.dim, first.key)} (${formatRate(first.rate)})`;
 }
 
 function renderKpiChart(model: StatsV2KpiModel): HTMLElement {
   const chart = el("div", "dashboard-kpi-chart");
-  chart.appendChild(rateBar("Celkem", "lifetime", model.lifetimeRate, model.total));
-  chart.appendChild(rateBar("Nedávné", "recent", model.recentRate, model.recentTotal));
+  chart.appendChild(rateBar("Lifetime", "lifetime", model.lifetimeRate, model.total));
+  chart.appendChild(rateBar("Recent", "recent", model.recentRate, model.recentTotal));
   return chart;
 }
 
@@ -1101,7 +1140,10 @@ function renderConfidenceWeightedKpi(model: ConfidenceWeightedKpiModel): HTMLEle
 
   if (model.groups.length === 0) {
     const empty = el("div", "dashboard-confidence-kpi__empty");
-    empty.textContent = "Zatím není dostupný vážený vzorek.";
+    empty.textContent = localizedText(
+      "No confidence-weighted sample is available yet.",
+      "Zatím není dostupný vážený vzorek.",
+    );
     chart.appendChild(empty);
     return chart;
   }
@@ -1159,8 +1201,10 @@ function renderDecisionTimeTrend(model: DecisionTimeTrendModel): HTMLElement {
 
   if (!model.available) {
     const empty = el("div", "dashboard-decision-trend__empty");
-    empty.textContent =
-      `Je potřeba ${model.minSample} měřených rozhodnutí. Aktuální vzorek: ${model.sample}.`;
+    empty.textContent = localizedText(
+      `${model.minSample} timed decisions are required. Current sample: ${model.sample}.`,
+      `Je potřeba ${model.minSample} měřených rozhodnutí. Aktuální vzorek: ${model.sample}.`,
+    );
     chart.appendChild(empty);
     return chart;
   }
@@ -1202,7 +1246,7 @@ function renderDecisionTrendBar(point: DecisionTrendPoint, maxAverageMs: number)
   bar.appendChild(label);
 
   const sample = el("div", "dashboard-decision-trend__sample");
-  sample.textContent = `Rozhodnutí: ${point.total}`;
+  sample.textContent = `Decisions: ${point.total}`;
   bar.appendChild(sample);
 
   return bar;
@@ -1218,7 +1262,10 @@ function renderAccuracyTrend(points: readonly AccuracyTrendPoint[]): HTMLElement
 
   if (points.length === 0) {
     const empty = el("div", "dashboard-accuracy-trend__empty");
-    empty.textContent = "Zatím není dostupný nedávný vývoj.";
+    empty.textContent = localizedText(
+      "No recent trend is available yet.",
+      "Zatím není dostupný nedávný vývoj.",
+    );
     chart.appendChild(empty);
     return chart;
   }
@@ -1275,7 +1322,10 @@ function renderLeakChart(
 
   if (candidates.length === 0) {
     const empty = el("div", "dashboard-leak-chart__empty");
-    empty.textContent = "Zatím není dostupná slabina s dostatečným vzorkem.";
+    empty.textContent = localizedText(
+      "No leak has a sufficient sample yet.",
+      "Zatím není dostupná slabina s dostatečným vzorkem.",
+    );
     chart.appendChild(empty);
     return chart;
   }
@@ -1357,17 +1407,17 @@ function renderStreakSession(streak: number, sessionCount: number): HTMLElement 
   const box = el("section", "dashboard-session");
 
   const heading = el("h3", "dashboard-session__title");
-  heading.textContent = "Aktuální relace";
+  heading.textContent = "Current session";
   box.appendChild(heading);
 
   const streakNode = el("div", "dashboard-streak");
   streakNode.dataset.streak = String(streak);
-  streakNode.textContent = `Série správných odpovědí: ${streak}`;
+  streakNode.textContent = `Correct streak: ${streak}`;
   box.appendChild(streakNode);
 
   const sessionNode = el("div", "dashboard-session-count");
   sessionNode.dataset.sessionCount = String(sessionCount);
-  sessionNode.textContent = `Spoty v této relaci: ${sessionCount}`;
+  sessionNode.textContent = `Spots this session: ${sessionCount}`;
   box.appendChild(sessionNode);
 
   return box;
@@ -1482,7 +1532,7 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
   const box = el("section", "stats-transfer");
 
   const heading = el("h3", "stats-transfer__title");
-  heading.textContent = "Export / import statistik";
+  heading.textContent = "Stats export / import";
   box.appendChild(heading);
 
   const profileOptions = listStatsProfiles(
@@ -1539,8 +1589,14 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
     status.hidden = false;
     status.className = "stats-transfer__status stats-transfer__status--ok";
     status.textContent = selectedProfileId
-      ? "Export vybraného profilu je připravený v poli JSON."
-      : "Export statistik je připravený v poli JSON.";
+      ? localizedText(
+        "The selected profile export is ready in the JSON field.",
+        "Export vybraného profilu je připravený v poli JSON.",
+      )
+      : localizedText(
+        "The stats export is ready in the JSON field.",
+        "Export statistik je připravený v poli JSON.",
+      );
   });
 
   importBtn.addEventListener("click", () => {
@@ -1550,14 +1606,19 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
       const postflopSaved = data.onPostflopRecordsImported?.(result.postflopRecords) ?? true;
       if (!postflopSaved) {
         status.className = "stats-transfer__status stats-transfer__status--error";
-        status.textContent = "Preflop statistiky byly importovány, ale postflop záznam se nepodařilo uložit.";
+        status.textContent = localizedText(
+          "Preflop stats were imported, but the postflop record could not be saved.",
+          "Preflop statistiky byly importovány, ale postflop záznam se nepodařilo uložit.",
+        );
         return;
       }
       const postflopLinesSaved = data.onPostflopLineRecordsImported?.(result.postflopLineRecords) ?? true;
       if (!postflopLinesSaved) {
         status.className = "stats-transfer__status stats-transfer__status--error";
-        status.textContent =
-          "Preflop a postflop statistiky byly importovány, ale záznam postflop hand line se nepodařilo uložit.";
+        status.textContent = localizedText(
+          "Preflop and postflop stats were imported, but the postflop hand-line record could not be saved.",
+          "Preflop a postflop statistiky byly importovány, ale záznam postflop hand line se nepodařilo uložit.",
+        );
         return;
       }
       renderDashboard({
@@ -1569,12 +1630,15 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
       if (refreshedStatus) {
         refreshedStatus.hidden = false;
         refreshedStatus.className = "stats-transfer__status stats-transfer__status--ok";
-        refreshedStatus.textContent = `Importováno záznamů statistik: ${result.imported}.`;
+        refreshedStatus.textContent = localizedText(
+          `Imported stats records: ${result.imported}.`,
+          `Importováno záznamů statistik: ${result.imported}.`,
+        );
       }
       return;
     }
     status.className = "stats-transfer__status stats-transfer__status--error";
-    status.textContent = "Import statistik selhal.";
+    status.textContent = localizedText("Stats import failed.", "Import statistik selhal.");
   });
 
   resetProfileBtn.addEventListener("click", () => {
@@ -1590,20 +1654,28 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
     status.hidden = false;
     if (!save.ok) {
       status.className = "stats-transfer__status stats-transfer__status--error";
-      status.textContent = "Reset vybraného profilu selhal.";
+      status.textContent = localizedText(
+        "The selected profile reset failed.",
+        "Reset vybraného profilu selhal.",
+      );
       return;
     }
     const postflopSaved = data.onPostflopRecordsImported?.(selected.postflopRecords) ?? true;
     if (!postflopSaved) {
       status.className = "stats-transfer__status stats-transfer__status--error";
-      status.textContent = "Preflop statistiky byly resetovány, ale postflop záznam se nepodařilo uložit.";
+      status.textContent = localizedText(
+        "Preflop stats were reset, but the postflop record could not be saved.",
+        "Preflop statistiky byly resetovány, ale postflop záznam se nepodařilo uložit.",
+      );
       return;
     }
     const postflopLinesSaved = data.onPostflopLineRecordsImported?.(selected.postflopLineRecords) ?? true;
     if (!postflopLinesSaved) {
       status.className = "stats-transfer__status stats-transfer__status--error";
-      status.textContent =
-        "Preflop a postflop statistiky byly resetovány, ale záznam postflop hand line se nepodařilo uložit.";
+      status.textContent = localizedText(
+        "Preflop and postflop stats were reset, but the postflop hand-line record could not be saved.",
+        "Preflop a postflop statistiky byly resetovány, ale záznam postflop hand line se nepodařilo uložit.",
+      );
       return;
     }
     renderDashboard({
@@ -1615,7 +1687,10 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
     if (refreshedStatus) {
       refreshedStatus.hidden = false;
       refreshedStatus.className = "stats-transfer__status stats-transfer__status--ok";
-      refreshedStatus.textContent = "Statistiky vybraného profilu byly resetovány.";
+      refreshedStatus.textContent = localizedText(
+        "The selected profile stats were reset.",
+        "Statistiky vybraného profilu byly resetovány.",
+      );
     }
   });
 
@@ -1652,7 +1727,7 @@ function renderProfileBreakdown(dim: StatsV2BreakdownDim, groups: StatsV2Group[]
   const rows = el("div", "profile-breakdown__rows");
   if (groups.length === 0) {
     const empty = el("div", "profile-breakdown__empty");
-    empty.textContent = "Zatím nejsou žádné záznamy.";
+    empty.textContent = localizedText("No records yet.", "Zatím nejsou žádné záznamy.");
     rows.appendChild(empty);
   } else {
     for (const g of groups) {
@@ -1668,7 +1743,7 @@ function renderProfileBreakdowns(store: StatsStore): HTMLElement {
   const box = el("section", "profile-breakdowns");
 
   const heading = el("h3", "profile-breakdowns__title");
-  heading.textContent = "Statistiky podle profilu";
+  heading.textContent = "Stats by profile";
   box.appendChild(heading);
 
   const eventsV2 = migrateResultRecordsToV2(store.events());
@@ -1709,13 +1784,16 @@ function renderPostflopBreakdown(
   box.dataset.dim = dim;
 
   const heading = el("h4", "postflop-breakdown__title");
-  heading.textContent = dim === "flowMode" ? "Podle typu tréninku" : POSTFLOP_DIM_TITLE[dim];
+  heading.textContent = dim === "flowMode" ? "By training type" : POSTFLOP_DIM_TITLE[dim];
   box.appendChild(heading);
 
   const rows = el("div", "postflop-breakdown__rows");
   if (groups.length === 0) {
     const empty = el("div", "postflop-breakdown__empty");
-    empty.textContent = "Zatím nejsou žádné postflop odpovědi.";
+    empty.textContent = localizedText(
+      "No postflop answers yet.",
+      "Zatím nejsou žádné postflop odpovědi.",
+    );
     rows.appendChild(empty);
   } else {
     for (const group of groups) {
@@ -1772,7 +1850,7 @@ function renderPostflopBreakdowns(
   box.dataset.total = String(records.length + postflopLineStreetCount(lineRecords));
 
   const heading = el("h3", "postflop-breakdowns__title");
-  heading.textContent = "Postflop statistiky";
+  heading.textContent = "Postflop stats";
   box.appendChild(heading);
 
   const allRecords = [...records, ...postflopLineStreetRecords(lineRecords)];
@@ -1823,7 +1901,10 @@ function renderPostflopKpiChart(
   const rows = el("div", "postflop-kpi-chart__rows");
   if (groups.length === 0) {
     const empty = el("div", "postflop-kpi-chart__empty");
-    empty.textContent = "Zatím nejsou žádné postflop odpovědi.";
+    empty.textContent = localizedText(
+      "No postflop answers yet.",
+      "Zatím nejsou žádné postflop odpovědi.",
+    );
     rows.appendChild(empty);
   } else {
     for (const group of groups) {
@@ -1836,205 +1917,6 @@ function renderPostflopKpiChart(
   }
   chart.appendChild(rows);
   return chart;
-}
-
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
-
-function dashboardStyles(): HTMLStyleElement {
-  const style = document.createElement("style");
-  style.textContent = `
-.dashboard{font-family:Inter,ui-sans-serif,system-ui,Arial,sans-serif;color:#e8ecf7;display:flex;
-  flex-direction:column;gap:16px;max-width:960px;margin:0 auto;}
-.dashboard h3{margin:0 0 10px;font-size:14px;font-weight:950;color:#f8fbff;}
-.dashboard h4{margin:0 0 8px;font-size:12px;font-weight:950;color:#dce7fb;}
-.dashboard-summary,.dashboard-kpi,.preflop-curriculum,.dashboard-session,.permission-audit,.breakdown,.stats-transfer,.profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts,.postflop-kpi-charts{
-  background:linear-gradient(180deg,rgba(18,25,38,.98),rgba(10,15,24,.98));
-  border:1px solid rgba(148,163,184,.16);border-radius:14px;padding:14px 16px;
-  box-shadow:0 18px 48px rgba(0,0,0,.23),inset 0 1px 0 rgba(255,255,255,.05);}
-.dashboard-summary{display:grid;gap:6px;background:
-  radial-gradient(circle at 16% 0%,rgba(43,213,118,.13),rgba(43,213,118,0) 35%),
-  linear-gradient(180deg,rgba(18,25,38,.98),rgba(10,15,24,.98));}
-.dashboard-summary .summary-total{font-size:13px;color:#a8b7d5;font-weight:750;}
-.dashboard-summary .summary-rate-line{margin-top:2px;font-size:22px;font-weight:950;color:#9ff0bd;}
-.dashboard-summary .summary-rate-label{font-size:13px;font-weight:750;color:#a8b7d5;}
-.dashboard-kpi{display:grid;gap:12px;}
-.dashboard-kpi__cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
-.dashboard-kpi-card{border:1px solid rgba(123,211,255,.14);border-radius:10px;padding:10px;
-  background:rgba(255,255,255,.045);min-width:0;}
-.dashboard-kpi-card__label{font-size:11px;font-weight:900;text-transform:uppercase;color:#9fb0cf;}
-.dashboard-kpi-card__value{margin-top:4px;font-size:16px;font-weight:950;color:#f8fbff;overflow-wrap:anywhere;}
-.dashboard-kpi-chart,.dashboard-confidence-kpi,.dashboard-decision-trend,.dashboard-accuracy-trend,.dashboard-leak-chart{display:grid;gap:7px;}
-.dashboard-confidence-kpi{border-top:1px solid rgba(148,163,184,.12);padding-top:10px;}
-.dashboard-confidence-kpi__title{font-size:12px;font-weight:950;color:#dce7fb;}
-.dashboard-confidence-kpi__empty{font-size:12px;color:#9fb0cf;}
-.dashboard-confidence-kpi__rows{display:grid;gap:6px;}
-.dashboard-confidence-kpi-row{display:grid;grid-template-columns:minmax(130px,1.3fr) minmax(120px,2fr) auto auto;
-  align-items:center;gap:9px;font-size:12px;border:1px solid rgba(148,163,184,.12);border-radius:9px;
-  background:rgba(255,255,255,.035);padding:7px 8px;}
-.dashboard-confidence-kpi-row__label{font-weight:850;color:#dce7fb;min-width:0;overflow-wrap:anywhere;}
-.dashboard-confidence-kpi-row__track{height:8px;border-radius:999px;background:rgba(148,163,184,.14);overflow:hidden;}
-.dashboard-confidence-kpi-row__bar{height:100%;border-radius:inherit;background:linear-gradient(90deg,#7bd3ff,#2bd576);}
-.dashboard-confidence-kpi-row__rate{font-weight:950;color:#9ff0bd;font-variant-numeric:tabular-nums;}
-.dashboard-confidence-kpi-row__sample{font-weight:800;color:#9fb0cf;font-variant-numeric:tabular-nums;white-space:nowrap;}
-.dashboard-confidence-kpi-row[data-group="postflop-low"] .dashboard-confidence-kpi-row__bar,
-.dashboard-confidence-kpi-row[data-group="postflop-fallback"] .dashboard-confidence-kpi-row__bar{
-  background:linear-gradient(90deg,#facc15,#7bd3ff);}
-.dashboard-decision-trend{border-top:1px solid rgba(148,163,184,.12);padding-top:10px;}
-.dashboard-decision-trend__title{font-size:12px;font-weight:950;color:#dce7fb;}
-.dashboard-decision-trend__summary{font-size:13px;font-weight:950;color:#f8fbff;}
-.dashboard-decision-trend__empty{font-size:12px;color:#9fb0cf;}
-.dashboard-decision-trend__bars{display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));
-  gap:8px;align-items:end;min-height:122px;}
-.dashboard-decision-trend__bar{display:grid;grid-template-rows:auto 82px auto auto;gap:5px;min-width:0;
-  align-items:end;justify-items:center;font-size:11px;color:#9fb0cf;}
-.dashboard-decision-trend__value{font-weight:950;color:#f8fbff;font-variant-numeric:tabular-nums;}
-.dashboard-decision-trend__track{width:100%;max-width:42px;height:82px;border-radius:999px;
-  display:flex;align-items:flex-end;overflow:hidden;background:linear-gradient(180deg,rgba(148,163,184,.16),rgba(148,163,184,.08));
-  border:1px solid rgba(148,163,184,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.04);}
-.dashboard-decision-trend__fill{width:100%;border-radius:999px 999px 0 0;
-  background:linear-gradient(180deg,#facc15,#7bd3ff);min-height:2px;}
-.dashboard-decision-trend__label{font-weight:950;color:#dce7fb;}
-.dashboard-decision-trend__sample{font-weight:800;font-variant-numeric:tabular-nums;text-align:center;}
-.dashboard-decision-trend[data-direction="faster"] .dashboard-decision-trend__summary{color:#9ff0bd;}
-.dashboard-decision-trend[data-direction="slower"] .dashboard-decision-trend__summary{color:#ffb4b4;}
-.dashboard-accuracy-trend{border-top:1px solid rgba(148,163,184,.12);padding-top:10px;}
-.dashboard-accuracy-trend__title{font-size:12px;font-weight:950;color:#dce7fb;}
-.dashboard-accuracy-trend__empty{font-size:12px;color:#9fb0cf;}
-.dashboard-accuracy-trend__bars{display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));
-  gap:8px;align-items:end;min-height:126px;}
-.dashboard-accuracy-trend__bar{display:grid;grid-template-rows:auto 86px auto auto;gap:5px;min-width:0;
-  align-items:end;justify-items:center;font-size:11px;color:#9fb0cf;}
-.dashboard-accuracy-trend__value{font-weight:950;color:#9ff0bd;font-variant-numeric:tabular-nums;}
-.dashboard-accuracy-trend__track{width:100%;max-width:42px;height:86px;border-radius:999px;
-  display:flex;align-items:flex-end;overflow:hidden;background:linear-gradient(180deg,rgba(148,163,184,.16),rgba(148,163,184,.08));
-  border:1px solid rgba(148,163,184,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.04);}
-.dashboard-accuracy-trend__fill{width:100%;border-radius:999px 999px 0 0;
-  background:linear-gradient(180deg,#7bd3ff,#2bd576);min-height:2px;}
-.dashboard-accuracy-trend__label{font-weight:950;color:#dce7fb;}
-.dashboard-accuracy-trend__sample{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;}
-.dashboard-accuracy-trend__bar[data-source="postflop"] .dashboard-accuracy-trend__fill{
-  background:linear-gradient(180deg,#facc15,#2bd576);}
-.dashboard-accuracy-trend__bar[data-source="mixed"] .dashboard-accuracy-trend__fill{
-  background:linear-gradient(180deg,#c084fc,#7bd3ff 52%,#2bd576);}
-.dashboard-leak-chart{border-top:1px solid rgba(148,163,184,.12);padding-top:10px;}
-.dashboard-leak-chart__title{font-size:12px;font-weight:950;color:#dce7fb;}
-.dashboard-leak-chart__empty{font-size:12px;color:#9fb0cf;}
-.dashboard-leak-row{grid-template-columns:minmax(92px,1fr) minmax(120px,2fr) auto auto;}
-.dashboard-leak-row__train,.preflop-curriculum__recommendation-train{appearance:none;border:1px solid rgba(43,213,118,.45);
-  border-radius:9px;background:linear-gradient(180deg,#2bd576,#20bf69);color:#06120b;font-weight:950;
-  font-size:12px;padding:7px 10px;cursor:pointer;box-shadow:0 10px 20px rgba(43,213,118,.14),
-  inset 0 1px 0 rgba(255,255,255,.22);}
-.dashboard-leak-row__train:disabled,.preflop-curriculum__recommendation-train:disabled{
-  opacity:.45;cursor:not-allowed;}
-.dashboard-kpi-chart-row{display:grid;grid-template-columns:minmax(92px,1fr) minmax(120px,2fr) auto;
-  align-items:center;gap:9px;font-size:12px;}
-.dashboard-kpi-chart-row__label{font-weight:850;color:#dce7fb;min-width:0;overflow-wrap:anywhere;}
-.dashboard-kpi-chart-row__track{height:9px;border-radius:999px;background:rgba(148,163,184,.14);overflow:hidden;}
-.dashboard-kpi-chart-row__bar{height:100%;border-radius:inherit;background:linear-gradient(90deg,#2bd576,#7bd3ff);}
-.dashboard-kpi-chart-row__rate{font-weight:950;color:#9ff0bd;font-variant-numeric:tabular-nums;}
-.dashboard-kpi-chart-row.dashboard-leak-row{grid-template-columns:minmax(92px,1fr) minmax(120px,2fr) auto auto;}
-.preflop-curriculum{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center;
-  background:
-  radial-gradient(circle at 85% 0%,rgba(123,211,255,.12),rgba(123,211,255,0) 34%),
-  linear-gradient(180deg,rgba(18,25,38,.98),rgba(10,15,24,.98));}
-.preflop-curriculum__title{grid-column:1/-1;}
-.preflop-curriculum__summary{font-size:14px;font-weight:950;color:#f8fbff;overflow-wrap:anywhere;}
-.preflop-curriculum__goals,.preflop-curriculum__due{font-size:12px;font-weight:800;color:#9fb0cf;}
-.preflop-curriculum__due{grid-column:1/2;}
-.preflop-curriculum__recommendations{grid-column:1/-1;display:grid;gap:7px;margin-top:4px;}
-.preflop-curriculum__recommendations-title{font-size:12px;font-weight:950;color:#dce7fb;}
-.preflop-curriculum__recommendation{display:grid;grid-template-columns:minmax(110px,1fr) minmax(160px,2fr) auto;
-  gap:8px;align-items:center;border:1px solid rgba(148,163,184,.13);border-radius:9px;
-  padding:8px;background:rgba(255,255,255,.035);font-size:12px;}
-.preflop-curriculum__recommendation-label{font-weight:950;color:#f8fbff;min-width:0;overflow-wrap:anywhere;}
-.preflop-curriculum__recommendation-meta{font-weight:800;color:#9fb0cf;min-width:0;overflow-wrap:anywhere;}
-.preflop-curriculum__actions{grid-column:2;grid-row:2/5;align-self:center;}
-.preflop-curriculum__start{appearance:none;border:1px solid rgba(43,213,118,.55);border-radius:10px;
-  background:linear-gradient(180deg,#32df83,#20c96f);color:#06120b;font-weight:950;font-size:13px;
-  padding:10px 14px;cursor:pointer;box-shadow:0 12px 26px rgba(43,213,118,.2),inset 0 1px 0 rgba(255,255,255,.28);}
-.preflop-curriculum__start:disabled{opacity:.45;cursor:not-allowed;}
-.dashboard-session{display:flex;flex-direction:column;gap:5px;}
-.dashboard-streak{font-size:15px;font-weight:950;color:#9ff0bd;}
-.dashboard-session-count{font-size:13px;color:#a8b7d5;font-weight:750;}
-.permission-audit{display:grid;gap:10px;}
-.permission-audit__rows{display:grid;gap:8px;}
-.permission-audit__empty{font-size:12px;color:#9fb0cf;}
-.permission-audit-row{display:grid;grid-template-columns:minmax(72px,1fr) auto auto auto auto;
-  gap:8px;align-items:center;border:1px solid rgba(148,163,184,.14);border-radius:10px;
-  padding:9px;background:rgba(255,255,255,.035);font-size:12px;color:#dce7fb;}
-.permission-audit-row__title{font-weight:950;color:#f8fbff;}
-.permission-audit-row__status{font-weight:950;color:#9ff0bd;}
-.permission-audit-row[data-ready="false"] .permission-audit-row__status{color:#ffb4b4;}
-.permission-audit-row__license,.permission-audit-row__scope,.permission-audit-row__evidence{
-  color:#9fb0cf;font-weight:800;overflow-wrap:anywhere;}
-.profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts,.postflop-kpi-charts{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.profile-breakdowns__title,.postflop-breakdowns__title,.preflop-leak-charts__title,.postflop-kpi-charts__title{grid-column:1/-1;}
-.preflop-leak-chart--bucket{grid-column:1/-1;}
-.postflop-kpi-chart--boardTextureKey{grid-column:1/-1;}
-.profile-breakdown,.postflop-breakdown,.preflop-leak-chart,.postflop-kpi-chart{background:rgba(255,255,255,.04);
-  border:1px solid rgba(148,163,184,.13);border-radius:10px;padding:9px;min-width:0;}
-.preflop-leak-chart__rows,.postflop-kpi-chart__rows{display:grid;gap:6px;}
-.postflop-kpi-chart__empty{font-size:12px;color:#9fb0cf;}
-.breakdown__rows,.profile-breakdown__rows,.postflop-breakdown__rows{display:flex;flex-direction:column;gap:2px;}
-.breakdown-row,.profile-breakdown-row,.postflop-breakdown-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;
-  align-items:center;padding:5px 7px;border-radius:8px;font-size:13px;}
-.breakdown-row:nth-child(odd),.profile-breakdown-row:nth-child(odd),.postflop-breakdown-row:nth-child(odd){background:rgba(255,255,255,.035);}
-.breakdown-row__name,.profile-breakdown-row__name,.postflop-breakdown-row__name{font-weight:750;min-width:0;overflow-wrap:anywhere;color:#e8ecf7;}
-.breakdown-row__count,.profile-breakdown-row__count,.postflop-breakdown-row__count{color:#9fb0cf;font-variant-numeric:tabular-nums;}
-.breakdown-row__rate,.profile-breakdown-row__rate,.postflop-breakdown-row__rate{font-weight:950;text-align:right;font-variant-numeric:tabular-nums;color:#9ff0bd;}
-.profile-breakdown__empty,.postflop-breakdown__empty{font-size:12px;color:#9fb0cf;}
-.rate--unavailable{color:#9fb0cf;font-weight:700;}
-.stats-profile-filter{display:grid;gap:5px;margin-bottom:8px;}
-.stats-profile-filter__label{display:grid;gap:5px;font-size:12px;font-weight:900;color:#9fb0cf;}
-.stats-profile-select{appearance:none;border:1px solid rgba(148,163,184,.24);border-radius:10px;
-  background:#101827;color:#e8ecf7;font-weight:850;font-size:13px;padding:9px 11px;min-height:40px;}
-.stats-transfer__actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
-.stats-export,.stats-import,.stats-reset-profile{appearance:none;border:1px solid rgba(148,163,184,.24);border-radius:10px;
-  background:linear-gradient(180deg,#202a3f,#141d2f);color:#e8ecf7;font-weight:900;font-size:13px;padding:9px 13px;
-  cursor:pointer;box-shadow:0 10px 20px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.06);}
-.stats-reset-profile{border-color:rgba(255,180,180,.28);}
-.stats-export:hover,.stats-import:hover{border-color:#2bd576;}
-.stats-reset-profile:hover{border-color:#ffb4b4;}
-.stats-reset-profile:disabled{opacity:.45;cursor:not-allowed;}
-.stats-json-box{box-sizing:border-box;width:100%;min-height:140px;resize:vertical;
-  border:1px solid rgba(148,163,184,.24);border-radius:10px;padding:10px 11px;font-family:ui-monospace,
-  SFMono-Regular,Consolas,monospace;font-size:12px;color:#e8ecf7;background:#101827;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);}
-.stats-transfer__status{margin-top:8px;font-size:12px;font-weight:700;}
-.stats-transfer__status--ok{color:#9ff0bd;}
-.stats-transfer__status--error{color:#ffb4b4;}
-@media (max-width:640px){
-  .dashboard{max-width:100%;}
-  .profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts,.postflop-kpi-charts{grid-template-columns:1fr;}
-  .preflop-leak-chart--bucket{grid-column:auto;}
-  .postflop-kpi-chart--boardTextureKey{grid-column:auto;}
-  .dashboard-kpi__cards{grid-template-columns:1fr 1fr;}
-  .dashboard-kpi-chart-row{grid-template-columns:1fr;gap:5px;}
-  .dashboard-leak-row{grid-template-columns:1fr;}
-  .dashboard-leak-row__train,.preflop-curriculum__recommendation-train{width:100%;min-height:38px;}
-  .dashboard-confidence-kpi-row{grid-template-columns:1fr;gap:5px;}
-  .dashboard-confidence-kpi-row__sample{white-space:normal;}
-  .dashboard-decision-trend__bars{grid-template-columns:repeat(auto-fit,minmax(48px,1fr));gap:7px;min-height:108px;}
-  .dashboard-decision-trend__bar{grid-template-rows:auto 70px auto auto;font-size:10px;}
-  .dashboard-decision-trend__track{height:70px;max-width:36px;}
-  .dashboard-accuracy-trend__bars{grid-template-columns:repeat(auto-fit,minmax(48px,1fr));gap:7px;min-height:112px;}
-  .dashboard-accuracy-trend__bar{grid-template-rows:auto 72px auto auto;font-size:10px;}
-  .dashboard-accuracy-trend__track{height:72px;max-width:36px;}
-  .dashboard-summary,.dashboard-kpi,.preflop-curriculum,.dashboard-session,.permission-audit,.breakdown,.stats-transfer,.profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts,.postflop-kpi-charts{
-    border-radius:12px;padding:12px;}
-  .preflop-curriculum{grid-template-columns:1fr;}
-  .preflop-curriculum__actions,.preflop-curriculum__due{grid-column:auto;grid-row:auto;}
-  .preflop-curriculum__recommendations{grid-column:auto;}
-  .preflop-curriculum__recommendation{grid-template-columns:1fr;}
-  .preflop-curriculum__start{width:100%;min-height:42px;}
-  .permission-audit-row{grid-template-columns:1fr;gap:5px;}
-  .stats-transfer__actions{display:grid;grid-template-columns:1fr;}
-  .stats-export,.stats-import,.stats-reset-profile,.stats-profile-select{width:100%;min-height:42px;}
-}
-`;
-  return style;
 }
 
 // ---------------------------------------------------------------------------
@@ -2051,7 +1933,6 @@ export function renderDashboard(data: DashboardData, root: HTMLElement): void {
   const sessionCount = normalizeCount(data.sessionCount);
 
   const wrapper = el("div", "dashboard");
-  wrapper.appendChild(dashboardStyles());
 
   // Summary (Req 9.3).
   wrapper.appendChild(renderSummary(store.summary()));
@@ -2059,8 +1940,13 @@ export function renderDashboard(data: DashboardData, root: HTMLElement): void {
     store,
     data.postflopRecords ?? [],
     data.onStartPreflopFocus,
+    data.activeProfileId,
   ));
-  wrapper.appendChild(renderPreflopCurriculumPanel(store, data.onStartPreflopFocus));
+  wrapper.appendChild(renderPreflopCurriculumPanel(
+    store,
+    data.onStartPreflopFocus,
+    data.activeProfileId,
+  ));
 
   // Streak and current-session count (Req 9.5).
   wrapper.appendChild(renderStreakSession(store.currentStreak(), sessionCount));

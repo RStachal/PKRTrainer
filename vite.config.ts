@@ -6,7 +6,7 @@ import { defineConfig } from "vite";
 import {
   buildPrecacheManifest,
   injectPrecacheManifest,
-  isLazyMttProductionAsset,
+  isDeferredAsset,
   mttProductionChunkNameForModuleId,
 } from "./src/pwa/precacheManifestBuild";
 
@@ -31,6 +31,7 @@ function listPublicAssets(): string[] {
 // - samostatný vstup pro Service Worker s pevným názvem `sw.js` v kořeni dist/
 //   (registrace v src/pwa/registerSw.ts očekává `./sw.js`), Req 12.1, 12.5
 // - sekce `test` konfiguruje Vitest jako test runner (Req 12.1)
+
 export default defineConfig({
   base: "./",
   plugins: [
@@ -43,17 +44,40 @@ export default defineConfig({
           throw new Error("Expected generated sw.js chunk.");
         }
         const manifest = buildPrecacheManifest([
-          ...Object.keys(bundle).filter((fileName) => !isLazyMttProductionAsset(fileName)),
+          ...Object.keys(bundle).filter((fileName) => !isDeferredAsset(fileName)),
           ...listPublicAssets(),
         ]);
         worker.code = injectPrecacheManifest(worker.code, manifest);
       },
     },
   ],
+  /**
+   * Generované packy se do bundlu čtou jako text, ne jako objektový literál.
+   *
+   * Bez tohohle vite převádí každý JSON přes `dataToEsm` na modul s objektovým
+   * literálem, a rollup si k němu drží celý AST. Naměřeno 29. 9. 2026 nad
+   * dnešními 240 packy (80,6 MiB): literálový tvar zabere **2 039 MiB haldy**
+   * a 19,1 s parsování, kdežto `export default JSON.parse("…")` **281 MiB**
+   * a 1,6 s. Produkční build přitom od 24. 9. padal na stropu 12 288 MB
+   * s vrcholem 11 422 - těch ušetřených 1 758 MiB je rozdíl mezi červenou
+   * a zelenou bránou.
+   *
+   * Je to vlastníkova odpověď **4a** z 24. 9. 2026 („líné načítání i pro build
+   * a testy“) v nejmenším možném tvaru: pack se při buildu přestane rozkládat
+   * na AST a rozbalí ho až ten, kdo ho chce. Zvedat strop podruhé bylo
+   * zakázané, a tohle strop nezvedá.
+   *
+   * Cena: chunk ve tvaru `JSON.parse` je zhruba velký jako zdroj, kdežto
+   * literálový byl o 8-10 % menší. Naměřeno sondou na skutečném buildu, že se
+   * všechny vejdou (nejhorší river 496,3 z 528 KiB, turn-ev 1 022,9 z 1 100)
+   * a gzip se nehne; součtový raw rozpočet to stojí asi 3,6 MB. Rezerva na
+   * chunk je tím 28 KiB, ne 80 - viz poznámka v `checkBundleBudget.mts`.
+   */
+  json: { stringify: true },
   build: {
     outDir: "dist",
     target: "es2020",
-    sourcemap: true,
+    sourcemap: "hidden",
     rollupOptions: {
       input: {
         // Hlavní HTML vstup aplikace (JS/CSS bundly zůstávají hashované).
@@ -73,6 +97,11 @@ export default defineConfig({
           if (id.split("\\").join("/").endsWith("/src/core/postflopLineSimulator.ts")) {
             return "postflop-line";
           }
+          // Named rather than left to rollup so the precache predicate has a
+          // stable thing to match; the default was "preflopEquity.generated".
+          if (id.split("\\").join("/").endsWith("/src/data/ranges/preflopEquity.generated.ts")) {
+            return "preflop-equity";
+          }
           return undefined;
         },
       },
@@ -88,6 +117,69 @@ export default defineConfig({
     // přes komentář `// @vitest-environment jsdom` na začátku souboru.
     environment: "node",
     globals: true,
+    // Mnoho integračních testů spouští další Node/PowerShell CLI procesy, takže
+    // jeden worker znamená celý strom cmd -> npm -> node -> vite-node.
+    //
+    // Čtyřka není opatrnost, je to naměřená hodnota. Zvedl jsem ji na osm s tím,
+    // že sada obsahuje 58,7 minuty práce a víc workerů ji stlačí — a měření to
+    // otočilo naruby: 915 s při čtyřech, 4572 s při osmi. Každý CLI soubor se
+    // zpomalil sedmkrát až dvanáctkrát, například mttPostflopActionEvIntakeCli
+    // ze 186 s na 2251 s.
+    //
+    // Důvod je v tom, co ty testy dělají: osm workerů rozjede osm dalších
+    // npm/vite-node stromů, takže na šestnácti jádrech soupeří přes třicet
+    // procesů a studený start každého z nich se natáhne. Práce tu není dělitelná
+    // tak, jak vypadá — přidání workerů přidává hlavně režii.
+    //
+    // Neměňte to bez měření. PKRTRAINER_TEST_WORKERS je pro případ, kdy sada běží
+    // vedle něčeho jiného a potřebuje ubrat.
+    //
+    // **Sníženo ze 4 na 2 dne 25. 8. 2026, a to měření je tady:**
+    //
+    // | workerů | sada | výsledek |
+    // |---|---|---|
+    // | 4 | 476 s | 2 pády |
+    // | 4 | 980 s | 1 pád, vyhladovělý test |
+    // | 2 | **386 s** | 1 627 prošlo |
+    //
+    // Dva jsou tedy rychlejší **i** spolehlivější, což je proti intuici jen do
+    // chvíle, než se změří paměť: při dvou workerech drží node až 4,96 GB a
+    // volné zbývá 4,1 GB z 31,2. Při čtyřech by držel kolem deseti a stroj
+    // začne stránkovat - a stránkující test nespadne na tvrzení, ale na čase.
+    //
+    // Jak moc: test `SNG chipEV candidate profil` trval v plné sadě při čtyřech
+    // workerech **559 vteřin** a samostatně **537 ms**. Tisícinásobek.
+    //
+    // Čtyřka nebyla nikdy špatně - byla naměřená na **19 dodávaných rodinách**.
+    // Dnes jich je 97 a každý worker si drží vlastní strom `npm -> vite-node`
+    // s desítkami MB packů. Přerostl to obsah, ne chyba v nastavení.
+    maxWorkers: Number(process.env.PKRTRAINER_TEST_WORKERS ?? 2),
+    minWorkers: 1,
+    /**
+     * Limity zvednuté 24. 8. 2026, protože **vyrostl obsah, ne pomalost kódu**.
+     *
+     * Výchozích 5 s na test a 10 s na hook bylo kalibrováno na 19 dodávaných
+     * rodin. Dnes jich je 48 flopových, 32 turnových a 17 riverových a k tomu
+     * 6,6 MB tabulek EV, takže testy, které obsah načtou a rozdají z něj spoty,
+     * sedí těsně na hraně: naměřeno 5 188 ms na testu s limitem 5 000.
+     *
+     * Ověřeno, že to není zpomalení produktu: rozdání jednoho riverového spotu
+     * i s dopočtem EV trvá **2,2 ms**, načtení všech sedmnácti tabulek 978 ms.
+     * Roste čas na načtení obsahu v testu, ne práce na jedno rozdání.
+     */
+    testTimeout: 60_000,
+    hookTimeout: 60_000,
+    /*
+     * Zvednuto podruhé, 24. 8. 2026, a znovu proto, že **vyrostl obsah**.
+     *
+     * Celá sada dnes trvá 338 s, z toho 307 s transformace. Testy, které načtou
+     * sady packů (bootstrap, katalogy), sedí pod tou zátěží na hraně: samostatně
+     * projdou - ověřeno, 16 testů - a v plné sadě vyprší. Není to pomalost kódu:
+     * rozdání jednoho spotu i s dopočtem EV trvá 2,2 ms.
+     *
+     * Strop není kontrola správnosti, jen pojistka proti zaseknutí. Rozbitý test
+     * spadne na tvrzení, ne na čase, takže vyšší číslo nic neschovává.
+     */
     include: ["tests/**/*.{test,spec}.{ts,js}", "src/**/*.{test,spec}.{ts,js}"],
   },
 });
