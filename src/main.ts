@@ -319,6 +319,11 @@ export interface BootstrapOptions {
   storage?: Storage;
   /** Zaregistrovat Service Worker? (výchozí: jen v produkčním buildu). */
   registerSw?: boolean;
+  /**
+   * Které GUI tréninku; bez něj rozhoduje přepínač (`uiFlag.ts`). Od 3. 11. 2026
+   * je výchozí nové, takže si ho testy klasického toku vyžádají výslovně.
+   */
+  ui?: "next" | "classic";
 }
 
 /**
@@ -403,9 +408,12 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   const postflopLineStatsStore = createPostflopLineStatsStore(storage);
   const hhReviewStore = createHHReviewStore(storage);
 
-  // Nové GUI tréninku je za přepínačem, dokud neprojde E2E (fáze 1 redesignu).
-  // Čte se tady, protože postflopový panel se vykresluje dřív než trénink.
-  const nextUi = isNextUiEnabled(typeof location === "undefined" ? "" : location.search, storage);
+  // Nové GUI tréninku je od 3. 11. 2026 výchozí, klasika zůstává za přepínačem
+  // (fáze 1 redesignu). Čte se tady, protože postflopový panel se vykresluje
+  // dřív než trénink.
+  const nextUi = options.ui !== undefined
+    ? options.ui === "next"
+    : isNextUiEnabled(typeof location === "undefined" ? "" : location.search, storage);
 
   // Statistiky (dashboard) a HH import jsou dostupné nezávisle na Range_Store.
   let sessionCount = 0;

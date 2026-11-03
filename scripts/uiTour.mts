@@ -33,7 +33,8 @@ import { QA_VIEWPORTS, type Viewport } from "./lib/viewports.mts";
  *   npm run ui:tour                                 postaví dist/ a projde všechny šířky
  *   npm run ui:tour -- --no-build                   použije existující dist/
  *   npm run ui:tour -- --viewports=desktop-1280,mobile-390
- *   npm run ui:tour -- --ui=next                    nové GUI tréninku (za přepínačem)
+ *   npm run ui:tour -- --ui=next                    nové GUI tréninku (v aplikaci výchozí od 3. 11. 2026;
+ *                                                   prohlídka bez přepínače fotí klasiku kvůli porovnání)
  *
  * Není to brána, o obsahu nic netvrdí. Selže jen tehdy, když se nedostane na
  * obrazovku, kterou má vyfotit, protože pak je prohlídka neúplná a má to říct.

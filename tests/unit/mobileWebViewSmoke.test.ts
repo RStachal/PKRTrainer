@@ -84,7 +84,7 @@ describe("mobile / Android WebView smoke", () => {
     const root = document.createElement("div");
     document.body.appendChild(root);
 
-    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
 
     expect(root.querySelector(".filters")).not.toBeNull();
     expect(root.querySelector(".filter-start")).not.toBeNull();
@@ -162,7 +162,7 @@ describe("mobile / Android WebView smoke", () => {
       const root = document.createElement("div");
       document.body.appendChild(root);
 
-      bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+      bootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
 
       expect(root.querySelector(".filters")).not.toBeNull();
       expect(root.querySelector<HTMLSelectElement>(".profile-street")).not.toBeNull();
@@ -192,7 +192,7 @@ describe("mobile / Android WebView smoke", () => {
       const { bootstrap } = await importFreshMain();
       const root = document.createElement("div");
       document.body.appendChild(root);
-      bootstrap({ root, storage, registerSw: false });
+      bootstrap({ root, storage, registerSw: false, ui: "classic" });
 
       const street = root.querySelector<HTMLSelectElement>(".profile-street");
       street!.value = "FLOP";
@@ -206,7 +206,7 @@ describe("mobile / Android WebView smoke", () => {
       const { bootstrap } = await importFreshMain();
       const root = document.createElement("div");
       document.body.appendChild(root);
-      bootstrap({ root, storage, registerSw: false });
+      bootstrap({ root, storage, registerSw: false, ui: "classic" });
 
       root.querySelector<HTMLButtonElement>('[data-tab="stats"]')?.click();
       await waitForDashboard(root);

@@ -117,7 +117,7 @@ describe("bootstrap - inicializacni tok", () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
 
-    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
 
     expect(root.querySelector(".filters")).not.toBeNull();
     expect(stylesheet("legacy/app-shell.css")).toContain("@media (max-width:720px)");
@@ -156,7 +156,7 @@ describe("bootstrap - inicializacni tok", () => {
     const storage = new MemoryStorage();
     document.body.appendChild(root);
 
-    bootstrap({ root, storage, registerSw: false });
+    bootstrap({ root, storage, registerSw: false, ui: "classic" });
 
     expect(root.querySelector<HTMLElement>(".training__filters")?.hidden).toBe(false);
     expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(true);
@@ -200,7 +200,7 @@ describe("bootstrap - inicializacni tok", () => {
     const storage = new MemoryStorage();
     document.body.appendChild(root);
 
-    bootstrap({ root, storage, registerSw: false });
+    bootstrap({ root, storage, registerSw: false, ui: "classic" });
 
     const street = root.querySelector<HTMLSelectElement>(".profile-street");
     const seed = root.querySelector<HTMLInputElement>(".filter-seed");
@@ -245,7 +245,7 @@ describe("bootstrap - inicializacni tok", () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
 
-    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
 
     const street = root.querySelector<HTMLSelectElement>(".profile-street");
     const seed = root.querySelector<HTMLInputElement>(".filter-seed");
@@ -275,7 +275,7 @@ describe("bootstrap - inicializacni tok", () => {
     const storage = new QuotaAfterBootstrapStorage();
     document.body.appendChild(root);
 
-    bootstrap({ root, storage, registerSw: false });
+    bootstrap({ root, storage, registerSw: false, ui: "classic" });
     storage.failWrites = true;
     root.querySelector<HTMLButtonElement>(".filter-start")?.click();
     await waitForPreflopSession(root);
@@ -294,7 +294,7 @@ describe("bootstrap - inicializacni tok", () => {
     const storage = new QuotaAfterBootstrapStorage();
     document.body.appendChild(root);
 
-    bootstrap({ root, storage, registerSw: false });
+    bootstrap({ root, storage, registerSw: false, ui: "classic" });
     const street = root.querySelector<HTMLSelectElement>(".profile-street");
     street!.value = "FLOP";
     street!.dispatchEvent(new Event("change"));
@@ -320,7 +320,7 @@ describe("bootstrap - inicializacni tok", () => {
     const storage = new MemoryStorage();
     document.body.appendChild(root);
 
-    bootstrap({ root, storage, registerSw: false });
+    bootstrap({ root, storage, registerSw: false, ui: "classic" });
 
     const ante = root.querySelector<HTMLInputElement>(".filter-ante");
     ante!.checked = false;
@@ -362,7 +362,7 @@ describe("bootstrap - inicializacni tok", () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
 
-    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
 
     const street = root.querySelector<HTMLSelectElement>(".profile-street");
     const seed = root.querySelector<HTMLInputElement>(".filter-seed");
@@ -399,7 +399,7 @@ describe("bootstrap - inicializacni tok", () => {
     let main = await importFreshMain();
     const firstRoot = document.createElement("div");
 
-    main.bootstrap({ root: firstRoot, storage, registerSw: false });
+    main.bootstrap({ root: firstRoot, storage, registerSw: false, ui: "classic" });
 
     const street = firstRoot.querySelector<HTMLSelectElement>(".profile-street");
     street!.value = "FLOP";
@@ -413,7 +413,7 @@ describe("bootstrap - inicializacni tok", () => {
 
     main = await importFreshMain();
     const secondRoot = document.createElement("div");
-    main.bootstrap({ root: secondRoot, storage, registerSw: false });
+    main.bootstrap({ root: secondRoot, storage, registerSw: false, ui: "classic" });
 
     await waitForDashboard(secondRoot);
     expect(secondRoot.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total)
@@ -434,7 +434,7 @@ describe("bootstrap - inicializacni tok", () => {
     const root = document.createElement("div");
     document.body.appendChild(root);
 
-    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
 
     const format = root.querySelector<HTMLSelectElement>(".profile-format");
     format!.value = "SIX_MAX";
@@ -543,7 +543,7 @@ describe("bootstrap - inicializacni tok", () => {
     "MTT preflop gate: $format $speed ante $ante",
     async (scenario) => {
       const root = document.createElement("div");
-      gateBootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+      gateBootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
 
       const format = root.querySelector<HTMLSelectElement>(".profile-format");
       const speed = root.querySelector<HTMLSelectElement>(".profile-speed");
@@ -576,7 +576,7 @@ describe("bootstrap - inicializacni tok", () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
 
-    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
 
     const variant = root.querySelector<HTMLSelectElement>(".profile-variant");
     variant!.value = "SNG";
@@ -598,7 +598,7 @@ describe("bootstrap - inicializacni tok", () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
 
-    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
 
     const variant = root.querySelector<HTMLSelectElement>(".profile-variant");
     variant!.value = "CASH";
@@ -621,7 +621,7 @@ describe("bootstrap - inicializacni tok", () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
 
-    bootstrap({ root, storage: new BrokenWriteStorage(), registerSw: false });
+    bootstrap({ root, storage: new BrokenWriteStorage(), registerSw: false, ui: "classic" });
 
     expect(root.querySelector(".fatal")?.textContent).toContain("Úložiště není konzistentní");
     expect(root.querySelector(".filter-start")).toBeNull();
@@ -635,7 +635,7 @@ describe("bootstrap - inicializacni tok", () => {
     const storage = new MemoryStorage();
     storage.setItem(APP_LANGUAGE_STORAGE_KEY, "EN");
 
-    bootstrap({ root, storage, registerSw: false });
+    bootstrap({ root, storage, registerSw: false, ui: "classic" });
     window.dispatchEvent(new ErrorEvent("error", {
       error: new Error("simulated runtime failure"),
       message: "simulated runtime failure",
@@ -660,7 +660,7 @@ describe("bootstrap - inicializacni tok", () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
 
-    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
 
     expect(root.querySelector(".fatal")).toBeNull();
     expect(root.querySelector(".filter-start")).not.toBeNull();

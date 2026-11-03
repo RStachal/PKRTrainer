@@ -132,7 +132,10 @@ try {
       enabled: viewport.mobile,
       maxTouchPoints: viewport.mobile ? 5 : 1,
     });
-    await navigate(cdp, targetUrl);
+    // Klasické GUI výslovně: od 3. 11. 2026 je výchozí nové (`uiFlag.ts`) a tenhle
+    // blok zkouší klasickou cestu, která zůstává za `?ui=classic`. Parametr
+    // v adrese přežije `localStorage.clear()` i reload.
+    await navigate(cdp, withUi(targetUrl, "classic"));
     await waitForSelector(cdp, ".filter-start");
     await evaluate(cdp, `localStorage.clear()`);
     await reload(cdp);
@@ -655,7 +658,19 @@ try {
     }
     nextUiPostflopResults.push(await runNextUiPostflopScenario(cdp, viewport, browserErrors, contrastAudits));
   }
-  // Zpět na dnešní GUI, ať zbytek běhu zkouší výchozí stav.
+  // Výchozí GUI je od 3. 11. 2026 nové: bez parametru v adrese a bez uložené
+  // volby se trénink musí otevřít v nové obrazovce.
+  if (expectedPreflop !== "blocked") {
+    await navigate(cdp, targetUrl);
+    await waitForSelector(cdp, ".filter-start");
+    await evaluate(cdp, `localStorage.clear()`);
+    await reload(cdp);
+    await waitForSelector(cdp, ".filter-start");
+    await activate(cdp, ".filter-start", "keyboard");
+    await waitForSelector(cdp, ".dx-trainer__actions button");
+  }
+  // Zbytek běhu (odolnost, Service Worker) jede na klasickém GUI, jak byl
+  // napsaný; klasika zůstává za `?ui=classic`.
   await navigate(cdp, withUi(targetUrl, "classic"));
   await waitForSelector(cdp, ".filter-start");
 

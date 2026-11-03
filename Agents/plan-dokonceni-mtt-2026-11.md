@@ -141,6 +141,8 @@ která na nich stojí.
    body pro čtecí sezení fáze C, 5 uzavřeno, 14 po MTT 1.0.)*
 7. GUI fáze 1 dokončit: režim linky (3c), statistika nezapočítá neposouzenou
    odpověď jako chybu (schéma záznamu), přepínač na výchozí po zeleném E2E.
+   *(3. 11.: hotovo i s maticí range v novém postflopu; nové GUI je výchozí,
+   bod 333.)*
 
 **Fáze C – obsah a GUI (týdny 2–3)**
 

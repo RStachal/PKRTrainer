@@ -24,7 +24,7 @@ async function startSession(): Promise<HTMLElement> {
   const { bootstrap } = await import("../../src/main");
   const root = document.createElement("div");
   document.body.appendChild(root);
-  bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+  bootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
   root.querySelector<HTMLButtonElement>(".filter-start")?.click();
   // The preflop pack is fetched, so the session appears a tick after the click.
   // Asserting straight away tests an empty panel, which is how the first version

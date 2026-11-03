@@ -19,6 +19,10 @@ ztrátě týdne nepushnutých commitů 23.-30. 10. Neověřené se necommituje.
   špičce kolem 11 GB, proto jen při volném stroji.
 - Výstup do logu, např.
   `npm run verify:day > artifacts/verify-day-<datum>.log 2>&1`.
+- Přes den, když majitel na stroji pracuje, paralelní sada `verify:block`
+  padá na `Timeout calling "onTaskUpdate"` i se všemi testy zelenými (3. 11.
+  2026: 1 258 s místo 483). Pak `verify:day` a za ní
+  `npm run build && npm run verify:precache && npm run bundle:budget && npm run e2e:chrome:preview`.
 - Během běhu **neupravovat zdroje** ani deník (`diaryTable` čte deník).
 - Červená: najdi příčinu. Spadlý krok je poslední řádek
   `> mtt-preflop-trainer@... <skript>` v logu.

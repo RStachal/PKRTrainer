@@ -1,6 +1,7 @@
 # Redesign GUI – plán
 
-**Stav:** fáze 0 a 0b hotové 22. 10. 2026, další je fáze 1 (trénink). Vlastník
+**Stav:** fáze 0, 0b a 1 hotové. Od 3. 11. 2026 je nové GUI tréninku výchozí,
+klasika zůstává za `?ui=classic` (deník 333). Další je fáze 2 (matice). Vlastník
 návrh 22. 10. schválil: „myslím, že to vypadá dobře, můžeš pokračovat." Průběh
 a naměřená čísla jsou na konci dokumentu.
 
