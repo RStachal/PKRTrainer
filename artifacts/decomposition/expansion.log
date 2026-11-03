@@ -3463,3 +3463,351 @@ UnicodeDecodeError: 'charmap' codec can't decode byte 0x88 in position 1122: cha
 [06:31:12] expansion: hotovo 0, selhalo 0, zbývá 167
 [06:31:12] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
 [06:31:12] fronta není prázdná, rozkladu okno nepředávám
+[21:01:12] POZOR: napajeni je BATERIE ({0} %); nastaveni pro sit neplati a Windows uspi stroj, az baterie dojde. Okno neni jiste - zapoj stroj.
+[21:01:12] viko na siti: nedelat nic (overeno v registru)
+[21:01:13] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:01:13] konec okna 2026-10-24T07:00 (vikendovy rozvrh: True)
+[21:03:14] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[21:31:16] napajeni: sit
+[21:31:16] viko na siti: nedelat nic (overeno v registru)
+[21:31:17] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:31:17] konec okna 2026-10-24T07:00 (vikendovy rozvrh: True)
+[21:31:19] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[22:01:14] napajeni: sit
+[22:01:14] viko na siti: nedelat nic (overeno v registru)
+[22:01:15] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[22:01:15] konec okna 2026-10-24T07:00 (vikendovy rozvrh: True)
+[22:01:16] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[22:31:15] napajeni: sit
+[22:31:15] viko na siti: nedelat nic (overeno v registru)
+[22:31:15] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[22:31:16] konec okna 2026-10-24T07:00 (vikendovy rozvrh: True)
+[22:31:17] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[23:01:10] napajeni: sit
+[23:01:10] viko na siti: nedelat nic (overeno v registru)
+[23:01:11] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[23:01:11] konec okna 2026-10-24T07:00 (vikendovy rozvrh: True)
+[23:01:11] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[23:31:15] napajeni: sit
+[23:31:15] viko na siti: nedelat nic (overeno v registru)
+[23:31:16] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[23:31:16] konec okna 2026-10-24T07:00 (vikendovy rozvrh: True)
+[23:31:18] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[00:01:14] napajeni: sit
+[00:01:15] viko na siti: nedelat nic (overeno v registru)
+[00:01:15] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[00:01:15] konec okna 2026-10-24T07:00 (vikendovy rozvrh: True)
+[00:01:17] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[00:31:16] napajeni: sit
+[00:31:17] viko na siti: nedelat nic (overeno v registru)
+[00:31:17] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[00:31:17] konec okna 2026-10-24T07:00 (vikendovy rozvrh: True)
+[00:31:19] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[01:01:13] napajeni: sit
+[01:01:13] viko na siti: nedelat nic (overeno v registru)
+[01:01:13] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[01:01:13] konec okna 2026-10-24T07:00 (vikendovy rozvrh: True)
+[01:01:14] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[01:31:16] napajeni: sit
+[01:31:16] viko na siti: nedelat nic (overeno v registru)
+[01:31:16] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[01:31:17] konec okna 2026-10-24T07:00 (vikendovy rozvrh: True)
+[01:31:18] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[02:01:13] napajeni: sit
+[02:01:13] viko na siti: nedelat nic (overeno v registru)
+[02:01:13] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[02:01:13] konec okna 2026-10-24T07:00 (vikendovy rozvrh: True)
+[02:01:14] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[02:31:16] napajeni: sit
+[02:31:16] viko na siti: nedelat nic (overeno v registru)
+[02:31:16] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[02:31:16] konec okna 2026-10-24T07:00 (vikendovy rozvrh: True)
+[02:31:18] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[03:01:24] napajeni: sit
+[03:01:24] viko na siti: nedelat nic (overeno v registru)
+[03:01:25] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[03:01:25] konec okna 2026-10-24T07:00 (vikendovy rozvrh: True)
+[03:01:27] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[03:31:23] napajeni: sit
+[03:31:24] viko na siti: nedelat nic (overeno v registru)
+[03:31:24] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[03:31:25] konec okna 2026-10-24T07:00 (vikendovy rozvrh: True)
+[03:31:28] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[04:01:17] napajeni: sit
+[04:01:18] viko na siti: nedelat nic (overeno v registru)
+[04:01:19] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[04:01:19] konec okna 2026-10-24T07:00 (vikendovy rozvrh: True)
+[04:01:22] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[04:31:21] napajeni: sit
+[04:31:22] viko na siti: nedelat nic (overeno v registru)
+[04:31:23] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[04:31:23] konec okna 2026-10-24T07:00 (vikendovy rozvrh: True)
+[04:31:26] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[05:01:10] napajeni: sit
+[05:01:11] viko na siti: nedelat nic (overeno v registru)
+[05:01:12] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[05:01:12] konec okna 2026-10-24T07:00 (vikendovy rozvrh: True)
+[05:01:13] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[05:31:18] napajeni: sit
+[05:31:19] viko na siti: nedelat nic (overeno v registru)
+[05:31:19] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[05:31:19] konec okna 2026-10-24T07:00 (vikendovy rozvrh: True)
+[05:31:20] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[06:01:13] napajeni: sit
+[06:01:14] viko na siti: nedelat nic (overeno v registru)
+[06:01:15] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[06:01:15] konec okna 2026-10-24T07:00 (vikendovy rozvrh: True)
+[06:01:16] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[06:31:18] napajeni: sit
+[06:31:18] viko na siti: nedelat nic (overeno v registru)
+[06:31:19] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[06:31:19] konec okna 2026-10-24T07:00 (vikendovy rozvrh: True)
+[06:31:20] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[07:01:08] sobota: plny ranni cyklus jeste neprobehl, solver pocka nejdele do 10:00
+[08:01:09] sobota: bezi plny ranni cyklus, solver pocka
+[08:53:47] sobota: bezi plny ranni cyklus, solver pocka
+[10:01:22] sobota: bezi plny ranni cyklus, solver pocka
+[10:31:09] sobota: bezi plny ranni cyklus, solver pocka
+[11:01:09] sobota: bezi plny ranni cyklus, solver pocka
+[11:31:09] sobota: bezi plny ranni cyklus, solver pocka
+[12:01:09] sobota: bezi plny ranni cyklus, solver pocka
+[12:31:09] sobota: bezi plny ranni cyklus, solver pocka
+[13:01:09] sobota: bezi plny ranni cyklus, solver pocka
+[13:31:09] sobota: bezi plny ranni cyklus, solver pocka
+[14:01:09] sobota: bezi plny ranni cyklus, solver pocka
+[14:31:09] sobota: bezi plny ranni cyklus, solver pocka
+[15:01:08] sobota: bezi plny ranni cyklus, solver pocka
+[15:31:10] napajeni: sit
+[15:31:11] viko na siti: nedelat nic (overeno v registru)
+[15:31:11] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[15:31:11] konec okna 2026-10-26T07:00 (vikendovy rozvrh: True)
+[15:31:12] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[16:01:13] napajeni: sit
+[16:01:14] viko na siti: nedelat nic (overeno v registru)
+[16:01:14] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[16:01:14] konec okna 2026-10-26T07:00 (vikendovy rozvrh: True)
+[16:01:16] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[16:31:17] napajeni: sit
+[16:31:18] viko na siti: nedelat nic (overeno v registru)
+[16:31:18] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[16:31:18] konec okna 2026-10-26T07:00 (vikendovy rozvrh: True)
+[16:31:20] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[17:01:12] napajeni: sit
+[17:01:12] viko na siti: nedelat nic (overeno v registru)
+[17:01:13] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[17:01:13] konec okna 2026-10-26T07:00 (vikendovy rozvrh: True)
+[17:01:15] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[17:31:11] napajeni: sit
+[17:31:11] viko na siti: nedelat nic (overeno v registru)
+[17:31:11] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[17:31:11] konec okna 2026-10-26T07:00 (vikendovy rozvrh: True)
+[17:31:12] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[18:01:14] napajeni: sit
+[18:01:14] viko na siti: nedelat nic (overeno v registru)
+[18:01:14] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[18:01:15] konec okna 2026-10-26T07:00 (vikendovy rozvrh: True)
+[18:01:16] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[18:31:11] napajeni: sit
+[18:31:12] viko na siti: nedelat nic (overeno v registru)
+[18:31:12] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[18:31:12] konec okna 2026-10-26T07:00 (vikendovy rozvrh: True)
+[18:31:13] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[19:01:21] napajeni: sit
+[19:01:22] viko na siti: nedelat nic (overeno v registru)
+[19:01:23] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[19:01:23] konec okna 2026-10-26T07:00 (vikendovy rozvrh: True)
+[19:01:26] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[19:31:12] napajeni: sit
+[19:31:12] viko na siti: nedelat nic (overeno v registru)
+[19:31:13] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[19:31:13] konec okna 2026-10-26T07:00 (vikendovy rozvrh: True)
+[19:31:14] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[20:01:18] napajeni: sit
+[20:01:19] viko na siti: nedelat nic (overeno v registru)
+[20:01:19] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[20:01:19] konec okna 2026-10-26T07:00 (vikendovy rozvrh: True)
+[20:01:22] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[20:31:19] napajeni: sit
+[20:31:19] viko na siti: nedelat nic (overeno v registru)
+[20:31:20] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[20:31:20] konec okna 2026-10-26T07:00 (vikendovy rozvrh: True)
+[20:31:23] ustupuji: tahle noc patří prvnímu rozkladu (priorita DECOMPOSITION, střídání nocí)
+[21:01:14] napajeni: sit
+[21:01:15] viko na siti: nedelat nic (overeno v registru)
+[21:01:15] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[21:01:15] konec okna 2026-10-26T07:00 (vikendovy rozvrh: True)
+[21:07:17] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[21:07:17] nastagováno 167 desek bez checkpointu; deadline Mon 26.10. 07:00
+[21:07:17] na disku volno 603.9 GB (hranice 8 GB)
+[21:07:17] stroj se drží vzhůru po dobu běhu
+[21:07:17] napájení: síť
+[21:07:17] cena desky změřena 2026-10-24 05:01 na 937 deskách: 25 bb 6.4 min, 40 bb 27.6 min, 50 bb 23.9 min
+[21:07:17] solving MTT9_40BB_LJ_CO_SRP A72r (vlákna 16)
+[22:09:01]   hotovo za 61.7 min, checkpoint 41 MB
+[22:09:01] solving MTT9_40BB_LJ_CO_SRP 883r (vlákna 16)
+[22:54:12]   hotovo za 45.2 min, checkpoint 46 MB
+[22:54:12] solving MTT9_40BB_LJ_CO_SRP 986tt (vlákna 12)
+[23:36:01]   hotovo za 41.8 min, checkpoint 42 MB
+[23:36:01] solving MTT9_40BB_LJ_CO_SRP AT4mono (vlákna 16)
+[00:02:07]   hotovo za 26.1 min, checkpoint 30 MB
+[00:02:07] solving MTT9_40BB_LJ_CO_SRP 742r (vlákna 16)
+[01:10:22]   hotovo za 68.2 min, checkpoint 47 MB
+[01:10:22] solving MTT9_40BB_LJ_CO_SRP K98tt (vlákna 12)
+[01:42:14]   hotovo za 31.9 min, checkpoint 41 MB
+[01:42:14] solving MTT9_40BB_BTN_SB_SRP A72r (vlákna 16)
+[01:42:35]   spadlo po 0.3 min (rc=3); zkouším znovu
+[02:12:37]   (stupeň 1 by dal týž strop i přesnost, přeskakuje se)
+[02:12:37]   SELHALO po 90.0 min (rc=timeout); příští noc stupeň 2 - strop 90 min, přesnost 1.0 %
+[02:12:37] solving MTT9_40BB_BTN_SB_SRP 883r (vlákna 16)
+[02:57:44]   hotovo za 45.1 min, checkpoint 82 MB
+[02:57:44] solving MTT9_40BB_BTN_SB_SRP 986tt (vlákna 12)
+[04:04:01]   hotovo za 66.3 min, checkpoint 78 MB
+[04:04:01] solving MTT9_40BB_BTN_SB_SRP AT4mono (vlákna 12)
+[04:04:24]   spadlo po 0.4 min (rc=3221225477); zkouším znovu
+[04:30:16]   hotovo za 25.9 min, checkpoint 55 MB (napodruhé)
+[04:30:16] solving MTT9_40BB_BTN_SB_SRP 742r (vlákna 12)
+[06:00:18]   (stupeň 1 by dal týž strop i přesnost, přeskakuje se)
+[06:00:18]   SELHALO po 90.0 min (rc=timeout); příští noc stupeň 2 - strop 90 min, přesnost 1.0 %
+[06:00:18] solving MTT9_40BB_BTN_SB_SRP K98tt (vlákna 16)
+[07:23:07]   hotovo za 82.8 min, checkpoint 77 MB
+[07:23:07] solving MTT9_40BB_CO_SB_SRP A72r (vlákna 16)
+[07:23:29]   spadlo po 0.4 min (rc=3221225477); zkouším znovu
+[08:53:30]   (stupeň 1 by dal týž strop i přesnost, přeskakuje se)
+[08:53:30]   SELHALO po 90.0 min (rc=timeout); příští noc stupeň 2 - strop 90 min, přesnost 1.0 %
+[08:53:30] solving MTT9_40BB_CO_SB_SRP 883r (vlákna 12)
+[10:12:39]   hotovo za 79.1 min, checkpoint 59 MB
+[10:12:39] solving MTT9_40BB_CO_SB_SRP 986tt (vlákna 16)
+[11:26:51]   hotovo za 74.2 min, checkpoint 55 MB
+[11:26:51] solving MTT9_40BB_CO_SB_SRP AT4mono (vlákna 16)
+[11:54:42]   hotovo za 27.8 min, checkpoint 39 MB
+[11:54:42] solving MTT9_40BB_CO_SB_SRP 742r (vlákna 12)
+[13:24:44]   (stupeň 1 by dal týž strop i přesnost, přeskakuje se)
+[13:24:44]   SELHALO po 90.0 min (rc=timeout); příští noc stupeň 2 - strop 90 min, přesnost 1.0 %
+[13:24:44] solving MTT9_40BB_CO_SB_SRP K98tt (vlákna 16)
+[14:50:54]   hotovo za 86.2 min, checkpoint 56 MB
+[14:50:54] solving MTT9_40BB_HJ_SB_SRP A72r (vlákna 16)
+[16:20:55]   (stupeň 1 by dal týž strop i přesnost, přeskakuje se)
+[16:20:55]   SELHALO po 90.0 min (rc=timeout); příští noc stupeň 2 - strop 90 min, přesnost 1.0 %
+[16:20:55] solving MTT9_40BB_HJ_SB_SRP 883r (vlákna 12)
+[17:50:56]   (stupeň 1 by dal týž strop i přesnost, přeskakuje se)
+[17:50:56]   SELHALO po 90.0 min (rc=timeout); příští noc stupeň 2 - strop 90 min, přesnost 1.0 %
+[17:50:56] solving MTT9_40BB_HJ_SB_SRP 986tt (vlákna 16)
+[18:52:00]   hotovo za 61.1 min, checkpoint 48 MB
+[18:52:00] solving MTT9_40BB_HJ_SB_SRP AT4mono (vlákna 16)
+[19:30:25]   hotovo za 38.4 min, checkpoint 34 MB
+[19:30:25] solving MTT9_40BB_HJ_SB_SRP 742r (vlákna 16)
+[21:00:37]   (stupeň 1 by dal týž strop i přesnost, přeskakuje se)
+[21:00:37]   SELHALO po 90.2 min (rc=timeout); příští noc stupeň 2 - strop 90 min, přesnost 1.0 %
+[21:00:37] solving MTT9_40BB_HJ_SB_SRP K98tt (vlákna 16)
+[21:00:58]   spadlo po 0.4 min (rc=3221225477); zkouším znovu
+[22:01:23]   hotovo za 60.4 min, checkpoint 49 MB (napodruhé)
+[22:01:23] solving MTT9_50BB_UTG_1_SB_SRP 742r (přesnost 1.0 %, strop 90 min, vlákna 16)
+[23:06:48]   hotovo za 65.4 min, checkpoint 50 MB
+[23:06:48] solving MTT9_50BB_UTG_1_SB_SRP K98tt (přesnost 1.0 %, strop 90 min, vlákna 16)
+[23:52:24]   hotovo za 45.6 min, checkpoint 44 MB
+[23:52:24] solving MTT9_50BB_UTG_2_SB_SRP A72r (přesnost 1.0 %, strop 90 min, vlákna 12)
+[01:10:22]   hotovo za 78.0 min, checkpoint 52 MB
+[01:10:22] solving MTT9_50BB_UTG_2_SB_SRP 883r (přesnost 1.0 %, strop 90 min, vlákna 12)
+[02:11:46]   hotovo za 61.4 min, checkpoint 58 MB
+[02:11:46] solving MTT9_50BB_UTG_2_SB_SRP 986tt (přesnost 1.0 %, strop 90 min, vlákna 12)
+[03:02:31]   hotovo za 50.8 min, checkpoint 53 MB
+[03:02:31] solving MTT9_50BB_UTG_2_SB_SRP AT4mono (přesnost 1.0 %, strop 90 min, vlákna 12)
+[03:32:58]   hotovo za 30.4 min, checkpoint 37 MB
+[03:32:58] solving MTT9_50BB_UTG_2_SB_SRP 742r (přesnost 1.0 %, strop 90 min, vlákna 12)
+[04:59:51]   hotovo za 86.9 min, checkpoint 59 MB
+[04:59:51] solving MTT9_50BB_UTG_2_SB_SRP K98tt (přesnost 1.0 %, strop 90 min, vlákna 16)
+[05:49:55]   hotovo za 50.1 min, checkpoint 52 MB
+[05:49:55] solving MTT9_50BB_UTG_SB_SRP A72r (přesnost 1.0 %, strop 90 min, vlákna 16)
+[07:10:31]   hotovo za 80.6 min, checkpoint 44 MB
+[07:10:31] deadline; končím mezi deskami
+[07:10:32] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[07:10:32] expansion: hotovo 26, selhalo 7, zbývá 141
+[07:10:32] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[07:10:32] fronta není prázdná, rozkladu okno nepředávám
+[09:21:35] spusteni mimo okno 20:45-06:45, koncim bez prace
+[09:21:53] spusteni mimo okno 20:45-06:45, koncim bez prace
+[09:51:58] spusteni mimo okno 20:45-06:45, koncim bez prace
+[10:18:52] spusteni mimo okno 20:45-06:45, koncim bez prace
+[12:31:52] spusteni mimo okno 20:45-06:45, koncim bez prace
+[12:58:19] spusteni mimo okno 20:45-06:45, koncim bez prace
+[13:06:58] spusteni mimo okno 20:45-06:45, koncim bez prace
+[13:21:01] spusteni mimo okno 20:45-06:45, koncim bez prace
+[20:01:27] spusteni mimo okno 20:45-06:45, koncim bez prace
+[20:18:23] spusteni mimo okno 20:45-06:45, koncim bez prace
+[20:35:27] spusteni mimo okno 20:45-06:45, koncim bez prace
+[20:47:53] POZOR: napajeni je BATERIE (47 %); nastaveni pro sit neplati a Windows uspi stroj, az baterie dojde. Okno neni jiste - zapoj stroj.
+[20:47:53] viko na siti: nedelat nic (overeno v registru)
+[20:47:53] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[20:47:54] konec okna 2026-10-30T07:00 (vikendovy rozvrh: True, ucet NT AUTHORITY\SYSTEM)
+[20:50:25] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[20:50:25] nastagováno 141 desek bez checkpointu; deadline Fri 30.10. 07:00
+[20:50:25] na disku volno 614.5 GB (hranice 8 GB)
+[20:50:25] stroj se drží vzhůru po dobu běhu
+[20:50:25] POZOR: napájení je baterie (45 %) - víko a nečinnost se nastavují pro síť, takže na baterii neplatí a Windows uspí stroj, až baterie dojde. Noc 1.-2. 10. 2026 tím přišla o 8 h 21 min. Solvit se bude dál, ale okno není jisté.
+[20:50:25] cena desky změřena 2026-10-29 08:21 na 963 deskách: 25 bb 6.4 min, 40 bb 28.7 min, 50 bb 25.5 min
+[20:50:25] solving MTT9_50BB_UTG_SB_SRP 883r (přesnost 1.0 %, strop 90 min, vlákna 16)
+[20:59:18] POZOR: napajeni je BATERIE (36 %); nastaveni pro sit neplati a Windows uspi stroj, az baterie dojde. Okno neni jiste - zapoj stroj.
+[20:59:18] viko na siti: nedelat nic (overeno v registru)
+[20:59:18] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[20:59:18] konec okna 2026-10-30T07:00 (vikendovy rozvrh: True, ucet NT AUTHORITY\SYSTEM)
+[20:59:19] ve frontě 192 souborů pro desku, kterou už nese jiný; beru první podle jména
+[20:59:19] nastagováno 141 desek bez checkpointu; deadline Fri 30.10. 07:00
+[20:59:19] na disku volno 614.7 GB (hranice 8 GB)
+[20:59:19] stroj se drží vzhůru po dobu běhu
+[20:59:19] POZOR: napájení je baterie (36 %) - víko a nečinnost se nastavují pro síť, takže na baterii neplatí a Windows uspí stroj, až baterie dojde. Noc 1.-2. 10. 2026 tím přišla o 8 h 21 min. Solvit se bude dál, ale okno není jisté.
+[20:59:19] cena desky změřena 2026-10-29 08:21 na 963 deskách: 25 bb 6.4 min, 40 bb 28.7 min, 50 bb 25.5 min
+[20:59:19] solving MTT9_50BB_UTG_SB_SRP 883r (přesnost 1.0 %, strop 90 min, vlákna 16)
+[09:35:35] spusteni mimo okno 20:45-06:45, koncim bez prace
+[10:12:21] spusteni mimo okno 20:45-06:45, koncim bez prace
+[10:30:43] spusteni mimo okno 20:45-06:45, koncim bez prace
+[10:47:59] spusteni mimo okno 20:45-06:45, koncim bez prace
+[12:17:08] spusteni mimo okno 20:45-06:45, koncim bez prace
+[13:21:50] spusteni mimo okno 20:45-06:45, koncim bez prace
+[13:34:32] spusteni mimo okno 20:45-06:45, koncim bez prace
+[20:49:24] napajeni: sit
+[20:49:24] viko na siti: nedelat nic (overeno v registru)
+[20:49:25] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[20:49:27] konec okna 2026-11-03T07:00 (vikendovy rozvrh: True)
+[20:51:58] nastagováno 204 desek bez checkpointu; deadline Tue 03.11. 07:00
+[20:51:58] na disku volno 953.7 GB (hranice 8 GB)
+[20:51:59] stroj se drží vzhůru po dobu běhu
+[20:51:59] napájení: síť
+[20:51:59] cena desky změřena 2026-10-23 04:31 na 937 deskách: 25 bb 6.4 min, 40 bb 27.6 min, 50 bb 23.9 min
+[20:51:59] solving MTT9_50BB_LJ_HJ_SRP A72r (přesnost 1.0 %, strop 90 min, vlákna 12)
+[21:23:45]   hotovo za 31.8 min, checkpoint 55 MB
+[21:23:45] solving MTT9_50BB_LJ_HJ_SRP 883r (přesnost 1.0 %, strop 90 min, vlákna 16)
+[21:46:00]   hotovo za 22.3 min, checkpoint 62 MB
+[21:46:00] solving MTT9_50BB_LJ_HJ_SRP 986tt (přesnost 1.0 %, strop 90 min, vlákna 12)
+[22:06:32]   hotovo za 20.5 min, checkpoint 60 MB
+[22:06:32] solving MTT9_50BB_LJ_HJ_SRP AT4mono (přesnost 1.0 %, strop 90 min, vlákna 16)
+[22:18:16]   hotovo za 11.7 min, checkpoint 41 MB
+[22:18:16] solving MTT9_50BB_LJ_HJ_SRP 742r (přesnost 1.0 %, strop 90 min, vlákna 12)
+[22:54:36]   hotovo za 36.3 min, checkpoint 62 MB
+[22:54:36] solving MTT9_50BB_LJ_HJ_SRP K98tt (přesnost 1.0 %, strop 90 min, vlákna 16)
+[23:16:04]   hotovo za 21.5 min, checkpoint 58 MB
+[23:16:04] solving MTT9_40BB_HJ_BB_SRP A72r (vlákna 12)
+[00:16:54]   hotovo za 60.8 min, checkpoint 134 MB
+[00:16:54] solving MTT9_40BB_HJ_BB_SRP 883r (vlákna 16)
+[01:20:20]   hotovo za 63.4 min, checkpoint 137 MB
+[01:20:20] solving MTT9_40BB_HJ_BB_SRP 986tt (vlákna 12)
+[01:58:01]   hotovo za 37.7 min, checkpoint 135 MB
+[01:58:01] solving MTT9_40BB_HJ_BB_SRP AT4mono (vlákna 16)
+[02:20:25]   hotovo za 22.4 min, checkpoint 98 MB
+[02:20:25] solving MTT9_40BB_HJ_BB_SRP 742r (vlákna 16)
+[03:50:27]   (stupeň 1 by dal týž strop i přesnost, přeskakuje se)
+[03:50:27]   SELHALO po 90.0 min (rc=timeout); příští noc stupeň 2 - strop 90 min, přesnost 1.0 %
+[03:50:27] solving MTT9_40BB_HJ_BB_SRP K98tt (vlákna 16)
+[04:29:58]   hotovo za 39.5 min, checkpoint 133 MB
+[04:29:58] solving MTT9_50BB_HJ_BB_SRP A72r (přesnost 1.0 %, strop 90 min, vlákna 12)
+[05:13:55]   hotovo za 43.9 min, checkpoint 209 MB
+[05:13:55] solving MTT9_50BB_HJ_BB_SRP 883r (přesnost 1.0 %, strop 90 min, vlákna 12)
+[06:17:55]   hotovo za 64.0 min, checkpoint 202 MB
+[06:17:55] solving MTT9_50BB_HJ_BB_SRP 986tt (přesnost 1.0 %, strop 90 min, vlákna 16)
+[07:16:35]   hotovo za 58.7 min, checkpoint 186 MB
+[07:16:35] deadline; končím mezi deskami
+[07:16:35] expansion: hotovo 14, selhalo 1, zbývá 190
+[07:16:35] fronta není prázdná, rozkladu okno nepředávám
+[07:33:51] spusteni mimo okno 20:00-06:45, koncim bez prace
+[07:44:50] spusteni mimo okno 20:00-06:45, koncim bez prace
+[08:04:40] spusteni mimo okno 20:00-06:45, koncim bez prace
+[08:04:45] spusteni mimo okno 20:00-06:45, koncim bez prace
