@@ -1,5 +1,10 @@
 import type { PostflopAction, PostflopPotType, PostflopStreet } from "../../core/postflopGenerator";
 import { postflopDecisionPrices } from "../../core/postflopDecisionPrice";
+import type {
+  PostflopLineAction,
+  PostflopLineActor,
+  PostflopPolicyAction,
+} from "../../core/postflopLineSimulator";
 import { gradePostflopAction, type PostflopGrade } from "../../core/postflopScoring";
 import { villainActionBeforeHero, type PostflopTrainingSpot } from "../../core/postflopTrainingSpot";
 import { emptySessionScore, isHit, recordAnswer } from "../../core/sessionScore";
@@ -10,9 +15,11 @@ import { outcomeChip, type OutcomeChipKind } from "../kit/outcomeChip";
 import { playingCard } from "../kit/playingCard";
 import { postflopPokerTable } from "../kit/pokerTable";
 import { formatSharePercent, strategyBar, strategyLegend } from "../kit/strategyBar";
+import { openRangeDialog } from "../kit/rangeDialog";
 import { postflopModelNotes } from "../postflopModelNotes";
+import { renderPostflopRangeMatrix } from "../postflopRangeMatrixView";
 import { colorForPostflopAction } from "../rangeMatrixView";
-import { actionButton, createTrainerFrame, el, nextSpotRow } from "./trainerFrame";
+import { actionButton, button, createTrainerFrame, el, nextSpotRow } from "./trainerFrame";
 
 /**
  * Nová obrazovka jednoho postflopového spotu (Agents/ui-redesign-plan.md,
@@ -37,10 +44,39 @@ export interface PostflopTrainerViewOptions {
   now?: () => number;
 }
 
+/**
+ * Ulice uvnitř linky flop → turn → river (fáze 1, krok 3c).
+ *
+ * Linku vede volající (`postflopView.ts`), stejně jako u starého pohledu: po
+ * odpovědi ji podle zvolené akce přegeneruje, protože další ulice na volbě
+ * závisí, a obrazovce řekne, co dál. Do statistik jde celá linka najednou na
+ * konci, proto se u ulice linky `onAnswered` nevolá.
+ */
+export interface PostflopTrainerLineStep {
+  /** Pořadí ulice v lince od nuly a kolik ulic linka má. */
+  index: number;
+  total: number;
+  /** Co se v lince stalo na předchozích ulicích. */
+  priorActions: readonly PostflopLineAction[];
+  /** Odpověď na ulici; vrací, co dál. */
+  answer(chosen: PostflopAction): PostflopLineContinuation;
+}
+
+export type PostflopLineContinuation =
+  | { kind: "NEXT_STREET"; street: PostflopStreet; go: () => void }
+  | {
+      kind: "COMPLETE";
+      /** Správně zahraných ulic, posouzených (bez neposouzených) a všech. */
+      correct: number;
+      judged: number;
+      total: number;
+      again: () => void;
+    };
+
 export interface PostflopTrainerView {
   readonly element: HTMLElement;
-  /** Ukáže otázku k novému spotu. */
-  show(spot: PostflopTrainingSpot): void;
+  /** Ukáže otázku k novému spotu; s `line` jako ulici linky. */
+  show(spot: PostflopTrainingSpot, line?: PostflopTrainerLineStep): void;
   /** Odpojí klávesnici; obrazovka se pak už nepoužije. */
   destroy(): void;
 }
@@ -139,6 +175,34 @@ function solverMix(spot: PostflopTrainingSpot): readonly { action: PostflopActio
   return mix.map((item) => ({ action: item.action, share: item.frequencyPct }));
 }
 
+/** Akce v historii linky; pokerové termíny zůstávají anglicky (směr, bod 8). */
+const POLICY_LABEL: Record<PostflopPolicyAction, string> = {
+  CHECK: "check",
+  CALL: "call",
+  FOLD: "fold",
+  BET_SMALL: "bet",
+  BET_BIG: "bet",
+  RAISE: "raise",
+  ALL_IN: "all-in",
+};
+
+/**
+ * Předchozí ulice linky, jedna věta na ulici: kdo co zahrál a pot po ní.
+ * Hráče a soupeře jmenuje pozicemi, ne „Hero/Villain“ jako starý pohled.
+ */
+function lineHistory(spot: PostflopTrainingSpot, actions: readonly PostflopLineAction[]): string[] {
+  const seat = (actor: PostflopLineActor): string => (actor === "HERO" ? spot.heroPosition : spot.villainPosition);
+  return actions.map((action) => {
+    const steps = action.sequence?.length
+      ? action.sequence.map((entry) => (
+        `${seat(entry.actor)} ${POLICY_LABEL[entry.action]}`
+        + (entry.amountBB > 0 ? ` ${formatBbAmount(entry.amountBB)}` : "")
+      ))
+      : [`${spot.heroPosition} ${POLICY_LABEL[action.action]}`];
+    return `${STREET_LABEL[action.street]}: ${steps.join(", ")} · pot ${formatBbAmount(action.potBBAfter)}`;
+  });
+}
+
 function handList(doc: Document, title: string, hands: readonly string[]): HTMLElement {
   const block = el(doc, "div", "dx-trainer__hands");
   block.append(el(doc, "h3", "dx-trainer__hands-title", title));
@@ -157,6 +221,7 @@ export function createPostflopTrainerView(
 ): PostflopTrainerView {
   const now = options.now ?? defaultNow;
   let current: PostflopTrainingSpot | null = null;
+  let line: PostflopTrainerLineStep | null = null;
   let answered = false;
   let shownAt = 0;
   let score = emptySessionScore();
@@ -181,7 +246,67 @@ export function createPostflopTrainerView(
     }));
   }
 
-  function renderFeedback(spot: PostflopTrainingSpot, chosen: PostflopAction, grade: PostflopGrade): void {
+  /**
+   * Matice range k desce v dialogu, jako u preflopu. Starý pohled ji kreslí
+   * přímo ve vyhodnocení; tady by vyhodnocení protáhla daleko za dvě sekundy
+   * čtení (směr, bod 3), takže je za tlačítkem.
+   */
+  function rangeButton(spot: PostflopTrainingSpot): HTMLButtonElement {
+    const range = button(doc, "dx-btn dx-btn--secondary dx-trainer__range", "Range");
+    range.addEventListener("click", () => openRangeDialog(
+      doc,
+      `${spot.heroPosition} vs ${spot.villainPosition} · ${STREET_LABEL[spot.street]}`,
+      (dialog) => {
+        const matrix = el(doc, "div", "range-modal__matrix");
+        dialog.appendChild(matrix);
+        renderPostflopRangeMatrix(spot, matrix);
+      },
+    ));
+    return range;
+  }
+
+  /** Řádek pod vyhodnocením: další spot, další ulice linky, nebo konec linky. */
+  function nextRow(
+    spot: PostflopTrainingSpot,
+    continuation: PostflopLineContinuation | null,
+  ): { parts: HTMLElement[]; next: HTMLButtonElement } {
+    const extra = [rangeButton(spot)];
+    if (continuation === null) {
+      const { row, next } = nextSpotRow(doc, () => options.onNext(), extra);
+      return { parts: [row], next };
+    }
+    if (continuation.kind === "NEXT_STREET") {
+      const { row, next } = nextSpotRow(
+        doc,
+        continuation.go,
+        extra,
+        localizedText(`Continue: ${STREET_LABEL[continuation.street]}`, `Pokračovat: ${STREET_LABEL[continuation.street]}`),
+      );
+      return { parts: [row], next };
+    }
+    const unsolved = continuation.total - continuation.judged;
+    const done = el(
+      doc,
+      "p",
+      "dx-trainer__line-done",
+      localizedText(
+        `Line complete: ${continuation.correct} of ${continuation.judged} correct`,
+        `Linka hotová: ${continuation.correct} z ${continuation.judged} správně`,
+      ) + (unsolved > 0 ? localizedText(`, ${unsolved} not judged.`, `, ${unsolved} neposouzeno.`) : "."),
+    );
+    done.dataset.correct = String(continuation.correct);
+    done.dataset.judged = String(continuation.judged);
+    done.dataset.total = String(continuation.total);
+    const { row, next } = nextSpotRow(doc, continuation.again, extra, localizedText("Next line", "Další linka"));
+    return { parts: [done, row], next };
+  }
+
+  function renderFeedback(
+    spot: PostflopTrainingSpot,
+    chosen: PostflopAction,
+    grade: PostflopGrade,
+    continuation: PostflopLineContinuation | null,
+  ): void {
     const label = (action: PostflopAction): string => actionText(spot, action).label;
     const ev = grade.actionEv;
 
@@ -294,9 +419,9 @@ export function createPostflopTrainerView(
     more.append(notes);
     parts.push(more);
 
-    const { row, next } = nextSpotRow(doc, () => options.onNext());
-    parts.push(row);
-    frame.showFeedback(parts, next);
+    const after = nextRow(spot, continuation);
+    parts.push(...after.parts);
+    frame.showFeedback(parts, after.next);
   }
 
   function submit(action: PostflopAction): void {
@@ -308,19 +433,33 @@ export function createPostflopTrainerView(
     // Neposouzená akce se do skóre nepočítá: není to chyba hráče, jen větev,
     // kterou solver nemá.
     if (!grade.unsolved) score = recordAnswer(score, isHit(grade.correct, grade.actionEv?.outcome));
-    options.onAnswered(spot, action, Number.isFinite(responseMs) ? responseMs : undefined);
+    // Ulice linky do statistik nejde po jedné: celou linku zapíše volající na
+    // jejím konci (`onLineCompleted`), jako u starého pohledu.
+    const continuation = line === null ? null : line.answer(action);
+    if (line === null) options.onAnswered(spot, action, Number.isFinite(responseMs) ? responseMs : undefined);
     frame.markActions(action, grade.recommended);
     frame.renderScore(score);
-    renderFeedback(spot, action, grade);
+    renderFeedback(spot, action, grade, continuation);
   }
 
-  function show(spot: PostflopTrainingSpot): void {
+  function show(spot: PostflopTrainingSpot, step?: PostflopTrainerLineStep): void {
     current = spot;
+    line = step ?? null;
     answered = false;
     frame.root.dataset.seed = String(spot.seed);
     frame.root.dataset.street = spot.street;
     frame.root.dataset.actionNode = spot.actionNode;
-    frame.street.textContent = STREET_LABEL[spot.street];
+    frame.root.dataset.mode = line === null ? "single" : "line";
+    if (line === null) {
+      delete frame.root.dataset.lineIndex;
+      delete frame.root.dataset.lineTotal;
+    } else {
+      frame.root.dataset.lineIndex = String(line.index);
+      frame.root.dataset.lineTotal = String(line.total);
+    }
+    frame.street.textContent = line === null
+      ? STREET_LABEL[spot.street]
+      : `${STREET_LABEL[spot.street]} ${line.index + 1}/${line.total}`;
     frame.title.textContent =
       `${spot.heroPosition} vs ${spot.villainPosition} · ${POT_TYPE_LABEL[spot.potType]}`;
     frame.meta.textContent = [
@@ -330,7 +469,9 @@ export function createPostflopTrainerView(
       spot.inPosition ? "IP" : "OOP",
     ].join(" · ");
     frame.table.replaceChildren(postflopPokerTable(doc, spot));
+    const history = line === null ? [] : lineHistory(spot, line.priorActions);
     frame.prompt.replaceChildren(
+      ...history.map((sentence) => el(doc, "span", "dx-trainer__line-history", sentence)),
       el(doc, "span", "dx-trainer__situation", situationText(spot)),
       `${localizedText("How do you play", "Jak zahraješ")} `,
       ...spot.heroCards.map((card) => playingCard(doc, card, "sm")),

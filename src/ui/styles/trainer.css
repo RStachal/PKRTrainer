@@ -158,6 +158,20 @@
   font-weight: var(--dx-weight-regular);
 }
 
+/* Linka (krok 3c): předchozí ulice, každá na vlastním řádku nad situací. */
+.dx-trainer__line-history {
+  flex-basis: 100%;
+  color: var(--dx-text-secondary);
+  font-size: var(--dx-text-sm);
+  font-weight: var(--dx-weight-regular);
+  overflow-wrap: anywhere;
+}
+
+.dx-trainer__line-done {
+  margin: 0;
+  font-weight: var(--dx-weight-medium);
+}
+
 .dx-trainer__price {
   margin: 0;
   color: var(--dx-text-secondary);

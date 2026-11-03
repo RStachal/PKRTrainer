@@ -3,11 +3,15 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ActionEvSet } from "../../src/core/actionEv";
 import type { PostflopAction } from "../../src/core/postflopGenerator";
+import type { PostflopLineAction } from "../../src/core/postflopLineSimulator";
 import type { PostflopActionNode, PostflopTrainingSpot } from "../../src/core/postflopTrainingSpot";
 import type { Card } from "../../src/core/types";
 import { setAppLanguage } from "../../src/ui/cs";
 import { renderPostflopView } from "../../src/ui/postflopView";
-import { createPostflopTrainerView } from "../../src/ui/trainer/postflopTrainerView";
+import {
+  createPostflopTrainerView,
+  type PostflopLineContinuation,
+} from "../../src/ui/trainer/postflopTrainerView";
 
 /**
  * Nová obrazovka jednoho postflopového spotu (Agents/ui-redesign-plan.md,
@@ -301,5 +305,122 @@ describe("zapojení do postflopového panelu", () => {
       expect(root.querySelector<HTMLElement>(".dx-trainer__feedback")?.hidden).toBe(true);
       expect(root.querySelector<HTMLElement>(".dx-trainer")?.dataset.seed).not.toBe(first);
     });
+  });
+});
+
+/**
+ * Linka flop → turn → river v nové obrazovce (fáze 1, krok 3c). Linku vede
+ * panel; obrazovka kreslí ulici, předchozí ulice a tlačítko, které vede dál.
+ */
+describe("nová postflopová obrazovka - linka", () => {
+  const flopAction = {
+    street: "FLOP",
+    action: "BET_SMALL",
+    potBBAfter: 10,
+    sequence: [
+      { actor: "HERO", action: "BET_SMALL", amountBB: 2 },
+      { actor: "VILLAIN", action: "CALL", amountBB: 2 },
+    ],
+  } as unknown as PostflopLineAction;
+
+  it("ukáže pořadí ulice a předchozí ulice pozicemi, odpověď nezapíše po ulici", () => {
+    const { view, root, onAnswered } = mount();
+    const go = vi.fn();
+    const answer = vi.fn((): PostflopLineContinuation => ({ kind: "NEXT_STREET", street: "RIVER", go }));
+    view.show({ ...spot(), street: "TURN" }, { index: 1, total: 3, priorActions: [flopAction], answer });
+
+    expect(text(root, ".dx-chip")).toBe("Turn 2/3");
+    expect(root.dataset.mode).toBe("line");
+    expect(root.dataset.lineIndex).toBe("1");
+    expect(text(root, ".dx-trainer__line-history")).toBe("Flop: BTN bet 2 BB, BB call 2 BB · pot 10 BB");
+
+    buttons(root)[1].click();
+    expect(answer).toHaveBeenCalledWith("BET_SMALL");
+    expect(onAnswered).not.toHaveBeenCalled();
+    const next = root.querySelector<HTMLButtonElement>(".dx-trainer__next");
+    expect(next?.textContent).toContain("Pokračovat: River");
+    next?.click();
+    expect(go).toHaveBeenCalledTimes(1);
+  });
+
+  it("na konci řekne, kolik ulic bylo správně, neposouzené zvlášť, a nabídne další linku", () => {
+    const { view, root } = mount();
+    const again = vi.fn();
+    view.show({ ...spot(), street: "RIVER" }, {
+      index: 2,
+      total: 3,
+      priorActions: [],
+      answer: () => ({ kind: "COMPLETE", correct: 1, judged: 2, total: 3, again }),
+    });
+    buttons(root)[0].click();
+
+    const done = root.querySelector<HTMLElement>(".dx-trainer__line-done");
+    expect(done?.textContent).toBe("Linka hotová: 1 z 2 správně, 1 neposouzeno.");
+    expect(done?.dataset.total).toBe("3");
+    const next = root.querySelector<HTMLButtonElement>(".dx-trainer__next");
+    expect(next?.textContent).toContain("Další linka");
+    next?.click();
+    expect(again).toHaveBeenCalledTimes(1);
+  });
+
+  it("jednotlivý spot po lince zase hlásí odpověď volajícímu a nese „Další spot“", () => {
+    const { view, root, onAnswered } = mount();
+    view.show(spot(), { index: 0, total: 3, priorActions: [], answer: () => ({ kind: "NEXT_STREET", street: "TURN", go: vi.fn() }) });
+    view.show(spot());
+    expect(root.dataset.mode).toBe("single");
+    expect(root.dataset.lineIndex).toBeUndefined();
+    expect(text(root, ".dx-chip")).toBe("Flop");
+    buttons(root)[0].click();
+    expect(onAnswered).toHaveBeenCalledTimes(1);
+    expect(root.querySelector(".dx-trainer__next")?.textContent).toContain("Další spot");
+  });
+
+  it("panel vede skutečnou linku od flopu po konec a zapíše ji jednou celou", () => {
+    const root = document.createElement("div");
+    document.body.appendChild(root);
+    const onAnswered = vi.fn();
+    const onLineCompleted = vi.fn();
+    renderPostflopView(root, { initialSeed: 3, initialStreet: "FLOP", nextUi: true, onAnswered, onLineCompleted });
+    const mode = root.querySelector<HTMLSelectElement>(".postflop-mode");
+    if (mode === null) throw new Error("chybí volba režimu");
+    mode.value = "line";
+    root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+
+    return vi.waitFor(() => {
+      expect(root.querySelector<HTMLElement>(".dx-trainer")?.dataset.mode).toBe("line");
+    }).then(() => {
+      const screen = root.querySelector<HTMLElement>(".dx-trainer")!;
+      const total = Number(screen.dataset.lineTotal);
+      expect(total).toBeGreaterThanOrEqual(1);
+      for (let street = 0; street < 3; street += 1) {
+        expect(screen.dataset.lineIndex).toBe(String(street));
+        buttons(screen)[0].click();
+        const next = screen.querySelector<HTMLButtonElement>(".dx-trainer__next")!;
+        if (next.textContent?.includes("Další linka")) break;
+        expect(next.textContent).toMatch(/^Pokračovat: (Turn|River)/);
+        next.click();
+      }
+      expect(screen.querySelector(".dx-trainer__line-done")).not.toBeNull();
+      expect(onLineCompleted).toHaveBeenCalledTimes(1);
+      expect(onAnswered).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe("nová postflopová obrazovka - matice range", () => {
+  it("„Range“ otevře dialog s maticí k desce a Escape ho zavře", () => {
+    const { view, root } = mount();
+    view.show(spot());
+    buttons(root)[0].click();
+
+    const range = root.querySelector<HTMLButtonElement>(".dx-trainer__range");
+    expect(range?.textContent).toBe("Range");
+    range?.click();
+    const dialog = document.querySelector<HTMLElement>(".range-modal");
+    expect(dialog?.querySelector(".range-modal__title")?.textContent).toBe("BTN vs BB · Flop");
+    expect(dialog?.querySelector(".postflop-flopzilla")?.getAttribute("data-board")).not.toBe("");
+
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    expect(document.querySelector(".range-modal")).toBeNull();
   });
 });

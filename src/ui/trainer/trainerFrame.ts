@@ -54,14 +54,18 @@ export function actionButton(
   return action;
 }
 
-/** Řádek pod vyhodnocením: případná další tlačítka a „Další spot“ s Enterem. */
+/**
+ * Řádek pod vyhodnocením: případná další tlačítka a „Další spot“ s Enterem.
+ * Linka (krok 3c) tlačítko jen přejmenuje - „Pokračovat: Turn“, „Další linka“.
+ */
 export function nextSpotRow(
   doc: Document,
   onNext: () => void,
   extra: readonly HTMLElement[] = [],
+  label = localizedText("Next spot", "Další spot"),
 ): { row: HTMLElement; next: HTMLButtonElement } {
   const row = el(doc, "div", "dx-trainer__next-row");
-  const next = button(doc, "dx-btn dx-btn--primary dx-trainer__next", localizedText("Next spot", "Další spot"));
+  const next = button(doc, "dx-btn dx-btn--primary dx-trainer__next", label);
   next.append(kbd(doc, "Enter"));
   next.addEventListener("click", onNext);
   row.append(...extra, next);

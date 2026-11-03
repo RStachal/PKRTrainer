@@ -648,7 +648,7 @@ try {
   // krok 5). Běží na všech šířkách a stejnými vstupy jako zbytek E2E, aby se
   // přepínač dal otočit na výchozí s důkazem, ne s odhadem.
   const nextUiResults: Array<{ viewport: string; feedbackMs: number }> = [];
-  const nextUiPostflopResults: Array<{ viewport: string; feedbackMs: number }> = [];
+  const nextUiPostflopResults: Array<{ viewport: string; feedbackMs: number; line: "passed" | "unavailable" }> = [];
   for (const viewport of activeViewports) {
     if (expectedPreflop !== "blocked") {
       nextUiResults.push(await runNextUiScenario(cdp, viewport, browserErrors, contrastAudits));
@@ -775,7 +775,10 @@ try {
     console.log(`- next UI ${result.viewport}: question/feedback/next passed, feedback ${result.feedbackMs} ms`);
   }
   for (const result of nextUiPostflopResults) {
-    console.log(`- next UI postflop ${result.viewport}: board/question/feedback/next passed, feedback ${result.feedbackMs} ms`);
+    console.log(
+      `- next UI postflop ${result.viewport}: board/question/feedback/next passed, feedback ${result.feedbackMs} ms,`
+      + ` line ${result.line === "passed" ? "passed" : "not offered in this build"}`,
+    );
   }
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
@@ -1165,7 +1168,7 @@ async function runNextUiPostflopScenario(
   viewport: Viewport,
   browserErrors: string[],
   contrastAudits: Array<{ viewport: string; surface: string; entries: ContrastAuditEntry[] }>,
-): Promise<{ viewport: string; feedbackMs: number }> {
+): Promise<{ viewport: string; feedbackMs: number; line: "passed" | "unavailable" }> {
   const input = viewport.mobile ? "touch" : "keyboard";
   const scope = ".postflop-output .dx-trainer";
   browserErrors.length = 0;
@@ -1297,8 +1300,73 @@ async function runNextUiPostflopScenario(
   await waitForSelector(client, `${scope} .dx-trainer__feedback[hidden]`);
   await activate(client, `${scope} .dx-trainer__actions button`, input);
   await waitForSelector(client, `${scope} .dx-trainer__feedback:not([hidden])`);
+
+  // Linka v nové obrazovce (fáze 1, krok 3c): tytéž vstupy jako linka starého
+  // GUI nad produkční fixturou (situace facing-bet, týž seed, CALL na každé
+  // ulici), ale tady v náhledu, tedy v bráně. Linka smí skončit dřív (fold,
+  // all-in), proto se jde, dokud se neukáže její konec.
+  await activate(client, `${scope} .dx-trainer__change`, input);
+  await waitForSelector(client, ".postflop-generate");
+  const lineOffered = await evaluate<boolean>(client, `(() => {
+    const mode = document.querySelector(".postflop-mode");
+    if (!(mode instanceof HTMLSelectElement)) throw new Error("Missing postflop mode");
+    const option = [...mode.options].find((item) => item.value === "line");
+    if (!option || option.disabled) return false;
+    mode.value = "line";
+    mode.dispatchEvent(new Event("change", { bubbles: true }));
+    const situation = document.querySelector(".postflop-situation");
+    if (!(situation instanceof HTMLSelectElement)) throw new Error("Missing postflop situation");
+    situation.value = "facing-bet";
+    situation.dispatchEvent(new Event("change", { bubbles: true }));
+    const seed = document.querySelector(".postflop-seed");
+    if (!(seed instanceof HTMLInputElement)) throw new Error("Missing postflop seed");
+    seed.value = ${JSON.stringify(postflopSeed)};
+    return true;
+  })()`);
+  let line: "passed" | "unavailable" = "unavailable";
+  if (lineOffered) {
+    await activate(client, ".postflop-generate", input);
+    let streets = 0;
+    for (; streets < 3; streets += 1) {
+      const current = `${scope}[data-mode="line"][data-line-index="${streets}"]`;
+      await waitForSelector(client, `${current} .dx-trainer__actions button`);
+      const lineView = await evaluate<{ history: number; overflow: number; chip: string }>(client, `(() => ({
+        history: document.querySelectorAll(${JSON.stringify(`${current} .dx-trainer__line-history`)}).length,
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        chip: document.querySelector(${JSON.stringify(`${current} .dx-chip`)})?.textContent ?? ""
+      }))()`);
+      assert(lineView.history === streets, `${label} line: ${lineView.history} earlier streets shown on street ${streets + 1}`);
+      assert(lineView.overflow <= 1, `${label} line: page overflow ${lineView.overflow}px on street ${streets + 1}`);
+      assert(/ \d\/\d$/.test(lineView.chip), `${label} line: street chip "${lineView.chip}" without progress`);
+      const call = `${current} .dx-trainer__actions button[data-action="CALL"]`;
+      const hasCall = await evaluate<boolean>(client, `document.querySelector(${JSON.stringify(call)}) !== null`);
+      await activate(client, hasCall ? call : `${current} .dx-trainer__actions button`, input);
+      await waitForSelector(client, `${scope} .dx-trainer__feedback:not([hidden])`);
+      const ended = await evaluate<boolean>(
+        client,
+        `document.querySelector(${JSON.stringify(`${scope} .dx-trainer__line-done`)}) !== null`,
+      );
+      if (ended) break;
+      await activate(client, `${scope} .dx-trainer__next`, input);
+    }
+    const done = await evaluate<{ total: string; text: string }>(client, `(() => ({
+      total: document.querySelector(${JSON.stringify(`${scope} .dx-trainer__line-done`)})?.getAttribute("data-total") ?? "",
+      text: document.querySelector(${JSON.stringify(scope)})?.textContent ?? ""
+    }))()`);
+    assert(done.total === String(streets + 1), `${label} line: summary says ${done.total} streets after ${streets + 1}`);
+    assertSourceFree(done.text, `${label} line`);
+    contrastAudits.push({
+      viewport: viewport.name,
+      surface: "next-ui-postflop-line",
+      entries: await auditContrast(client, viewport.name, "next UI postflop line", [
+        `${scope} .dx-trainer__line-done`,
+        `${scope} .dx-trainer__next`,
+      ]),
+    });
+    line = "passed";
+  }
   assert(browserErrors.length === 0, `${label}: ${browserErrors.join(" | ")}`);
-  return { viewport: viewport.name, feedbackMs: Math.round(feedbackMs * 10) / 10 };
+  return { viewport: viewport.name, feedbackMs: Math.round(feedbackMs * 10) / 10, line };
 }
 
 async function runServiceWorkerUpgradeScenario(

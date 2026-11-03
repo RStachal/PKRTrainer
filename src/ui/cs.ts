@@ -239,6 +239,8 @@ const CZ_CATALOG = {
     importJson: "Importovat JSON",
     resetProfile: "Resetovat vybraný profil",
     transferPlaceholder: "JSON pro export / import statistik",
+    postflopUnsolved: (count: number) =>
+      `Neposouzeno: ${count}. Akci rozbor nepočítal, takže se do úspěšnosti nepočítá.`,
   },
   system: {
     unexpectedStart:
@@ -554,6 +556,8 @@ const EN_CATALOG: UiCatalog = {
     importJson: "Import JSON",
     resetProfile: "Reset selected profile",
     transferPlaceholder: "Stats export / import JSON",
+    postflopUnsolved: (count: number) =>
+      `Not judged: ${count}. The analysis did not solve that action, so it does not count towards accuracy.`,
   },
   system: {
     unexpectedStart: "The app could not start because of an unexpected error. Reload the page.",

@@ -65,6 +65,7 @@ import {
 import {
   availablePostflopStatsDimensions,
   breakdownPostflopStats,
+  isJudgedPostflopRecord,
   type PostflopStatsBreakdownDim,
   type PostflopStatsGroup,
   type PostflopStatsV2BridgeRecord,
@@ -564,9 +565,12 @@ function renderKpiPanel(
 ): HTMLElement {
   const preflopRecords = migrateResultRecordsToV2(store.events());
   const model = buildStatsV2KpiModel(preflopRecords, { leakProfileId: activeProfileId });
+  // Neposouzená odpověď (akce mimo vyřešený strom) do úspěšnosti nepatří; čas
+  // rozhodnutí z ní ale platí dál.
+  const judgedPostflop = postflopRecords.filter(isJudgedPostflopRecord);
   const avgDecisionMs = averageDecisionMs(preflopRecords, postflopRecords);
-  const accuracyTrend = buildAccuracyTrend(preflopRecords, postflopRecords);
-  const confidenceWeightedKpi = buildConfidenceWeightedKpi(preflopRecords, postflopRecords);
+  const accuracyTrend = buildAccuracyTrend(preflopRecords, judgedPostflop);
+  const confidenceWeightedKpi = buildConfidenceWeightedKpi(preflopRecords, judgedPostflop);
   const decisionTrend = buildDecisionTimeTrend(preflopRecords, postflopRecords);
   const box = el("section", "dashboard-kpi");
   box.dataset.total = String(model.total);
@@ -1809,12 +1813,13 @@ function postflopFlowModeGroups(
   records: readonly PostflopStatsV2BridgeRecord[],
   lineRecords: readonly PostflopLineResultRecord[],
 ): PostflopStatsGroup[] {
+  const judged = records.filter(isJudgedPostflopRecord);
   const singles = postflopStatsGroup(
     "SINGLE_SPOT",
-    records.length,
-    records.filter((record) => record.correct).length,
+    judged.length,
+    judged.filter((record) => record.correct).length,
   );
-  const lineStreetRecords = postflopLineStreetRecords(lineRecords);
+  const lineStreetRecords = postflopLineStreetRecords(lineRecords).filter(isJudgedPostflopRecord);
   const lines = postflopStatsGroup(
     "HAND_LINE",
     lineStreetRecords.length,
@@ -1854,6 +1859,15 @@ function renderPostflopBreakdowns(
   box.appendChild(heading);
 
   const allRecords = [...records, ...postflopLineStreetRecords(lineRecords)];
+  // Kolik odpovědí se do úspěšnosti nepočítá a proč - jinak by součty skupin
+  // nesouhlasily s počtem odpovědí a nikdo by nevěděl proč.
+  const unsolved = allRecords.length - allRecords.filter(isJudgedPostflopRecord).length;
+  box.dataset.unsolved = String(unsolved);
+  if (unsolved > 0) {
+    const note = el("p", "postflop-breakdowns__unsolved");
+    note.textContent = CS.dashboard.postflopUnsolved(unsolved);
+    box.appendChild(note);
+  }
   box.appendChild(renderPostflopBreakdown("flowMode", postflopFlowModeGroups(records, lineRecords)));
   for (const dim of availablePostflopStatsDimensions()) {
     box.appendChild(renderPostflopBreakdown(dim, breakdownPostflopStats(allRecords, dim)));

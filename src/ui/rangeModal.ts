@@ -5,6 +5,7 @@ import { currentMttPreflopRangePack } from "../data/ranges/mttPreflopRangePacks"
 import type { RangePack } from "../data/ranges/rangePack";
 import { depthDoesNotChangeSelection } from "../data/ranges/preflopDepthHonesty";
 import { localizedText } from "./cs";
+import { openRangeDialog } from "./kit/rangeDialog";
 import { renderMatrix } from "./rangeMatrixView";
 
 export function renderRangeModalButton(
@@ -23,60 +24,14 @@ export function renderRangeModalButton(
 
 /** Otevře dialog s maticí range; nové GUI ho volá z vlastního tlačítka. */
 export function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
-  const previousOverflow = doc.body.style.overflow;
-  const overlay = doc.createElement("div");
-  overlay.className = "range-modal";
-  overlay.setAttribute("role", "dialog");
-  overlay.setAttribute("aria-modal", "true");
-  overlay.setAttribute("aria-label", "Range matrix");
+  openRangeDialog(doc, `${spot.context} ${spot.heroPos} ${spot.effStack} BB`, (dialog) => {
+    dialog.appendChild(renderRangeModelSummary(doc, currentMttPreflopRangePack(spot.ante), spot));
 
-  const backdrop = doc.createElement("button");
-  backdrop.type = "button";
-  backdrop.className = "range-modal__backdrop";
-  backdrop.setAttribute("aria-label", "Close range");
-  overlay.appendChild(backdrop);
-
-  const dialog = doc.createElement("div");
-  dialog.className = "range-modal__dialog";
-  overlay.appendChild(dialog);
-
-  const header = doc.createElement("div");
-  header.className = "range-modal__header";
-  dialog.appendChild(header);
-
-  const title = doc.createElement("h2");
-  title.className = "range-modal__title";
-  title.textContent = `${spot.context} ${spot.heroPos} ${spot.effStack} BB`;
-  header.appendChild(title);
-
-  const close = doc.createElement("button");
-  close.type = "button";
-  close.className = "range-modal__close";
-  close.textContent = "Close";
-  header.appendChild(close);
-
-  dialog.appendChild(renderRangeModelSummary(doc, currentMttPreflopRangePack(spot.ante), spot));
-
-  const matrix = doc.createElement("div");
-  matrix.className = "range-modal__matrix";
-  dialog.appendChild(matrix);
-  renderMatrix(spot, store, matrix);
-
-  const closeModal = (): void => {
-    doc.removeEventListener("keydown", handleKeydown);
-    doc.body.style.overflow = previousOverflow;
-    overlay.remove();
-  };
-  const handleKeydown = (event: KeyboardEvent): void => {
-    if (event.key === "Escape") closeModal();
-  };
-
-  backdrop.addEventListener("click", closeModal);
-  close.addEventListener("click", closeModal);
-  doc.addEventListener("keydown", handleKeydown);
-  doc.body.style.overflow = "hidden";
-  doc.body.appendChild(overlay);
-  close.focus();
+    const matrix = doc.createElement("div");
+    matrix.className = "range-modal__matrix";
+    dialog.appendChild(matrix);
+    renderMatrix(spot, store, matrix);
+  });
 }
 
 function renderRangeModelSummary(doc: Document, pack: RangePack, spot: Spot): HTMLElement {

@@ -266,7 +266,10 @@ používat první.
        (`trainerFrame.ts`).
 
      Chybí oproti starému pohledu: matice range (patří do dialogu, jako
-     u preflopu) a režim linky (3c).
+     u preflopu) a režim linky (3c). **Obojí doplněno 3. 11.:** tlačítko
+     „Range“ otevře `renderPostflopRangeMatrix` v témž dialogu jako preflop
+     (kostra dialogu vytažená do `src/ui/kit/rangeDialog.ts`, aby postflop
+     nepřitáhl preflopové range do svého balíku).
 
      Při práci se našly dvě chyby mimo redesign:
      - **Starý pohled prozrazoval odpověď.** Ukazatel sázky uprostřed stolu
@@ -277,8 +280,19 @@ používat první.
        `unsolved` nečte, přestože `postflopScoring.ts` výslovně říká, že to
        statistika rozlišit musí. Na riveru to v srpnu postihlo 104 z 300
        spotů. Oprava sahá na schéma záznamu, import a přehled, a proto je to
-       samostatný krok.
-   - **3c** režim linky v nové obrazovce;
+       samostatný krok. **Opraveno 3. 11.:** záznam i most do statistik v2
+       nesou `unsolved: true`, validátory (a tím import) ho berou,
+       `isJudgedPostflopRecord` ho drží mimo rozpad, souhrn spot/linka, trend
+       a váženou úspěšnost; čas rozhodnutí se počítá dál. Přehled napíše, kolik
+       odpovědí neposoudil. Starší záznamy pole nemají a rozlišit se nedají.
+   - **3c** režim linky v nové obrazovce. **Hotovo 3. 11.:** `show(spot, line)`
+     ukáže ulici linky („Turn 2/3“), předchozí ulice pozicemi („Flop: BTN bet
+     2 BB, BB call 2 BB · pot 10 BB“) a vede „Pokračovat: Turn“ až po „Linka
+     hotová: 2 z 3 správně“ a „Další linka“. Linku řídí `postflopView.ts` týmž
+     `branchPostflopLine` jako starý pohled a zapíše ji celou na konci
+     (`onLineCompleted`), ulice po jedné do statistik nejdou. E2E ji projde na
+     všech šířkách v bráně (`line passed`), klasická linka běží jen nad
+     produkční fixturou;
    - **3d** E2E postflopu za přepínačem. **Napsané 23. 10.**
      (`runNextUiPostflopScenario`): start flopu formulářem, otázka s deskou,
      odpověď skutečným vstupem, vyhodnocení a další spot na všech šířkách.

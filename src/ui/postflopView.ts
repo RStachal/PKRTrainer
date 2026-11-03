@@ -320,6 +320,51 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
     return trainerView;
   };
 
+  /**
+   * Linka v nové obrazovce (fáze 1, krok 3c). Rozdání, větvení podle zvolené
+   * akce (`branchPostflopLine`), počet správných ulic i zápis celé linky na
+   * konci (`onLineCompleted`) jsou tytéž jako u `renderLineSpot`; kreslí jen
+   * nová obrazovka.
+   */
+  const showNextUiLine = (
+    line: PostflopLine,
+    index: number,
+    chosenByStreet: Partial<Record<PostflopStreet, PostflopAction>>,
+    startedAt: number,
+  ): void => {
+    const view = nextView();
+    output.replaceChildren(view.element);
+    const step = line.streets[index];
+    view.show(step.spot.trainingSpot ?? postflopSpotToTrainingSpot(step.spot, getAppLanguage()), {
+      index,
+      total: line.streets.length,
+      priorActions: step.actionHistory,
+      answer: (chosen) => {
+        const chosenNow = { ...chosenByStreet, [step.street]: chosen };
+        const branched = branchPostflopLine(line, chosenNow, options);
+        if (index < branched.streets.length - 1) {
+          return {
+            kind: "NEXT_STREET",
+            street: branched.streets[index + 1].street,
+            go: () => showNextUiLine(branched, index + 1, chosenNow, startedAt),
+          };
+        }
+        options.onLineCompleted?.(branched, chosenNow, startedAt, Date.now());
+        const grades = branched.streets.map((street) => gradePostflopAction(
+          postflopSpotToTrainingSpot(street.spot, getAppLanguage()),
+          chosenNow[street.street]!,
+        ));
+        return {
+          kind: "COMPLETE",
+          correct: grades.filter((grade) => grade.correct).length,
+          judged: grades.filter((grade) => grade.unsolved !== true).length,
+          total: grades.length,
+          again: () => void showNewSpot(),
+        };
+      },
+    });
+  };
+
   const showNewSpot = async (): Promise<void> => {
     const seed = parseSeed(seedInput.value) ?? randomSeed();
     // Seed je jednorázový vstup pro reprodukci konkrétní situace. Po použití
@@ -367,6 +412,10 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
         });
         controls.hidden = true;
         output.hidden = false;
+        if (options.nextUi === true) {
+          showNextUiLine(line, 0, {}, Date.now());
+          return;
+        }
         renderLineSpot(output, line, 0, {}, Date.now(), options, {
           onNewSpot: showNewSpot,
           onChangeSituation: showSituationInput,

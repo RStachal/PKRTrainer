@@ -64,6 +64,14 @@ export interface PostflopResultRecord {
   bestEvBb?: number;
   evLossBb?: number;
   equivalentBestActions?: readonly PostflopAction[];
+  /**
+   * The chosen action is one the solved content does not model
+   * (`PostflopGrade.unsolved`). `correct` is false because it is not the right
+   * answer, but it is not the player's mistake either, so it never counts
+   * towards accuracy (`isJudgedPostflopRecord`). Written since 3. 11. 2026;
+   * on older records the two cannot be told apart.
+   */
+  unsolved?: true;
 }
 
 export interface PostflopStatsV2BridgeRecord {
@@ -101,6 +109,20 @@ export interface PostflopStatsV2BridgeRecord {
   bestEvBb?: number;
   evLossBb?: number;
   equivalentBestActions?: readonly PostflopAction[];
+  /** See `PostflopResultRecord.unsolved`. */
+  unsolved?: true;
+}
+
+/**
+ * Does this answer count towards accuracy?
+ *
+ * An action the solved content does not model was never judged: counting it as
+ * a miss charged the player for what nobody computed - 104 of 300 river spots in
+ * August 2026 (`postflopScoring.ts`). Response time still counts; only accuracy
+ * skips it.
+ */
+export function isJudgedPostflopRecord(record: { unsolved?: boolean }): boolean {
+  return record.unsolved !== true;
 }
 
 export type PostflopStatsV2BridgeRecordLike =
@@ -177,6 +199,7 @@ export function buildPostflopResultRecord(
           equivalentBestActions: [...grade.actionEv.bestActions],
         }
       : {}),
+    ...(grade.unsolved ? { unsolved: true as const } : {}),
   };
 }
 
@@ -222,6 +245,7 @@ export function bridgePostflopResultRecordToStatsV2(
     strategyProvenance: record.sourceProvenance ?? null,
     ...(isValidResponseMs(record.responseMs) ? { responseMs: record.responseMs } : {}),
     ...(actionEv ?? {}),
+    ...(record.unsolved ? { unsolved: true as const } : {}),
   };
 }
 
@@ -257,7 +281,8 @@ export function isPostflopResultRecord(value: unknown): value is PostflopResultR
     typeof record.ts === "number" &&
     Number.isFinite(record.ts) &&
     isOptionalResponseMs(record.responseMs) &&
-    isOptionalActionEvResult(record)
+    isOptionalActionEvResult(record) &&
+    (record.unsolved === undefined || record.unsolved === true)
   );
 }
 
@@ -300,7 +325,8 @@ export function isPostflopStatsV2BridgeRecord(
       record.confidence === "HIGH" ||
       record.confidence === null) &&
     isOptionalResponseMs(record.responseMs) &&
-    isOptionalBridgeActionEvResult(record)
+    isOptionalBridgeActionEvResult(record) &&
+    (record.unsolved === undefined || record.unsolved === true)
   );
 }
 
@@ -378,6 +404,7 @@ export function breakdownPostflopStats(
   const order: string[] = [];
 
   for (const record of records) {
+    if (!isJudgedPostflopRecord(record)) continue;
     const key = postflopDimKey(record, dim);
     let group = groups.get(key);
     if (group === undefined) {
