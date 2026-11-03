@@ -37,10 +37,13 @@ try {
   $only = ""
   if ($Streets -ne "") { $only = " --streets=$Streets" }
   Write-NightLog -Log $log -Message "plny cyklus: start (PID $PID)$only"
-  # Turnova EV jen 120 min (ranni cyklus ma 210): plny cyklus nema konec okna a
-  # nesmi se protahnout do vsedniho dne. Co nestihne, dozene ranni cyklus - ten
-  # obnovuje zastarale turnove tabulky sam.
-  $command = "/c cd /d `"$repo`" && `"$node`" scripts\run-cli.mjs scripts\runAfterNight.mts --write --turn-ev-minutes=120$only >> `"$log`" 2>&1"
+  # Turnova EV 240 min (do 3. 11. 2026 jen 120): vsedni ranni cyklus, ktery
+  # dohanel, co sobota nestihla, od ztraty stroje nebezi, a majitel 3. 11. (D5,
+  # body 291 a 292) rozhodl, ze turnova EV dvou rodin na 100 bb se pocita jen
+  # v sobotnim cyklu. Nejdrazsi z nich (MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR)
+  # stoji kolem tri hodin sama (14. 9. 2026), takze 120 minut by ji jen
+  # zkouselo a nedokoncilo. Faze bezi tak dlouho jen se zastaralymi tabulkami.
+  $command = "/c cd /d `"$repo`" && `"$node`" scripts\run-cli.mjs scripts\runAfterNight.mts --write --turn-ev-minutes=240$only >> `"$log`" 2>&1"
   $process = Start-Process -FilePath "cmd.exe" -ArgumentList $command -WindowStyle Hidden -Wait -PassThru
   $code = $process.ExitCode
   Write-NightLog -Log $log -Message "plny cyklus: konec rc=$code"

@@ -6,8 +6,10 @@ a „po něm". Měřítkem je definice MTT 1.0 z rozhodnutí D1
 (`plan-dokonceni-mtt-2026-11.md`, oddíl 2). U každého bodu je důvod; kde se
 stav od zápisu změnil, je u něj dnešní měření a příkaz.
 
-**Stav: návrh, čeká na potvrzení majitelem.** Po potvrzení se stav bodů zapíše
-do čtvrtého sloupce deníku, aby je agenda přestala nabízet.
+**Stav: potvrzeno majitelem 3. 11. 2026 („potvrzuji").** Stav všech 24 bodů je
+zapsaný ve čtvrtém sloupci deníku; `npm run mtt:agenda` teď na majiteli ukazuje
+jen tři body čtecího sezení (skupina A). Pravidlo B se dá provést díky
+sobotnímu rozpočtu turnové EV 240 min (`pack-cycle.ps1`, do 3. 11. jen 120).
 
 ## Shrnutí
 

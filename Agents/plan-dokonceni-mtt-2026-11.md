@@ -137,7 +137,8 @@ která na nich stojí.
 
 5. Skills a `CLAUDE.md` v repozitáři (oddíl 6). *(3. 11.: hotovo.)*
 6. Sezení majitele: D1–D7 a třídění 24 bodů (D5). *(D1–D7 přijaté 3. 11.;
-   návrh třídění v `trideni-agendy-2026-11.md` čeká na potvrzení.)*
+   třídění potvrzeno 3. 11. (`trideni-agendy-2026-11.md`): do MTT 1.0 jen tři
+   body pro čtecí sezení fáze C, 5 uzavřeno, 14 po MTT 1.0.)*
 7. GUI fáze 1 dokončit: režim linky (3c), statistika nezapočítá neposouzenou
    odpověď jako chybu (schéma záznamu), přepínač na výchozí po zeleném E2E.
 
