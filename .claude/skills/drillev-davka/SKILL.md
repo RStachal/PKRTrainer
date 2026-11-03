@@ -39,7 +39,10 @@ description: Dávka pro noční solving DrillEV - stav fronty monolitů, nastago
 - Na baterii noc solví dál, ale Windows ji uspí, až baterie dojde - stroj na
   noc do zásuvky (`POZOR: napajeni je BATERIE` v logu).
 - Deska rozdělaná v 06:59 doběhne. Přetažení je nejvýš její strop (90 min).
-- Jeden monolit drží 5-7 logických procesorů z 16 (2. 11. 2026). Pokus
-  o dva souběžné monolity je rozhodnutí D6 v plánu; dokud neběží,
-  `--thread-trial` v `night-expansion.ps1` neměň.
+- Jeden monolit drží 5-7 logických procesorů z 16 (2. 11. 2026). Od 3. 11.
+  běží pokus D6: dvě desky souběžně po 8 vláknech (`--parallel=2 --threads=8`
+  v `night-expansion.ps1`), strop a rezerva krát 1,5, druhá deska jen při
+  aspoň 12 GB volné paměti. Vyhodnocuje se řádkem `propustnost:` na konci
+  noci proti 1,35 desky za hodinu (noc 2.-3. 11., jeden monolit). Zpět = smazat
+  oba parametry.
 - Solver z relace nespouštěj; ověřuj na logu příští noci.

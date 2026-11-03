@@ -26,6 +26,11 @@ sed -n "$n,\$p" artifacts/decomposition/expansion.log | tr -d '\r' \
   o rodině je na majiteli.
 - `spadlo po 0.x min (rc=3221225477)` a pak `hotovo (napodruhé)` je známý
   přechodný pád solveru, ne vada desky.
+- Pokus D6 (dvě desky souběžně, od 3. 11. 2026): `propustnost: N desek za
+  H h` proti 1,35 desky za hodinu z noci 2.-3. 11. (jeden monolit). Rodiny se
+  mezi nocemi liší cenou, takže srovnání čti i s `mtt:board-cost`. Řádky
+  výsledku nesou `paměť X GB` (špička desky) a `[rodina deska]`; `souběh:
+  čekám na paměť` říká, kolikrát pojistka druhou desku nepustila.
 - `stroj mezi tím SPAL` / `POZOR: stroj během okna spal` = ztracené okno; pak
   události `Kernel-Power` 42/107/506/507. Samotné 506/507 přes noc jsou
   normální (Modern Standby; runner drží požadavek na běh) - rozhoduje mezera

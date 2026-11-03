@@ -1,6 +1,6 @@
 """Odsolvit nastagované rodiny, dokud vydrží noční okno.
 
-  python run_night_expansion.py [--until=HH:MM] [--limit=N] [--workers=N] [--river-workers=N] [--river-threads=N] [--turn-share=F] [--thread-trial=N]
+  python run_night_expansion.py [--until=HH:MM] [--limit=N] [--workers=N] [--river-workers=N] [--river-threads=N] [--turn-share=F] [--thread-trial=N] [--parallel=N] [--threads=N]
 
 Sourozenec `run_night_decomposition.py`. Ten rozkládá existující checkpointy na
 turnové a riverové podhry; tenhle vyrábí checkpointy, které ještě neexistují.
@@ -45,7 +45,9 @@ import re
 import shutil
 import subprocess
 import sys
+import threading
 import time
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from datetime import datetime, timedelta
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -374,8 +376,140 @@ def trial_threads(family: str, board: str, trial: int) -> int:
     return trial if digest[0] % 2 else CONTROL_THREADS
 
 
+# Pokus D6: dva monolity souběžně (rozhodnutí majitele 3. 11. 2026, deník 329).
+#
+# Jeden monolit drží 5,3-7 logických procesorů ze 16 (WMI, 2. 11. 2026 21:00),
+# ať dostane vláken dvanáct, nebo šestnáct - pokus výš dal poměr času 1,17
+# s intervalem 0,93-1,57, tedy víc vláken stroj nezaplní. Zaplnit ho může jen
+# druhá deska vedle: `--parallel=2` pustí dvě naráz, každou s `--threads`
+# vlákny (bez parametru `PARALLEL_THREADS`). Pokus o vlákna se v souběžné noci
+# nepouští - vlákna drží souběh.
+#
+# Pojistky, každá z měření, nebo z toho, že měření chybí:
+#
+# - Strop a rezerva krát `PARALLEL_CAP_FACTOR`. Deska vedle druhé běží déle
+#   a strop kalibrovaný na samotnou desku by z pomalejší udělal spadlou -
+#   devadesát minut okna za nic a stupeň žebříku navíc. O kolik déle, změří až
+#   první noc; 1,5 je odhad, a proto se násobí jen v souběhu.
+# - Paměť. Monolit 50 bb na bránící BB zapsal 3. 11. checkpoint 209 MB a kolik
+#   paměti bere, nikdo neměřil (od teď to měří `run_solver`). Další deska vedle
+#   běžící se proto pustí, jen když je volných aspoň `PARALLEL_MIN_FREE_RAM_GB`.
+#   První deska jede vždycky, jako dosud.
+# - Rozestup. Druhá deska startuje až `PARALLEL_STAGGER_SECONDS` po první, ať
+#   první stihne postavit strom a paměť se měří po něm, ne před ním.
+#
+# Minuty souběžné desky nejdou do ceny jedné desky (`boardCost.mts`, podle
+# `souběžně N` v řádku `solving`), jinak by strop rostl dvakrát. Noc se hodnotí
+# propustností: řádek `propustnost:` na konci běhu.
+PARALLEL_THREADS = 8
+PARALLEL_CAP_FACTOR = 1.5
+PARALLEL_MIN_FREE_RAM_GB = 12
+PARALLEL_STAGGER_SECONDS = 180
+
+# Souběžné desky píšou z vláken; řádek se nesmí rozpadnout uprostřed.
+_LOG_LOCK = threading.Lock()
+
+
 def log(message: str) -> None:
-    print(f"[{datetime.now():%H:%M:%S}] {message}", flush=True)
+    with _LOG_LOCK:
+        print(f"[{datetime.now():%H:%M:%S}] {message}", flush=True)
+
+
+def free_ram_gb() -> float:
+    """Volná fyzická paměť v GB.
+
+    Když se ji na Windows zjistit nepodaří, vrací nulu: pojistka souběhu pak
+    druhou desku nepustí a noc jede po jedné, jako dosud. Opačná chyba by
+    pustila druhý monolit naslepo.
+    """
+    if os.name != "nt":
+        return float("inf")
+    try:
+        import ctypes
+
+        class MemoryStatus(ctypes.Structure):
+            _fields_ = [
+                ("dwLength", ctypes.c_ulong),
+                ("dwMemoryLoad", ctypes.c_ulong),
+                ("ullTotalPhys", ctypes.c_ulonglong),
+                ("ullAvailPhys", ctypes.c_ulonglong),
+                ("ullTotalPageFile", ctypes.c_ulonglong),
+                ("ullAvailPageFile", ctypes.c_ulonglong),
+                ("ullTotalVirtual", ctypes.c_ulonglong),
+                ("ullAvailVirtual", ctypes.c_ulonglong),
+                ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+            ]
+
+        status = MemoryStatus()
+        status.dwLength = ctypes.sizeof(MemoryStatus)
+        if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
+            return 0.0
+        return status.ullAvailPhys / (1024 ** 3)
+    except Exception:
+        return 0.0
+
+
+def peak_memory_gb(process):
+    """Špička pracovní množiny doběhlého solveru v GB, nebo `None`.
+
+    Kvůli pojistce souběhu: kolik paměti monolit bere, se do 3. 11. 2026
+    neměřilo. Handle drží `Popen`, takže se dá zeptat i po skončení procesu.
+    `argtypes` jsou nutné - bez nich `ctypes` předá handle jako 32bitové číslo
+    a volání tiše selže (21. 10. 2026 u priority, deník 325).
+    """
+    if os.name != "nt":
+        return None
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        class Counters(ctypes.Structure):
+            _fields_ = [
+                ("cb", wintypes.DWORD),
+                ("PageFaultCount", wintypes.DWORD),
+                ("PeakWorkingSetSize", ctypes.c_size_t),
+                ("WorkingSetSize", ctypes.c_size_t),
+                ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
+                ("QuotaPagedPoolUsage", ctypes.c_size_t),
+                ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
+                ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+                ("PagefileUsage", ctypes.c_size_t),
+                ("PeakPagefileUsage", ctypes.c_size_t),
+            ]
+
+        query = ctypes.WinDLL("psapi").GetProcessMemoryInfo
+        query.argtypes = [wintypes.HANDLE, ctypes.POINTER(Counters), wintypes.DWORD]
+        query.restype = wintypes.BOOL
+        counters = Counters()
+        counters.cb = ctypes.sizeof(Counters)
+        if not query(wintypes.HANDLE(int(process._handle)), ctypes.byref(counters), counters.cb):
+            return None
+        return counters.PeakWorkingSetSize / (1024 ** 3)
+    except Exception:
+        return None
+
+
+def run_solver(param: str, timeout_seconds: float):
+    """Jeden běh solveru: `(návratový kód nebo "timeout", špička paměti v GB nebo None)`.
+
+    Timeout je selhání desky, ne noci. V noci na 15. 9. 2026 běžela
+    `MTT9_25BB_BTN_SB_SRP J73r` přes třicet minut, `TimeoutExpired` nikdo
+    nechytil a runner spadl v 01:48 - zbylých pět hodin okna (asi 35 desek)
+    shořelo a rozklad okno nedostal. Výstup solveru se čte jako bajty a
+    zahazuje, jako dřív (`subprocess.run` s `capture_output`).
+    """
+    process = subprocess.Popen(
+        [os.path.join(SOLVER_ROOT, "console_solver.exe"), "-i", param],
+        cwd=SOLVER_ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    )
+    try:
+        process.communicate(timeout=timeout_seconds)
+        rc = process.returncode
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.communicate()
+        rc = "timeout"
+    return rc, peak_memory_gb(process)
 
 
 def free_gb() -> float:
@@ -482,12 +616,225 @@ def solved(checkpoint: str) -> bool:
     return os.path.exists(checkpoint) and os.path.getsize(checkpoint) > 0
 
 
+def board_gate(item, deadline, parallel):
+    """Smí se deska pustit? `"stop"`, `"skip"`, nebo `(strop, přesnost)` pokusu.
+
+    Pojistky, které do 3. 11. 2026 stály přímo ve smyčce noci. Vytažené jsou
+    proto, aby je souběh nemohl obejít: platí před každou deskou, ať běží
+    sama, nebo vedle jiné.
+    """
+    _, family, board, checkpoint, level = item
+    # Porada mohla rozhodnout až po startu (viz čekání v `main`): noc rozkladu
+    # se pozná i mezi deskami a rozdělané desky se dodělají.
+    if decomposition_has_the_night():
+        log("ustupuji mezi deskami: porada dala tuhle noc prvnímu rozkladu")
+        return "stop"
+    cap_minutes, accuracy = caps_for(family, level)
+    factor = PARALLEL_CAP_FACTOR if parallel > 1 else 1
+    cap_minutes = int(round(cap_minutes * factor))
+    remaining = (deadline - datetime.now()).total_seconds() / 60
+    if remaining <= 0:
+        log("deadline; končím mezi deskami")
+        return "stop"
+    # Čerstvá deska potřebuje typicky medián své hloubky, takže stačí
+    # rezerva podle `RESERVE_MINUTES`. Opakovaný pokus má smysl jen celý -
+    # usekne-li ho deadline, je to zahozená hodina, takže se mu rezervuje
+    # celý jeho strop.
+    need = cap_minutes if level > 0 else int(round(reserve_for(family) * factor))
+    if remaining < need:
+        log(f"končím {remaining:.0f} min před deadline: "
+            f"{'opakovaný pokus' if level > 0 else 'deska'} potřebuje asi {need}")
+        return "stop"
+    available = free_gb()
+    if available < MIN_FREE_GB:
+        log(f"končím: na disku zbývá {available:.1f} GB")
+        return "stop"
+    # Seznam se sestavil před začátkem noci; mezitím mohla desku dodělat
+    # jiná položka nebo jiný běh. Hotová se znovu nesolví.
+    if solved(checkpoint):
+        log(f"přeskakuji {family} {board}: checkpoint už existuje")
+        return "skip"
+    return cap_minutes, accuracy
+
+
+def solve_board(item, caps, parallel, threads, thread_trial, stats, stats_lock):
+    """Jedna deska od parametrů po checkpoint, nebo po značku pádu.
+
+    Řádky výsledku nesou na konci `[rodina deska]`. V souběhu se páry
+    `solving`/`hotovo` prolínají a cena desky se z nich počítá - `boardCost.mts`
+    páruje podle téhle značky, a bez ní (logy do 3. 11. 2026) podle pořadí.
+    """
+    param, family, board, checkpoint, level = item
+    cap_minutes, accuracy = caps
+    tag = f"[{family} {board}]"
+    os.makedirs(os.path.dirname(checkpoint), exist_ok=True)
+    # Parametry se přepisují i na **stupni nula**: od rozhodnutí 2c nese jinou
+    # přesnost celá hloubka, ne jen opakovaný pokus. Do 9. 10. 2026 se tenhle
+    # řádek volal jen pro `level > 0`, takže by čerstvá deska na 50 bb běžela
+    # na 0,5 % a log by u ní tvrdil 1 % - změna by se nikde neprojevila.
+    if thread_trial:
+        threads = trial_threads(family, board, thread_trial)
+    param = param_for_level(param, family, level, checkpoint, threads)
+    # Vlákna se píšou u obou skupin pokusu, i u kontrolních dvanácti:
+    # vyhodnocení podle nich pozná, které desky v pokusu byly. Souběh se píše
+    # taky - podle něj se jeho minuty drží mimo cenu jedné desky.
+    notes = ([] if threads is None else [f"vlákna {threads}"]) + ([f"souběžně {parallel}"] if parallel > 1 else [])
+    note = "".join(f", {text}" for text in notes)
+    if level > 0:
+        log(f"solving {family} {board} (stupeň {level}: strop {cap_minutes} min, "
+            f"přesnost {accuracy} %{note})")
+    elif accuracy != DEFAULT_ACCURACY:
+        log(f"solving {family} {board} (přesnost {accuracy} %, strop {cap_minutes} min{note})")
+    elif notes:
+        log(f"solving {family} {board} ({', '.join(notes)})")
+    else:
+        log(f"solving {family} {board}")
+    for attempt in range(1, BOARD_ATTEMPTS + 1):
+        started = time.time()
+        rc, peak = run_solver(param, cap_minutes * 60)
+        # Deska, která timeout přesáhne jednou, ho přesáhne i podruhé (solver je
+        # deterministický), takže se neopakuje a rovnou se odloží.
+        if rc == "timeout":
+            attempt = BOARD_ATTEMPTS
+        minutes = (time.time() - started) / 60
+        # Stroj mezi tím spal, deska nebyla pomalá.
+        #
+        # Proces se vešel do stropu - nevypršel - a přesto na hodinách uběhlo
+        # víc, než kolik strop dovoluje. To nejde, pokud se hodiny nepohnuly bez
+        # procesu, tedy pokud stroj nespal. Žádné API na to není potřeba a žádné
+        # by nebylo spolehlivější: `time.monotonic()` se na Windows u Modern
+        # Standby chová různě, kdežto tahle nesrovnalost je logická.
+        #
+        # Noc 1.-2. 10. 2026 bez tohohle rozlišení ohlásila „hotovo za
+        # 507.5 min" u desky, která běžela šest minut a pak osm hodin spala.
+        # Řádek se čte jako extrémně pomalý solve, a byla to ztracená noc.
+        overslept = rc != "timeout" and minutes > cap_minutes + 2
+        if overslept:
+            # Dolní mez, ne přesný čas: kolik z těch minut deska opravdu
+            # solvila, se zvenčí zjistit nedá.
+            with stats_lock:
+                stats["slept_minutes"] += minutes - cap_minutes
+        memory = "" if peak is None else f", paměť {peak:.1f} GB"
+        if solved(checkpoint):
+            size = os.path.getsize(checkpoint) / (1024 ** 2)
+            with stats_lock:
+                stats["done"] += 1
+            # Úspěch **uklízí značku po pádu**. Bez tohohle zůstala ležet
+            # vedle hotového checkpointu a dál se čte jako fakt: desky
+            # `J73r` a `T84r` v `MTT9_25BB_CO_BTN_SRP` dosolvily 5. 10. 2026
+            # (46 MB, kolem 46 min každá), a jejich značky z 30. 9. tam
+            # ležely i 6. 10. Vlastníkovi se kvůli nim pořád nabízelo
+            # rozhodnutí o rodině, která už byla 12/12, a každý konzument
+            # značek musel zvlášť ověřovat, že checkpoint přece existuje.
+            marker = checkpoint + ".failed"
+            if os.path.exists(marker):
+                try:
+                    os.remove(marker)
+                    log(f"  (uklizena značka po dřívějším pádu) {tag}")
+                except OSError as problem:
+                    log(f"  POZOR: značku po pádu nejde smazat ({problem}) {tag}")
+            again = "" if attempt == 1 else " (napodruhé)"
+            if overslept:
+                log(f"  hotovo, ale stroj mezi tím SPAL: na hodinách "
+                    f"{minutes:.1f} min při stropu {cap_minutes}, "
+                    f"checkpoint {size:.0f} MB{memory}{again} {tag}")
+            else:
+                log(f"  hotovo za {minutes:.1f} min, checkpoint {size:.0f} MB{memory}{again} {tag}")
+            return
+        if attempt < BOARD_ATTEMPTS:
+            log(f"  spadlo po {minutes:.1f} min (rc={rc}); zkouším znovu {tag}")
+            continue
+        # Pád při spánku není pád desky. Stroj ji usekl uprostřed, takže to
+        # nebyl poctivý pokus - stupeň se nespotřebuje a deska zůstane ve
+        # frontě tak, jak byla. Bez tohohle by jedna noc na baterii odložila
+        # natrvalo každou desku, kterou zastihla.
+        if overslept:
+            log(f"  nedokončeno, protože stroj SPAL: na hodinách "
+                f"{minutes:.1f} min při stropu {cap_minutes}; "
+                f"stupeň se nespotřebovává, deska zůstává ve frontě {tag}")
+            return
+        with stats_lock:
+            stats["failed"] += 1
+        next_level = next_useful_level(family, level)
+        with open(checkpoint + ".failed", "w", encoding="utf-8") as handle:
+            handle.write(f"{datetime.now():%Y-%m-%d %H:%M} rc={rc} "
+                         f"po {attempt} pokusech stupen={next_level}\n")
+        if next_level > level + 1:
+            log(f"  (stupeň {level + 1} by dal týž strop i přesnost, přeskakuje se) {tag}")
+        if next_level < len(ESCALATION):
+            next_cap, next_accuracy = caps_for(family, next_level)
+            log(f"  SELHALO po {minutes:.1f} min (rc={rc}); příští noc "
+                f"stupeň {next_level} - strop {next_cap} min, přesnost {next_accuracy} % {tag}")
+        else:
+            log(f"  SELHALO po {minutes:.1f} min (rc={rc}); žebříček vyčerpán "
+                f"({len(ESCALATION)} stupně), odloženo natrvalo - "
+                f"rozhodnutí o rodině je na vlastníkovi {tag}")
+        return
+
+
+def run_queue(todo, deadline, parallel=1, threads=None, thread_trial=0):
+    """Odsolví frontu do deadlinu, v souběhu po `parallel` deskách naráz.
+
+    S `parallel=1` je to dosavadní noc: deska po desce, pojistky před každou
+    (`board_gate`). Ve souběhu se další deska pustí vedle běžící, když uběhl
+    rozestup a je volná paměť; jinak se čeká, až některá doběhne. Pojistka,
+    která řekne „stop", zastaví jen další desky - rozdělané doběhnou.
+    """
+    if parallel > 1:
+        thread_trial = 0
+        threads = threads or PARALLEL_THREADS
+    stats = {"done": 0, "failed": 0, "slept_minutes": 0.0}
+    stats_lock = threading.Lock()
+    queue = list(todo)
+    running = {}
+    last_start = None
+    waiting_for_memory = False
+    stopped = False
+    with ThreadPoolExecutor(max_workers=parallel) as pool:
+        while True:
+            while queue and not stopped and len(running) < parallel:
+                if running:
+                    if last_start is not None and time.time() - last_start < PARALLEL_STAGGER_SECONDS:
+                        break
+                    free = free_ram_gb()
+                    if free < PARALLEL_MIN_FREE_RAM_GB:
+                        if not waiting_for_memory:
+                            log(f"souběh: čekám na paměť - volných {free:.1f} GB, další deska "
+                                f"vedle běžící chce aspoň {PARALLEL_MIN_FREE_RAM_GB}")
+                            waiting_for_memory = True
+                        break
+                item = queue.pop(0)
+                caps = board_gate(item, deadline, parallel)
+                if caps == "skip":
+                    continue
+                if caps == "stop":
+                    stopped = True
+                    break
+                running[pool.submit(solve_board, item, caps, parallel, threads, thread_trial,
+                                    stats, stats_lock)] = item
+                last_start = time.time()
+                waiting_for_memory = False
+            if not running:
+                break
+            finished, _ = wait(list(running), timeout=60, return_when=FIRST_COMPLETED)
+            for future in finished:
+                running.pop(future)
+                # Výjimka z desky shodí noc jako dřív ve smyčce: tiše ztracená
+                # deska by byla horší než pád, který je v logu vidět.
+                future.result()
+    return stats
+
+
 def main():
     # Výchozí konec je konec okna. Od 10. 9. 2026 je to sedmá, ne osmá.
     until = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--until=")), "07:00")
     limit = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--limit=")), "0"))
     # Pokus o vlákna (viz `trial_threads`); bez parametru jede staging beze změny.
     thread_trial = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--thread-trial=")), "0"))
+    # Pokus D6 (viz `PARALLEL_THREADS`): kolik desek naráz a s kolika vlákny.
+    parallel = max(1, int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--parallel=")), "1")))
+    threads_arg = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--threads=")), None)
+    threads = int(threads_arg) if threads_arg else None
 
     # Tentýž výklad `--until` jako v rozkladu, ze stejného místa: `HH:MM`, nebo
     # od 15. 10. 2026 absolutní datum, které wrapper spočítá z rozvrhu stroje
@@ -546,148 +893,23 @@ def main():
             "neplatí a Windows uspí stroj, až baterie dojde. Noc 1.-2. 10. 2026 "
             "tím přišla o 8 h 21 min. Solvit se bude dál, ale okno není jisté.")
 
-    done = failed = 0
-    slept_minutes = 0.0
-    for param, family, board, checkpoint, level in (todo[:limit] if limit else todo):
-        # Porada mohla rozhodnout až po startu (viz čekání výš): noc rozkladu
-        # se pozná i mezi deskami a deska rozdělaná se dodělá.
-        if decomposition_has_the_night():
-            log("ustupuji mezi deskami: porada dala tuhle noc prvnímu rozkladu")
-            break
-        cap_minutes, accuracy = caps_for(family, level)
-        remaining = (deadline - datetime.now()).total_seconds() / 60
-        if remaining <= 0:
-            log("deadline; končím mezi deskami")
-            break
-        # Čerstvá deska potřebuje typicky medián své hloubky, takže stačí
-        # rezerva podle `RESERVE_MINUTES`. Opakovaný pokus má smysl jen celý -
-        # usekne-li ho deadline, je to zahozená hodina, takže se mu rezervuje
-        # celý jeho strop.
-        need = cap_minutes if level > 0 else reserve_for(family)
-        if remaining < need:
-            log(f"končím {remaining:.0f} min před deadline: "
-                f"{'opakovaný pokus' if level > 0 else 'deska'} potřebuje asi {need}")
-            break
-        available = free_gb()
-        if available < MIN_FREE_GB:
-            log(f"končím: na disku zbývá {available:.1f} GB")
-            break
-        # Seznam se sestavil před začátkem noci; mezitím mohla desku dodělat
-        # jiná položka nebo jiný běh. Hotová se znovu nesolví.
-        if solved(checkpoint):
-            log(f"přeskakuji {family} {board}: checkpoint už existuje")
-            continue
-
-        os.makedirs(os.path.dirname(checkpoint), exist_ok=True)
-        # Parametry se přepisují i na **stupni nula**: od rozhodnutí 2c nese jinou
-        # přesnost celá hloubka, ne jen opakovaný pokus. Do 9. 10. 2026 se tenhle
-        # řádek volal jen pro `level > 0`, takže by čerstvá deska na 50 bb běžela
-        # na 0,5 % a log by u ní tvrdil 1 % - změna by se nikde neprojevila.
-        threads = trial_threads(family, board, thread_trial) if thread_trial else None
-        param = param_for_level(param, family, level, checkpoint, threads)
-        # Vlákna se píšou u obou skupin pokusu, i u kontrolních dvanácti:
-        # vyhodnocení podle nich pozná, které desky v pokusu byly.
-        note = "" if threads is None else f", vlákna {threads}"
-        if level > 0:
-            log(f"solving {family} {board} (stupeň {level}: strop {cap_minutes} min, "
-                f"přesnost {accuracy} %{note})")
-        elif accuracy != DEFAULT_ACCURACY:
-            log(f"solving {family} {board} (přesnost {accuracy} %, strop {cap_minutes} min{note})")
-        elif threads is not None:
-            log(f"solving {family} {board} (vlákna {threads})")
-        else:
-            log(f"solving {family} {board}")
-        for attempt in range(1, BOARD_ATTEMPTS + 1):
-            started = time.time()
-            # Timeout je selhání desky, ne noci. V noci na 15. 9. 2026 běžela
-            # `MTT9_25BB_BTN_SB_SRP J73r` přes třicet minut, `TimeoutExpired`
-            # nikdo nechytil a runner spadl v 01:48 - zbylých pět hodin okna
-            # (asi 35 desek) shořelo a rozklad okno nedostal. Deska, která
-            # timeout přesáhne jednou, ho přesáhne i podruhé (solver je
-            # deterministický), takže se neopakuje a rovnou se odloží.
-            try:
-                result = subprocess.run(
-                    [os.path.join(SOLVER_ROOT, "console_solver.exe"), "-i", param],
-                    cwd=SOLVER_ROOT, capture_output=True, text=True,
-                    timeout=cap_minutes * 60,
-                )
-                rc = result.returncode
-            except subprocess.TimeoutExpired:
-                rc = "timeout"
-                attempt = BOARD_ATTEMPTS
-            minutes = (time.time() - started) / 60
-            # Stroj mezi tím spal, deska nebyla pomalá.
-            #
-            # Proces se vešel do stropu - `subprocess.run` nevyhodil
-            # `TimeoutExpired` - a přesto na hodinách uběhlo víc, než kolik
-            # strop dovoluje. To nejde, pokud se hodiny nepohnuly bez procesu,
-            # tedy pokud stroj nespal. Žádné API na to není potřeba a žádné by
-            # nebylo spolehlivější: `time.monotonic()` se na Windows u Modern
-            # Standby chová různě, kdežto tahle nesrovnalost je logická.
-            #
-            # Noc 1.-2. 10. 2026 bez tohohle rozlišení ohlásila „hotovo za
-            # 507.5 min" u desky, která běžela šest minut a pak osm hodin spala.
-            # Řádek se čte jako extrémně pomalý solve, a byla to ztracená noc.
-            overslept = rc != "timeout" and minutes > cap_minutes + 2
-            if overslept:
-                # Dolní mez, ne přesný čas: kolik z těch minut deska opravdu
-                # solvila, se zvenčí zjistit nedá.
-                slept_minutes += minutes - cap_minutes
-            if solved(checkpoint):
-                size = os.path.getsize(checkpoint) / (1024 ** 2)
-                done += 1
-                # Úspěch **uklízí značku po pádu**. Bez tohohle zůstala ležet
-                # vedle hotového checkpointu a dál se čte jako fakt: desky
-                # `J73r` a `T84r` v `MTT9_25BB_CO_BTN_SRP` dosolvily 5. 10. 2026
-                # (46 MB, kolem 46 min každá), a jejich značky z 30. 9. tam
-                # ležely i 6. 10. Vlastníkovi se kvůli nim pořád nabízelo
-                # rozhodnutí o rodině, která už byla 12/12, a každý konzument
-                # značek musel zvlášť ověřovat, že checkpoint přece existuje.
-                marker = checkpoint + ".failed"
-                if os.path.exists(marker):
-                    try:
-                        os.remove(marker)
-                        log("  (uklizena značka po dřívějším pádu)")
-                    except OSError as problem:
-                        log(f"  POZOR: značku po pádu nejde smazat ({problem})")
-                again = "" if attempt == 1 else " (napodruhé)"
-                if overslept:
-                    log(f"  hotovo, ale stroj mezi tím SPAL: na hodinách "
-                        f"{minutes:.1f} min při stropu {cap_minutes}, "
-                        f"checkpoint {size:.0f} MB{again}")
-                else:
-                    log(f"  hotovo za {minutes:.1f} min, checkpoint {size:.0f} MB{again}")
-                break
-            if attempt < BOARD_ATTEMPTS:
-                log(f"  spadlo po {minutes:.1f} min (rc={rc}); zkouším znovu")
-                continue
-            # Pád při spánku není pád desky. Stroj ji usekl uprostřed, takže to
-            # nebyl poctivý pokus - stupeň se nespotřebuje a deska zůstane ve
-            # frontě tak, jak byla. Bez tohohle by jedna noc na baterii odložila
-            # natrvalo každou desku, kterou zastihla.
-            if overslept:
-                log(f"  nedokončeno, protože stroj SPAL: na hodinách "
-                    f"{minutes:.1f} min při stropu {cap_minutes}; "
-                    "stupeň se nespotřebovává, deska zůstává ve frontě")
-                break
-            failed += 1
-            next_level = next_useful_level(family, level)
-            with open(checkpoint + ".failed", "w", encoding="utf-8") as handle:
-                handle.write(f"{datetime.now():%Y-%m-%d %H:%M} rc={rc} "
-                             f"po {attempt} pokusech stupen={next_level}\n")
-            if next_level > level + 1:
-                log(f"  (stupeň {level + 1} by dal týž strop i přesnost, přeskakuje se)")
-            if next_level < len(ESCALATION):
-                next_cap, next_accuracy = caps_for(family, next_level)
-                log(f"  SELHALO po {minutes:.1f} min (rc={rc}); příští noc "
-                    f"stupeň {next_level} - strop {next_cap} min, přesnost {next_accuracy} %")
-            else:
-                log(f"  SELHALO po {minutes:.1f} min (rc={rc}); žebříček vyčerpán "
-                    f"({len(ESCALATION)} stupně), odloženo natrvalo - "
-                    "rozhodnutí o rodině je na vlastníkovi")
-            break
+    if parallel > 1:
+        if thread_trial:
+            log("pokus o vlákna v souběžné noci neběží: vlákna drží souběh (D6)")
+        log(f"souběh: {parallel} desky naráz po {threads or PARALLEL_THREADS} vláknech, strop "
+            f"a rezerva krát {PARALLEL_CAP_FACTOR}, další deska až při "
+            f"{PARALLEL_MIN_FREE_RAM_GB} GB volné paměti (pokus D6)")
+    started = time.time()
+    stats = run_queue(todo[:limit] if limit else todo, deadline, parallel, threads, thread_trial)
+    done, failed, slept_minutes = stats["done"], stats["failed"], stats["slept_minutes"]
 
     log(f"expansion: hotovo {done}, selhalo {failed}, zbývá {len(pending_boards())}")
+    # Propustnost noci: měřítko pokusu D6. Do 3. 11. 2026 se dala spočítat jen
+    # z prvního a posledního řádku logu ručně.
+    hours = (time.time() - started) / 3600
+    if done and hours > 0:
+        log(f"propustnost: {done} desek za {hours:.1f} h, {done / hours:.2f} desky za hodinu"
+            + (f" při souběhu {parallel}" if parallel > 1 else ""))
     # Ztracený čas se hlásí zvlášť od práce. Bez tohohle řádku vypadá noc
     # 1.-2. 10. 2026 jako „hotovo 14, selhalo 0" - tedy jako úspěch, kterým
     # nebyla: osm hodin okna prospala a čtrnáct desek je třetina běžné noci.

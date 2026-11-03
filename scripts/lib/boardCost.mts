@@ -100,7 +100,20 @@ const SOLVING = /^\[\d{2}:\d{2}:\d{2}\] solving (MTT9_\S+) (\S+?)(?: \(.*)?\s*$/
 const SOLVING_LEVEL = /\(stupeň (\d+):/;
 /** Počet vláken; runner ho píše jen v pokusu o vlákna (od 20. 10. 2026). */
 const SOLVING_THREADS = /vlákna (\d+)/;
+/** Kolik desek běželo naráz; runner to píše jen v souběžné noci (pokus D6, od 3. 11. 2026). */
+const SOLVING_PARALLEL = /souběžně (\d+)/;
 const DONE = /^\[\d{2}:\d{2}:\d{2}\]\s+hotovo za ([\d.]+) min/;
+/**
+ * Deska, které se řádek výsledku týká: `[rodina deska]` na konci řádku.
+ *
+ * Runner ji píše od 3. 11. 2026: v souběžné noci (pokus D6) se páry
+ * `solving`/`hotovo` prolínají a pořadí už neříká, čí je který výsledek.
+ */
+const RESULT_BOARD = /\[(MTT9_\S+) (\S+)\]\s*$/;
+/** Řádky, kterými deska skončí bez ceny: pád na strop, nebo spánek stroje. */
+const ENDED_WITHOUT_COST = /^\[\d{2}:\d{2}:\d{2}\]\s+(?:SELHALO|nedokončeno|hotovo, ale)/;
+/** Souběžná deska má strop krát 1,5 (`PARALLEL_CAP_FACTOR` v runneru), práh spánku taky. */
+const PARALLEL_CAP_FACTOR = 1.5;
 const DEPTH = /_(\d+)BB_/;
 
 export interface BoardSolve {
@@ -110,48 +123,76 @@ export interface BoardSolve {
   minutes: number;
   /** Stupeň žebříku, na kterém deska doběhla; 0 je první pokus. */
   level: number;
-  /** Vlákna solveru, když je runner zapsal - jen v pokusu o vlákna. */
+  /** Vlákna solveru, když je runner zapsal - jen v pokusu o vlákna nebo v souběhu. */
   threads?: number;
+  /** Kolik desek běželo naráz - jen v souběžné noci (pokus D6). */
+  parallel?: number;
+}
+
+/**
+ * Běžela deska sama? Jen takové minuty jsou cena desky.
+ *
+ * Souběžná deska (pokus D6) běží déle, protože se o stroj dělí - a runner jí
+ * strop násobí sám. Kdyby její minuty šly do ceny, strop by rostl dvakrát:
+ * jednou z ceny, podruhé souběžným násobkem.
+ */
+export function isSingleSolve(solve: BoardSolve): boolean {
+  return (solve.parallel ?? 1) <= 1;
 }
 
 /**
  * Páry `solving <rodina> <deska>` a následné `hotovo za N min`.
  *
- * Runner solví desky **po jedné** (`--workers` jsou vlákna solveru, ne desky),
- * takže dvojice jde za sebou a nic se nepřekrývá. Řádek `SELHALO` otevřený pár
- * zahazuje: deska, která narazila na strop, cenu neříká - říká jen, že je dražší
- * než strop, a to už strop sám.
+ * Do 3. 11. 2026 solvil runner desky **po jedné**, takže dvojice šla za sebou
+ * a párovalo se podle pořadí. Od pokusu D6 může běžet víc desek naráz a řádek
+ * výsledku nese `[rodina deska]`; páruje se podle něj, a bez něj (starší logy)
+ * podle pořadí jako dřív. Řádek `SELHALO` otevřený pár zahazuje: deska, která
+ * narazila na strop, cenu neříká - říká jen, že je dražší než strop, a to už
+ * strop sám.
  *
  * Tím se cena spotřebovaná **neúspěšnými** pokusy do tabulky nedostane, i když
  * okno sežrala. Je to vědomé a na bezpečnou stranu: plán tím cenu podstřeluje,
  * a podstřelená cena znamená víc nastagovaných desek, ne prázdnou noc.
  */
 export function parseBoardSolves(lines: readonly string[]): BoardSolve[] {
+  type Open = { family: string; board: string; level: number; threads?: number; parallel?: number };
   const solves: BoardSolve[] = [];
-  let open: { family: string; board: string; level: number; threads?: number } | undefined;
+  const open = new Map<string, Open>();
+  let last: string | undefined;
   for (const line of lines) {
     const start = SOLVING.exec(line);
     if (start !== null) {
       const threads = SOLVING_THREADS.exec(line)?.[1];
-      open = {
+      const parallel = SOLVING_PARALLEL.exec(line)?.[1];
+      const entry: Open = {
         family: start[1].trim(),
         board: start[2].trim(),
         level: Number(SOLVING_LEVEL.exec(line)?.[1] ?? 0),
         ...(threads === undefined ? {} : { threads: Number(threads) }),
+        ...(parallel === undefined ? {} : { parallel: Number(parallel) }),
       };
+      last = `${entry.family} ${entry.board}`;
+      open.set(last, entry);
+      continue;
+    }
+    const named = RESULT_BOARD.exec(line);
+    const key = named === null ? last : `${named[1]} ${named[2]}`;
+    if (ENDED_WITHOUT_COST.test(line)) {
+      if (key !== undefined) open.delete(key);
       continue;
     }
     const done = DONE.exec(line);
     if (done === null) continue;
     // Řádek bez otevřeného páru je uříznutý log, ne deska; a cena bez rodiny
     // nemá hloubku, takže by zkreslila tu, do které by spadla.
-    const started = open;
-    open = undefined;
+    const started = key === undefined ? undefined : open.get(key);
+    if (key !== undefined) open.delete(key);
     if (started === undefined) continue;
     const depth = DEPTH.exec(started.family);
     if (depth === null) continue;
     const minutes = Number(done[1]);
-    if (minutes > CLOCK_MOVED_MINUTES) continue;
+    const clockMoved = CLOCK_MOVED_MINUTES * ((started.parallel ?? 1) > 1 ? PARALLEL_CAP_FACTOR : 1);
+    if (minutes > clockMoved) continue;
     solves.push({ ...started, depthBB: Number(depth[1]), minutes });
   }
   return solves;
@@ -248,6 +289,7 @@ export function capFromP90(p90: number): number {
 export function depthCostsFrom(solves: readonly BoardSolve[]): DepthCost[] {
   const byDepth = new Map<number, number[]>();
   for (const solve of solves) {
+    if (!isSingleSolve(solve)) continue;
     const bucket = byDepth.get(solve.depthBB);
     if (bucket === undefined) byDepth.set(solve.depthBB, [solve.minutes]);
     else bucket.push(solve.minutes);
@@ -355,6 +397,7 @@ export function costForFamily(
 export function familyCostsFrom(solves: readonly BoardSolve[]): FamilyCost[] {
   const byFamily = new Map<string, number[]>();
   for (const solve of solves) {
+    if (!isSingleSolve(solve)) continue;
     const bucket = byFamily.get(solve.family);
     if (bucket === undefined) byFamily.set(solve.family, [solve.minutes]);
     else bucket.push(solve.minutes);
@@ -396,7 +439,7 @@ export function fitWidthModels(
 ): WidthModel[] {
   const byDepth = new Map<number, (BoardSolve & { width: number })[]>();
   for (const solve of solves) {
-    if (!(solve.width > 0) || !(solve.minutes > 0)) continue;
+    if (!(solve.width > 0) || !(solve.minutes > 0) || !isSingleSolve(solve)) continue;
     const bucket = byDepth.get(solve.depthBB);
     if (bucket === undefined) byDepth.set(solve.depthBB, [solve]);
     else bucket.push(solve);
