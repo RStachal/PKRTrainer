@@ -184,6 +184,33 @@ describe("rangeMatrixView - DOM", () => {
     expect(root2.querySelector(".range-matrix-meta")?.textContent).toContain("vs UTG (obecná)");
   });
 
+  it("ukaze zaznam, podle ktereho se hodnotilo, i se scenarem a dorovnavajicimi", () => {
+    // Do 3. 11. 2026 klic nesl jen sedacku, takze spot se scenarem (ICM) nebo
+    // s jmenovanymi dorovnavajicimi ukazal obecnejsi zaznam nez hodnoceni.
+    const keys: unknown[] = [];
+    const recording: RangeStore = {
+      isLoaded: () => true,
+      lookup: (key) => {
+        keys.push(key);
+        return { actions: { AKs: ["OPEN_2X"] }, strict: { AKs: ["OPEN_2X"] } };
+      },
+    };
+    const scenario = {
+      ...spot,
+      tableState: { ...tableState, vsSeat: "UTG" as const, stackSetupId: "icm-a", flatCallers: ["BU"] },
+    };
+    renderMatrix(scenario, recording, document.createElement("div"));
+    expect(keys).toEqual([{
+      position: "BTN",
+      bucket: 25,
+      context: "RFI",
+      ante: "OFF",
+      vsSeat: "UTG",
+      stackSetupId: "icm-a",
+      flatCallers: ["BU"],
+    }]);
+  });
+
   it("pri nedostupnych datech zobrazi indikaci bez mrizky", () => {
     const root = document.createElement("div");
     renderMatrix(spot, missingStore, root);

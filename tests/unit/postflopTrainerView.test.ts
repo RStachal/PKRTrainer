@@ -418,9 +418,32 @@ describe("nová postflopová obrazovka - matice range", () => {
     range?.click();
     const dialog = document.querySelector<HTMLElement>(".range-modal");
     expect(dialog?.querySelector(".range-modal__title")?.textContent).toBe("BTN vs BB · Flop");
-    expect(dialog?.querySelector(".postflop-flopzilla")?.getAttribute("data-board")).not.toBe("");
+    // Nová matice (fáze 2): deska nahoře a ruka hráče vybraná v detailu.
+    expect(dialog?.querySelectorAll(".dx-range__board .dx-card")).toHaveLength(3);
+    expect(dialog?.querySelectorAll(".dx-matrix__cell")).toHaveLength(169);
+    expect(dialog?.querySelector<HTMLElement>(".dx-range__detail")?.dataset.hand).toBe("AKo");
 
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     expect(document.querySelector(".range-modal")).toBeNull();
+  });
+
+  it("Enter na buňce v dialogu vybere ruku a spot za dialogem nepřeskočí", () => {
+    // Do 3. 11. 2026 klávesnice obrazovky brala Enter i z dialogu a klikla na
+    // „Další spot“ za ním (nalezeno E2E fáze 2).
+    const { view, root, onNext } = mount();
+    view.show(spot());
+    buttons(root)[0].click();
+    root.querySelector<HTMLButtonElement>(".dx-trainer__range")?.click();
+
+    const cell = document.querySelector<HTMLElement>('.range-modal [data-hand="QJs"]')!;
+    cell.focus();
+    cell.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    expect(document.querySelector<HTMLElement>(".range-modal .dx-range__detail")?.dataset.hand).toBe("QJs");
+    document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    expect(onNext).not.toHaveBeenCalled();
+
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    expect(onNext).toHaveBeenCalledTimes(1);
   });
 });

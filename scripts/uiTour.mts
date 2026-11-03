@@ -59,6 +59,18 @@ const PREFLOP_SELECTORS: Record<TourUi, { action: string; result: string; change
   },
 };
 
+/** Totéž pro postflop; nové GUI má obrazovku v panelu postflopu. */
+const POSTFLOP_SELECTORS: Record<TourUi, { action: string; result: string }> = {
+  classic: {
+    action: ".postflop-action",
+    result: ".postflop-result",
+  },
+  next: {
+    action: ".postflop-output .dx-trainer__actions button",
+    result: ".postflop-output .dx-trainer__feedback:not([hidden])",
+  },
+};
+
 interface TourArgs {
   build: boolean;
   viewports: readonly Viewport[];
@@ -183,6 +195,21 @@ async function capture(
  */
 function tourSteps(ui: TourUi): ReadonlyArray<{ step: string; run: (client: CdpClient) => Promise<void> }> {
   const preflop = PREFLOP_SELECTORS[ui];
+  const postflop = POSTFLOP_SELECTORS[ui];
+  // Matice range v dialogu (fáze 2) jen v novém GUI; klasika ji má jinde.
+  const range = (step: string, button: string) => (ui === "next"
+    ? [{
+      step,
+      run: async (client: CdpClient) => {
+        await click(client, button);
+        await waitForSelector(client, ".range-modal .dx-matrix", STEP_TIMEOUT_MS);
+      },
+    }]
+    : []);
+  const closeRange = (client: CdpClient) => evaluate(
+    client,
+    `document.querySelector(".range-modal__close")?.click()`,
+  );
   return [
   {
     step: "01-start",
@@ -205,23 +232,26 @@ function tourSteps(ui: TourUi): ReadonlyArray<{ step: string; run: (client: CdpC
       await waitForSelector(client, preflop.result, STEP_TIMEOUT_MS);
     },
   },
+  ...range("03b-preflop-range", `${preflop.result} .dx-trainer__range`),
   {
     step: "04-flop-question",
     run: async (client) => {
+      await closeRange(client);
       await click(client, preflop.change);
       await waitForSelector(client, ".filter-start", STEP_TIMEOUT_MS);
       await setSeedAndStreet(client, "FLOP");
       await click(client, ".filter-start");
-      await waitForSelector(client, ".postflop-action", STEP_TIMEOUT_MS);
+      await waitForSelector(client, postflop.action, STEP_TIMEOUT_MS);
     },
   },
   {
     step: "05-flop-result",
     run: async (client) => {
-      await click(client, ".postflop-action");
-      await waitForSelector(client, ".postflop-result", STEP_TIMEOUT_MS);
+      await click(client, postflop.action);
+      await waitForSelector(client, postflop.result, STEP_TIMEOUT_MS);
     },
   },
+  ...range("06-flop-range", `${postflop.result} .dx-trainer__range`),
   ];
 }
 

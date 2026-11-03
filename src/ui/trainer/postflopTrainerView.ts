@@ -8,17 +8,16 @@ import type {
 import { gradePostflopAction, type PostflopGrade } from "../../core/postflopScoring";
 import { villainActionBeforeHero, type PostflopTrainingSpot } from "../../core/postflopTrainingSpot";
 import { emptySessionScore, isHit, recordAnswer } from "../../core/sessionScore";
-import { MODEL_BET_RATIO, solvedBetSizing } from "../../data/ranges/solvedBetSizing";
 import { CS, localizedText } from "../cs";
 import { formatBbAmount, formatDecimal, formatEvLoss, formatSignedBb } from "../kit/format";
 import { outcomeChip, type OutcomeChipKind } from "../kit/outcomeChip";
 import { playingCard } from "../kit/playingCard";
 import { postflopPokerTable } from "../kit/pokerTable";
 import { formatSharePercent, strategyBar, strategyLegend } from "../kit/strategyBar";
-import { openRangeDialog } from "../kit/rangeDialog";
 import { postflopModelNotes } from "../postflopModelNotes";
-import { renderPostflopRangeMatrix } from "../postflopRangeMatrixView";
 import { colorForPostflopAction } from "../rangeMatrixView";
+import { actionText, facingBetBb } from "./postflopActionText";
+import { openPostflopRange } from "./postflopRange";
 import { actionButton, button, createTrainerFrame, el, nextSpotRow } from "./trainerFrame";
 
 /**
@@ -98,44 +97,6 @@ const EV_DECIMALS = 2;
 
 function defaultNow(): number {
   return typeof performance !== "undefined" ? performance.now() : Date.now();
-}
-
-/** Sázka, které hráč čelí, když ji vyřešené pravidlo nese. */
-function facingBetBb(spot: PostflopTrainingSpot): number | undefined {
-  const source = spot.explanation.source;
-  return source.kind === "STRATEGY_PACK" ? source.facingBetBB : undefined;
-}
-
-/**
- * Název akce a částka, když akce stojí žetony.
- *
- * Velikost sázky je ta, kterou solve za tlačítkem hrál (`solvedBetSizing`);
- * bez vyřešené velikosti modelová, se kterou počítá i simulátor linky, takže
- * tlačítko a bank po akci mluví o téže sázce.
- */
-function actionText(spot: PostflopTrainingSpot, action: PostflopAction): { label: string; detail?: string } {
-  switch (action) {
-    case "BET_SMALL":
-    case "BET_BIG": {
-      const sizing = solvedBetSizing(spot.explanation.source, action);
-      if (sizing?.allIn === true) return { label: "All-in", detail: formatBbAmount(spot.effectiveStackBB) };
-      const ratio = sizing?.ratio ?? MODEL_BET_RATIO[action];
-      return {
-        label: `Bet ${formatSharePercent(ratio)}`,
-        detail: formatBbAmount(Math.min(spot.effectiveStackBB, spot.potBB * ratio)),
-      };
-    }
-    case "CALL": {
-      const bet = facingBetBb(spot);
-      return bet === undefined ? { label: "Call" } : { label: "Call", detail: formatBbAmount(bet) };
-    }
-    case "CHECK":
-      return { label: "Check" };
-    case "RAISE":
-      return { label: "Raise" };
-    case "FOLD":
-      return { label: "Fold" };
-  }
 }
 
 /**
@@ -253,14 +214,10 @@ export function createPostflopTrainerView(
    */
   function rangeButton(spot: PostflopTrainingSpot): HTMLButtonElement {
     const range = button(doc, "dx-btn dx-btn--secondary dx-trainer__range", "Range");
-    range.addEventListener("click", () => openRangeDialog(
+    range.addEventListener("click", () => openPostflopRange(
       doc,
+      spot,
       `${spot.heroPosition} vs ${spot.villainPosition} · ${STREET_LABEL[spot.street]}`,
-      (dialog) => {
-        const matrix = el(doc, "div", "range-modal__matrix");
-        dialog.appendChild(matrix);
-        renderPostflopRangeMatrix(spot, matrix);
-      },
     ));
     return range;
   }

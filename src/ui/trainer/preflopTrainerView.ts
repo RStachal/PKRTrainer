@@ -11,7 +11,7 @@ import { outcomeChip, type OutcomeChipKind } from "../kit/outcomeChip";
 import { playingCard } from "../kit/playingCard";
 import { pokerTable } from "../kit/pokerTable";
 import { colorForActionKey } from "../rangeMatrixView";
-import { openRangeModal } from "../rangeModal";
+import { openPreflopRange } from "./preflopRange";
 import { actionButton, button, createTrainerFrame, el, nextSpotRow } from "./trainerFrame";
 
 /**
@@ -171,8 +171,8 @@ export function createPreflopTrainerView(
     const extra: HTMLElement[] = [];
     const store = session.rangeStore;
     if (store !== null) {
-      const range = button(doc, "dx-btn dx-btn--secondary", "Range");
-      range.addEventListener("click", () => openRangeModal(doc, spot, store));
+      const range = button(doc, "dx-btn dx-btn--secondary dx-trainer__range", "Range");
+      range.addEventListener("click", () => openPreflopRange(doc, spot, store));
       extra.push(range);
     }
     const { row, next: nextButton } = nextSpotRow(doc, () => next(), extra);

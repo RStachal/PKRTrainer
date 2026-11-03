@@ -165,6 +165,9 @@ export function createTrainerFrame(doc: Document, options: TrainerFrameOptions):
 
   function onKeyDown(event: KeyboardEvent): void {
     if (!root.isConnected || root.closest("[hidden]") !== null) return;
+    // Nad obrazovkou je modální dialog (range): klávesy patří jemu. Enter na
+    // buňce matice jinak přeskočil spot za dialogem (3. 11. 2026, E2E fáze 2).
+    if (doc.querySelector('[aria-modal="true"]') !== null) return;
     if (event.altKey || event.ctrlKey || event.metaKey || isTypingTarget(event.target)) return;
     if (/^[1-9]$/.test(event.key) && !options.isAnswered()) {
       const action = actions.querySelectorAll<HTMLButtonElement>("button")[Number(event.key) - 1];

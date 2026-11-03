@@ -147,7 +147,9 @@ která na nich stojí.
 **Fáze C – obsah a GUI (týdny 2–3)**
 
 8. GUI fáze 2 (matice 13×13 bez vodorovného posunu na 360 px) a fáze 3
-   (předvolby, start jedním klepnutím).
+   (předvolby, start jedním klepnutím). *(3. 11.: fáze 2 hotová, bod 334. Pruh
+   frekvencí v buňce čeká na rozhodnutí o formátu packů. Před fází 3 část
+   úklidu starých stylů, protože CSS je na 79,96 z 80 KiB.)*
 9. Packy pro rodiny z dávky, jak se dokončují; mechanická kontrola; čtení
    majitelem přes `mtt:review-desk` (druhé sezení).
 10. GUI fáze 4 (statistiky a slabá místa) a 5 (úklid starých stylů).

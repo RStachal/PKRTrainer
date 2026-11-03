@@ -1,9 +1,11 @@
 # Redesign GUI – plán
 
-**Stav:** fáze 0, 0b a 1 hotové. Od 3. 11. 2026 je nové GUI tréninku výchozí,
-klasika zůstává za `?ui=classic` (deník 333). Další je fáze 2 (matice). Vlastník
-návrh 22. 10. schválil: „myslím, že to vypadá dobře, můžeš pokračovat." Průběh
-a naměřená čísla jsou na konci dokumentu.
+**Stav:** fáze 0, 0b, 1 a 2 hotové. Od 3. 11. 2026 je nové GUI tréninku
+výchozí, klasika zůstává za `?ui=classic` (deník 333); matice range nového GUI
+se vejde na 360 px (deník 334). Další je fáze 3 (nastavení), před ní úklid
+starých stylů kvůli rozpočtu CSS. Vlastník návrh 22. 10. schválil: „myslím, že
+to vypadá dobře, můžeš pokračovat." Průběh a naměřená čísla jsou na konci
+dokumentu.
 
 **Zadání vlastníka (22. 10. 2026):** „nelíbí se mi současné GUI … budeme potřebovat
 re-design tak, aby aplikace vypadala moderně, profesionálně, přehledně a byla
@@ -344,3 +346,76 @@ Verdikty v čipu musí pokrýt všechno, co dnes doména vrací:
 - **Na 360 px se překrývají sedadla.** Sedadlo protihráče na BB leží přes
   sedadlo hráče (snímek `mobile-360-05-flop-result-full`). Je to chyba
   starého stolu a nové rozvržení ji musí vyřešit.
+
+### Fáze 2, 3. 11. 2026: matice range
+
+Nové GUI otevírá „Range“ v dialogu s maticí z kitu: `src/ui/kit/handMatrix.ts`
+(mřížka) a `src/ui/kit/rangeView.ts` (matice, detail ruky, souhrn s legendou).
+Obsah dodávají `src/ui/trainer/preflopRange.ts` a `postflopRange.ts`. Klasické
+GUI má dál starou matici; zmizí ve fázi 5.
+
+- **Vejde se na telefon.** Řádek je mřížka třinácti sloupců, záhlaví
+  s hodnotami karet není (nese je popisek buňky a čtrnáctý sloupec by na
+  360 px vzal buňkám místo). Na 360 px vychází buňka na 22,9 px, jak počítal
+  směr (bod 7). E2E to hlídá na všech čtyřech šířkách: 169 buněk ve 13
+  řádcích, dialog ani stránka se neposouvají do strany, buňka aspoň 18 px,
+  detail k ruce hráče hned a k jiné ruce po klepnutí, kontrast, Escape.
+
+  | Šířka | Buňka | Vyhodnocení preflop / postflop |
+  |---|---|---|
+  | mobil 360 | 22,9 px | 9,6 / 10,8 ms |
+  | mobil 390 | 25,2 px | 11,3 / 11,1 ms |
+  | mobil 412 | 26,9 px | 13,6 / 15,2 ms |
+  | desktop 1280 | 37,9 px | 48,3 / 34,2 ms (stroj pod zátěží) |
+
+  Kontrol kontrastu je 160 místo 128.
+- **Ovládání podle vzoru mřížky WAI-ARIA.** Tabulátor vede jen na vybranou
+  buňku, šipky, Home a End přesouvají výběr i detail. Ruka hráče má bílý
+  vnitřní rámeček, vybraná ruka obrys v akcentu.
+- **Popisek je čitelný na každé barvě.** Na modré barvě callu (#3d7eb8)
+  nemá 4,5:1 ani bílý, ani tmavý text. Popisek proto leží na tmavém
+  průsvitném podkladu (`--dx-matrix-plate`, stránka z 64 %).
+  `handMatrix.test.ts` počítá kontrast přes všechny barvy akcí, všechny barvy
+  síly ruky i přes bílou.
+- **Preflop:** plná barva akce, protože pack nese doporučené akce, ne
+  frekvence. Souhrn „Hraješ 2,1 % rukou (28 z 1 326 kombinací), zbytek je
+  fold.“, pruh složení range a legenda, která zvýrazní akci v matici. Detail
+  ukazuje doporučení, další správné akce a EV akcí, když je pack nese.
+- **Postflop:** buňka má barvu akce, kterou ruka hraje nejčastěji (barva
+  tlačítka), blaf je šrafovaný. Souhrn ukazuje frekvence celé range vážené
+  kombinacemi a podíl blafů v sázkách. Detail ukazuje ruku na desce, průměr
+  skupiny a EV jednotlivých kombinací. Bez kbelíků (heuristika) ukáže sílu
+  rukou na desce a řekne to.
+
+**Pruh frekvencí v každé buňce, jak ho má návrh, zatím není.** Vyřešené packy
+nenesou strategii po třídách rukou. Kbelík jsou všechny třídy se stejnou
+převažující akcí a jeho směs je jejich průměr (`classesByDominantAction`
+v `turnStrategyRuleBuilder.ts`; flop a river mají týž tvar). Pruh v buňce by
+ukazoval průměr skupiny, jako by patřil té ruce. Frekvence proto jsou
+v souhrnu a v detailu, s poznámkou, že jde o průměr skupiny. Kdyby je packy
+nesly po třídách, pack by vyrostl. Turnový pack
+`mtt9-50bb-sb-bb-srp-oop-cbet-midspr` (459 KB) má 258 pravidel a 22 754
+záznamů tříd, v průměru 3,7 akce na pravidlo; směs v celých procentech by
+přidala zhruba 230 KB. Je to rozhodnutí o formátu packů, ne o vzhledu.
+
+**Nalezeno cestou:**
+
+- **Klasická matice ukazovala jinou range, než podle které se hodnotilo.**
+  Klíč záznamu nesl jen sedačku protihráče, hodnocení i scénář stacků (ICM)
+  a jmenované dorovnávající. Obě matice teď berou klíč z jednoho místa
+  (`gradedRangeKey` v `rangeMatrixView.ts`).
+- **Enter v dialogu přeskočil spot.** Klávesnice obrazovky poslouchá celý
+  dokument, takže Enter na buňce matice kromě výběru ruky klikl i na „Další
+  spot“ za dialogem. Týkalo se to i staré matice v dialogu z fáze 1. Našlo
+  to první E2E fáze 2: po zavření dialogu už „Další spot“ nebyl. Rámec
+  obrazovky teď klávesy nebere, dokud je otevřený modální dialog
+  (`trainerFrame.ts`, test v `postflopTrainerView.test.ts`).
+- **Legenda síly ruky vynechávala „Made flush“.** Buňka s barvou na desce
+  měla barvu bez položky v legendě (`CATEGORY_ORDER`).
+- **Prohlídka UI v novém GUI končila na flopu.** Postflopové kroky měly
+  selektory klasiky. Teď má vlastní a fotí i dialog s range (`03b`, `06`).
+
+**Rozpočet CSS je skoro vyčerpaný:** 79,96 z 80 KiB. Položka legendy proto
+používá tlačítko z kitu. Fáze 3 a 4 se do stropu nevejdou, dokud se neuklidí
+staré styly obrazovek, které nové GUI už nahradilo, nebo dokud se nerozhodne
+o stropu. Úklid je fáze 5, část z něj tedy půjde dřív.

@@ -171,8 +171,10 @@ function matrixGroup(cell: ProductionCell | undefined): MatrixGroup {
 
 
 /** Pořadí kategorií pro režim, ve kterém akci neznáme: od nejsilnější dolů. */
-const CATEGORY_ORDER: readonly FlopzillaCategory[] = [
+export const CATEGORY_ORDER: readonly FlopzillaCategory[] = [
   "SET_PLUS",
+  // Chyběl, takže buňka s barvou na desce měla barvu bez položky v legendě.
+  "MADE_FLUSH",
   "MADE_STRAIGHT",
   "TWO_PAIR",
   "OVERPAIR",
@@ -389,7 +391,7 @@ function detailPanel(doc: Document): HTMLElement {
  * až o čtrnáct blindů, protože `76` se dvěma srdci na srdcové desce je jiná ruka
  * než `76` bez nich.
  */
-function comboEvsByHandClass(
+export function comboEvsByHandClass(
   spot: PostflopTrainingSpot,
 ): Map<HandLabel, { combo: string; values: readonly { action: PostflopAction; evBb: number }[] }[]> {
   const byClass = new Map<HandLabel, {
@@ -679,6 +681,11 @@ function categoryShare(count: number): string {
 
 export function flopzillaCategoryLabel(category: FlopzillaCategory): string {
   return CATEGORY_DEFS[category].label;
+}
+
+/** Barva síly ruky pro matici bez strategie (heuristika, spot mimo obsah). */
+export function flopzillaCategoryColor(category: FlopzillaCategory): string {
+  return CATEGORY_DEFS[category].color;
 }
 
 /**

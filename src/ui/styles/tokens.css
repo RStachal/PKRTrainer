@@ -62,6 +62,14 @@
   --dx-felt-rail: #1a222e;
 
   /*
+   * Matice range: podklad popisku a šrafování blafu. Podklad je stránka
+   * z 64 %, takže popisek přečte i na nejsvětlejší barvě buňky, a na směsi
+   * barev pod sebou taky (tests/unit/handMatrix.test.ts).
+   */
+  --dx-matrix-plate: rgba(13, 17, 23, 0.64);
+  --dx-matrix-hatch: rgba(13, 17, 23, 0.5);
+
+  /*
    * Písmo systémové: aplikace je offline-first, takže nic ze sítě
    * (zásada 4 v Agents/design.md). Čísla mají stejnou šířku, aby sloupce EV
    * neposkakovaly.

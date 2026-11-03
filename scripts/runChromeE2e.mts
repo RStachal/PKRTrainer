@@ -650,8 +650,13 @@ try {
   // Nové GUI tréninku za přepínačem (Agents/ui-redesign-plan.md, fáze 1,
   // krok 5). Běží na všech šířkách a stejnými vstupy jako zbytek E2E, aby se
   // přepínač dal otočit na výchozí s důkazem, ne s odhadem.
-  const nextUiResults: Array<{ viewport: string; feedbackMs: number }> = [];
-  const nextUiPostflopResults: Array<{ viewport: string; feedbackMs: number; line: "passed" | "unavailable" }> = [];
+  const nextUiResults: Array<{ viewport: string; feedbackMs: number; rangeCellPx: number }> = [];
+  const nextUiPostflopResults: Array<{
+    viewport: string;
+    feedbackMs: number;
+    line: "passed" | "unavailable";
+    rangeCellPx: number;
+  }> = [];
   for (const viewport of activeViewports) {
     if (expectedPreflop !== "blocked") {
       nextUiResults.push(await runNextUiScenario(cdp, viewport, browserErrors, contrastAudits));
@@ -787,11 +792,15 @@ try {
   console.log(`- contrast: ${contrastAudits.flatMap((audit) => audit.entries).length} checks passed`);
   console.log("- service worker: real upgrade and previous-build chunk rollback passed");
   for (const result of nextUiResults) {
-    console.log(`- next UI ${result.viewport}: question/feedback/next passed, feedback ${result.feedbackMs} ms`);
+    console.log(
+      `- next UI ${result.viewport}: question/feedback/next passed, feedback ${result.feedbackMs} ms,`
+      + ` range 169 cells ${result.rangeCellPx} px`,
+    );
   }
   for (const result of nextUiPostflopResults) {
     console.log(
       `- next UI postflop ${result.viewport}: board/question/feedback/next passed, feedback ${result.feedbackMs} ms,`
+      + ` range 169 cells ${result.rangeCellPx} px,`
       + ` line ${result.line === "passed" ? "passed" : "not offered in this build"}`,
     );
   }
@@ -906,7 +915,7 @@ async function activate(
   if (mode === "keyboard") {
     await evaluate(client, `(() => {
       const element = document.querySelector(${JSON.stringify(selector)});
-      if (!(element instanceof HTMLElement)) throw new Error("Missing interactive element");
+      if (!(element instanceof HTMLElement)) throw new Error(${JSON.stringify(`Missing interactive element: ${selector}`)});
       element.scrollIntoView({ block: "center" });
       element.focus();
     })()`);
@@ -925,7 +934,7 @@ async function activate(
 
   const point = await evaluate<{ x: number; y: number }>(client, `(() => {
     const element = document.querySelector(${JSON.stringify(selector)});
-    if (!(element instanceof HTMLElement)) throw new Error("Missing interactive element");
+    if (!(element instanceof HTMLElement)) throw new Error(${JSON.stringify(`Missing interactive element: ${selector}`)});
     element.scrollIntoView({ block: "center" });
     const rect = element.getBoundingClientRect();
     return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
@@ -1062,7 +1071,7 @@ async function runNextUiScenario(
   viewport: Viewport,
   browserErrors: string[],
   contrastAudits: Array<{ viewport: string; surface: string; entries: ContrastAuditEntry[] }>,
-): Promise<{ viewport: string; feedbackMs: number }> {
+): Promise<{ viewport: string; feedbackMs: number; rangeCellPx: number }> {
   const input = viewport.mobile ? "touch" : "keyboard";
   browserErrors.length = 0;
   await client.send("Emulation.setDeviceMetricsOverride", {
@@ -1164,12 +1173,105 @@ async function runNextUiScenario(
     ]),
   });
 
+  const rangeCellPx = await checkRangeDialog(
+    client,
+    viewport,
+    input,
+    ".dx-trainer__feedback:not([hidden]) .dx-trainer__range",
+    `${viewport.name} next UI`,
+    contrastAudits,
+  );
+
   await activate(client, ".dx-trainer__next", input);
   await waitForSelector(client, ".dx-trainer__feedback[hidden]");
   await activate(client, ".dx-trainer__actions button", input);
   await waitForSelector(client, ".dx-trainer__feedback:not([hidden])");
   assert(browserErrors.length === 0, `${viewport.name} next UI: ${browserErrors.join(" | ")}`);
-  return { viewport: viewport.name, feedbackMs: Math.round(feedbackMs * 10) / 10 };
+  return { viewport: viewport.name, feedbackMs: Math.round(feedbackMs * 10) / 10, rangeCellPx };
+}
+
+/**
+ * Range v dialogu nového GUI (plán redesignu, fáze 2, „hotovo, když“: 169
+ * buněk bez vodorovného posunu na 360 px). Na každé šířce ověří mřížku,
+ * přetečení dialogu i stránky, šířku buňky, detail k ruce hráče hned a k jiné
+ * ruce po skutečném vstupu, kontrast a zavření Escapem. Vrací šířku buňky
+ * v px, ať je v reportu vidět, kolik zbylo.
+ */
+async function checkRangeDialog(
+  client: CdpClient,
+  viewport: Viewport,
+  input: "keyboard" | "touch",
+  button: string,
+  label: string,
+  contrastAudits: Array<{ viewport: string; surface: string; entries: ContrastAuditEntry[] }>,
+): Promise<number> {
+  await activate(client, button, input);
+  await waitForSelector(client, ".range-modal .dx-matrix__cell");
+  const view = await evaluate<{
+    cells: number;
+    rows: number;
+    dialogOverflow: number;
+    pageOverflow: number;
+    matrixOverflow: number;
+    cellPx: number;
+    heroSelected: boolean;
+    detailHand: string;
+    heroHand: string;
+    text: string;
+  }>(client, `(() => {
+    const dialog = document.querySelector(".range-modal__dialog");
+    const cells = [...dialog.querySelectorAll(".dx-matrix__cell")];
+    const hero = dialog.querySelector(".dx-matrix__cell[data-hero]");
+    const matrix = dialog.querySelector(".dx-matrix").getBoundingClientRect();
+    const inner = dialog.getBoundingClientRect();
+    return {
+      cells: cells.length,
+      rows: dialog.querySelectorAll('.dx-matrix [role="row"]').length,
+      dialogOverflow: dialog.scrollWidth - dialog.clientWidth,
+      pageOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      matrixOverflow: matrix.right - inner.right,
+      cellPx: Math.min(...cells.map((cell) => cell.getBoundingClientRect().width)),
+      heroSelected: hero?.getAttribute("aria-selected") === "true",
+      detailHand: dialog.querySelector(".dx-range__detail")?.dataset.hand ?? "",
+      heroHand: hero?.dataset.hand ?? "",
+      text: dialog.textContent ?? ""
+    };
+  })()`);
+  assertSourceFree(view.text, `${label} range`);
+  assert(view.cells === 169 && view.rows === 13, `${label} range: ${view.cells} cells in ${view.rows} rows`);
+  assert(view.dialogOverflow <= 1, `${label} range: dialog scrolls sideways by ${view.dialogOverflow}px`);
+  assert(view.pageOverflow <= 1, `${label} range: page overflow ${view.pageOverflow}px`);
+  assert(view.matrixOverflow <= 0, `${label} range: matrix sticks out of the dialog by ${view.matrixOverflow}px`);
+  // Návrh počítá s buňkou kolem 22 px na telefonu; pod 18 px se popisek nevejde.
+  assert(view.cellPx >= 18, `${label} range: cells only ${view.cellPx}px wide`);
+  assert(
+    view.heroSelected && view.detailHand === view.heroHand,
+    `${label} range: detail shows ${view.detailHand}, hero hand ${view.heroHand}`,
+  );
+  contrastAudits.push({
+    viewport: viewport.name,
+    surface: "next-ui-range",
+    entries: await auditContrast(client, viewport.name, `${label} range`, [
+      ".range-modal .dx-matrix__cell[data-hero] .dx-matrix__label",
+      ".range-modal .dx-range__detail .dx-range__title",
+      ".range-modal .dx-range__summary .dx-range__title",
+      ".range-modal .dx-range__key",
+    ]),
+  });
+
+  const other = view.heroHand === "AA" ? "KK" : "AA";
+  await activate(client, `.range-modal .dx-matrix__cell[data-hand="${other}"]`, input);
+  const picked = await evaluate<string>(
+    client,
+    `document.querySelector(".range-modal .dx-range__detail")?.dataset.hand ?? ""`,
+  );
+  assert(picked === other, `${label} range: tapping ${other} showed ${picked}`);
+
+  const escape = { key: "Escape", code: "Escape", windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 };
+  await client.send("Input.dispatchKeyEvent", { type: "keyDown", ...escape });
+  await client.send("Input.dispatchKeyEvent", { type: "keyUp", ...escape });
+  await waitForSelector(client, "body:not(:has(.range-modal))");
+  return Math.round(view.cellPx * 10) / 10;
 }
 
 /**
@@ -1183,7 +1285,7 @@ async function runNextUiPostflopScenario(
   viewport: Viewport,
   browserErrors: string[],
   contrastAudits: Array<{ viewport: string; surface: string; entries: ContrastAuditEntry[] }>,
-): Promise<{ viewport: string; feedbackMs: number; line: "passed" | "unavailable" }> {
+): Promise<{ viewport: string; feedbackMs: number; line: "passed" | "unavailable"; rangeCellPx: number }> {
   const input = viewport.mobile ? "touch" : "keyboard";
   const scope = ".postflop-output .dx-trainer";
   browserErrors.length = 0;
@@ -1310,6 +1412,14 @@ async function runNextUiPostflopScenario(
       `${scope} .dx-trainer__next`,
     ]),
   });
+  const rangeCellPx = await checkRangeDialog(
+    client,
+    viewport,
+    input,
+    `${scope} .dx-trainer__range`,
+    label,
+    contrastAudits,
+  );
 
   await activate(client, `${scope} .dx-trainer__next`, input);
   await waitForSelector(client, `${scope} .dx-trainer__feedback[hidden]`);
@@ -1381,7 +1491,7 @@ async function runNextUiPostflopScenario(
     line = "passed";
   }
   assert(browserErrors.length === 0, `${label}: ${browserErrors.join(" | ")}`);
-  return { viewport: viewport.name, feedbackMs: Math.round(feedbackMs * 10) / 10, line };
+  return { viewport: viewport.name, feedbackMs: Math.round(feedbackMs * 10) / 10, line, rangeCellPx };
 }
 
 async function runServiceWorkerUpgradeScenario(

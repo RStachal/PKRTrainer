@@ -149,7 +149,7 @@ const CATEGORY_PRIORITY: Record<ActionCategory, number> = {
 };
 
 /** Pořadí kategorií v legendě (fold první, pak dle logiky akcí). */
-const LEGEND_ORDER: ActionCategory[] = [
+export const LEGEND_ORDER: readonly ActionCategory[] = [
   "FOLD",
   "CALL",
   "LIMP",
@@ -284,6 +284,36 @@ const POSTFLOP_CATEGORY: Record<PostflopAction, ActionCategory> = {
  */
 export function colorForPostflopAction(action: PostflopAction): string {
   return CATEGORIES[POSTFLOP_CATEGORY[action]].color;
+}
+
+/** Název kategorie v legendě; pokerové termíny zůstávají anglicky. */
+export function rangeCategoryLabel(category: ActionCategory): string {
+  return CATEGORIES[category].label;
+}
+
+/**
+ * Klíč záznamu, podle kterého se spot hodnotil (`generateSpot` v drillEngine).
+ *
+ * Matice musí ukázat tu range, ze které se odpověď hodnotila. Dřív klíč nesl
+ * jen sedačku protihráče, takže spot se scénářem stacků (ICM) nebo
+ * s jmenovanými dorovnávajícími ukázal obecnější záznam, než podle kterého
+ * byla odpověď hodnocená (nalezeno 3. 11. 2026 při fázi 2 redesignu). Osy
+ * bere ze stavu stolu, který nese to, co `lookup` doopravdy vrátil.
+ *
+ * Volitelný přístup schválně: matici volají i spoty poskládané mimo drill
+ * (kompoziční lišta, historie) bez `tableState`.
+ */
+export function gradedRangeKey(spot: Spot): RangeKey {
+  const table = spot.tableState;
+  return {
+    position: spot.heroPos,
+    bucket: spot.effStack,
+    context: spot.context,
+    ante: spot.ante,
+    ...(table?.vsSeat === undefined ? {} : { vsSeat: table.vsSeat }),
+    ...(table?.stackSetupId === undefined ? {} : { stackSetupId: table.stackSetupId }),
+    ...(table?.flatCallers === undefined ? {} : { flatCallers: table.flatCallers }),
+  };
 }
 
 export function categoryForHand(keys: ActionKey[] | undefined): ActionCategory {
@@ -743,19 +773,10 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
     // záznamy v packu) má odpověď z záznamu proti té sedačce; bez sedačky v
     // klíči by hráč po odpovědi „Proti openu z BTN“ viděl obecnou matici
     // proti kalibrovanému otvírači - jinou range, než podle které byl
-    // ohodnocen. Bez zpřesněného záznamu padá klíč na obecný jako všude.
-    // Volitelný přístup schválně: matici volají i spoty poskládané mimo drill
-    // (kompoziční lišta, historie) bez `tableState`.
+    // ohodnocen. Totéž platí pro scénář a dorovnávající (`gradedRangeKey`).
+    // Bez zpřesněného záznamu padá klíč na obecný jako všude.
     const vsSeat = spot.tableState?.vsSeat;
-    const key: RangeKey = {
-      position: spot.heroPos,
-      bucket: spot.effStack,
-      context: spot.context,
-      ante: spot.ante,
-      ...(vsSeat === undefined ? {} : { vsSeat }),
-    };
-
-    const entry = store.lookup(key);
+    const entry = store.lookup(gradedRangeKey(spot));
 
     // Req 10.6: pro daný spot nejsou dostupná data ranges.
     if (entry === undefined) {

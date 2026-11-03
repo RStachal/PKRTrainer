@@ -22,7 +22,7 @@ export function renderRangeModalButton(
   root.appendChild(button);
 }
 
-/** Otevře dialog s maticí range; nové GUI ho volá z vlastního tlačítka. */
+/** Otevře dialog se starou maticí range; nové GUI má vlastní (`trainer/preflopRange.ts`). */
 export function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
   openRangeDialog(doc, `${spot.context} ${spot.heroPos} ${spot.effStack} BB`, (dialog) => {
     dialog.appendChild(renderRangeModelSummary(doc, currentMttPreflopRangePack(spot.ante), spot));
