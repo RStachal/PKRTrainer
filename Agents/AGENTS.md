@@ -349,7 +349,10 @@ nedodat rozbitou věc a nikdy netvrdit víc, než co je změřené**.
 - Keep the app offline-capable.
 - Keep Android WebView compatibility in mind.
 - Prefer small, reviewable diffs.
-- Do not commit automatically.
+- Commit and push after each verified block - owner decision D7, 3. 11. 2026
+  (`Agents/plan-dokonceni-mtt-2026-11.md`), after a week of unpushed commits was
+  lost with the machine. Never commit unverified work. (Until then: "Do not
+  commit automatically.")
 - After changes, run build/tests if available.
 
 ## Refactor direction
