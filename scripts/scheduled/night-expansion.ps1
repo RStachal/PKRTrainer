@@ -14,7 +14,13 @@ if (-not $python) {
 # Vikendovy rozvrh (od 15. 10. 2026) se pozna z Planovace; dokud ho uloha nema,
 # chova se vsechno jako dosud - okno do 07:00, o vikendu pres den nic.
 $weekend = Test-WeekendSchedule -TaskName "PKRTrainer-Night-Expansion"
-if (-not (Test-NightWindow -Log $log -Weekend $weekend -Repo $repo)) { exit 0 }
+# Mimo okno: tik po rannim otevreni vika nebo odemceni zazalohuje checkpointy
+# z noci (D7, Invoke-CheckpointBackup). Skript zalohy sam overi, ze je vsedni
+# den pres den - v okne solveru nebali.
+if (-not (Test-NightWindow -Log $log -Weekend $weekend -Repo $repo)) {
+  Invoke-CheckpointBackup -Repo $repo -Python $python
+  exit 0
+}
 # Plny cyklus packu a solver se o stroj nedeli (viz pack-cycle.ps1): kdyz
 # cyklus bezi, solver pocka na dalsi tik. Mrtvy proces v zamku se nepocita.
 if (Test-PackCycleRunning -Repo $repo) {
@@ -40,4 +46,6 @@ Write-NightLog -Log $log -Message "konec okna $until (vikendovy rozvrh: $weekend
 # parametry.
 $command = "/c set PYTHONIOENCODING=utf-8 && `"$python`" `"$script`" --until=$until --workers=8 --river-workers=16 --river-threads=1 --turn-share=0.5 --parallel=2 --threads=8 >> `"$log`" 2>&1"
 $process = Start-Process -FilePath "cmd.exe" -ArgumentList $command -WindowStyle Hidden -Wait -PassThru
+# Noc doběhla; skončila-li po sedmé ve všední den, záloha jde hned.
+Invoke-CheckpointBackup -Repo $repo -Python $python
 exit $process.ExitCode

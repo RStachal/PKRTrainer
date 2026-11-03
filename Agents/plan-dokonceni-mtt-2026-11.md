@@ -129,13 +129,15 @@ která na nich stojí.
    ráno, což stojí čas, ne obsah. Obnovenému rozkladu chybí 5 turnových a 8
    riverových desek dodaných packů - generátory je teď nepřestaví, bod 331.
    Ruční cyklus pro rodinu z noci proběhl, flop 83/83.)*
-4. Noční záloha nových checkpointů (oddíl 6). *(Čeká na cíl od majitele.)*
+4. Noční záloha nových checkpointů (oddíl 6). *(3. 11.: majitel – podsložka
+   v DrillEV. `zaloha\checkpointy`, balí ji ranní tik noční úlohy mimo okno;
+   první běh 14 checkpointů, 1 574 → 567 MB. Mimo stroj ji dostává majitel.)*
 
 **Fáze B – proces a rozhodnutí (týden 1)**
 
 5. Skills a `CLAUDE.md` v repozitáři (oddíl 6). *(3. 11.: hotovo.)*
 6. Sezení majitele: D1–D7 a třídění 24 bodů (D5). *(D1–D7 přijaté 3. 11.;
-   třídění zbývá.)*
+   návrh třídění v `trideni-agendy-2026-11.md` čeká na potvrzení.)*
 7. GUI fáze 1 dokončit: režim linky (3c), statistika nezapočítá neposouzenou
    odpověď jako chybu (schéma záznamu), přepínač na výchozí po zeleném E2E.
 

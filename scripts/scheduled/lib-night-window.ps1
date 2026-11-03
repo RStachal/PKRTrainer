@@ -59,6 +59,23 @@ function Get-NightPython {
   return $null
 }
 
+# Záloha checkpointů do `zaloha\checkpointy` (rozhodnutí D7, 3. 11. 2026).
+#
+# Volá ji expanze ráno: tik po otevření víka nebo odemčení (mimo okno) a konec
+# noci. Kdy se smí balit, rozhoduje skript sám (všední den 07-20), takže tik
+# v okně solveru nic nezabalí. Vlastní log, ať řádky zálohy nemíchá s logem
+# expanze, ze kterého se počítá cena desky.
+function Invoke-CheckpointBackup {
+  param([string]$Repo, [string]$Python)
+  $backup = Join-Path $Repo "scripts\backup\backup_checkpoints.py"
+  if (-not $Python -or -not (Test-Path $backup)) { return }
+  $backupLog = Join-Path $Repo "artifacts\backup-checkpoints.log"
+  $command = "/c set PYTHONIOENCODING=utf-8 && `"$Python`" `"$backup`" >> `"$backupLog`" 2>&1"
+  try {
+    Start-Process -FilePath "cmd.exe" -ArgumentList $command -WindowStyle Hidden -Wait | Out-Null
+  } catch { }
+}
+
 # Zapsat, z čeho stroj doopravdy jede.
 #
 # ## Proč to tu je

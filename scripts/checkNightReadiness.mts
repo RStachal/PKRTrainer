@@ -210,8 +210,13 @@ for (const task of TASKS) {
       .map((match) => match[1])
       .filter((boundary) => /(Z|[+-]\d\d:\d\d)$/.test(boundary)),
   });
-  const logon = /<LogonType>([^<]+)<\/LogonType>/.exec(xml)?.[1] ?? "chybí";
-  add(`${task.name}: běží i bez přihlášení`, logon === "S4U", logon, "S4U");
+  // S4U, nebo účet SYSTEM: obojí běží bez přihlášeného uživatele. Úlohy jsou od
+  // 30. 10. 2026 pod SYSTEM (`install-night-tasks.ps1`, bod 1) a ten v exportu
+  // `LogonType` nenese, jen `UserId` S-1-5-18 - kontrola psaná pro S4U ho
+  // 3. 11. hlásila jako „chybí".
+  const system = /<UserId>S-1-5-18<\/UserId>/.test(xml);
+  const logon = system ? "SYSTEM" : /<LogonType>([^<]+)<\/LogonType>/.exec(xml)?.[1] ?? "chybí";
+  add(`${task.name}: běží i bez přihlášení`, logon === "S4U" || logon === "SYSTEM", logon, "S4U nebo SYSTEM");
 
   const state = powershell(`(Get-ScheduledTask -TaskName '${task.name}').State`);
   add(`${task.name}: není vypnutá`, state !== "" && state !== "Disabled", state || "neznámý", "Ready/Running");

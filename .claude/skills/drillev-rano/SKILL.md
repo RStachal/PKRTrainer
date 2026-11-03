@@ -63,6 +63,11 @@ a riveru by vypustily pravidla z desek, které obnovený rozklad nemá
 (`packBoardGuard.mts`; odmítnutí „dodaný ... pack stojí na N deskách" je
 pojistka, ne vada).
 
+Záloha checkpointů (D7): ranní tik noční úlohy je zabalí do
+`zaloha/checkpointy` (log `artifacts/backup-checkpoints.log`, řádek „záloha
+checkpointů: zabaleno N"). Ručně `python scripts/backup/backup_checkpoints.py`,
+obnova po ztrátě `--restore`. Mimo stroj ji kopíruje majitel.
+
 Sobota: plný cyklus pouští úloha `PKRTrainer-After-Night-TurnEv` v 07:00
 (log `artifacts/after-night-full.log`). Necommituje - v pondělí ho projdi,
 ověř branou a commitni jako data.

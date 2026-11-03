@@ -108,6 +108,15 @@ try {
   $wakeQuery = $esc::Escape("<QueryList><Query Id=`"0`" Path=`"System`"><Select Path=`"System`">*[System[Provider[@Name='Microsoft-Windows-Kernel-Power'] and EventID=507]]</Select></Query></QueryList>")
   $resumeQuery = $esc::Escape("<QueryList><Query Id=`"0`" Path=`"System`"><Select Path=`"System`">*[System[Provider[@Name='Microsoft-Windows-Power-Troubleshooter'] and EventID=1]]</Select></Query></QueryList>")
 
+  # Kdo smí úlohu vidět (bod 8). Popisovač v XML ale Plánovač použije jen při
+  # **založení** úlohy: 3. 11. 2026 zůstaly přeinstalované noční úlohy běžnému
+  # účtu neviditelné, zatímco nově založená ranní vidět byla. Nastavuje se proto
+  # po registraci ještě výslovně (`SetSecurityDescriptor`), při každé instalaci.
+  $taskSddl = "D:(A;;FA;;;BA)(A;;FA;;;SY)(A;;FR;;;AU)"
+  $scheduler = New-Object -ComObject Schedule.Service
+  $scheduler.Connect()
+  $taskFolder = $scheduler.GetFolder("\")
+
   $nightTasks = @(
     @{ Name = "PKRTrainer-Night-Decomposition"; Script = "night-decomposition.ps1"; WeekdayAt = "20:00"; WeekendAt = "00:00"; BootDelay = "PT2M"
        Description = "DrillEV: nocni rozklad (porada mtt:daily, turn/river vrstvy). Okno po-pa 20-07, vikend cely." },
@@ -212,6 +221,7 @@ try {
 </Task>
 "@
     Register-ScheduledTask -TaskName $name -Xml $xml -Force | Out-Null
+    $taskFolder.GetTask($name).SetSecurityDescriptor($taskSddl, 0)
     $task = Get-ScheduledTask -TaskName $name
     $kinds = ($task.Triggers | ForEach-Object { $_.CimClass.CimClassName -replace '^MSFT_Task', '' -replace 'Trigger$', '' }) -join ", "
     Write-Host ("  SYSTEM, priorita {0}, strop {1}, WakeToRun {2}" -f $task.Settings.Priority, $task.Settings.ExecutionTimeLimit, $task.Settings.WakeToRun)
@@ -276,6 +286,7 @@ try {
 </Task>
 "@
   Register-ScheduledTask -TaskName $morning -Xml $xml -Force | Out-Null
+  $taskFolder.GetTask($morning).SetSecurityDescriptor($taskSddl, 0)
   $task = Get-ScheduledTask -TaskName $morning
   Write-Host ("  SYSTEM, priorita {0}, strop {1}, WakeToRun {2}, zmeskany start: ne" -f $task.Settings.Priority, $task.Settings.ExecutionTimeLimit, $task.Settings.WakeToRun)
   Write-Host "  sobota 07:00: after-night.ps1 -> plny cyklus (pack-cycle.ps1); pateci noc konci v sobotu v 07:00"

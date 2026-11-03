@@ -27,6 +27,10 @@ artifacts/
 #
 # Ignorování platí jen pro nesledované soubory, takže stačilo jednou `-f`.
 
+# Záloha checkpointů (rozhodnutí D7, 3. 11. 2026): gigabajty, mimo stroj je
+# dostává majitel - `scripts/backup/backup_checkpoints.py`.
+/zaloha/
+
 # Generated FTP release packages
 deploy/pkrtrainer-ftp-*/
 deploy/pkrtrainer-ftp-*.zip
