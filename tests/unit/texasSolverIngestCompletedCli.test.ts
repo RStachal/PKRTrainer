@@ -1,18 +1,31 @@
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { itWithSolverOutput } from "../solverInputs";
-
 const TMP_ROOT = join(process.cwd(), "artifacts", "test-texas-solver-ingest");
+// Povel ke sloučení draftů CLI plánuje, jen když drafty na disku leží, a ty
+// leží v `artifacts/` (mimo git), ne v dočasném kořeni testu. Na stroji bez nich
+// - CI, a od ztráty stroje 30. 10. 2026 i tenhle (deník 328) - test chybějící
+// vstup hlásil jako „o povel míň" (3 místo 4). Podmínka je táž jako v CLI
+// (`defaultMergeInputDirs` a `draftFilesExist` v
+// `ingestTexasSolverCompletedCoverage.mts`); existence adresáře nestačí, 3. 11.
+// 2026 tu ležel prázdný.
+const SB_OOP_CBET_DRAFTS = [
+  "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR-ROOT",
+  "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR-ROOT",
+  "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR-ROOT",
+].map((name) => join("artifacts/texas-solver-review-integration/normalized-drafts", name));
+const itWithMergeDrafts = SB_OOP_CBET_DRAFTS.some((dir) => (
+  existsSync(join(dir, "normalized.candidate.json")) && existsSync(join(dir, "permission.candidate.json"))
+)) ? it : it.skip;
 
 afterEach(() => {
   rmSync(TMP_ROOT, { recursive: true, force: true });
 });
 
 describe("mtt:texas-solver-ingest-completed CLI", () => {
-  itWithSolverOutput("reviewuje SB vs BB OOP c-bet root node misto CHECK vetve", () => {
+  itWithMergeDrafts("reviewuje SB vs BB OOP c-bet root node misto CHECK vetve", () => {
     const familyId = "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR";
     const outputBase = join(TMP_ROOT, "output", "texas-solver");
     const rawDir = join(outputBase, familyId, "raw");

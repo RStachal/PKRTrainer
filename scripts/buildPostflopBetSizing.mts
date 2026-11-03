@@ -1,8 +1,10 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { readManifestEntries } from "./lib/manifestEntries.mts";
 import { betActionFor, type BetActionRule } from "./lib/postflopBetActionMapping.mts";
 import { SOLVER_PARAM_ROOT, SOLVER_PARAM_FILE, treeEconomicsFrom } from "./lib/solverFamilyParams.mts";
 import { generatedMttPostflopPilotPacks } from "../src/data/ranges/mttPostflopPilotPacks.generated";
+import { MTT_POSTFLOP_BET_SIZING } from "../src/data/ranges/postflopBetSizing.generated";
 
 /**
  * Recover what each pilot family's bet buttons actually mean.
@@ -134,9 +136,42 @@ function hasCheckpoint(family: string): boolean {
   });
 }
 
+/**
+ * Rodiny, které produkt dodává: položky manifestů vyřešených packů v gitu.
+ *
+ * Dodaný pack je důkaz, že rodina odsolvená byla, stejně dobrý jako checkpoint,
+ * ze kterého vznikl - a na rozdíl od checkpointu je v gitu. Monolitické
+ * checkpointy se 30. 10. 2026 ztratily se strojem (deník 328). Ranní cyklus
+ * (`runAfterNight.mts`) volá tenhle generátor s `--write` každé ráno, takže
+ * bez dodaného obsahu by tabulka spadla z 91 rodin na tři, které od té doby
+ * dosolvila noc (změřeno 3. 11. 2026), a hráč by u dodávaných rodin četl na
+ * tlačítku pevná procenta místo solvu.
+ *
+ * Parametry ale git nese jen u 20 rodin. Parametry dvojic sedaček
+ * (`pkrtrainer_mtt_seat_pair_expansion_v1`) byly jen na stroji, takže 63
+ * dodávaných rodin nemá od ztráty z čeho velikosti odvodit - změřeno týž den.
+ * Ty se převezmou z dosavadní tabulky (`collectBetSizing`): pack vznikl z těch
+ * parametrů, a dokud se nepřestaví, jeho tlačítka znamenají totéž.
+ */
+const SOLVED_MANIFESTS = [
+  ["src/data/ranges/flopSolvedManifest.generated.ts", "flop"],
+  ["src/data/ranges/turnSolvedManifest.generated.ts", "turn"],
+  ["src/data/ranges/riverSolvedManifest.generated.ts", "river"],
+] as const;
+
+export function shippedFamilies(): Set<string> {
+  const shipped = new Set<string>();
+  for (const [path, directory] of SOLVED_MANIFESTS) {
+    if (!existsSync(path)) continue;
+    for (const entry of readManifestEntries(readFileSync(path, "utf8"), directory)) shipped.add(entry.familyId);
+  }
+  return shipped;
+}
+
 export function collectBetSizing(paramRoot = PARAM_ROOT): Map<string, FamilyBetSizing> {
   const found = new Map<string, FamilyBetSizing>();
   if (!existsSync(paramRoot)) return found;
+  const shipped = shippedFamilies();
 
   for (const set of readdirSync(paramRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory())) {
     const dir = join(paramRoot, set.name);
@@ -144,10 +179,17 @@ export function collectBetSizing(paramRoot = PARAM_ROOT): Map<string, FamilyBetS
       const match = PARAM_FILE.exec(file);
       if (match?.groups === undefined) continue;
       const family = match.groups.family;
-      if (found.has(family) || !hasCheckpoint(family)) continue;
+      if (found.has(family) || !(shipped.has(family) || hasCheckpoint(family))) continue;
       const sizing = familySizingFrom(readFileSync(join(dir, file), "utf8"), family, ruleForShippedFamily(family));
       if (sizing !== null) found.set(family, sizing);
     }
+  }
+  // Dodávaná rodina bez parametrů na disku si nechá řádek, se kterým se dodává.
+  // Ne pro rodinu, která se nedodává: nastagovaný vstup do tabulky nepatří.
+  for (const family of shipped) {
+    const previous = MTT_POSTFLOP_BET_SIZING[family];
+    if (found.has(family) || previous === undefined) continue;
+    found.set(family, { ...previous, smallPct: [...previous.smallPct], bigPct: [...previous.bigPct] });
   }
   return found;
 }

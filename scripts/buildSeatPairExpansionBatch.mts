@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import {
@@ -16,6 +16,7 @@ import {
 } from "./lib/srpMonolithParams.mts";
 import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 import { queuedFamilies, readExpansionQueue, type ExpansionQueue } from "./lib/expansionQueue.mts";
+import { readManifestEntries } from "./lib/manifestEntries.mts";
 import type { Position, StackBucket } from "../src/core/types";
 
 /**
@@ -84,7 +85,7 @@ function demandByPattern(): { counts: Map<string, number>; measured: boolean } {
   }
 }
 const OUTPUT_DIR = EXPANSION_PARAMS_DIR;
-const WORK = "artifacts/decomposition";
+const FLOP_MANIFEST = "src/data/ranges/flopSolvedManifest.generated.ts";
 
 /**
  * Desky, na kterých se rodina zakládá.
@@ -151,7 +152,8 @@ const SEATS: readonly Position[] = [
 ];
 
 /**
- * Rodiny, které už máme - podle **hloubky**, a podle checkpointů, ne rozkladu.
+ * Rodiny, které už máme - podle **hloubky**, podle dodaného packu a checkpointů,
+ * ne podle rozkladu.
  *
  * ## Dvě vady, které tenhle výpočet měl, a obě bránily stagovat novou práci
  *
@@ -171,23 +173,35 @@ const SEATS: readonly Position[] = [
  * že osa je vyčerpaná - přitom na 40 bb chybělo třináct dvojic, které se nikdy
  * nenabídly.
  *
- * Drží se proto celé jméno rodiny (`MTT9_40BB_HJ_BB_SRP`) a sjednocení obou
- * zdrojů: co je vyřešené **nebo** rozložené, se znovu nestaguje.
+ * Drží se proto celé jméno rodiny (`MTT9_40BB_HJ_BB_SRP`).
  *
  * **A co leží ve frontě, taky.** Rodina nastagovaná, ale ještě bez checkpointu
  * do 15. 10. 2026 držená nebyla: návrh pro 40 bb hlásil „13 rodin k založení"
  * a bylo to přesně těch třináct, které ve frontě čekaly na noc. Zápis by je
  * zapsal znovu pod jinými čísly a runner, který tehdy kopie nerozeznával, by
  * každou desku solvil dvakrát.
+ *
+ * ## Rozklad důkaz není, dodaný flopový pack ano (2. 11. 2026)
+ *
+ * Starý stroj se 30. 10. 2026 ztratil a s ním všechny monolitické checkpointy:
+ * `CHECKPOINT_BASE` je mimo git i mimo zálohu, rozklad se obnovil z archivů.
+ * Dosavadní výpočet (checkpointy **nebo** rozklad) pak držel jen 33 rodin
+ * z rozkladu a návrh pro 25/40/50 bb vyšel **84 rodin, 504 desek** - většina
+ * z nich je přitom v produktu dodaná (flopový manifest nese 82 rodin a 1 083
+ * desek). Noc by je solvila znovu a `mtt:daily` by takovou frontu doplnil sám.
+ *
+ * Co je vyřešené, ví git: rodina se dodává až úplná, takže rodina s flopovým
+ * packem v manifestu je hotová, ať checkpoint na disku leží, nebo ne. Rozklad
+ * naopak důkaz není: 14 rodin 40/50 bb se mezi 16. a 26. 10. odsolvilo
+ * (`artifacts/expansion.log`, některé i rozložilo), jejich packy ale vznikly
+ * v ranních cyklech, které se do gitu nedostaly - a ty se solvit znovu mají.
+ * Drží se tedy: dodaný pack, neprázdný checkpoint, nebo místo ve frontě.
  */
 function heldFamilies(queue: ExpansionQueue): Set<string> {
   const held = new Set<string>();
 
-  if (existsSync(WORK)) {
-    for (const name of readdirSync(WORK)) {
-      if (!name.includes("__")) continue;
-      held.add(name.split("__")[0]);
-    }
+  for (const entry of readManifestEntries(readFileSync(FLOP_MANIFEST, "utf8"), "flop")) {
+    held.add(entry.familyId);
   }
 
   if (existsSync(CHECKPOINT_BASE)) {
@@ -318,6 +332,9 @@ console.log(demand.measured
 if (limit > 0 && planned.length > selected.length) {
   console.log(`omezeno:     ${selected.length} z ${planned.length} rodin (--limit)`);
 }
+// Jmény, v pořadí fronty: bez nich se dávka dá posoudit jen podle počtu, a počet
+// 2. 11. 2026 nepoznal, že z 84 rodin je většina dávno dodaná.
+console.log(`rodiny:      ${selected.map((row) => row.familyId).join(", ") || "-"}`);
 console.log(`hloubky:     ${DEPTHS.join(", ")} BB (měřeno: 25BB je 148 s na desku, 100BB přes 2,5 h)`);
 console.log(`konvence:    pot ${SRP_POT_BB} BB (otevření na ${OPEN_TO_BB}, dorovnání, složený SB), ${CHIPS_PER_BB} žetonů na blind`);
 if (skipped.length > 0) {
