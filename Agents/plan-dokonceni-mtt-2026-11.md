@@ -120,12 +120,15 @@ která na nich stojí.
 1. Commit a push dnešních změn; bod deníku o ztrátě a obnově. *(3. 11.: body
    deníku 328 a 329.)*
 2. Instalátor znovu přes den (úlohy budou čitelné i bez správce – `mtt:night-ready`).
+   *(3. 11.: instalátor nese i sobotní plný cyklus, D2. Pustit jako správce.)*
 3. Ověřit turnový a riverový generátor bez checkpointů; ranní cyklus pustit
    ručně nanečisto, pak `--write` jen pro rodiny z noci. *(3. 11.: projitý celý
    cyklus. Ničil by jen tabulku velikostí sázek - opraveno, bod 328. Turn bez
    checkpointů ukazuje „0 použitelných desek" jen v nálezu brány, pack
    neblokuje; `familiesToGenerate` bez checkpointu přegeneruje rodinu každé
-   ráno, což stojí čas, ne obsah.)*
+   ráno, což stojí čas, ne obsah. Obnovenému rozkladu chybí 5 turnových a 8
+   riverových desek dodaných packů - generátory je teď nepřestaví, bod 331.
+   Ruční cyklus pro rodinu z noci proběhl, flop 83/83.)*
 4. Noční záloha nových checkpointů (oddíl 6). *(Čeká na cíl od majitele.)*
 
 **Fáze B – proces a rozhodnutí (týden 1)**

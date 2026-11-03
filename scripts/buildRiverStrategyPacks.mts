@@ -22,6 +22,7 @@ import {
   type TurnReviewVerdictRecord,
 } from "../src/data/ranges/turnReviewVerdict";
 import { manifestLoadExpression, readManifestEntries } from "./lib/manifestEntries.mts";
+import { ALLOW_LOST_BOARDS, lostBoardsRefusal, packBoardsMissing } from "./lib/packBoardGuard.mts";
 
 /**
  * Postaví riverový pack z jedné rodiny.
@@ -293,6 +294,10 @@ const write = process.argv.includes("--write");
 // EV je drahé (kolem pěti minut na rodinu), takže se nepočítá při každém běhu.
 const writeEv = write && process.argv.includes("--ev");
 const family = familyArg?.split("=")[1];
+// Desky dodaného packu, které rozklad nemá (ztráta stroje, `packBoardGuard.mts`).
+const lostBoards = family === undefined || process.argv.includes(ALLOW_LOST_BOARDS)
+  ? []
+  : packBoardsMissing(join(OUT_DIR, `${family.toLowerCase().replace(/_/g, "-")}.generated.json`), ROOT);
 
 if (family === undefined) {
   console.error("Usage: npm run mtt:river-pack -- --family=<FAMILY_ID> [--write]");
@@ -312,6 +317,9 @@ if (family === undefined) {
 } else if (!existsSync(ROOT)) {
   console.error(`${ROOT} is absent; nothing to build from.`);
   process.exitCode = 1;
+} else if (lostBoards.length > 0) {
+  console.error(lostBoardsRefusal(family, "river", lostBoards));
+  process.exitCode = 2;
 } else {
   const directories = riverDirectories(family);
   const evidence: TurnFamilyEvidence = {

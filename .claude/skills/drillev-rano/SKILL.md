@@ -58,7 +58,14 @@ Start-Process cmd.exe -ArgumentList '/c cd /d C:\Work\DrillEV && npm run mtt:aft
 
 Čti log; běží minuty až hodiny. Před 3. 11. 2026 cyklus nesměl běžet vůbec:
 tabulka velikostí sázek by po ztrátě checkpointů přišla o dodávané rodiny
-(oprava v `buildPostflopBetSizing.mts`, `shippedFamilies`).
+(oprava v `buildPostflopBetSizing.mts`, `shippedFamilies`) a generátory turnu
+a riveru by vypustily pravidla z desek, které obnovený rozklad nemá
+(`packBoardGuard.mts`; odmítnutí „dodaný ... pack stojí na N deskách" je
+pojistka, ne vada).
+
+Sobota: plný cyklus pouští úloha `PKRTrainer-After-Night-TurnEv` v 07:00
+(log `artifacts/after-night-full.log`). Necommituje - v pondělí ho projdi,
+ověř branou a commitni jako data.
 
 ## 4. Brána a zápis
 

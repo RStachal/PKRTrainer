@@ -54,11 +54,17 @@
 #    obě noční úlohy jako „nenalezena", zatímco obě běžely. Popisovač dává
 #    přihlášeným uživatelům (AU) jen čtení (FR), spouštět ani měnit je nemohou.
 #
-# Ranní úlohy (`PKRTrainer-After-Night-TurnEv`, sobotní plný cyklus) se tu
-# záměrně **nezakládají**: přegenerovávají packy, a monolitické checkpointy, ze
-# kterých se packy staví, se se starým strojem ztratily. Dokud se neověří, že
-# generátory packů bez nich nic dodaného nepřepíšou, pouští se ranní cyklus
-# ručně. Wrappery bez ranní úlohy sobotní ráno nedrží (`Test-NightWindow`).
+# 9. **Sobotní plný cyklus packů v 07:00** (`PKRTrainer-After-Night-TurnEv`,
+#    rozhodnutí majitele D2 z 3. 11. 2026). Úloha pouští `after-night.ps1`, a ten
+#    v sobotu s víkendovým rozvrhem a stropem úlohy aspoň 8 h pustí plný cyklus
+#    (`pack-cycle.ps1`). Páteční noc tím končí v sobotu v 07:00 a solver počká,
+#    než cyklus doběhne (`Get-NightDeadline`, `Test-NightWindow`). Zakládá se až
+#    od 3. 11.: do té doby by cyklus po ztrátě checkpointů přepsal tabulku sázek
+#    a vypustil pravidla z desek, které obnovený rozklad nemá (deník 328, 331).
+#    `StartWhenAvailable` je vypnuté: zmeškaný cyklus by jinak naskočil
+#    odpoledne vedle běžícího solveru a obě práce by běžely několikrát déle.
+#    Všední lehký cyklus se zatím nezakládá - noční okno je do sedmé a lehký
+#    cyklus s ranní bránou by ho zkrátil; pouští se ručně (`drillev-rano`).
 #
 # Co se záměrně **nemění**: rychlé spuštění (`HiberbootEnabled`). Případ, kvůli
 # kterému tu jsou spouštěče, je restart, a ten je vždycky plný boot.
@@ -212,6 +218,67 @@ try {
     Write-Host "  spoustece: $kinds"
     Write-Host "  vsedni $($spec.WeekdayAt) +30min x 11h, sobota $($spec.WeekendAt) +30min x 55h, boot +$($spec.BootDelay), prihlaseni, odemceni, viko (507), hibernace (1)"
   }
+
+  # ---- 9: sobotní plný cyklus packů -------------------------------------------
+
+  $morning = "PKRTrainer-After-Night-TurnEv"
+  $afterNight = Join-Path $PSScriptRoot "after-night.ps1"
+  Write-Host "`n== $morning"
+  $xml = @"
+<Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Author>DrillEV</Author>
+    <Description>$($esc::Escape("DrillEV: sobotni plny cyklus packu v 07:00 (D2). Solver na nej ceka; necommituje se."))</Description>
+    <SecurityDescriptor>D:(A;;FA;;;BA)(A;;FA;;;SY)(A;;FR;;;AU)</SecurityDescriptor>
+  </RegistrationInfo>
+  <Triggers>
+    <CalendarTrigger>
+      <StartBoundary>$($today)T07:00:00</StartBoundary>
+      <Enabled>true</Enabled>
+      <ScheduleByWeek>
+        <DaysOfWeek><Saturday /></DaysOfWeek>
+        <WeeksInterval>1</WeeksInterval>
+      </ScheduleByWeek>
+    </CalendarTrigger>
+  </Triggers>
+  <Principals>
+    <Principal id="Author">
+      <UserId>S-1-5-18</UserId>
+      <RunLevel>HighestAvailable</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <AllowHardTerminate>true</AllowHardTerminate>
+    <StartWhenAvailable>false</StartWhenAvailable>
+    <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <AllowStartOnDemand>true</AllowStartOnDemand>
+    <Enabled>true</Enabled>
+    <Hidden>false</Hidden>
+    <RunOnlyIfIdle>false</RunOnlyIfIdle>
+    <WakeToRun>true</WakeToRun>
+    <ExecutionTimeLimit>PT12H</ExecutionTimeLimit>
+    <Priority>4</Priority>
+  </Settings>
+  <Actions Context="Author">
+    <Exec>
+      <Command>powershell.exe</Command>
+      <Arguments>-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "$afterNight"</Arguments>
+      <WorkingDirectory>$repo</WorkingDirectory>
+    </Exec>
+  </Actions>
+</Task>
+"@
+  Register-ScheduledTask -TaskName $morning -Xml $xml -Force | Out-Null
+  $task = Get-ScheduledTask -TaskName $morning
+  Write-Host ("  SYSTEM, priorita {0}, strop {1}, WakeToRun {2}, zmeskany start: ne" -f $task.Settings.Priority, $task.Settings.ExecutionTimeLimit, $task.Settings.WakeToRun)
+  Write-Host "  sobota 07:00: after-night.ps1 -> plny cyklus (pack-cycle.ps1); pateci noc konci v sobotu v 07:00"
 
   # ---- 4: Windows solver nesetri ---------------------------------------------
 
