@@ -1,7 +1,7 @@
 {
-  "measuredAt": "2026-10-23 04:31",
+  "measuredAt": "2026-11-03 07:04",
   "source": "artifacts/decomposition/expansion.log",
-  "solves": 937,
+  "solves": 977,
   "depths": [
     {
       "depthBB": 25,
@@ -17,26 +17,26 @@
     },
     {
       "depthBB": 40,
-      "boards": 158,
-      "median": 27.6,
-      "p90": 58.1,
-      "max": 85.6,
-      "planMinutes": 27.6,
-      "promiseMinutes": 31.4,
+      "boards": 180,
+      "median": 28.9,
+      "p90": 63.4,
+      "max": 86.2,
+      "planMinutes": 28.9,
+      "promiseMinutes": 33.9,
       "capMinutes": 90,
-      "reserveMinutes": 59,
+      "reserveMinutes": 64,
       "basis": "měřeno"
     },
     {
       "depthBB": 50,
-      "boards": 81,
-      "median": 23.9,
-      "p90": 40.9,
-      "max": 62.2,
-      "planMinutes": 23.9,
-      "promiseMinutes": 25.6,
+      "boards": 99,
+      "median": 25.5,
+      "p90": 51.1,
+      "max": 86.9,
+      "planMinutes": 25.5,
+      "promiseMinutes": 29.6,
       "capMinutes": 90,
-      "reserveMinutes": 41,
+      "reserveMinutes": 52,
       "basis": "měřeno"
     }
   ],
@@ -252,6 +252,13 @@
       "mean": 55.4
     },
     {
+      "family": "MTT9_40BB_BTN_SB_SRP",
+      "depthBB": 40,
+      "boards": 4,
+      "median": 66.3,
+      "mean": 55
+    },
+    {
       "family": "MTT9_40BB_CO_BB_SRP",
       "depthBB": 40,
       "boards": 5,
@@ -266,11 +273,18 @@
       "mean": 42
     },
     {
+      "family": "MTT9_40BB_CO_SB_SRP",
+      "depthBB": 40,
+      "boards": 4,
+      "median": 79.1,
+      "mean": 66.8
+    },
+    {
       "family": "MTT9_40BB_HJ_BB_SRP",
       "depthBB": 40,
-      "boards": 5,
-      "median": 39,
-      "mean": 46.5
+      "boards": 10,
+      "median": 39.5,
+      "mean": 45.6
     },
     {
       "family": "MTT9_40BB_HJ_BTN_SRP",
@@ -287,6 +301,13 @@
       "mean": 27
     },
     {
+      "family": "MTT9_40BB_HJ_SB_SRP",
+      "depthBB": 40,
+      "boards": 3,
+      "median": 60.4,
+      "mean": 53.3
+    },
+    {
       "family": "MTT9_40BB_LJ_BB_SRP",
       "depthBB": 40,
       "boards": 5,
@@ -299,6 +320,13 @@
       "boards": 6,
       "median": 37.3,
       "mean": 36.5
+    },
+    {
+      "family": "MTT9_40BB_LJ_CO_SRP",
+      "depthBB": 40,
+      "boards": 6,
+      "median": 45.2,
+      "mean": 45.8
     },
     {
       "family": "MTT9_40BB_LJ_HJ_SRP",
@@ -441,6 +469,20 @@
       "mean": 15
     },
     {
+      "family": "MTT9_50BB_HJ_BB_SRP",
+      "depthBB": 50,
+      "boards": 3,
+      "median": 58.7,
+      "mean": 55.5
+    },
+    {
+      "family": "MTT9_50BB_LJ_HJ_SRP",
+      "depthBB": 50,
+      "boards": 6,
+      "median": 22.3,
+      "mean": 24
+    },
+    {
       "family": "MTT9_50BB_LJ_SB_SRP",
       "depthBB": 50,
       "boards": 6,
@@ -478,9 +520,9 @@
     {
       "family": "MTT9_50BB_UTG_1_SB_SRP",
       "depthBB": 50,
-      "boards": 4,
-      "median": 20.1,
-      "mean": 20.1
+      "boards": 6,
+      "median": 29.1,
+      "mean": 31.9
     },
     {
       "family": "MTT9_50BB_UTG_2_BTN_SRP",
@@ -511,6 +553,13 @@
       "mean": 21.5
     },
     {
+      "family": "MTT9_50BB_UTG_2_SB_SRP",
+      "depthBB": 50,
+      "boards": 6,
+      "median": 61.4,
+      "mean": 59.6
+    },
+    {
       "family": "MTT9_50BB_UTG_BTN_SRP",
       "depthBB": 50,
       "boards": 6,
@@ -537,38 +586,25 @@
       "boards": 6,
       "median": 25.5,
       "mean": 23.8
+    },
+    {
+      "family": "MTT9_50BB_UTG_SB_SRP",
+      "depthBB": 50,
+      "boards": 1,
+      "median": 80.6,
+      "mean": 80.6
     }
   ],
   "widthModels": [
     {
-      "depthBB": 25,
-      "boards": 698,
-      "intercept": 1.5138,
-      "slope": 0.0536,
-      "smear": 1.1895,
-      "r2": 0,
-      "minWidth": 162,
-      "maxWidth": 804
-    },
-    {
       "depthBB": 40,
-      "boards": 158,
-      "intercept": -0.2507,
-      "slope": 0.5955,
-      "smear": 1.1156,
-      "r2": 0.34,
-      "minWidth": 190,
+      "boards": 55,
+      "intercept": 1.6729,
+      "slope": 0.3172,
+      "smear": 1.1187,
+      "r2": 0.12,
+      "minWidth": 300,
       "maxWidth": 1300
-    },
-    {
-      "depthBB": 50,
-      "boards": 81,
-      "intercept": -0.4953,
-      "slope": 0.6484,
-      "smear": 1.1013,
-      "r2": 0.05,
-      "minWidth": 210,
-      "maxWidth": 368
     }
   ]
 }
