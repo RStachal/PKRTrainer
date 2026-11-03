@@ -23,6 +23,11 @@ describe("machineWindow", () => {
     expect(machineWindow(at(22, 3))).toBe("NOC");
   });
 
+  it("od 2. 11. 2026 začíná noc ve 20:00, ne ve 21:00", () => {
+    expect(machineWindow(at(21, 19))).toBe("DEN");
+    expect(machineWindow(at(21, 20))).toBe("NOC");
+  });
+
   it("víkend je plný celý den, i v poledne", () => {
     expect(machineWindow(at(24, 12))).toBe("VÍKEND");
     expect(machineWindow(at(25, 15))).toBe("VÍKEND");

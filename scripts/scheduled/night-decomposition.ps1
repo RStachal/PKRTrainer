@@ -1,13 +1,17 @@
-# Noční rozklad, spouštěný Plánovačem úloh (PKRTrainer-Night-Decomposition, 21:00).
+# Noční rozklad, spouštěný Plánovačem úloh (PKRTrainer-Night-Decomposition, 20:00).
 # Skryté okno ze stejného důvodu jako after-night.ps1: viditelnou konzoli
 # někdo zavře a běh dostane Ctrl+C. Argumenty přesně jako v úloze do 22. 9. 2026.
-$repo = "C:\Users\stachal\PKRTrainer\PKRTrainer"
-$python = "C:\Users\stachal\AppData\Local\Microsoft\WindowsApps\python3.exe"
+# Brána okna a umlčení víka; obojí se musí dělat **každou noc**, ne jednou -
+# viz lib-night-window.ps1. Odtud i cesta k repozitáři a k Pythonu.
+. (Join-Path $PSScriptRoot "lib-night-window.ps1")
+$repo = Get-NightRepo
+$python = Get-NightPython
 $script = Join-Path $repo "Agents\solver-input\decomposition\run_night_decomposition.py"
 $log = Join-Path $repo "artifacts\decomposition\night.log"
-# Brána okna a umlčení víka; obojí se musí dělat **každou noc**, ne jednou -
-# viz lib-night-window.ps1.
-. (Join-Path $PSScriptRoot "lib-night-window.ps1")
+if (-not $python) {
+  Write-NightLog -Log $log -Message "POZOR: python nenalezen (PKRTRAINER_PYTHON, pymanager, PATH); noc nepobezi"
+  exit 1
+}
 # Vikendovy rozvrh (od 15. 10. 2026) se pozna z Planovace; dokud ho uloha nema,
 # chova se vsechno jako dosud - okno do 07:00, o vikendu pres den nic.
 $weekend = Test-WeekendSchedule -TaskName "PKRTrainer-Night-Decomposition"

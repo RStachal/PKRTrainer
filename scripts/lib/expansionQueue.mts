@@ -27,8 +27,13 @@ import { join } from "node:path";
 import { escalationSteps, failureLevel } from "./nightEscalation.mts";
 import { CHECKPOINT_BASE, EXPANSION_PARAMS_DIR } from "./srpMonolithParams.mts";
 
-/** Kolik minut má noční okno (21:00-07:00 minus rezerva na konci). */
-export const NIGHT_WINDOW_MINUTES = 587;
+/**
+ * Kolik minut má noční okno (20:00-07:00 minus rezerva na konci).
+ *
+ * Do 2. 11. 2026 to bylo 587 pro okno 21:00-07:00; rezerva 13 minut zůstává,
+ * okno začíná o hodinu dřív (majitel: „noční solving od 20 - 7").
+ */
+export const NIGHT_WINDOW_MINUTES = 647;
 
 /**
  * Pod kolik nocí práce fronta nesmí klesnout.

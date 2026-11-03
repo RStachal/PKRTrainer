@@ -31,6 +31,34 @@ function Write-NightLog {
   try { Add-Content -Path $Log -Value $line -Encoding utf8 } catch { }
 }
 
+# Kořen repozitáře podle umístění skriptů (`scripts\scheduled` -> dvě patra nahoru).
+#
+# Do 2. 11. 2026 stál ve wrapperech natvrdo `C:\Users\stachal\PKRTrainer\PKRTrainer`.
+# Starý stroj se 30. 10. ztratil a repozitář se naklonoval jinam
+# (`C:\Work\DrillEV`); pevná cesta by noc pustila do adresáře, který neexistuje.
+function Get-NightRepo {
+  return (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+}
+
+# Python pro noční runnery.
+#
+# Úlohy běží pod účtem SYSTEM, kterému nepatří ani uživatelská `PATH`, ani alias
+# `WindowsApps\python3.exe` (ten do 30. 10. 2026 stál ve wrapperech a pod SYSTEM
+# nespustí nic). Proto napřed vědomé přebití proměnnou, pak instalace Python
+# Install Manageru u vlastníka, nakonec cokoli na systémové `PATH`.
+function Get-NightPython {
+  $candidates = @(
+    $env:PKRTRAINER_PYTHON,
+    "C:\Users\stachal\AppData\Local\Python\pythoncore-3.14-64\python.exe"
+  )
+  foreach ($candidate in $candidates) {
+    if ($candidate -and (Test-Path $candidate)) { return $candidate }
+  }
+  $found = Get-Command python.exe -ErrorAction SilentlyContinue
+  if ($found) { return $found.Source }
+  return $null
+}
+
 # Zapsat, z čeho stroj doopravdy jede.
 #
 # ## Proč to tu je
@@ -73,6 +101,9 @@ function Write-PowerSource {
 # nevyužívala. Sobotní ráno dostane plný ranní cyklus (`after-night.ps1`: packy
 # všech ulic, kontrola, EV), zbytek víkendu solver.
 #
+# **Od 2. 11. 2026 začíná všední okno ve 20:00** (majitel: „denně od pondělí do
+# pátku noční solving od 20 - 7 a o víkendu po celý den").
+#
 # Víkendový režim se zapne **jen tehdy, když ho Plánovač doopravdy má**:
 # týdenní spouštěč a strop běhu přes dva dny. Nastavuje je instalátor pod
 # správcem; do té doby se všechno chová přesně jako dosud. Čte se z úlohy, ne
@@ -102,6 +133,18 @@ function Test-WeekendSchedule {
   }
 }
 
+# Je v Plánovači ranní úloha, která v sobotu pouští plný cyklus packů?
+#
+# Na tom závisí sobota: s ní páteční noc končí v sobotu v 07:00 a solver počká
+# na cyklus, bez ní jede noc v kuse do pondělí (`Get-NightDeadline`,
+# `Test-NightWindow`). Je to parametr obou funkcí s výchozí hodnotou odsud, aby
+# testy mohly zkoušet oba stroje - bez parametru by výsledek testu záležel na
+# tom, jaké úlohy má počítač, na kterém sada zrovna běží (3. 11. 2026 spadly
+# tím dva testy rozvrhu).
+function Test-PackCycleScheduled {
+  return [bool](Get-ScheduledTask -TaskName "PKRTrainer-After-Night-TurnEv" -ErrorAction SilentlyContinue)
+}
+
 # Konec okna pro runner, absolutně (`yyyy-MM-ddTHH:mm`), jak ho čte
 # `parse_until` v `run_night_decomposition.py`.
 #
@@ -109,12 +152,19 @@ function Test-WeekendSchedule {
 # S ním nejbližší 07:00, které nepadne na neděli: sobotní sedmá zůstává koncem,
 # protože sobotní ráno patří plnému ranním cyklu, a po něm běží solver v kuse
 # až do pondělní sedmé.
+#
+# Bez ranní úlohy v Plánovači (po ztrátě stroje 2. 11. 2026, viz `Test-NightWindow`)
+# sobotní sedmá konec okna není: cyklus, kterému patřila, nepoběží, a páteční
+# noc jede v kuse až do pondělní sedmé.
 function Get-NightDeadline {
-  param([bool]$Weekend, [datetime]$Now = (Get-Date))
+  param([bool]$Weekend, [datetime]$Now = (Get-Date), [bool]$PackCycle = (Test-PackCycleScheduled))
   $deadline = $Now.Date.AddHours(7)
   if ($deadline -le $Now) { $deadline = $deadline.AddDays(1) }
   if ($Weekend) {
-    while ($deadline.DayOfWeek -eq [DayOfWeek]::Sunday) { $deadline = $deadline.AddDays(1) }
+    while ($deadline.DayOfWeek -eq [DayOfWeek]::Sunday -or
+           ($deadline.DayOfWeek -eq [DayOfWeek]::Saturday -and -not $PackCycle)) {
+      $deadline = $deadline.AddDays(1)
+    }
   }
   return $deadline.ToString("yyyy-MM-ddTHH:mm", [Globalization.CultureInfo]::InvariantCulture)
 }
@@ -151,13 +201,19 @@ function Test-PackCycleDoneToday {
 # počká, dokud běží plný ranní cyklus, a do desíti i na to, než se spustí -
 # v 07:00 by jinak předběhl cyklus, který startuje v 07:05. Když se do desíti
 # nespustil vůbec, solver nečeká dál: prázdná sobota je horší.
+#
+# Sobotní čekání platí jen tehdy, když ranní úloha v Plánovači je. Po ztrátě
+# stroje (2. 11. 2026) se ranní cyklus neinstaluje, dokud se neověří, že packy
+# bez monolitických checkpointů nepřepíše - a bez úlohy by solver každou sobotu
+# do desíti čekal na cyklus, který nepřijde.
 function Test-NightWindow {
-  param([string]$Log, [bool]$Weekend = $false, [string]$Repo = "", [datetime]$Now = (Get-Date))
+  param([string]$Log, [bool]$Weekend = $false, [string]$Repo = "", [datetime]$Now = (Get-Date),
+        [bool]$PackCycle = (Test-PackCycleScheduled))
   $time = $Now.TimeOfDay
-  if ($time -ge [TimeSpan]"20:45:00" -or $time -lt [TimeSpan]"06:45:00") { return $true }
+  if ($time -ge [TimeSpan]"19:55:00" -or $time -lt [TimeSpan]"06:45:00") { return $true }
   $isWeekend = $Now.DayOfWeek -eq [DayOfWeek]::Saturday -or $Now.DayOfWeek -eq [DayOfWeek]::Sunday
   if ($Weekend -and $isWeekend) {
-    if ($Now.DayOfWeek -eq [DayOfWeek]::Saturday) {
+    if ($Now.DayOfWeek -eq [DayOfWeek]::Saturday -and $PackCycle) {
       if (Test-PackCycleRunning -Repo $Repo) {
         Write-NightLog -Log $Log -Message "sobota: bezi plny ranni cyklus, solver pocka"
         return $false
@@ -169,7 +225,7 @@ function Test-NightWindow {
     }
     return $true
   }
-  Write-NightLog -Log $Log -Message "spusteni mimo okno 20:45-06:45, koncim bez prace"
+  Write-NightLog -Log $Log -Message "spusteni mimo okno 20:00-06:45, koncim bez prace"
   return $false
 }
 

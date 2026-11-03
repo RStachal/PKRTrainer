@@ -84,7 +84,7 @@ const STAGED_PARAMS = join(
 );
 const CHECKPOINT_ROOT = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
 
-/** Kolik minut má noční okno (21:00-07:00 minus rezerva na konci). */
+/** Kolik minut má noční okno (20:00-07:00 minus rezerva na konci). */
 const WINDOW_MINUTES = NIGHT_WINDOW_MINUTES;
 
 /*
@@ -574,7 +574,7 @@ if (!existsSync(CYCLE_LOG)) {
     `blok končí „${CYCLE_END}“, nebo úloha ještě běží`);
 }
 
-console.log("Připravenost noci 21:00-07:00");
+console.log("Připravenost noci 20:00-07:00");
 console.log("");
 for (const check of checks) {
   console.log(`${check.ok ? "  ok  " : "  !!  "}${check.label.padEnd(46)} ${check.got}${check.ok ? "" : `   (čekáno: ${check.want})`}`);

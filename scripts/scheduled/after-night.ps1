@@ -6,7 +6,8 @@
 # dostal Ctrl+C (kód 0xC000013A) uprostřed obnovy turnové EV a 17 tabulek
 # zůstalo zastaralých. Skryté okno se zavřít nedá. `-Wait` drží úlohu jako
 # běžící, takže strop Plánovače (PT5H) dál platí.
-$repo = "C:\Users\stachal\PKRTrainer\PKRTrainer"
+# Repozitář podle umístění skriptu, ne pevnou cestou (viz `Get-NightRepo`).
+$repo = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $node = "C:\Program Files\nodejs\node.exe"
 $log = Join-Path $repo "artifacts\after-night-turn-ev.log"
 # Plny cyklus packu (pack-cycle.ps1) dela vsechno, co tenhle, a vic. Dva cykly

@@ -30,8 +30,10 @@ function powershell(body: string): string {
   return out.stdout.trim();
 }
 
-const deadline = (now: string, weekend: boolean): string => powershell(
-  `Get-NightDeadline -Weekend $${weekend} -Now ([datetime]'${now}')`,
+// Je v Plánovači sobotní plný cyklus? Výslovně, ne podle úloh stroje, na kterém
+// sada běží - jinak by výsledek záležel na počítači (3. 11. 2026).
+const deadline = (now: string, weekend: boolean, packCycle = true): string => powershell(
+  `Get-NightDeadline -Weekend $${weekend} -Now ([datetime]'${now}') -PackCycle $${packCycle}`,
 );
 
 describe.skipIf(!onWindows)("konec okna (Get-NightDeadline)", () => {
@@ -54,11 +56,18 @@ describe.skipIf(!onWindows)("konec okna (Get-NightDeadline)", () => {
   it("ve všední noc s rozvrhem nic nemění", () => {
     expect(deadline("2026-10-21T21:01", true)).toBe("2026-10-22T07:00");
   });
+
+  it("bez sobotního cyklu jede páteční noc v kuse do pondělní sedmé", () => {
+    // Po ztrátě stroje (2. 11. 2026) ranní úloha není; sobotní sedmá by jinak
+    // uťala noc kvůli cyklu, který nepoběží.
+    expect(deadline("2026-10-23T20:01", true, false)).toBe("2026-10-26T07:00");
+    expect(deadline("2026-10-21T20:01", true, false)).toBe("2026-10-22T07:00");
+  });
 });
 
 describe.skipIf(!onWindows)("brána okna (Test-NightWindow) a zámek plného cyklu", () => {
-  const window = (now: string, weekend: boolean, repo: string): string => powershell(
-    `Test-NightWindow -Log '${join(repo, "night.log")}' -Weekend $${weekend} -Repo '${repo}' -Now ([datetime]'${now}')`,
+  const window = (now: string, weekend: boolean, repo: string, packCycle = true): string => powershell(
+    `Test-NightWindow -Log '${join(repo, "night.log")}' -Weekend $${weekend} -Repo '${repo}' -Now ([datetime]'${now}') -PackCycle $${packCycle}`,
   );
   const repoWith = (files: Record<string, string>): string => {
     const repo = mkdtempSync(join(tmpdir(), "night-window-"));
@@ -87,6 +96,17 @@ describe.skipIf(!onWindows)("brána okna (Test-NightWindow) a zámek plného cyk
     const repo = repoWith({});
     expect(window("2026-10-24T08:00", true, repo)).toBe("False");
     expect(window("2026-10-24T11:00", true, repo)).toBe("True");
+  });
+
+  it("bez sobotního cyklu v Plánovači sobota nečeká", () => {
+    const repo = repoWith({});
+    expect(window("2026-10-24T08:00", true, repo, false)).toBe("True");
+  });
+
+  it("okno začíná ve 20:00 (majitel 2. 11. 2026), ne ve 21:00", () => {
+    const repo = repoWith({});
+    expect(window("2026-10-21T19:50", false, repo)).toBe("False");
+    expect(window("2026-10-21T20:01", false, repo)).toBe("True");
   });
 
   it("zámek s mrtvým PID neblokuje, solver jede", () => {

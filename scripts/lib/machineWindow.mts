@@ -34,17 +34,19 @@ import { cpus, freemem, totalmem } from "node:os";
 export type MachineWindow = "DEN" | "NOC" | "VÍKEND";
 
 /**
- * Denní okno je 07:00-21:00 ve všední den; noc a celý víkend jsou plné.
+ * Denní okno je 07:00-20:00 ve všední den; noc a celý víkend jsou plné.
  *
  * Víkend platí od 15. 10. 2026, slovy majitele: „stroj na vývoj a solvení na
  * 100 % můžeš využít v těchto termínech: pondělí až pátek 21 - 7, kdykoli
- * o víkendu. Přes den zde asi na 50 % částečně používáme HW."
+ * o víkendu. Přes den zde asi na 50 % částečně používáme HW." Od 2. 11. 2026
+ * začíná noc o hodinu dřív: „denně od pondělí do pátku noční solving od 20 - 7
+ * a o víkendu po celý den".
  */
 export function machineWindow(now = new Date()): MachineWindow {
   const day = now.getDay();
   if (day === 0 || day === 6) return "VÍKEND";
   const hour = now.getHours();
-  return hour >= 7 && hour < 21 ? "DEN" : "NOC";
+  return hour >= 7 && hour < 20 ? "DEN" : "NOC";
 }
 
 /** Nejvyšší počet souběžných procesů, který si běh v tomhle okně smí vzít. */

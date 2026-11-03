@@ -20,7 +20,8 @@
 # zamkem. Od 20. 10. 2026: oprava vyberu riveroveho rozpoctu meni jen riverove
 # packy, a plny cyklus by zbytecne generoval i flop a turn.
 param([string]$Streets = "")
-$repo = "C:\Users\stachal\PKRTrainer\PKRTrainer"
+# Repozitář podle umístění skriptu, ne pevnou cestou (viz `Get-NightRepo`).
+$repo = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $node = "C:\Program Files\nodejs\node.exe"
 $log = Join-Path $repo "artifacts\after-night-full.log"
 $lock = Join-Path $repo "artifacts\pack-cycle.lock"
