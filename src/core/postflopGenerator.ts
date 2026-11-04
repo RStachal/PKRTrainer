@@ -6,6 +6,7 @@ import { positionsForFormat, type TableFormat } from "./trainingProfile";
 import type { ActionEvSet } from "./actionEv";
 import type { SprFidelity } from "./postflopSprFidelity";
 import { heroRangeWeight } from "../data/ranges/postflopRangeWeights.generated";
+import type { SolvedClassMixRef } from "../data/ranges/solvedClassMix";
 import { familyIdFromRuleId } from "../data/ranges/postflopSolvedSpr";
 import {
   bestActionsForActionEv,
@@ -353,6 +354,11 @@ export type PostflopRecommendationSource =
        */
       heroBetSizes?: Partial<Record<"BET_SMALL" | "BET_BIG", PostflopSolvedBetSizing>>;
       heroRangeBucket?: PostflopHeroRangeBucket;
+      /**
+       * Kde leží frekvence vybraného pravidla po třídách rukou, které si
+       * stáhne matice range (`solvedClassMix.ts`). Chybí u obsahu bez nich.
+       */
+      classMix?: SolvedClassMixRef;
       opponentPolicy?: PostflopOpponentPolicyBranch;
       /**
        * How far the shown SPR sits from the SPR this family was solved at. Absent

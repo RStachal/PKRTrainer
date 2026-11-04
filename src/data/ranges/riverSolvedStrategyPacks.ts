@@ -1,4 +1,5 @@
 import type { SolvedRiverManifestEntry } from "./riverSolvedManifest.generated";
+import type { SolvedClassMixFile } from "./solvedClassMix";
 import { registerSolvedRiverPack, runtimeSolvedRiverPacks } from "./riverSolvedRuntimeRegistry";
 import type { RiverStrategyPack } from "./riverStrategyPack";
 
@@ -36,6 +37,15 @@ function solvedRiverManifestAsync(): Promise<readonly SolvedRiverManifestEntry[]
   manifestPromise ??= import("./riverSolvedManifest.generated")
     .then((module) => module.solvedRiverManifest);
   return manifestPromise;
+}
+
+/**
+ * Frekvence po třídách rukou k packu pro matici range (`solvedClassMix.ts`),
+ * nebo `undefined`, když je rodina nenese. Stahuje se až s maticí, ne s packem.
+ */
+export async function loadSolvedRiverClassMix(packId: string): Promise<SolvedClassMixFile | undefined> {
+  const entry = (await solvedRiverManifestAsync()).find((item) => item.packId === packId);
+  return entry?.loadMix?.();
 }
 
 /** Položky manifestu, které profil chce; ante segment se ignoruje jako u turnu. */

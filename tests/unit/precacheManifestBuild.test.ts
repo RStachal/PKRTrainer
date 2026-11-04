@@ -169,6 +169,11 @@ describe("precache build manifest", () => {
       ["turn-ev", "turn-ev"],
       ["river", "river"],
       ["river-ev", "river-ev"],
+      // Frekvence po třídách rukou pro matici range (3. 11. 2026). Kdyby je
+      // pravidlo nepoznalo, skončily by na instalační cestě - popáté tatáž past.
+      ["flop-mix", "flop-mix"],
+      ["turn-mix", "turn-mix"],
+      ["river-mix", "river-mix"],
     ] as const) {
       const name = mttProductionChunkNameForModuleId(
         `/repo/src/data/ranges/${dir}/mtt9-40bb-hj-bb-srp.generated.json?raw`,

@@ -13,9 +13,35 @@ export interface HandMatrixCell {
    * může mít víc: blaf sází, takže patří k sázce i k blafům.
    */
   groups?: readonly string[];
+  /**
+   * Strategie té třídy jako pruhy akcí zleva doprava. Bez ní má buňka plnou
+   * barvu `color`. Podíly se převedou na procenta, součet nemusí být 1.
+   */
+  mix?: readonly { color: string; share: number }[];
   /** Co buňka znamená, slovy: popisek pro čtečku i bublina. */
   description: string;
 }
+
+/**
+ * Pruhy akcí jako jeden gradient s ostrými přechody: žádné prvky navíc ve 169
+ * buňkách a žádné CSS navíc (rozpočet stylů je na 79,96 z 80 KiB).
+ */
+function mixGradient(mix: readonly { color: string; share: number }[]): string | undefined {
+  const parts = mix.filter((part) => Number.isFinite(part.share) && part.share > 0);
+  const total = parts.reduce((sum, part) => sum + part.share, 0);
+  if (parts.length === 0 || total <= 0) return undefined;
+  let from = 0;
+  const stops = parts.map((part, index) => {
+    const to = index === parts.length - 1 ? 100 : from + (part.share / total) * 100;
+    const stop = `${part.color} ${Number(from.toFixed(2))}% ${Number(to.toFixed(2))}%`;
+    from = to;
+    return stop;
+  });
+  return `linear-gradient(90deg, ${stops.join(", ")})`;
+}
+
+/** Šrafování blafu, jak ho má CSS (`[data-hatched]`), nad pruhy akcí. */
+const HATCH = "repeating-linear-gradient(135deg, var(--dx-matrix-hatch) 0 2px, transparent 2px 6px)";
 
 export interface HandMatrixConfig {
   /** Název mřížky pro čtečku. */
@@ -23,6 +49,8 @@ export interface HandMatrixConfig {
   cell: (hand: HandLabel) => HandMatrixCell;
   /** Ruka hráče: má vlastní rámeček, jiný než barva i výběr. */
   hero?: HandLabel;
+  /** Ruka vybraná na začátku; výchozí je ruka hráče. */
+  selected?: HandLabel;
   onSelect: (hand: HandLabel) => void;
 }
 
@@ -70,6 +98,11 @@ export function handMatrix(doc: Document, config: HandMatrixConfig): HandMatrix 
       if (data.color === undefined) cell.dataset.empty = "true";
       else cell.style.setProperty("--action-accent", data.color);
       if (data.hatched === true) cell.dataset.hatched = "true";
+      const gradient = data.color === undefined || data.mix === undefined ? undefined : mixGradient(data.mix);
+      if (gradient !== undefined) {
+        cell.dataset.mixed = "true";
+        cell.style.backgroundImage = data.hatched === true ? `${HATCH}, ${gradient}` : gradient;
+      }
       if (data.groups !== undefined) cell.dataset.groups = data.groups.join(" ");
       const hero = hand === config.hero;
       if (hero) cell.dataset.hero = "true";
@@ -142,7 +175,7 @@ export function handMatrix(doc: Document, config: HandMatrixConfig): HandMatrix 
   });
 
   // Bez výběru by se do matice tabulátorem nedalo vstoupit vůbec.
-  select(config.hero ?? handLabel(0, 0));
+  select(config.selected ?? config.hero ?? handLabel(0, 0));
 
   return {
     element: root,

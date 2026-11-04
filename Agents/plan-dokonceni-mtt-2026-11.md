@@ -148,8 +148,12 @@ která na nich stojí.
 
 8. GUI fáze 2 (matice 13×13 bez vodorovného posunu na 360 px) a fáze 3
    (předvolby, start jedním klepnutím). *(3. 11.: fáze 2 hotová, bod 334. Pruh
-   frekvencí v buňce čeká na rozhodnutí o formátu packů. Před fází 3 část
-   úklidu starých stylů, protože CSS je na 79,96 z 80 KiB.)*
+   frekvencí v buňce: majitel 3. 11. „chci to. Rozšířit" - frekvence po
+   třídách v souboru vedle packu (`ui-redesign-plan.md`, fáze 2). 4. 11.:
+   dodány u 35 z 55 turnových rodin a 1 flopové, k packům beze změny
+   obsahu; zbytek turnu a celý river přijde se sobotní přestavbou packů,
+   bod 336. Před fází 3 část úklidu starých stylů, protože CSS je na 79,96
+   z 80 KiB.)*
 9. Packy pro rodiny z dávky, jak se dokončují; mechanická kontrola; čtení
    majitelem přes `mtt:review-desk` (druhé sezení).
 10. GUI fáze 4 (statistiky a slabá místa) a 5 (úklid starých stylů).
@@ -159,6 +163,11 @@ která na nich stojí.
     4. 11.: noc 3.-4. 11. D6 nezměřila - druhou desku nepustila pojistka
     paměti a noc po poradě ve 21:00 připadla rozkladu; hranice porady
     opravená, bod 335.)*
+11a. *(Přidáno 4. 11., bod 337.)* Vyřešený postflop do jednotlivého spotu:
+    aplikace dnes vyřešené packy načítá jen v produkční lince a v rozboru
+    HH, takže je jednotlivý spot nedostane ani s licencí - změřeno
+    v Chrome, 0 stažených chunků. Bez toho MTT 1.0 (D1) vyřešený postflop
+    hráči nedodá. Čeká na majitele: má být v betě bez licence?
 
 **Fáze D – vydání (týden 4)**
 

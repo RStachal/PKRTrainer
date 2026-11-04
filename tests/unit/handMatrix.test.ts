@@ -118,6 +118,27 @@ describe("matice 13×13", () => {
     expect(at("AA").style.getPropertyValue("--action-accent")).toBe("#cc3440");
   });
 
+  it("strategie třídy jsou pruhy akcí zleva doprava, blaf šrafovaný i nad nimi", () => {
+    const { at } = mount((hand) => (
+      hand === "AKo"
+        ? { color: "#2bd576", mix: [{ color: "#2bd576", share: 70 }, { color: "#2bb1a8", share: 30 }], description: "mix" }
+        : hand === "76s"
+          ? { color: "#2bd576", hatched: true, mix: [{ color: "#2bd576", share: 1 }, { color: "#2bb1a8", share: 1 }], description: "blaf" }
+          : { color: "#2bb1a8", description: "Check" }
+    ));
+    expect(at("AKo").dataset.mixed).toBe("true");
+    expect(at("AKo").style.backgroundImage).toBe(
+      "linear-gradient(90deg, #2bd576 0% 70%, #2bb1a8 70% 100%)",
+    );
+    expect(at("76s").style.backgroundImage).toBe(
+      "repeating-linear-gradient(135deg, var(--dx-matrix-hatch) 0 2px, transparent 2px 6px), "
+      + "linear-gradient(90deg, #2bd576 0% 50%, #2bb1a8 50% 100%)",
+    );
+    // Bez strategie plná barva převažující akce, bez pruhů.
+    expect(at("AA").dataset.mixed).toBeUndefined();
+    expect(at("AA").style.backgroundImage).toBe("");
+  });
+
   it("počítá kombinace třídy", () => {
     expect(combosInClass("AA")).toBe(6);
     expect(combosInClass("AKs")).toBe(4);

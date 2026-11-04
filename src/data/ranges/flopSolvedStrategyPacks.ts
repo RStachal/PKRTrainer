@@ -1,4 +1,5 @@
 import type { SolvedFlopManifestEntry } from "./flopSolvedManifest.generated";
+import type { SolvedClassMixFile } from "./solvedClassMix";
 import { registerSolvedFlopPack, runtimeSolvedFlopPacks } from "./flopSolvedRuntimeRegistry";
 import type { FlopSolvedStrategyPack } from "./flopSolvedStrategyPack";
 
@@ -20,6 +21,14 @@ function solvedFlopManifestAsync(): Promise<readonly SolvedFlopManifestEntry[]> 
   return manifestPromise;
 }
 
+/**
+ * Frekvence po třídách rukou k packu pro matici range (`solvedClassMix.ts`),
+ * nebo `undefined`, když je rodina nenese. Stahuje se až s maticí, ne s packem.
+ */
+export async function loadSolvedFlopClassMix(packId: string): Promise<SolvedClassMixFile | undefined> {
+  const entry = (await solvedFlopManifestAsync()).find((item) => item.packId === packId);
+  return entry?.loadMix?.();
+}
 
 /**
  * Vyřešené flopové packy, jeden stahovatelný chunk na rodinu.

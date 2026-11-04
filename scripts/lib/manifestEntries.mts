@@ -43,6 +43,28 @@ export function manifestLoadExpression(directory: string, slug: string, typeName
 }
 
 /**
+ * Adresář frekvencí po třídách rukou k packům ulice (`flop-mix`, `turn-mix`,
+ * `river-mix`; `solvedClassMix.ts`). Vlastní adresář, ne přípona vedle packu:
+ * skripty, které procházejí `turn/*.generated.json` jako packy, je tak
+ * neuvidí, a chunk dostane jméno, které precache pozná jako odložené
+ * (`isSolvedStreetAsset`).
+ */
+export function classMixDirectory(street: "flop" | "turn" | "river"): string {
+  return `${street}-mix`;
+}
+
+/**
+ * Řádek `loadMix` položky manifestu, nebo prázdný řetězec, když rodina
+ * frekvence nemá. Musí stát **za** `load`: `readManifestEntries` bere u rodiny
+ * první import za `familyId` a ten musí být pack.
+ */
+export function manifestMixLine(street: "flop" | "turn" | "river", slug: string, hasMix: boolean): string {
+  if (!hasMix) return "";
+  return `\n    loadMix: () => import("./${classMixDirectory(street)}/${slug}.generated.json?raw")`
+    + ".then((module) => JSON.parse(module.default) as SolvedClassMixFile),";
+}
+
+/**
  * Položky manifestu, jak je generátor potřebuje zachovat.
  *
  * `directory` je podadresář dat (`flop`, `turn`, `turn-ev`, `river`,

@@ -281,6 +281,35 @@ const MAX_LAZY_MTT_TOTAL_GZIP_KB = numberFromEnv(
   "BUNDLE_MAX_LAZY_MTT_TOTAL_GZIP_KB",
   13312,
 );
+/**
+ * Frekvence po třídách rukou (chunky `*-mix-solved-*`) mají vlastní součet od
+ * 4. 11. 2026.
+ *
+ * Majitel 3. 11. 2026 na otázku, jestli chce v matici range pruh frekvencí
+ * v každé buňce za cenu větší knihovny: „chci to. Rozšířit". Soubor leží vedle
+ * packu a stahuje se až s maticí (`solvedClassMix.ts`), takže hráč platí jeden
+ * chunk na rodinu, když range otevře; instalační cesta se nemění.
+ *
+ * Vlastní řádek, ne zvednutý součet líné knihovny: ten hlídá růst z nocí (bod
+ * 139 a zvednutí 13. 10.) a frekvence by jeho rezervu snědly jednorázovým
+ * rozhodnutím o obsahu. Tady se jejich cena dá obhájit zvlášť.
+ *
+ * Změřeno na produkčním buildu 4. 11. 2026 (deník 336):
+ *
+ * | | chunků | raw | gzip |
+ * |---|---|---|---|
+ * | dnes: turn 35 rodin, flop 1, river 1 | 37 | 3 786 KiB | 897 KiB |
+ * | odhad po přestavbě packů: turn 55 (průměr 104 / 25 KiB), river 48 (vzorek tří rodin 64-125 KiB raw), flop 1 | 104 | ~10 450 KiB | ~2 490 KiB |
+ * | strop | | **11 264 KiB** | **3 072 KiB** |
+ *
+ * Strop kryje rozhodnutý rozsah, tedy frekvence ke všem dnes dodávaným
+ * rodinám, i to, co přinese sobotní přestavba turnu a riveru. Rodiny z dávky
+ * expanze (31 nastagovaných) ho přetečou, a tak to má být: jejich frekvence
+ * jsou nový růst a obhájí se s nimi. Hráč platí jeden chunk na rodinu, když
+ * otevře matici, dnes nejvýš 174 KiB raw / 46 KiB gzip.
+ */
+const MAX_CLASS_MIX_TOTAL_JS_KB = numberFromEnv("BUNDLE_MAX_CLASS_MIX_TOTAL_JS_KB", 11264);
+const MAX_CLASS_MIX_TOTAL_GZIP_KB = numberFromEnv("BUNDLE_MAX_CLASS_MIX_TOTAL_GZIP_KB", 3072);
 // The equity table is fetched when a session starts, so it is off the install
 // path and does not belong in the precache totals - but it is not an MTT
 // production pack either, and folding it into that bucket would hide it behind a
@@ -326,6 +355,9 @@ let precacheGzipKb = 0;
 let lazyMttRawKb = 0;
 let lazyMttGzipKb = 0;
 let lazyMttCount = 0;
+let classMixRawKb = 0;
+let classMixGzipKb = 0;
+let classMixCount = 0;
 let deferredRawKb = 0;
 let deferredGzipKb = 0;
 let deferredCount = 0;
@@ -348,7 +380,14 @@ for (const file of jsFiles) {
   // počítal do instalační cesty, ačkoli tam není - tedy měřil něco jiného, než
   // co hráč zaplatí.
   const deferred = isPreflopEquityAsset(file) || isSolvedManifestAsset(file);
-  if (lazyMttProduction) {
+  // Frekvence po třídách jsou líné jako packy (strop na chunk týž), ale
+  // sčítají se zvlášť - viz `MAX_CLASS_MIX_TOTAL_JS_KB`.
+  const classMix = /^mtt-(flop|turn|river)-mix-solved-/.test(file);
+  if (classMix) {
+    classMixCount += 1;
+    classMixRawKb += rawKb;
+    classMixGzipKb += gzipKb;
+  } else if (lazyMttProduction) {
     lazyMttCount += 1;
     lazyMttRawKb += rawKb;
     lazyMttGzipKb += gzipKb;
@@ -392,6 +431,10 @@ console.log(
   `lazy MTT JS total: count=${lazyMttCount} raw=${lazyMttRawKb.toFixed(2)} KiB ` +
     `gzip=${lazyMttGzipKb.toFixed(2)} KiB`,
 );
+console.log(
+  `class mix JS total: count=${classMixCount} raw=${classMixRawKb.toFixed(2)} KiB ` +
+    `gzip=${classMixGzipKb.toFixed(2)} KiB`,
+);
 
 console.log(
   `deferred JS total: count=${deferredCount} raw=${deferredRawKb.toFixed(2)} KiB ` +
@@ -402,6 +445,8 @@ checkTotalBudget("precache raw JS", precacheRawKb, MAX_PRECACHE_JS_KB);
 checkTotalBudget("precache gzip JS", precacheGzipKb, MAX_PRECACHE_GZIP_KB);
 checkTotalBudget("lazy MTT raw JS", lazyMttRawKb, MAX_LAZY_MTT_TOTAL_JS_KB);
 checkTotalBudget("lazy MTT gzip JS", lazyMttGzipKb, MAX_LAZY_MTT_TOTAL_GZIP_KB);
+checkTotalBudget("class mix raw JS", classMixRawKb, MAX_CLASS_MIX_TOTAL_JS_KB);
+checkTotalBudget("class mix gzip JS", classMixGzipKb, MAX_CLASS_MIX_TOTAL_GZIP_KB);
 
 // Všechno CSS jde do precache: načítá ho main.ts, žádné se nestahuje líně.
 let cssRawKb = 0;

@@ -7,6 +7,7 @@ import type {
 } from "../../core/postflopGenerator";
 import type { Card, HandLabel } from "../../core/types";
 import { bettingLaneForHand } from "../../core/flopHandCategory";
+import type { SolvedClassMixRef } from "./solvedClassMix";
 
 /**
  * Zdroj odpovědi vyřešené rodiny, se všemi poli, která kontrakt vyžaduje.
@@ -74,6 +75,8 @@ export interface SolvedSourceInput {
    * rozdaných spotů na všech třech ulicích, přestože ji obsah má.
    */
   heroHand?: string;
+  /** Kde leží frekvence pravidla po třídách rukou (`solvedClassMix.ts`). */
+  classMix?: SolvedClassMixRef;
 }
 
 export function solvedStrategySource(
@@ -140,6 +143,7 @@ export function solvedStrategySource(
     // a turnu je to jediné číslo, které tam vůbec být může: cenu neplatí, když
     // jedná první, a EV se tam spočítat nedá (bod 131).
     ...(heroBucket === undefined ? {} : { heroRangeBucket: heroBucket }),
+    ...(input.classMix === undefined ? {} : { classMix: input.classMix }),
   };
 }
 

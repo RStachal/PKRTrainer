@@ -48,8 +48,9 @@ export function isSolvedStreetAsset(fileName: string): boolean {
   const baseName = fileName.replace(/\\/g, "/").split("/").pop() ?? "";
   // Pořadí v alternaci není kosmetika: `turn` by na `turn-ev-solved-…` sedlo
   // dřív a pak by `-solved-` nesedělo, takže by chunk propadl mezi nutné.
-  // Delší varianta proto vždycky napřed.
-  return /^mtt-(flop|turn-ev|turn|river-ev|river)-solved-[a-z0-9-]+-[a-zA-Z0-9_-]{8,}\.js$/
+  // Delší varianta proto vždycky napřed. `-mix` jsou frekvence po třídách rukou
+  // pro matici range (`solvedClassMix.ts`, 3. 11. 2026); stahují se až s maticí.
+  return /^mtt-(flop-mix|flop|turn-ev|turn-mix|turn|river-ev|river-mix|river)-solved-[a-z0-9-]+-[a-zA-Z0-9_-]{8,}\.js$/
     .test(baseName);
 }
 
@@ -123,14 +124,21 @@ export function mttProductionChunkNameForModuleId(moduleId: string): string | nu
     ?? (fileName === "turnEvManifest.generated.ts" ? "turn-ev" : null);
   if (manifestStreet !== null) return `mtt-manifest-${manifestStreet}`;
 
-  // Ulice s `-ev` musí být napřed. `/ranges/turn-ev/` sice `/ranges/turn/`
-  // neobsahuje, ale pořadí je tu jediná ochrana proti tomu, aby se to při
-  // příštím přejmenování adresáře tiše rozešlo - a tahle past už stála tři
-  // opravy.
+  // Ulice s `-ev` a `-mix` musí být napřed. `/ranges/turn-ev/` sice
+  // `/ranges/turn/` neobsahuje, ale pořadí je tu jediná ochrana proti tomu, aby
+  // se to při příštím přejmenování adresáře tiše rozešlo - a tahle past už
+  // stála tři opravy. `-mix` (frekvence po třídách, 3. 11. 2026) přibyl na obou
+  // místech naráz, tady i v `isSolvedStreetAsset`.
   const street = normalized.includes("/ranges/river-ev/")
     ? "river-ev"
     : normalized.includes("/ranges/turn-ev/")
     ? "turn-ev"
+    : normalized.includes("/ranges/flop-mix/")
+    ? "flop-mix"
+    : normalized.includes("/ranges/turn-mix/")
+    ? "turn-mix"
+    : normalized.includes("/ranges/river-mix/")
+    ? "river-mix"
     : normalized.includes("/ranges/turn/")
     ? "turn"
     : normalized.includes("/ranges/river/")

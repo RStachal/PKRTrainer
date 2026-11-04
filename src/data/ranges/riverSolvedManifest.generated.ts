@@ -2,12 +2,15 @@
 // Do not edit by hand.
 
 import type { RiverStrategyPack } from "./riverStrategyPack";
+import type { SolvedClassMixFile } from "./solvedClassMix";
 
 export interface SolvedRiverManifestEntry {
   familyId: string;
   packId: string;
   profileKey: string;
   load(): Promise<RiverStrategyPack>;
+  /** Frekvence po třídách rukou pro matici range; chybí u rodin bez nich. */
+  loadMix?(): Promise<SolvedClassMixFile>;
 }
 
 export const solvedRiverManifest: readonly SolvedRiverManifestEntry[] = [

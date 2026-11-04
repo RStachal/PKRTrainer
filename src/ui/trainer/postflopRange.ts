@@ -1,5 +1,5 @@
 import { GRID_SIZE, handLabel } from "../../core/poker";
-import type { PostflopAction, PostflopRangeBucket } from "../../core/postflopGenerator";
+import type { PostflopAction, PostflopActionFrequency, PostflopRangeBucket } from "../../core/postflopGenerator";
 import type { PostflopTrainingSpot } from "../../core/postflopTrainingSpot";
 import type { Card, HandLabel } from "../../core/types";
 import { localizedText } from "../cs";
@@ -14,7 +14,7 @@ import {
   type RangeLegendEntry,
   type RangeViewConfig,
 } from "../kit/rangeView";
-import { strategyBar, strategyLegend } from "../kit/strategyBar";
+import { formatSharePercent, strategyBar, strategyLegend } from "../kit/strategyBar";
 import {
   CATEGORY_ORDER,
   classifyFlopHand,
@@ -81,24 +81,37 @@ function comboEvRows(
   return [el(doc, "h4", "dx-trainer__hands-title", localizedText("EV by combo", "EV po kombinacích")), list];
 }
 
+/** Akce směsi v pořadí souhrnu, od nejagresivnější. */
+function ordered(mix: readonly PostflopActionFrequency[]): PostflopActionFrequency[] {
+  return [...mix]
+    .filter((item) => item.frequencyPct > 0)
+    .sort((left, right) => ACTION_ORDER.indexOf(left.action) - ACTION_ORDER.indexOf(right.action));
+}
+
 /**
- * Matice podle akce: barva je akce, kterou solver s rukou hraje nejčastěji,
- * blaf je šrafovaný.
+ * Matice podle akce, blaf je šrafovaný.
  *
- * Proč ne pruh frekvencí v každé buňce, jak ho má návrh: vyřešené packy
- * nesou strategii po kbelících, ne po třídách rukou. Kbelík jsou všechny třídy
- * se stejnou převažující akcí a jeho směs je jejich průměr
- * (`classesByDominantAction`, `buildTurnStrategyRule`). Pruh v buňce by
- * ukazoval průměr skupiny, jako by to byla ta ruka. Frekvence proto jsou
- * v souhrnu celé range a v detailu jako průměr skupiny, s tím, že jím jsou.
+ * Pack nese strategii po kbelících: všechny třídy se stejnou převažující akcí
+ * a průměr jejich směsi (`classesByDominantAction`). Pruh frekvencí v buňce
+ * proto kreslí jen `handMix` - strategie po třídách ze souboru vedle packu
+ * (`solvedClassMix.ts`, majitel 3. 11. 2026: „chci to. Rozšířit"). Bez něj má
+ * buňka plnou barvu akce, kterou ruka hraje nejčastěji, a frekvence jsou
+ * v souhrnu a v detailu jako průměr skupiny, s tím, že jím jsou.
  */
 function strategyConfig(
   doc: Document,
   spot: PostflopTrainingSpot,
   bucketOf: ReadonlyMap<HandLabel, PostflopRangeBucket>,
   exact: boolean,
+  handMix?: ReadonlyMap<HandLabel, readonly PostflopActionFrequency[]>,
 ): Omit<RangeViewConfig, "label" | "hero"> {
   const label = (action: PostflopAction): string => actionText(spot, action).label;
+  /** „Bet 33 % 64 %, Check 36 %“ - pro čtečku a bublinu buňky. */
+  const mixText = (mix: readonly PostflopActionFrequency[]): string => {
+    const items = ordered(mix);
+    const total = items.reduce((sum, item) => sum + item.frequencyPct, 0);
+    return items.map((item) => `${label(item.action)} ${formatSharePercent(item.frequencyPct / total)}`).join(", ");
+  };
   const shares = new Map<PostflopAction, number>();
   const dominant = new Set<PostflopAction>();
   let betCombos = 0;
@@ -145,17 +158,23 @@ function strategyConfig(
   }
 
   const comboEvs = comboEvsByHandClass(spot);
-  const notes = [localizedText(
-    "A cell shows the action the hand takes most often.",
-    "Buňka má barvu akce, kterou ruka hraje nejčastěji.",
-  )];
+  const perHand = handMix !== undefined && handMix.size > 0;
+  const notes = [perHand
+    ? localizedText(
+      "Bars in a cell show how often the hand takes each action, in whole percent.",
+      "Pruhy v buňce ukazují, jak často ruka hraje každou akci, v celých procentech.",
+    )
+    : localizedText(
+      "A cell shows the action the hand takes most often.",
+      "Buňka má barvu akce, kterou ruka hraje nejčastěji.",
+    )];
   if (bluffCombos > 0) {
     notes.push(localizedText(
       "Hatched cells are bluffs: bets with a hand that is not betting for value.",
       "Šrafované buňky jsou blafy: sázky s rukou, která nesází pro hodnotu.",
     ));
   }
-  if (exact) {
+  if (exact && !perHand) {
     notes.push(localizedText(
       "Frequencies are averages over hands that share their most frequent action; the pack does not store them hand by hand.",
       "Frekvence jsou průměry skupin rukou se stejnou převažující akcí; po jednotlivých rukou je pack nenese.",
@@ -172,11 +191,20 @@ function strategyConfig(
       const lane = !AGGRESSIVE.has(bucket.action)
         ? ""
         : bluff ? localizedText(", bluff", ", blaf") : localizedText(", value", ", hodnota");
+      const own = handMix?.get(hand);
       return {
         color: colorForPostflopAction(bucket.action),
         hatched: bluff,
         groups: bluff ? [bucket.action, "BLUFF"] : [bucket.action],
-        description: `${label(bucket.action)}${lane}`,
+        ...(own === undefined
+          ? {}
+          : {
+            mix: ordered(own).map((item) => ({
+              color: colorForPostflopAction(item.action),
+              share: item.frequencyPct,
+            })),
+          }),
+        description: `${own === undefined ? label(bucket.action) : mixText(own)}${lane}`,
       };
     },
     summary: {
@@ -210,7 +238,20 @@ function strategyConfig(
         parts.push(rangeDetailLine(doc, localizedText("Most often", "Nejčastěji"), `${label(bucket.action)}${lane}`));
       }
       parts.push(rangeDetailLine(doc, localizedText("On the board", "Na desce"), flopzillaCategoryLabel(category)));
-      if (exact && bucket?.actionMix !== undefined) {
+      const own = bucket === undefined ? undefined : handMix?.get(hand);
+      if (own !== undefined) {
+        const segments = ordered(own).map((item) => ({
+          label: label(item.action),
+          share: item.frequencyPct,
+          color: colorForPostflopAction(item.action),
+        }));
+        const title = localizedText(`How the solver plays ${hand}`, `Jak solver hraje ${hand}`);
+        parts.push(
+          el(doc, "h4", "dx-trainer__hands-title", title),
+          strategyBar(doc, segments, { label: title }),
+          strategyLegend(doc, segments),
+        );
+      } else if (exact && bucket?.actionMix !== undefined) {
         const segments = bucket.actionMix.map((item) => ({
           label: label(item.action),
           share: item.frequencyPct,
@@ -280,7 +321,15 @@ function strengthConfig(doc: Document, spot: PostflopTrainingSpot): Omit<RangeVi
   };
 }
 
-/** Postflopová range v novém GUI (Agents/ui-redesign-plan.md, fáze 2). */
+/**
+ * Postflopová range v novém GUI (Agents/ui-redesign-plan.md, fáze 2).
+ *
+ * Matice se ukáže hned s tím, co nese pack. Frekvence po třídách rukou se
+ * stahují zvlášť (`solvedClassMixLoader.ts`) a až dorazí, matice se překreslí
+ * s pruhy v buňkách a s toutéž vybranou rukou. `data-class-mix` na obalu říká,
+ * jak to dopadlo: `loading`, `ready`, nebo `none` (rodina je nenese, soubor
+ * k packu nepatří, nebo se nestáhl).
+ */
 export function postflopRangeContent(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
   const source = spot.explanation.source;
   const buckets = source.kind === "STRATEGY_PACK" ? source.rangeBuckets ?? [] : [];
@@ -290,21 +339,50 @@ export function postflopRangeContent(doc: Document, spot: PostflopTrainingSpot):
   for (const bucket of buckets) {
     for (const hand of bucket.handClasses) if (!bucketOf.has(hand)) bucketOf.set(hand, bucket);
   }
-  const config = bucketOf.size > 0
-    ? strategyConfig(doc, spot, bucketOf, exactMixes(spot, buckets))
-    : strengthConfig(doc, spot);
+  const exact = exactMixes(spot, buckets);
+  const host = el(doc, "div", "dx-range-host");
 
-  const board = el(doc, "div", "dx-range__board");
-  board.setAttribute("aria-label", localizedText("Board", "Deska"));
-  board.append(...spot.board.map((card) => playingCard(doc, card, "sm")));
+  const render = (handMix?: ReadonlyMap<HandLabel, readonly PostflopActionFrequency[]>): void => {
+    const previous = host.querySelector<HTMLElement>(".dx-range__detail")?.dataset.hand as HandLabel | undefined;
+    const focused = host.contains(doc.activeElement);
+    const config = bucketOf.size > 0
+      ? strategyConfig(doc, spot, bucketOf, exact, handMix)
+      : strengthConfig(doc, spot);
+    const board = el(doc, "div", "dx-range__board");
+    board.setAttribute("aria-label", localizedText("Board", "Deska"));
+    board.append(...spot.board.map((card) => playingCard(doc, card, "sm")));
+    const view = rangeView(doc, {
+      ...config,
+      label: localizedText("Range matrix", "Matice range"),
+      hero: postflopHandClassFromCards(spot.heroCards),
+      ...(previous === undefined ? {} : { selected: previous }),
+    });
+    view.prepend(board);
+    host.replaceChildren(view);
+    if (focused) host.querySelector<HTMLElement>('.dx-matrix__cell[aria-selected="true"]')?.focus();
+  };
+  render();
 
-  const view = rangeView(doc, {
-    ...config,
-    label: localizedText("Range matrix", "Matice range"),
-    hero: postflopHandClassFromCards(spot.heroCards),
-  });
-  view.prepend(board);
-  return view;
+  const ref = source.kind === "STRATEGY_PACK" ? source.classMix : undefined;
+  if (ref === undefined || bucketOf.size === 0) {
+    host.dataset.classMix = "none";
+    return host;
+  }
+  host.dataset.classMix = "loading";
+  void import("../../data/ranges/solvedClassMixLoader")
+    .then((module) => module.loadClassMix(ref))
+    .then((mix) => {
+      if (mix === undefined) {
+        host.dataset.classMix = "none";
+        return;
+      }
+      render(mix);
+      host.dataset.classMix = "ready";
+    })
+    .catch(() => {
+      host.dataset.classMix = "none";
+    });
+  return host;
 }
 
 /** Otevře range k desce v dialogu; nové GUI ho volá z tlačítka „Range“. */

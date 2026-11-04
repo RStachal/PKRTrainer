@@ -1,6 +1,7 @@
 import type { PostflopStrategyResolver } from "../../core/postflopGenerator";
 import { createPostflopResolverChain } from "./postflopResolverChain";
 import type { SolvedTurnManifestEntry } from "./turnSolvedManifest.generated";
+import type { SolvedClassMixFile } from "./solvedClassMix";
 import { registerSolvedTurnPack, runtimeSolvedTurnPacks } from "./turnSolvedRuntimeRegistry";
 import type { TurnStrategyPack } from "./turnStrategyPack";
 import { createTurnStrategyResolver } from "./turnStrategyResolver";
@@ -23,6 +24,14 @@ function solvedTurnManifestAsync(): Promise<readonly SolvedTurnManifestEntry[]> 
   return manifestPromise;
 }
 
+/**
+ * Frekvence po třídách rukou k packu pro matici range (`solvedClassMix.ts`),
+ * nebo `undefined`, když je rodina nenese. Stahuje se až s maticí, ne s packem.
+ */
+export async function loadSolvedTurnClassMix(packId: string): Promise<SolvedClassMixFile | undefined> {
+  const entry = (await solvedTurnManifestAsync()).find((item) => item.packId === packId);
+  return entry?.loadMix?.();
+}
 
 /**
  * The solved turn packs the app ships, one downloadable chunk per family.

@@ -398,6 +398,50 @@ nesly po třídách, pack by vyrostl. Turnový pack
 záznamů tříd, v průměru 3,7 akce na pravidlo; směs v celých procentech by
 přidala zhruba 230 KB. Je to rozhodnutí o formátu packů, ne o vzhledu.
 
+**Rozhodnuto 3. 11. 2026 večer, majitel: „chci to. Rozšířit".** Návrh:
+
+- **Frekvence nejdou do packu.** Pack má strop 528 KB raw a 128 KB gzip.
+  Generátor ořezává pravidla na 500 KB (`trimToModuleBudget`), takže
+  frekvence by z packu vytlačily obsah. Pack se navíc stahuje u každého
+  rozdaného spotu. Frekvence proto leží v souboru vedle packu a stahují se až
+  s maticí, stejně jako tabulky turnové EV.
+- **Soubor:** `src/data/ranges/{flop,turn,river}-mix/<rodina>.generated.json`
+  (`solvedClassMix.ts`). Na každé pravidlo packu jeden řetězec se 169 místy
+  v pořadí mřížky, v každém celá procenta akcí v pořadí akcí pravidla. Páruje
+  se podle pořadí pravidla v packu (`pack.rules.indexOf(rule)`, jako EV)
+  a soubor nese otisk obsahu packu. Frekvence k jinému obsahu se nepoužijí.
+- **Vlastní adresáře `-mix`:** chunk pak dostane jméno, které precache pozná
+  jako odložené (`isSolvedStreetAsset`). Soubor s tečkou vedle packu by
+  skončil na instalační cestě, popáté tatáž past. Skripty, které procházejí
+  `turn/*.generated.json` jako packy, soubory s frekvencemi neuvidí.
+- **Generátory** (flop, turn, river) zakódují směs tříd hned u postaveného
+  pravidla a zapíšou soubor po ořezu (`writeClassMix`). Když se soubor
+  nevejde do 500 KB, vyprázdní frekvence od konce; pravidla packu kvůli nim
+  nikdy neubývají. Manifest dá rodině `loadMix` jen tehdy, když soubor leží.
+- **Matice** se ukáže hned s tím, co nese pack, a až frekvence dorazí,
+  překreslí se s pruhy v buňkách a s toutéž vybranou rukou. Detail pak ukáže
+  strategii té třídy („Jak solver hraje 76s“), ne průměr skupiny.
+- **Kde budou:** flop se staví z checkpointů monolitu, takže frekvence po
+  třídách dostanou jen rodiny vyřešené od 2. 11. a další přibývají s každou
+  nocí. Turn a river z rozkladu, ale jen tam, kde přestavba dá přesně dodaný
+  obsah (níž).
+
+**Stav 4. 11. 2026 (deník 336).** Frekvence se k dodaným packům dopsaly
+režimem generátorů `--mix-only`: pack zůstane, jak je, a soubor
+s frekvencemi se zapíše jen tehdy, když přestavba dá týž otisk obsahu
+(`mixOnlyRefusal`). Přestavět packy kvůli frekvencím by znamenalo vyměnit
+obsah, a s ním EV i posouzení majitelem.
+
+| ulice | rodin s frekvencemi | proč ne zbytek |
+|---|---|---|
+| flop | 1 z 83 | checkpointy monolitů se ztratily 30. 10. |
+| turn | 35 z 55 | u 16 je rozklad novější než dodaný pack (15 packů 25bb z 12. 9. proti rozkladu z 23.-24. 10., `MTT9_50BB_UTG_2_CO_SRP` rozložená den po stavbě packu); plný cyklus 24. 10. je přestavěl (`artifacts/after-night-full.log`), ale commity se ztratily se strojem. 3 hluboké rodiny mají v rozkladu víc desek, než na kolika pack stojí (150bb 30 proti 20), 1 rodina má ztracené desky |
+| river | 1 z 48 | 20 packů z 19. 10. postavil rozpočet, který 20. 10. opravil commit fb2f7482 („cyklus 19. 10. vzal 21 packům 103 desek“), takže je přestavba změní; 27 packů z 12. 9. a 24. 9. stojí na vrstvách, které pozdější rozklad (4.-24. 10.) nahradil. Sedí jen pack z 20. 10. (`MTT9_20BB_BTN_BB_SRP_LOWSPR`); zkoušeno 12 rodin, zbytek dávky zastaven, protože jde o packy z 19. 10. |
+
+Zbytek přijde s přestavbou packů. Sobotní plný cyklus (7. 11. v 07:00)
+přestaví turn a river z dnešního rozkladu a generátor k nim frekvence zapíše
+sám; cyklus necommituje, takže obsah i frekvence projdou pondělní kontrolou.
+
 **Nalezeno cestou:**
 
 - **Klasická matice ukazovala jinou range, než podle které se hodnotilo.**
@@ -414,6 +458,12 @@ přidala zhruba 230 KB. Je to rozhodnutí o formátu packů, ne o vzhledu.
   měla barvu bez položky v legendě (`CATEGORY_ORDER`).
 - **Prohlídka UI v novém GUI končila na flopu.** Postflopové kroky měly
   selektory klasiky. Teď má vlastní a fotí i dialog s range (`03b`, `06`).
+- **Jednotlivý spot vyřešené packy nedostane (4. 11., deník 337).** Pruhy
+  frekvencí měly projít E2E na turnovém spotu, jenže aplikace vyřešené packy
+  načítá jen v produkční lince a v rozboru HH: v prohlížeči se na žádné
+  ulici nestáhl ani jeden chunk `*-solved-*`, ani s licencí. Frekvence proto
+  hlídá test nad dodanými daty (`solvedClassMixData.test.ts`) a v aplikaci se
+  ukážou, až se načítání opraví (rozhodnutí majitele).
 
 **Rozpočet CSS je skoro vyčerpaný:** 79,96 z 80 KiB. Položka legendy proto
 používá tlačítko z kitu. Fáze 3 a 4 se do stropu nevejdou, dokud se neuklidí

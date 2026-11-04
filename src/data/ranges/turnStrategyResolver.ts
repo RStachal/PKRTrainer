@@ -281,6 +281,14 @@ export function createTurnStrategyResolver(pack: TurnStrategyPack): PostflopStra
         // jedinou buňku s akcí a blafovací část je od složených rukou
         // nerozeznatelná - změřeno 25. 8. 2026 na 0 tříd ze 169.
         rangeBuckets: solvedRangeBuckets(rule.buckets, rule.actions, actions, input.board ?? []),
+        // Kde leží frekvence pravidla po třídách rukou pro matici range.
+        classMix: {
+          street: "TURN",
+          packId: pack.id,
+          contentHash: pack.contentHash,
+          ruleIndex: pack.rules.indexOf(rule),
+          actions: actions.map((item) => item.action),
+        },
       }),
       ...(actionEvsFor(pack, pack.rules.indexOf(rule), input,
         actions.map((item) => item.action)) ?? {}),

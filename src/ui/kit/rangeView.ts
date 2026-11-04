@@ -27,6 +27,8 @@ export interface RangeViewConfig {
   label: string;
   cell: (hand: HandLabel) => HandMatrixCell;
   hero?: HandLabel;
+  /** Ruka vybraná na začátku, když to nemá být ruka hráče. */
+  selected?: HandLabel;
   /** Celá range: pruh, věta pod ním a legenda, která zvýrazňuje. */
   summary: {
     title: string;
@@ -81,6 +83,7 @@ export function rangeView(doc: Document, config: RangeViewConfig): HTMLElement {
     label: config.label,
     cell: config.cell,
     ...(config.hero === undefined ? {} : { hero: config.hero }),
+    ...(config.selected === undefined ? {} : { selected: config.selected }),
     onSelect: showDetail,
   });
   const matrixWrap = el(doc, "div", "dx-range__grid");
@@ -127,7 +130,7 @@ export function rangeView(doc: Document, config: RangeViewConfig): HTMLElement {
   root.append(matrixWrap, side);
 
   const first = matrix.element.querySelector<HTMLElement>('[aria-selected="true"]')?.dataset.hand;
-  showDetail((config.hero ?? first ?? "AA") as HandLabel);
+  showDetail((first ?? config.hero ?? "AA") as HandLabel);
   return root;
 }
 

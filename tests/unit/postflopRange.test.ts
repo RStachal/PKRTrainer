@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { PostflopRangeBucket } from "../../src/core/postflopGenerator";
 import type { PostflopTrainingSpot } from "../../src/core/postflopTrainingSpot";
@@ -7,6 +7,11 @@ import type { Card } from "../../src/core/types";
 import { setAppLanguage } from "../../src/ui/cs";
 import { colorForPostflopAction } from "../../src/ui/rangeMatrixView";
 import { postflopRangeContent } from "../../src/ui/trainer/postflopRange";
+
+// Frekvence po třídách se stahují zvlášť (`solvedClassMixLoader.ts`); test je
+// dodá sám, aby nesahal na skutečné packy.
+const loadClassMix = vi.fn();
+vi.mock("../../src/data/ranges/solvedClassMixLoader", () => ({ loadClassMix }));
 
 /**
  * Postflopová range v novém GUI (Agents/ui-redesign-plan.md, fáze 2).
@@ -179,5 +184,76 @@ describe("postflopová range v novém GUI", () => {
     // Overpair je na K-high desce jen AA: 6 z 1 326 kombinací, tedy „<1 %“, ne „0 %“.
     expect(root.querySelector('.dx-range__key[data-group="OVERPAIR"] .dx-range__value')?.textContent)
       .toBe(`<1${NBSP}%`);
+  });
+});
+
+describe("postflopová range - frekvence po třídách rukou", () => {
+  const ref = {
+    street: "FLOP" as const,
+    packId: "pack-v1",
+    contentHash: "abc-1",
+    ruleIndex: 4,
+    actions: ["BET_SMALL", "CHECK"] as const,
+  };
+  const withRef = () => {
+    const base = spot();
+    return {
+      ...base,
+      explanation: { ...base.explanation, source: { ...base.explanation.source, classMix: ref } },
+    } as unknown as PostflopTrainingSpot;
+  };
+  const exactMix = (bet: number, check: number) => [
+    { action: "BET_SMALL", frequencyPct: bet, visibility: "EXACT" },
+    { action: "CHECK", frequencyPct: check, visibility: "EXACT" },
+  ].filter((item) => item.frequencyPct > 0);
+
+  it("bez odkazu nic nestahuje a zůstane u převažující akce", () => {
+    loadClassMix.mockReset();
+    const root = postflopRangeContent(document, spot());
+    expect(root.dataset.classMix).toBe("none");
+    expect(loadClassMix).not.toHaveBeenCalled();
+    expect(root.querySelectorAll("[data-mixed]")).toHaveLength(0);
+  });
+
+  it("po stažení nakreslí pruhy v buňce, detail té třídy a nechá vybranou ruku", async () => {
+    loadClassMix.mockReset();
+    loadClassMix.mockResolvedValue(new Map([
+      ["AKo", exactMix(70, 30)],
+      ["76s", exactMix(55, 45)],
+      ["22", exactMix(0, 100)],
+    ]));
+    const root = postflopRangeContent(document, withRef());
+    document.body.appendChild(root);
+    expect(root.dataset.classMix).toBe("loading");
+    // Hráč mezitím vybral jinou ruku; po překreslení má zůstat vybraná.
+    at(root, "76s").click();
+
+    await vi.waitFor(() => expect(root.dataset.classMix).toBe("ready"));
+    expect(loadClassMix).toHaveBeenCalledWith(ref);
+    const ako = at(root, "AKo");
+    expect(ako.dataset.mixed).toBe("true");
+    expect(ako.getAttribute("aria-label")).toBe(`AKo: Bet 33${NBSP}% 70${NBSP}%, Check 30${NBSP}%, hodnota (tvoje ruka)`);
+    // Blaf zůstane šrafovaný i s pruhy, čistý check má jednu barvu bez pruhů navíc.
+    expect(at(root, "76s").dataset.hatched).toBe("true");
+    expect(at(root, "76s").dataset.mixed).toBe("true");
+    // Ruka mimo soubor zůstane u plné barvy převažující akce.
+    expect(at(root, "KQs").dataset.mixed).toBeUndefined();
+
+    const detail = root.querySelector<HTMLElement>(".dx-range__detail")!;
+    expect(detail.dataset.hand).toBe("76s");
+    expect(detail.querySelector(".dx-trainer__hands-title")?.textContent).toBe("Jak solver hraje 76s");
+    expect(detail.querySelector(".dx-strategy-bar")?.getAttribute("aria-label")).toContain(`Check 45${NBSP}%`);
+    const notes = [...root.querySelectorAll(".dx-range__side > .dx-trainer__note")].map((note) => note.textContent);
+    expect(notes[0]).toBe("Pruhy v buňce ukazují, jak často ruka hraje každou akci, v celých procentech.");
+    expect(notes.some((note) => note?.startsWith("Frekvence jsou průměry skupin"))).toBe(false);
+  });
+
+  it("když rodina frekvence nenese, zůstane matice, jak byla", async () => {
+    loadClassMix.mockReset();
+    loadClassMix.mockResolvedValue(undefined);
+    const root = postflopRangeContent(document, withRef());
+    await vi.waitFor(() => expect(root.dataset.classMix).toBe("none"));
+    expect(root.querySelectorAll("[data-mixed]")).toHaveLength(0);
+    expect(root.querySelector(".dx-range__detail")?.textContent).toContain("v průměru");
   });
 });
