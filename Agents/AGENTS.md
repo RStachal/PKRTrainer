@@ -354,6 +354,11 @@ nedodat rozbitou věc a nikdy netvrdit víc, než co je změřené**.
   lost with the machine. Never commit unverified work. (Until then: "Do not
   commit automatically.")
 - After changes, run build/tests if available.
+- Three rules are enforced by a Claude Code `PreToolUse` hook, not only by this
+  text (owner, 4. 11. 2026; `scripts/hooks/guardToolUse.mjs`, `CLAUDE.md`): no
+  solver runs from a session, no heavy work in the solver window (Mon-Fri
+  20:00-07:00 and weekends), no edits to sources, tests or the diary while a
+  test suite lock is alive.
 
 ## Refactor direction
 

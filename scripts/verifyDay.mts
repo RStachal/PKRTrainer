@@ -23,6 +23,8 @@
 import { spawnSync } from "node:child_process";
 import { freemem } from "node:os";
 
+import { takeSuiteLock } from "./lib/suiteLock.mts";
+
 interface Step {
   script: string;
   /** Kolik volné paměti chtít před startem, v GB. */
@@ -73,6 +75,9 @@ function waitForMemory(step: Step): void {
 }
 
 const started = Date.now();
+// Po celou bránu, ne jen po dobu sady: i kroky za ní čtou zdroje a deník
+// (`scripts/hooks/guardToolUse.mjs`). Uvolní se i při `process.exit`.
+takeSuiteLock("verify-day");
 for (const step of STEPS) {
   waitForMemory(step);
   const stepStarted = Date.now();

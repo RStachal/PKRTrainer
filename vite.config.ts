@@ -117,6 +117,8 @@ export default defineConfig({
     // přes komentář `// @vitest-environment jsdom` na začátku souboru.
     environment: "node",
     globals: true,
+    // Zámek běžící sady pro hook Claude Code (`tests/suiteLock.ts`).
+    globalSetup: ["tests/suiteLock.ts"],
     // Mnoho integračních testů spouští další Node/PowerShell CLI procesy, takže
     // jeden worker znamená celý strom cmd -> npm -> node -> vite-node.
     //
