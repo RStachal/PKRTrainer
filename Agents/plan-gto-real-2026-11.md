@@ -424,6 +424,13 @@ rozhoduje P1 v tom plánu.
 - **R4** – „udělej návrh sám, víceméně jde jen o kvalitní zobrazení stolu
   a propracovat ikony dle varianty GTO vs REAL“. Návrh dělá agent bez kola
   výběru; majitel ho uvidí na stránce s návrhem a ve snímcích `ui:tour`.
+  **Návrh hotový 4. 11.:** plátno https://claude.ai/artifact/K5jGZWGkERAHdQHqF5axUq
+  (soukromé, sdílí se přes Share) se stolem na desktopu a telefonu
+  s přepínačem GTO/REAL, sadou sedmi ikon (žralok, orel, kámen, kostka,
+  velryba, žeton s pozicí, hrdina), šesti stavy u sedadla (klid, na tahu,
+  soupeř, složil, all-in, vítěz) a kartou hráče. Zdroj kreseb (SVG, viewBox
+  100, bez písma ze sítě) je `Agents/design/avatary-v1.html`, náhled
+  `avatary-v1.png`; v M2 z nich vznikne `src/ui/kit/avatar.ts`.
 - **R6** – charty dodá majitel a ptá se, jestli je jde odvodit algoritmem.
   Odpověď v 7.1.
 - **R7** – o tom, jestli jsou GTO a REAL placené, se nerozhoduje. **Placený bude
