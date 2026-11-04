@@ -343,6 +343,30 @@ Push/fold do 15 bb jde spočítat vlastním Nashovým výpočtem i bez chartů
 (odhad 1–2 dny). **Doporučení:** v1 do MTT 1.0, v2 jako obsah pro 1.1, až
 doběhne dnešní dávka.
 
+### 7.1 Dají se 6-max charty odvodit algoritmem? (R6, 4. 11.)
+
+Zčásti, a s jiným stupněm jistoty podle hloubky:
+
+- **Push/fold (do 15–20 bb): ano, přesně.** Nashova rovnováha shove a call
+  nad 169 třídami s equity tabulkou, kterou aplikace má (`preflopEquity.ts`).
+  Je to známý výpočet a dá se ověřit proti veřejným push/fold tabulkám.
+  Odhad 1–2 dny.
+- **Hlubší stacky (open, 3-bet, 4-bet na 20–100 bb): jen přibližně.** Chce
+  to vlastní zjednodušený preflopový solver: strom s pevnými velikostmi
+  (open, 3-bet, 4-bet jam), CFR nad 169 třídami a postflop nahrazený equity
+  s realizací podle pozice. Výsledek je tak dobrý, jak dobrá je ta realizace –
+  aproximace, ne měření. Odhad 5–8 dní včetně ověření proti 9-max chartům.
+- **Proč to dává smysl i s charty:** stejný preflopový model (strom, equity,
+  realizace) potřebuje REAL pro open, 3-bet a call (4.4) – jen místo
+  rovnováhy počítá nejlepší odpověď proti archetypu. Postaví se jednou v M3
+  a pak slouží třikrát: REAL na preflopu, kontrola majitelových chartů
+  (velké odchylky na čtení) a doplnění míst, která charty nepokryjí (se
+  štítkem „odvozeno algoritmem“).
+
+**Postup:** charty majitele jsou zdroj pravdy. Push/fold 6-max se spočítá
+hned po dodání chartů jako kontrola (a pod 15 bb jako náhrada, kde chart
+chybí). Zjednodušený solver pro hlubší stacky až s REAL preflopem (M3).
+
 ## 8. Cash (fáze 2)
 
 - **Chybí:** cash charty s rakem (100 bb, 6-max), rake v modelu (osa `rakeMode`
@@ -375,6 +399,12 @@ flopu, 6-max měřený, ICM jako produkční profil.
 **Kde řezat, kdyby kalendář tlačil:** REAL postflop do 1.1 ušetří 5–7 dní
 (REAL v 1.0 jen na preflopu), provizorní grafika místo produkční 2–4 dny.
 
+**Přístup do aplikace (R7, 4. 11.):** registrace, platba a licence jsou
+samostatný blok 14–18 dní agenta (`plan-pristup-registrace-2026-11.md`).
+Souběžně s M2–M7 by MTT 1.0 posunul zhruba o tři týdny; doporučení je vydat
+MTT 1.0 jako betu s pozvánkami a placený vstup spustit hned po ní (leden),
+rozhoduje P1 v tom plánu.
+
 ## 10. Rozhodnutí majitele
 
 | | rozhodnutí | doporučení |
@@ -387,6 +417,19 @@ flopu, 6-max měřený, ICM jako produkční profil.
 | R6 | 6-max charty: existují, a s právem použití? | když ano, preflop v2 hned; jinak v1 |
 | R7 | Je REAL placená funkce? | rozhodnout před vydáním; v betě zdarma jako vyřešený postflop |
 | R8 | Výpočetní výkon pro cash (druhý stroj, cloud) | rozhodnout na začátku fáze 2 |
+
+**Rozhodnuto 4. 11. 2026.** Majitel:
+
+- **R1, R2, R3, R5** – souhlas s doporučením.
+- **R4** – „udělej návrh sám, víceméně jde jen o kvalitní zobrazení stolu
+  a propracovat ikony dle varianty GTO vs REAL“. Návrh dělá agent bez kola
+  výběru; majitel ho uvidí na stránce s návrhem a ve snímcích `ui:tour`.
+- **R6** – charty dodá majitel a ptá se, jestli je jde odvodit algoritmem.
+  Odpověď v 7.1.
+- **R7** – o tom, jestli jsou GTO a REAL placené, se nerozhoduje. **Placený bude
+  vstup do aplikace** a k tomu registrace hráčů z webu tak, aby provoz zvládl
+  kolem 1 000 uživatelů. Rozpracované v `plan-pristup-registrace-2026-11.md`.
+- **R8** – postupně.
 
 ## 11. Rizika
 
