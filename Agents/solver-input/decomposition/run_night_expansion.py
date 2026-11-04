@@ -853,13 +853,14 @@ def main():
         )
         return
 
-    # Porada (`mtt:daily`) běží na začátku rozkladu ve 21:00 a trvá kolem dvou
-    # minut; expanze startuje o minutu později. Chvíli se na ni počká, ať se noc
-    # nerozjede podle včerejšího rozhodnutí. Když porada neproběhne (rozklad se
-    # nespustil), jede se jako dosud.
+    # Porada (`mtt:daily`) běží na začátku rozkladu ve 20:00 a 3. 11. 2026 trvala
+    # 225 s; expanze startuje o minutu později. Chvíli se na ni počká, ať se noc
+    # nerozjede podle včerejšího rozhodnutí. Do 4. 11. se čekalo nejvýš 6 min,
+    # tedy necelé tři minuty rezervy; teď deset. Když porada neproběhne (rozklad
+    # se nespustil), jede se jako dosud.
     from run_night_decomposition import _priority_is_fresh
     waited = 0
-    while not _priority_is_fresh() and waited < 6 * 60 and datetime.now() < deadline:
+    while not _priority_is_fresh() and waited < 10 * 60 and datetime.now() < deadline:
         time.sleep(30)
         waited += 30
     if decomposition_has_the_night():

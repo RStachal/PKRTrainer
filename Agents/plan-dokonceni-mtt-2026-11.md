@@ -155,7 +155,10 @@ která na nich stojí.
 10. GUI fáze 4 (statistiky a slabá místa) a 5 (úklid starých stylů).
 11. Noci: dávka 204 desek, pak rozklad nových rodin (turnová EV). Pokus D6.
     *(3. 11.: D6 v runneru a ve wrapperu, bod 330; první souběžná noc je
-    první noc šířky. Rozhodnout po dvou nocích podle řádku `propustnost:`.)*
+    první noc šířky. Rozhodnout po dvou nocích podle řádku `propustnost:`.
+    4. 11.: noc 3.-4. 11. D6 nezměřila - druhou desku nepustila pojistka
+    paměti a noc po poradě ve 21:00 připadla rozkladu; hranice porady
+    opravená, bod 335.)*
 
 **Fáze D – vydání (týden 4)**
 

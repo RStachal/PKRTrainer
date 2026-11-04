@@ -308,17 +308,32 @@ def staged_boards_without_checkpoint():
     return staged_work_without_checkpoint()[0]
 
 
-def _priority_is_fresh():
+# Od kdy se noc počítá jako „tahle": spodní okraj brány ve wrapperech
+# (`Test-NightWindow` v `scripts/scheduled/lib-night-window.ps1`), na minutu
+# stejný.
+#
+# Do 4. 11. 2026 tu stálo natvrdo 20:45 ze starého okna 21-7. Brána se 2. 11.
+# posunula na 19:55, hranice ne. V noci 3.-4. 11. proto tik ve 20:00 vzal
+# poradu z minulého večera za dnešní, expanze podle ní začala solvit, a když se
+# porada ve 21:00 konečně pustila a dala noc rozkladu, jely obě práce naráz:
+# deska na 50 bb (průměr 25,5 min) přetekla strop 135 min, z toho 100 min
+# běžela vedle rozkladu. `nightPriorityFresh.test.ts` hlídá, že se hranice
+# s branou znovu nerozejde.
+NIGHT_BOUNDARY = "19:55"
+
+
+def _priority_is_fresh(now=None):
     """Je rozhodnutí o noci z **téhle** noci?
 
     Noc přesahuje půlnoc, takže „z dneška" nestačí: tik ve 02:00 by hlásil jiný
-    den než tik ve 22:00 téže noci. Hranicí je proto poslední 20:45 - spodní
-    okraj okna, od kterého se noc počítá (viz brána ve wrapperech).
+    den než tik ve 22:00 téže noci. Hranicí je proto poslední `NIGHT_BOUNDARY` -
+    spodní okraj okna, od kterého se noc počítá (viz brána ve wrapperech).
     """
     if not os.path.exists(NIGHT_PRIORITY):
         return False
-    now = datetime.now()
-    boundary = now.replace(hour=20, minute=45, second=0, microsecond=0)
+    now = now or datetime.now()
+    hour, minute = (int(part) for part in NIGHT_BOUNDARY.split(":"))
+    boundary = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
     if now < boundary:
         boundary -= timedelta(days=1)
     try:
