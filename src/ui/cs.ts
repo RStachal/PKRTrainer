@@ -640,6 +640,9 @@ const CZECH_EXPLANATION_PREFIXES = [
   "training.incorrect",
   "training.equivalent",
   "training.acceptable",
+  // Verdikt jako ostatní čtyři; chyběl, takže česky hraný spot hlásil
+  // nespočítanou akci anglicky (nalezeno 4. 11. 2026).
+  "training.unsolved",
   "training.actionEv.unavailable",
   "training.actionEv.note",
   "training.explanationUnavailable",
@@ -650,6 +653,7 @@ const CZECH_EXPLANATION_PREFIXES = [
   "postflop.incorrect",
   "postflop.equivalent",
   "postflop.acceptable",
+  "postflop.unsolved",
   "postflop.actionEv.unavailable",
   "postflop.actionEv.note",
   "system",

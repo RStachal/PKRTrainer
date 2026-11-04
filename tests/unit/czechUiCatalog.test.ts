@@ -41,6 +41,19 @@ describe("EN/CZ UI language contract", () => {
     expect(czech.system.asyncError).toContain("asynchronní operaci");
   });
 
+  it("vyhodnocení odpovědi mluví česky celé, včetně neposouzené akce", () => {
+    // Verdikt `unsolved` byl v CZ katalogu přeložený, ale chyběl mezi prefixy,
+    // takže ho hybridní katalog ukazoval anglicky mezi českými větami.
+    const english = catalogForLanguage("EN");
+    const czech = catalogForLanguage("CZ");
+    for (const section of ["training", "postflop"] as const) {
+      for (const verdict of ["correct", "incorrect", "equivalent", "acceptable", "unsolved"] as const) {
+        expect(czech[section][verdict], `${section}.${verdict}`).not.toBe(english[section][verdict]);
+      }
+    }
+    expect(czech.postflop.unsolved).toBe("Tuhle akci rozbor nepočítal, takže ji neumíme posoudit.");
+  });
+
   it("persists the selected language and exposes it through the live catalog proxy", () => {
     const values = new Map<string, string>();
     const storage = {
