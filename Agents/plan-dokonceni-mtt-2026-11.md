@@ -5,6 +5,11 @@ Napsáno 2. 11. 2026 večer, po obnově na novém stroji. Cíl majitele: dokonč
 v oddíle 1 jsou změřená a u každého je příkaz nebo soubor, odkud je. Odhady
 jsou označené jako odhady.
 
+**4. 11. 2026:** majitel rozšířil zadání o režimy GTO a REAL (ikony hráčů,
+exploit podle typu soupeře), 6-max do kompletního MTT a cash jako fázi 2.
+Analýza, algoritmus a nový odhad jsou v `plan-gto-real-2026-11.md`; definice
+MTT 1.0 (D1) a kalendář (oddíl 5) se mění podle rozhodnutí R1 tam.
+
 ## 1. Stav k 2. 11. 2026 – co přežilo, co ne
 
 ### Kód a dokumentace
