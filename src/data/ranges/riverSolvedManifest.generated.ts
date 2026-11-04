@@ -49,6 +49,7 @@ export const solvedRiverManifest: readonly SolvedRiverManifestEntry[] = [
     packId: "mtt-full-ring-9-river-solved-mtt9-20bb-btn-bb-srp-lowspr-v1",
     profileKey: "FULL_RING_9|REGULAR|CHIP_EV|RIVER",
     load: () => import("./river/mtt9-20bb-btn-bb-srp-lowspr.generated.json?raw").then((module) => JSON.parse(module.default) as RiverStrategyPack),
+    loadMix: () => import("./river-mix/mtt9-20bb-btn-bb-srp-lowspr.generated.json?raw").then((module) => JSON.parse(module.default) as SolvedClassMixFile),
   },
   {
     familyId: "MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR",

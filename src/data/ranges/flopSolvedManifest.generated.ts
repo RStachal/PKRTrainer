@@ -409,6 +409,7 @@ export const solvedFlopManifest: readonly SolvedFlopManifestEntry[] = [
     packId: "mtt-full-ring-9-flop-solved-mtt9-50bb-lj-hj-srp-v1",
     profileKey: "FULL_RING_9|REGULAR|CHIP_EV|FLOP",
     load: () => import("./flop/mtt9-50bb-lj-hj-srp.generated.json?raw").then((module) => JSON.parse(module.default) as FlopSolvedStrategyPack),
+    loadMix: () => import("./flop-mix/mtt9-50bb-lj-hj-srp.generated.json?raw").then((module) => JSON.parse(module.default) as SolvedClassMixFile),
   },
   {
     familyId: "MTT9_50BB_LJ_SB_SRP",
