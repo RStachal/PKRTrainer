@@ -28,14 +28,16 @@ describe("app shell palette", () => {
   });
 
   it("states the verdict in colour before any text is read", () => {
-    // The moment a player is here for. A stripe down the leading edge says which
-    // way it went at a glance; the text is confirmation rather than discovery.
-    const sheet = stylesheet("legacy/app-shell.css");
-    expect(sheet).toContain(".result--correct");
-    expect(sheet).toContain(".result--wrong");
-    // Distinct leading edges, not two shades of the same idea.
-    expect(sheet).toMatch(/\.result--correct\{[^}]*border-left:4px solid #2bd576/);
-    expect(sheet).toMatch(/\.result--wrong\{[^}]*border-left:4px solid #e23b3b/);
+    // The moment a player is here for. Since the classic GUI went (4. 11. 2026)
+    // the verdict is the coloured chip that opens the feedback (`outcomeChip.ts`);
+    // the text after it is confirmation rather than discovery.
+    const components = stylesheet("components.css");
+    expect(components).toMatch(/\.dx-chip--correct\s*\{[^}]*background:\s*var\(--dx-outcome-best\)/);
+    expect(components).toMatch(/\.dx-chip--mistake\s*\{[^}]*background:\s*var\(--dx-outcome-mistake\)/);
+    // Distinct hues, not two shades of the same idea.
+    const tokens = stylesheet("tokens.css");
+    expect(tokens).toContain("--dx-outcome-best: #34d399;");
+    expect(tokens).toContain("--dx-outcome-mistake: #e5484d;");
   });
 
   it("respects a player who asked for less motion", () => {

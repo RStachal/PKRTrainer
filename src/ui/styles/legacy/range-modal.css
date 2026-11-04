@@ -1,8 +1,9 @@
 /*
- * Styly starého GUI z src/ui/rangeModal.ts,
- * přesunuté 22. 10. 2026 z řetězce v TypeScriptu beze změny textu (fáze 0b,
- * Agents/ui-redesign-plan.md). Zmizí s obrazovkami, které nahradí nové GUI;
- * nové prvky sem nepatří, ty jsou v ../tokens.css a ../components.css.
+ * Kostra dialogu s maticí range (src/ui/kit/rangeDialog.ts). Původně styly
+ * src/ui/rangeModal.ts, přesunuté 22. 10. 2026 z řetězce v TypeScriptu (fáze
+ * 0b, Agents/ui-redesign-plan.md); modul zmizel s klasickým GUI 4. 11. 2026,
+ * kostra dialogu zůstala. Nové prvky sem nepatří, ty jsou v ../tokens.css a
+ * ../components.css.
  */
 .range-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;
   justify-content:center;padding:clamp(8px,2vw,18px);font-family:Inter,system-ui,Arial,sans-serif;}
@@ -20,23 +21,11 @@
   border-bottom:1px solid rgba(255,255,255,.08);
   padding-bottom:10px;}
 .range-modal__title{margin:0;font-size:16px;font-weight:950;letter-spacing:0;color:#f4f7ff;}
-.range-modal__close,.range-modal-open{appearance:none;border:1px solid rgba(255,255,255,.18);
+.range-modal__close{appearance:none;border:1px solid rgba(255,255,255,.18);
   border-radius:10px;background:linear-gradient(180deg,#202a3d,#151d2d);color:#e8ecf7;
   font-weight:900;font-size:13px;padding:9px 13px;cursor:pointer;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 10px 22px rgba(0,0,0,.18);}
-.range-modal__close:hover,.range-modal-open:hover{border-color:#2bd576;transform:translateY(-1px);}
-.range-modal__evidence{display:grid;gap:6px;margin:0 0 12px;padding:10px;border:1px solid
-  rgba(123,211,255,.16);border-radius:10px;background:rgba(255,255,255,.045);
-  color:#cbd5e1;font-size:12px;}
-.range-modal__evidence-title{font-weight:900;color:#e8ecf7;}
-.range-modal__evidence-meta,.range-modal__evidence-assumptions{line-height:1.35;
-  overflow-wrap:anywhere;}
-.range-modal__matrix{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;
-  scrollbar-color:#7bd3ff rgba(255,255,255,.08);}
-.range-modal__matrix .matrix{min-width:620px;}
-.range-modal__matrix .matrix-cell{min-height:22px;display:flex;align-items:center;
-  justify-content:center;}
-.range-modal-open{margin-bottom:10px;}
+.range-modal__close:hover{border-color:#2bd576;transform:translateY(-1px);}
 @media (max-width:640px){
   .range-modal{align-items:stretch;}
   .range-modal__dialog{width:100%;max-height:min(96vh,96dvh);padding:10px 10px 14px;
@@ -44,15 +33,10 @@
   .range-modal__header{align-items:flex-start;}
   .range-modal__title{font-size:14px;}
   .range-modal__close{padding:8px 10px;}
-  .range-modal-open{width:100%;}
-  .range-modal__matrix .matrix{min-width:560px;}
-  .range-modal__matrix .range-matrix-view{min-width:560px;padding:9px;}
-  .range-modal__matrix .range-matrix-header{gap:8px;}
-  .range-modal__matrix .range-matrix-meta{font-size:10px;}
 }
 @media (prefers-reduced-motion:reduce){
   .range-modal *,.range-modal *::before,.range-modal *::after{
     transition-duration:.01ms!important;animation-duration:.01ms!important;
     animation-iteration-count:1!important;scroll-behavior:auto!important;}
-  .range-modal__close:hover,.range-modal-open:hover{transform:none;}
+  .range-modal__close:hover{transform:none;}
 }

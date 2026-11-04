@@ -5,8 +5,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // player working through spots had nothing in front of them that moved. The
 // streak is the part that pulls; the tally is what keeps it honest, because a
 // streak alone hides a bad session.
-
-import { CS } from "../../src/ui/cs";
+//
+// Since 4. 11. 2026 this runs on the new GUI only (the classic training screen
+// was removed); the scoreboard sits in the trainer frame's head.
 
 class MemoryStorage implements Storage {
   private readonly data = new Map<string, string>();
@@ -18,20 +19,25 @@ class MemoryStorage implements Storage {
   setItem(key: string, value: string): void { this.data.set(key, value); }
 }
 
+const GAME = ".training__game";
+const ACTION = `${GAME} .dx-trainer__actions button`;
+/** Outcomes the scoreboard counts as a hit (`isHit` in sessionScore.ts). */
+const HITS = new Set(["BEST", "CORRECT", "EQUIVALENT", "ACCEPTABLE"]);
+
 async function startSession(): Promise<HTMLElement> {
   vi.resetModules();
   document.body.innerHTML = "";
   const { bootstrap } = await import("../../src/main");
   const root = document.createElement("div");
   document.body.appendChild(root);
-  bootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
+  bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
   root.querySelector<HTMLButtonElement>(".filter-start")?.click();
   // The preflop pack is fetched, so the session appears a tick after the click.
   // Asserting straight away tests an empty panel, which is how the first version
   // of this file passed its opening case and clicked nothing in the other two.
   await vi.waitFor(() => {
-    expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(false);
-    expect(root.querySelector(".action-btn")).not.toBeNull();
+    expect(root.querySelector<HTMLElement>(GAME)?.hidden).toBe(false);
+    expect(root.querySelector(ACTION)).not.toBeNull();
   }, { timeout: 15000 });
   return root;
 }
@@ -39,30 +45,22 @@ async function startSession(): Promise<HTMLElement> {
 /**
  * Answer the current spot and report how it was graded.
  *
- * Which button is right is only revealed after the click - `--recommended` is
- * added during the reveal - so a test cannot choose to be wrong. The first
- * version of this file pretended it could, picking "any button that is not the
- * recommended one" while nothing was recommended yet, and then asserted a broken
- * streak that was often not broken at all. It failed differently on every run.
- *
- * So this observes instead of forcing, and the caller keeps its own expectation
- * from what actually happened.
+ * Which button is right is only revealed after the click, so a test cannot
+ * choose to be wrong. The first version of this file pretended it could and
+ * failed differently on every run. So this observes instead of forcing, and the
+ * caller keeps its own expectation from what actually happened.
  */
 async function answer(root: HTMLElement, index = 0): Promise<boolean> {
-  const buttons = [...root.querySelectorAll<HTMLButtonElement>(".action-btn")];
+  const buttons = [...root.querySelectorAll<HTMLButtonElement>(ACTION)];
   buttons[index % buttons.length]?.click();
 
-  const result = root.querySelector<HTMLElement>(".result");
-  const verdict = root.querySelector<HTMLElement>(".result__verdict")?.textContent ?? "";
-  // The scoreboard counts an equivalent or acceptable answer as a hit, so the
-  // correct/wrong class alone is not the rule - the verdict text carries it.
-  const hit = result?.classList.contains("result--correct") === true ||
-    verdict === CS.training.equivalent ||
-    verdict === CS.training.acceptable;
+  const outcome = root.querySelector<HTMLElement>(`${GAME} .dx-trainer__verdict .dx-chip`)?.dataset.outcome ?? "";
+  expect(outcome, "the answer was graded").not.toBe("");
+  const hit = HITS.has(outcome);
 
-  root.querySelector<HTMLButtonElement>(".result__next")?.click();
+  root.querySelector<HTMLButtonElement>(`${GAME} .dx-trainer__next`)?.click();
   await vi.waitFor(() => {
-    expect(root.querySelector(".action-btn")).not.toBeNull();
+    expect(root.querySelector(`${ACTION}:not(:disabled)`)).not.toBeNull();
   }, { timeout: 15000 });
   return hit;
 }
@@ -72,12 +70,11 @@ describe("session scoreboard", () => {
 
   it("starts a session at zero", async () => {
     const root = await startSession();
-    const streak = root.querySelector<HTMLElement>(".training__streak");
-    expect(streak).not.toBeNull();
-    expect(streak!.dataset.streak).toBe("0");
+    const streak = root.querySelector<HTMLElement>(`${GAME} .dx-trainer__streak`);
+    expect(streak?.textContent).toBe("Série 0");
     // Nothing to celebrate before the first answer.
-    expect(streak!.classList.contains("training__streak--hot")).toBe(false);
-    expect(root.querySelector(".training__tally")?.textContent).toBeTruthy();
+    expect(streak?.dataset.hot).toBe("false");
+    expect(root.querySelector(`${GAME} .dx-trainer__tally`)?.textContent).toBe("Zatím bez odpovědí");
   });
 
   it("tracks what the grader actually decided, answer after answer", async () => {
@@ -100,14 +97,13 @@ describe("session scoreboard", () => {
         expectedStreak = 0;
       }
 
-      const streak = root.querySelector<HTMLElement>(".training__streak")!;
-      expect(streak.dataset.streak, `after ${answered} answers`).toBe(String(expectedStreak));
-      expect(streak.classList.contains("training__streak--hot"))
-        .toBe(expectedStreak >= 3);
+      const streak = root.querySelector<HTMLElement>(`${GAME} .dx-trainer__streak`)!;
+      expect(streak.textContent, `after ${answered} answers`).toBe(`Série ${expectedStreak}`);
+      expect(streak.dataset.hot).toBe(String(expectedStreak >= 3));
       // The tally must keep showing the session even right after a miss, or a
       // mistake would erase the evidence that anything was played.
-      expect(root.querySelector(".training__tally")?.textContent)
-        .toContain(`${correct}/${answered}`);
+      expect(root.querySelector(`${GAME} .dx-trainer__tally`)?.textContent)
+        .toContain(`${correct} z ${answered} správně`);
     }
   });
 });

@@ -264,7 +264,7 @@ describe("zapojení do postflopového panelu", () => {
   function renderPanel(onAnswered = vi.fn()): HTMLElement {
     const root = document.createElement("div");
     document.body.appendChild(root);
-    renderPostflopView(root, { initialSeed: 1, initialStreet: "FLOP", nextUi: true, onAnswered });
+    renderPostflopView(root, { initialSeed: 1, initialStreet: "FLOP", onAnswered });
     root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
     return root;
   }
@@ -380,7 +380,7 @@ describe("nová postflopová obrazovka - linka", () => {
     document.body.appendChild(root);
     const onAnswered = vi.fn();
     const onLineCompleted = vi.fn();
-    renderPostflopView(root, { initialSeed: 3, initialStreet: "FLOP", nextUi: true, onAnswered, onLineCompleted });
+    renderPostflopView(root, { initialSeed: 3, initialStreet: "FLOP", onAnswered, onLineCompleted });
     const mode = root.querySelector<HTMLSelectElement>(".postflop-mode");
     if (mode === null) throw new Error("chybí volba režimu");
     mode.value = "line";

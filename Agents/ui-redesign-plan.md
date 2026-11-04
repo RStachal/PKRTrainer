@@ -1,11 +1,11 @@
 # Redesign GUI – plán
 
-**Stav:** fáze 0, 0b, 1 a 2 hotové. Od 3. 11. 2026 je nové GUI tréninku
-výchozí, klasika zůstává za `?ui=classic` (deník 333); matice range nového GUI
-se vejde na 360 px (deník 334). Další je fáze 3 (nastavení), před ní úklid
-starých stylů kvůli rozpočtu CSS. Vlastník návrh 22. 10. schválil: „myslím, že
-to vypadá dobře, můžeš pokračovat." Průběh a naměřená čísla jsou na konci
-dokumentu.
+**Stav:** fáze 0, 0b, 1 a 2 hotové, z fáze 5 smazané klasické GUI tréninku
+i s přepínačem `?ui=` (4. 11. 2026, deník 340). Nové GUI je od 3. 11. výchozí
+(deník 333) a teď jediné; matice range se vejde na 360 px (deník 334). CSS
+kleslo z 79,96 na 51,52 KiB, takže fáze 3 (nastavení) se do rozpočtu vejde.
+Vlastník návrh 22. 10. schválil: „myslím, že to vypadá dobře, můžeš
+pokračovat." Průběh a naměřená čísla jsou na konci dokumentu.
 
 **Zadání vlastníka (22. 10. 2026):** „nelíbí se mi současné GUI … budeme potřebovat
 re-design tak, aby aplikace vypadala moderně, profesionálně, přehledně a byla
@@ -212,8 +212,8 @@ používat první.
    věty a tlačítko „Další spot“. Obrazovka je za přepínačem.
 
    **Preflop hotový 22. 10.** (`src/ui/trainer/preflopTrainerView.ts`,
-   `src/ui/styles/trainer.css`). Zapíná se `?ui=next`, vypíná `?ui=classic`
-   a volba se pamatuje (`src/ui/trainer/uiFlag.ts`). Stav:
+   `src/ui/styles/trainer.css`). Zapínal se `?ui=next`, vypínal `?ui=classic`
+   a volba se pamatovala (`uiFlag.ts`; přepínač zmizel s klasikou 4. 11.). Stav:
    - Desktop má stůl vlevo, akce a vyhodnocení vpravo. Mobil má akce
      a vyhodnocení přilepené dole.
    - Nad akcemi je otázka s kartami hráče („Jak zahraješ 9♠ 6♠?“), protože
@@ -231,7 +231,7 @@ používat první.
    - Rozmístění sedadel (kdo složil, akce, jmenovaný protihráč) je vytažené
      do `src/ui/tableModel.ts`. Starý i nový stůl kreslí totéž.
 
-   Prohlídka: `npm run ui:tour -- --ui=next`.
+   Prohlídka: `npm run ui:tour` (do 4. 11. s `--ui=next`).
 3. **Postflop stejně.** Je výrazně složitější než preflop: má jeden spot
    i celou linku (flop → turn → river), resolver strategie s pravidly pro
    záložní obsah, a statistiky zapisuje přes zpětná volání z `main.ts`.
@@ -467,7 +467,51 @@ sám; cyklus necommituje, takže obsah i frekvence projdou pondělní kontrolou.
   packy své ulice načte před prvním rozdáním a E2E ověřuje stažení
   vyřešeného flopového i turnového packu a pruhy v turnové matici (deník 338).
 
-**Rozpočet CSS je skoro vyčerpaný:** 79,96 z 80 KiB. Položka legendy proto
-používá tlačítko z kitu. Fáze 3 a 4 se do stropu nevejdou, dokud se neuklidí
-staré styly obrazovek, které nové GUI už nahradilo, nebo dokud se nerozhodne
-o stropu. Úklid je fáze 5, část z něj tedy půjde dřív.
+**Rozpočet CSS byl skoro vyčerpaný:** 79,96 z 80 KiB. Položka legendy proto
+používá tlačítko z kitu. Fáze 3 a 4 by se do stropu nevešly, a tak část úklidu
+z fáze 5 šla dřív - viz další oddíl.
+
+### Fáze 5 (část), 4. 11. 2026: klasické GUI pryč
+
+Majitel 4. 11.: „Smazat klasiku teď". Nové GUI bylo od 3. 11. výchozí
+a prošlo E2E na všech šířkách; klasika za `?ui=classic` už jen držela kód,
+testy a styly, které hráč neuvidí.
+
+- **Kód.** Z `main.ts` a `postflopView.ts` zmizelo klasické vykreslení
+  (otázka, vyhodnocení, linka, Flopzilla matice, bubliny EV na tlačítkách,
+  cenové řádky), moduly `uiFlag.ts`, `rangeModal.ts`,
+  `actionEvButtonBubbles.ts` a `actionPriceLines.ts` a s nimi přepínač
+  `?ui=`. `postflopRangeMatrixView.ts` drží jen klasifikaci rukou a EV po
+  kombinacích, které čte nová matice.
+- **Testy.** Kde hlídaly chování panelu nebo zásadu, jsou převedené na novou
+  obrazovku: start aplikace, mobilní smoke, skóre relace, zásada „žádné zdroje
+  v UI" (teď i s dialogem range u postflopu), QA matice linek a postflopový
+  panel včetně poctivých poznámek modelu (SPR, dva stromy, pokrytí textur,
+  all-in na tlačítku). Testy klasického vykreslení, které pokrývá
+  `postflopTrainerView.test.ts`, zmizely.
+- **E2E a prohlídka.** Produkční tok (jazyk, brána preflopu, produkční flop
+  s EV akcí, produkční linka, turn a river, HH, statistiky, reload, offline
+  a odolnost) běží na nové obrazovce; `ui:tour` přepínač `--ui` nemá.
+- **Styly.** Ze `src/ui/styles/legacy` zmizela pravidla klasické obrazovky
+  (77,0 → 41,4 kB zdroje). Rozpočet CSS: 79,96 → 51,52 z 80 KiB.
+  Ve složce zůstaly živé styly kostry aplikace, filtrů, statistik, HH, stolu
+  rozboru HH a kostry dialogu; jejich přestěhování a smazání složky zbývá.
+
+**Nalezeno cestou:**
+
+- **Neposouzená akce česky mluvila anglicky.** Verdikt `unsolved` měl v CZ
+  katalogu překlad, ale chyběl mezi prefixy hybridního katalogu (`cs.ts`),
+  takže česky hraný spot hlásil nespočítanou akci anglicky mezi českými
+  větami - u preflopu i postflopu. Klasický test to dokonce bral za záměr
+  („sada běží v anglické lokalizaci"). Opraveno, hlídá to
+  `czechUiCatalog.test.ts`.
+- **Rozdání dalšího spotu je asynchronní.** Od 4. 11. načítá `beforeGenerate`
+  packy ulice před každým rozdáním a do té doby zůstává starý spot i s
+  vyhodnocením. E2E se tak jednou trefilo do starého spotu (smyčka mixu po
+  třídách teď čeká na nový). V produktu je během pomalého rozdání starý spot
+  klikací a druhé „Další spot" rozdá dvakrát - drobnost, zatím neopravená.
+- **Produkční fixture E2E je rozbitá už dřív.** `e2e:chrome:production-fixture`
+  (mimo brány) padá stejně na HEAD f499e732 i na 1359ba2c: spot nese vzor
+  pozic `3BP_HJ_VS_LJ` místo čekaného `OOP_CALLER_VS_IP_3BETTOR` a produkční
+  linka skončí prázdnou stránkou. S dočasně uvolněnou kontrolou vzoru prošel
+  na nové obrazovce produkční flop i EV akcí; linka je otevřený bod.

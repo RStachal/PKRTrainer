@@ -1,9 +1,9 @@
 /**
  * Dialog s maticí range - kostra společná preflopu i postflopu.
  *
- * Preflop ji otevírá přes `openRangeModal` (starý pohled „Show range“ i nové
- * GUI „Range“), postflop z nové obrazovky (Agents/ui-redesign-plan.md, fáze 1:
- * matice „patří do dialogu, jako u preflopu“). Je tu zvlášť a bez závislostí,
+ * Otevírá ji tlačítko „Range“ obrazovky tréninku: preflop přes
+ * `openPreflopRange`, postflop přes `openPostflopRange` (Agents/ui-redesign-plan.md,
+ * fáze 1: matice „patří do dialogu, jako u preflopu“). Je tu zvlášť a bez závislostí,
  * aby postflopová obrazovka nepřitáhla do svého balíku preflopové range.
  *
  * `fill` dostane tělo dialogu pod hlavičkou a doplní obsah. Zavírá se

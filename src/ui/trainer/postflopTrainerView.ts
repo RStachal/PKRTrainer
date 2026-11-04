@@ -21,9 +21,9 @@ import { openPostflopRange } from "./postflopRange";
 import { actionButton, button, createTrainerFrame, el, nextSpotRow } from "./trainerFrame";
 
 /**
- * Nová obrazovka jednoho postflopového spotu (Agents/ui-redesign-plan.md,
+ * Obrazovka jednoho postflopového spotu (Agents/ui-redesign-plan.md,
  * fáze 1, krok 3b). Spot rozdává `dealPostflopSpot` a hodnotí
- * `gradePostflopAction`, stejně jako starý pohled; zápis do statistik dělá
+ * `gradePostflopAction`; zápis do statistik dělá
  * `main.ts` přes `onAnswered`. Tahle vrstva kreslí a vede skóre relace.
  *
  * Otázka: deska na stole, akce soupeře na téhle ulici a akce hráče
@@ -46,7 +46,7 @@ export interface PostflopTrainerViewOptions {
 /**
  * Ulice uvnitř linky flop → turn → river (fáze 1, krok 3c).
  *
- * Linku vede volající (`postflopView.ts`), stejně jako u starého pohledu: po
+ * Linku vede volající (`postflopView.ts`): po
  * odpovědi ji podle zvolené akce přegeneruje, protože další ulice na volbě
  * závisí, a obrazovce řekne, co dál. Do statistik jde celá linka najednou na
  * konci, proto se u ulice linky `onAnswered` nevolá.
@@ -149,7 +149,7 @@ const POLICY_LABEL: Record<PostflopPolicyAction, string> = {
 
 /**
  * Předchozí ulice linky, jedna věta na ulici: kdo co zahrál a pot po ní.
- * Hráče a soupeře jmenuje pozicemi, ne „Hero/Villain“ jako starý pohled.
+ * Hráče a soupeře jmenuje pozicemi, ne „Hero/Villain“ jako dřív starý pohled.
  */
 function lineHistory(spot: PostflopTrainingSpot, actions: readonly PostflopLineAction[]): string[] {
   const seat = (actor: PostflopLineActor): string => (actor === "HERO" ? spot.heroPosition : spot.villainPosition);
@@ -208,9 +208,9 @@ export function createPostflopTrainerView(
   }
 
   /**
-   * Matice range k desce v dialogu, jako u preflopu. Starý pohled ji kreslí
-   * přímo ve vyhodnocení; tady by vyhodnocení protáhla daleko za dvě sekundy
-   * čtení (směr, bod 3), takže je za tlačítkem.
+   * Matice range k desce v dialogu, jako u preflopu. Přímo ve vyhodnocení by
+   * ho protáhla daleko za dvě sekundy čtení (směr, bod 3), takže je za
+   * tlačítkem.
    */
   function rangeButton(spot: PostflopTrainingSpot): HTMLButtonElement {
     const range = button(doc, "dx-btn dx-btn--secondary dx-trainer__range", "Range");
@@ -391,7 +391,7 @@ export function createPostflopTrainerView(
     // kterou solver nemá.
     if (!grade.unsolved) score = recordAnswer(score, isHit(grade.correct, grade.actionEv?.outcome));
     // Ulice linky do statistik nejde po jedné: celou linku zapíše volající na
-    // jejím konci (`onLineCompleted`), jako u starého pohledu.
+    // jejím konci (`onLineCompleted`).
     const continuation = line === null ? null : line.answer(action);
     if (line === null) options.onAnswered(spot, action, Number.isFinite(responseMs) ? responseMs : undefined);
     frame.markActions(action, grade.recommended);
@@ -406,6 +406,10 @@ export function createPostflopTrainerView(
     frame.root.dataset.seed = String(spot.seed);
     frame.root.dataset.street = spot.street;
     frame.root.dataset.actionNode = spot.actionNode;
+    // Typ potu a vzor pozic, ať test i E2E poznají, že spot odpovídá vybrané
+    // situaci.
+    frame.root.dataset.potType = spot.potType;
+    frame.root.dataset.positionPattern = spot.positionPattern;
     frame.root.dataset.mode = line === null ? "single" : "line";
     if (line === null) {
       delete frame.root.dataset.lineIndex;

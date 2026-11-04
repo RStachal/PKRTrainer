@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type {
   BlindSpeed,
@@ -79,7 +79,7 @@ describe("MTT hand-line QA matrix", () => {
     document.body.innerHTML = "";
   });
 
-  it.each(scenarios)("$name", (scenario) => {
+  it.each(scenarios)("$name", async (scenario) => {
     const root = document.createElement("div");
     document.body.appendChild(root);
     const completed: Array<{
@@ -104,17 +104,20 @@ describe("MTT hand-line QA matrix", () => {
 
     root.querySelector<HTMLSelectElement>(".postflop-mode")!.value = "line";
     root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+    // Od 4. 11. 2026 jen nová obrazovka; linka se rozdává asynchronně.
+    await vi.waitFor(() => {
+      expect(root.querySelector(TRAINER)).not.toBeNull();
+    }, { timeout: 20000 });
+    const screen = root.querySelector<HTMLElement>(TRAINER)!;
 
     scenario.actions.forEach((action, index) => {
-      expect(root.querySelector<HTMLElement>(".postflop-question-title")?.textContent)
-        .toMatch(new RegExp(`^Hand line ${index + 1}/\\d+$`));
-      expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street)
-        .toBe(scenario.expectedStreets[index]);
-      expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.mode).toBe("line");
+      expect(screen.dataset.lineIndex).toBe(String(index));
+      expect(screen.dataset.street).toBe(scenario.expectedStreets[index]);
+      expect(screen.dataset.mode).toBe("line");
       clickAction(root, action);
 
       if (index < scenario.actions.length - 1) {
-        root.querySelector<HTMLButtonElement>(".postflop-line-next")?.click();
+        screen.querySelector<HTMLButtonElement>(".dx-trainer__next")?.click();
       }
     });
 
@@ -123,7 +126,7 @@ describe("MTT hand-line QA matrix", () => {
       actions: scenario.expectedActions,
       total: scenario.expectedStreets.length,
     }]);
-    expect(root.querySelector<HTMLElement>(".postflop-line-complete")?.dataset.totalStreets)
+    expect(screen.querySelector<HTMLElement>(".dx-trainer__line-done")?.dataset.total)
       .toBe(String(scenario.expectedStreets.length));
     expect(root.textContent).not.toMatch(/\bhttps?:\/\//i);
     expect(root.textContent).not.toMatch(/\b(?:StrategyPack|RangePack)\b/);
@@ -132,8 +135,10 @@ describe("MTT hand-line QA matrix", () => {
   });
 });
 
+const TRAINER = ".postflop-output .dx-trainer";
+
 function clickAction(root: HTMLElement, action: PostflopAction): void {
-  const button = root.querySelector<HTMLButtonElement>(`.postflop-action[data-action="${action}"]`);
+  const button = root.querySelector<HTMLButtonElement>(`${TRAINER} .dx-trainer__actions button[data-action="${action}"]`);
   expect(button, `Expected action button ${action}`).not.toBeNull();
   button?.click();
 }

@@ -7,7 +7,8 @@ import { getAppLanguage, localizedText } from "./cs";
  * a kde se od zobrazeného spotu liší.
  *
  * Vytaženo 23. 10. 2026 z `postflopView.ts`, aby je četl starý pohled i nová
- * obrazovka (Agents/ui-redesign-plan.md, fáze 1, krok 3b). Každá z vět tu je,
+ * obrazovka (Agents/ui-redesign-plan.md, fáze 1, krok 3b); od 4. 11. 2026 je
+ * čte jen nová, v „Podrobnostech“ vyhodnocení. Každá z vět tu je,
  * protože bez ní hráč dostal tvrzení, které se o nic neopíralo - vyřešené SPR
  * jinde, než je spot, dva různé stromy v jednom agregátu, heuristika vydávaná
  * za solver. Dvě kopie by se rozešly právě v tom.

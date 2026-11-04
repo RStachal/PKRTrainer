@@ -20,8 +20,8 @@ import type { StatsStore } from "../persistence/statsStore";
  * Do 22. 10. 2026 tahle logika žila uvnitř `setupTraining` v main.ts, spletená
  * s vykreslováním. Nové GUI (Agents/ui-redesign-plan.md, fáze 1) ji potřebuje
  * taky a psát ji podruhé by znamenalo dvě místa, která se rozejdou - třeba
- * v tom, co se zapíše do statistik. Proto ji používá starý pohled i nová
- * obrazovka.
+ * v tom, co se zapíše do statistik. Používal ji starý pohled i nová
+ * obrazovka; od 4. 11. 2026 jen ta nová.
  */
 
 export type PreflopSessionStart =

@@ -84,7 +84,7 @@ describe("mobile / Android WebView smoke", () => {
     const root = document.createElement("div");
     document.body.appendChild(root);
 
-    bootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
 
     expect(root.querySelector(".filters")).not.toBeNull();
     expect(root.querySelector(".filter-start")).not.toBeNull();
@@ -100,7 +100,7 @@ describe("mobile / Android WebView smoke", () => {
     expect(warning?.textContent).toContain("Cash rake preview");
     expect(warning?.textContent).not.toContain("https://");
     expect(warning?.textContent?.toLowerCase()).not.toContain("zdroj");
-    expect(root.querySelector(".poker-table")).toBeNull();
+    expect(root.querySelector(".training__game .dx-table")).toBeNull();
 
     variant!.value = "MTT";
     variant!.dispatchEvent(new Event("change"));
@@ -118,11 +118,11 @@ describe("mobile / Android WebView smoke", () => {
 
     expect(root.querySelector<HTMLElement>(".app__panel--postflop")?.hidden).toBe(false);
     expect(root.querySelector(".postflop-view")).not.toBeNull();
-    expect(root.querySelectorAll(".postflop-action").length).toBeGreaterThanOrEqual(3);
-    expect(root.querySelector<HTMLElement>(".postflop-result")?.hidden).toBe(true);
-    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
-    expect(root.querySelector<HTMLElement>(".postflop-result")?.hidden).toBe(false);
-    expect(root.querySelector<HTMLElement>(".postflop-result")?.textContent)
+    expect(root.querySelectorAll(POSTFLOP_ACTION).length).toBeGreaterThanOrEqual(3);
+    expect(root.querySelector<HTMLElement>(POSTFLOP_FEEDBACK)?.hidden).toBe(true);
+    root.querySelector<HTMLButtonElement>(POSTFLOP_ACTION)?.click();
+    expect(root.querySelector<HTMLElement>(POSTFLOP_FEEDBACK)?.hidden).toBe(false);
+    expect(root.querySelector<HTMLElement>(POSTFLOP_FEEDBACK)?.textContent)
       .not.toContain("https://");
 
     root.querySelector<HTMLButtonElement>('[data-tab="hh"]')?.click();
@@ -163,7 +163,7 @@ describe("mobile / Android WebView smoke", () => {
       const root = document.createElement("div");
       document.body.appendChild(root);
 
-      bootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
+      bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
 
       expect(root.querySelector(".filters")).not.toBeNull();
       expect(root.querySelector<HTMLSelectElement>(".profile-street")).not.toBeNull();
@@ -173,15 +173,16 @@ describe("mobile / Android WebView smoke", () => {
       root.querySelector<HTMLButtonElement>(".filter-start")?.click();
       await waitForPostflopSpot(root);
 
-      expect(root.querySelector(".postflop-table")).not.toBeNull();
-      expect(root.querySelectorAll(".postflop-seat").length).toBeGreaterThanOrEqual(2);
-      const boardCards = root.querySelectorAll(".postflop-table__board .postflop-card").length;
+      expect(root.querySelector(`${POSTFLOP_TRAINER} .dx-table`)).not.toBeNull();
+      expect(root.querySelectorAll(`${POSTFLOP_TRAINER} .dx-table__seat`).length).toBeGreaterThanOrEqual(2);
+      const boardCards = root.querySelectorAll(`${POSTFLOP_TRAINER} .dx-table__board .dx-card`).length;
       expect(boardCards).toBeGreaterThanOrEqual(3);
       expect(boardCards).toBeLessThanOrEqual(5);
-      root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
-      expect(root.querySelector(".postflop-flopzilla__matrix")).not.toBeNull();
-      expect(root.querySelectorAll(".postflop-flopzilla__cell")).toHaveLength(169);
+      root.querySelector<HTMLButtonElement>(POSTFLOP_ACTION)?.click();
+      root.querySelector<HTMLButtonElement>(`${POSTFLOP_TRAINER} .dx-trainer__range`)?.click();
+      expect(document.querySelectorAll(".range-modal .dx-matrix__cell")).toHaveLength(169);
       expect(root.textContent).not.toContain("https://");
+      document.querySelector(".range-modal")?.remove();
     }
   });
 
@@ -194,22 +195,22 @@ describe("mobile / Android WebView smoke", () => {
       const { bootstrap } = await importFreshMain();
       const root = document.createElement("div");
       document.body.appendChild(root);
-      bootstrap({ root, storage, registerSw: false, ui: "classic" });
+      bootstrap({ root, storage, registerSw: false });
 
       const street = root.querySelector<HTMLSelectElement>(".profile-street");
       street!.value = "FLOP";
       street!.dispatchEvent(new Event("change"));
       root.querySelector<HTMLButtonElement>(".filter-start")?.click();
       await waitForPostflopSpot(root);
-      root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
-      expect(root.querySelector<HTMLElement>(".postflop-result")?.hidden).toBe(false);
+      root.querySelector<HTMLButtonElement>(POSTFLOP_ACTION)?.click();
+      expect(root.querySelector<HTMLElement>(POSTFLOP_FEEDBACK)?.hidden).toBe(false);
     }
 
     {
       const { bootstrap } = await importFreshMain();
       const root = document.createElement("div");
       document.body.appendChild(root);
-      bootstrap({ root, storage, registerSw: false, ui: "classic" });
+      bootstrap({ root, storage, registerSw: false });
 
       root.querySelector<HTMLButtonElement>('[data-tab="stats"]')?.click();
       await waitForDashboard(root);
@@ -227,9 +228,14 @@ describe("mobile / Android WebView smoke", () => {
  * (`loadSolvedPostflopStreets` v `main.ts`, deník 338), takže se spot
  * nevykreslí ve stejném ticku jako kliknutí.
  */
+/** Nové GUI tréninku (od 4. 11. 2026 jediné, klasika smazána). */
+const POSTFLOP_TRAINER = ".postflop-output .dx-trainer";
+const POSTFLOP_ACTION = `${POSTFLOP_TRAINER} .dx-trainer__actions button`;
+const POSTFLOP_FEEDBACK = `${POSTFLOP_TRAINER} .dx-trainer__feedback`;
+
 async function waitForPostflopSpot(root: HTMLElement): Promise<void> {
   await vi.waitFor(() => {
-    expect(root.querySelector(".postflop-meta")).not.toBeNull();
+    expect(root.querySelector(POSTFLOP_ACTION)).not.toBeNull();
   }, { timeout: 20000 });
 }
 

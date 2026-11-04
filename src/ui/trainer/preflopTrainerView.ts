@@ -15,9 +15,9 @@ import { openPreflopRange } from "./preflopRange";
 import { actionButton, button, createTrainerFrame, el, nextSpotRow } from "./trainerFrame";
 
 /**
- * Nová obrazovka preflopového tréninku (Agents/ui-redesign-plan.md, fáze 1,
- * krok 2). Logiku relace bere z řadiče, který používá i starý pohled, takže
- * oba zapisují do statistik totéž; tahle vrstva jen kreslí. Kostru obrazovky
+ * Obrazovka preflopového tréninku (Agents/ui-redesign-plan.md, fáze 1,
+ * krok 2). Logiku relace bere z řadiče (`preflopSession.ts`), který rozhoduje
+ * i o tom, co jde do statistik; tahle vrstva jen kreslí. Kostru obrazovky
  * a klávesnici sdílí s postflopem (`trainerFrame.ts`).
  *
  * Otázka: hlavička spotu, stůl a akce (klávesy 1–9). Po odpovědi stejné místo

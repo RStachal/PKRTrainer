@@ -33,8 +33,9 @@ import { QA_VIEWPORTS, type Viewport } from "./lib/viewports.mts";
  *   npm run ui:tour                                 postaví dist/ a projde všechny šířky
  *   npm run ui:tour -- --no-build                   použije existující dist/
  *   npm run ui:tour -- --viewports=desktop-1280,mobile-390
- *   npm run ui:tour -- --ui=next                    nové GUI tréninku (v aplikaci výchozí od 3. 11. 2026;
- *                                                   prohlídka bez přepínače fotí klasiku kvůli porovnání)
+ *
+ * Fotí jediné GUI tréninku; klasické se smazalo 4. 11. 2026 a s ním přepínač
+ * `--ui`. Starší prohlídky s příponou `-next` jsou totéž GUI.
  *
  * Není to brána, o obsahu nic netvrdí. Selže jen tehdy, když se nedostane na
  * obrazovku, kterou má vyfotit, protože pak je prohlídka neúplná a má to říct.
@@ -43,38 +44,22 @@ import { QA_VIEWPORTS, type Viewport } from "./lib/viewports.mts";
 const TOUR_SEED = "20261022";
 const STEP_TIMEOUT_MS = 60_000;
 
-type TourUi = "classic" | "next";
-
-/** Prvky preflopového tréninku, které se v novém GUI jmenují jinak. */
-const PREFLOP_SELECTORS: Record<TourUi, { action: string; result: string; change: string }> = {
-  classic: {
-    action: ".action-btn",
-    result: ".result__next",
-    change: ".training__change-situation",
-  },
-  next: {
-    action: ".dx-trainer__actions button",
-    result: ".dx-trainer__feedback:not([hidden])",
-    change: ".dx-trainer__change",
-  },
+/** Prvky preflopového tréninku. */
+const PREFLOP = {
+  action: ".training__game .dx-trainer__actions button",
+  result: ".training__game .dx-trainer__feedback:not([hidden])",
+  change: ".training__game .dx-trainer__change",
 };
 
-/** Totéž pro postflop; nové GUI má obrazovku v panelu postflopu. */
-const POSTFLOP_SELECTORS: Record<TourUi, { action: string; result: string }> = {
-  classic: {
-    action: ".postflop-action",
-    result: ".postflop-result",
-  },
-  next: {
-    action: ".postflop-output .dx-trainer__actions button",
-    result: ".postflop-output .dx-trainer__feedback:not([hidden])",
-  },
+/** Totéž pro postflop; obrazovka je v panelu postflopu. */
+const POSTFLOP = {
+  action: ".postflop-output .dx-trainer__actions button",
+  result: ".postflop-output .dx-trainer__feedback:not([hidden])",
 };
 
 interface TourArgs {
   build: boolean;
   viewports: readonly Viewport[];
-  ui: TourUi;
 }
 
 interface Shot {
@@ -93,12 +78,9 @@ interface MissingStep {
 function parseArgs(argv: readonly string[]): TourArgs {
   let build = true;
   let viewports: readonly Viewport[] = QA_VIEWPORTS;
-  let ui: TourUi = "classic";
   for (const arg of argv) {
     if (arg === "--no-build") {
       build = false;
-    } else if (arg === "--ui=next" || arg === "--ui=classic") {
-      ui = arg === "--ui=next" ? "next" : "classic";
     } else if (arg.startsWith("--viewports=")) {
       const names = arg.slice("--viewports=".length).split(",").map((name) => name.trim());
       const unknown = names.filter((name) => !QA_VIEWPORTS.some((viewport) => viewport.name === name));
@@ -109,10 +91,10 @@ function parseArgs(argv: readonly string[]): TourArgs {
       }
       viewports = QA_VIEWPORTS.filter((viewport) => names.includes(viewport.name));
     } else {
-      throw new Error(`neznámý přepínač ${arg}; známé: --no-build, --viewports=a,b, --ui=next|classic`);
+      throw new Error(`neznámý přepínač ${arg}; známé: --no-build, --viewports=a,b`);
     }
   }
-  return { build, viewports, ui };
+  return { build, viewports };
 }
 
 function timestamp(date: Date): string {
@@ -193,19 +175,17 @@ async function capture(
  * Kroky prohlídky. Každý staví na předchozím, takže první, který selže,
  * ukončí prohlídku na téhle šířce a zbytek se zapíše jako chybějící.
  */
-function tourSteps(ui: TourUi): ReadonlyArray<{ step: string; run: (client: CdpClient) => Promise<void> }> {
-  const preflop = PREFLOP_SELECTORS[ui];
-  const postflop = POSTFLOP_SELECTORS[ui];
-  // Matice range v dialogu (fáze 2) jen v novém GUI; klasika ji má jinde.
-  const range = (step: string, button: string) => (ui === "next"
-    ? [{
-      step,
-      run: async (client: CdpClient) => {
-        await click(client, button);
-        await waitForSelector(client, ".range-modal .dx-matrix", STEP_TIMEOUT_MS);
-      },
-    }]
-    : []);
+function tourSteps(): ReadonlyArray<{ step: string; run: (client: CdpClient) => Promise<void> }> {
+  const preflop = PREFLOP;
+  const postflop = POSTFLOP;
+  // Matice range v dialogu (fáze 2).
+  const range = (step: string, button: string) => [{
+    step,
+    run: async (client: CdpClient) => {
+      await click(client, button);
+      await waitForSelector(client, ".range-modal .dx-matrix", STEP_TIMEOUT_MS);
+    },
+  }];
   const closeRange = (client: CdpClient) => evaluate(
     client,
     `document.querySelector(".range-modal__close")?.click()`,
@@ -256,11 +236,8 @@ function tourSteps(ui: TourUi): ReadonlyArray<{ step: string; run: (client: CdpC
 }
 
 const args = parseArgs(process.argv.slice(2));
-const STEPS = tourSteps(args.ui);
-const outDirectory = resolve(
-  "artifacts/ui-tour",
-  `${timestamp(new Date())}${args.ui === "next" ? "-next" : ""}`,
-);
+const STEPS = tourSteps();
+const outDirectory = resolve("artifacts/ui-tour", timestamp(new Date()));
 const profileDirectory = mkdtempSync(join(tmpdir(), "pkrtrainer-ui-tour-"));
 const shots: Shot[] = [];
 const missing: MissingStep[] = [];
@@ -303,8 +280,7 @@ try {
       enabled: viewport.mobile,
       maxTouchPoints: viewport.mobile ? 5 : 1,
     });
-    // Parametr přežije vyčištění úložiště i reload, takže GUI zůstane zvolené.
-    await navigate(cdp, `${url}?ui=${args.ui}`);
+    await navigate(cdp, url);
     await waitForSelector(cdp, ".filter-start", STEP_TIMEOUT_MS);
     // Čistý stav: bez uložených filtrů a statistik z předchozí šířky.
     await evaluate(cdp, "localStorage.clear()");
@@ -342,7 +318,6 @@ writeFileSync(join(outDirectory, "index.json"), `${JSON.stringify({
   createdAt: new Date().toISOString(),
   commit: gitCommit(),
   seed: TOUR_SEED,
-  ui: args.ui,
   built: args.build,
   shots,
   missing,

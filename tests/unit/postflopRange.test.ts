@@ -155,6 +155,19 @@ describe("postflopová range v novém GUI", () => {
       .toBe(`Check +3,3 BB · Bet 33${NBSP}% +3,1 BB`);
   });
 
+  it("třída bez EV se netváří, že ji má", () => {
+    // Přeneseno z klasické matice (smazána 4. 11. 2026): EV drží jen část
+    // tříd, a kde chybí, detail ji nesmí naznačit prázdným nadpisem.
+    const root = postflopRangeContent(document, spot({
+      comboEvs: [{ combo: "AsKd", values: [{ action: "CHECK", evBb: 3.9 }] }],
+    }));
+    at(root, "22").click();
+    const detail = root.querySelector<HTMLElement>(".dx-range__detail")!;
+    expect(detail.dataset.hand).toBe("22");
+    expect(detail.querySelector(".dx-trainer__ev-row")).toBeNull();
+    expect(detail.textContent).not.toContain("EV po kombinacích");
+  });
+
   it("bez přesných frekvencí ukáže podíl kombinací podle převažující akce", () => {
     const qualitative = BUCKETS.map((bucket) => ({
       ...bucket,

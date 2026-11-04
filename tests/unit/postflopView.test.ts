@@ -1,98 +1,134 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { stylesheet } from "../stylesheets";
+import { setAppLanguage } from "../../src/ui/cs";
 import { renderPostflopView } from "../../src/ui/postflopView";
 import { solvedStrategySource } from "../../src/data/ranges/solvedStrategySource";
 import { loadSolvedRiverPacks } from "../../src/data/ranges/riverSolvedStrategyPacks";
 import { loadSolvedFlopPacks } from "../../src/data/ranges/flopSolvedStrategyPacks";
 import { loadAllSolvedTurnPacks } from "../../src/data/ranges/turnSolvedStrategyPacks";
-import type { PostflopStrategyResolver } from "../../src/core/postflopGenerator";
+import type { PostflopRecommendationSource, PostflopStrategyResolver } from "../../src/core/postflopGenerator";
 import { isPostflopPositionPattern } from "../../src/core/postflopGenerator";
 
-describe("postflopView - DOM", () => {
-  afterEach(() => {
-    document.body.innerHTML = "";
+/**
+ * Postflopový panel: zadání situace, rozdání a vyhodnocení.
+ *
+ * Od 4. 11. 2026 kreslí otázku i vyhodnocení jen nová obrazovka (klasické GUI
+ * smazáno). Její vlastní vykreslení hlídá `postflopTrainerView.test.ts`; tady
+ * zůstává, co patří panelu - volby situace, seed, upozornění, kontext pozic a
+ * typu potu, linka - a poctivé poznámky modelu, které panel hráči dává v
+ * „Podrobnostech“ (SPR, strom, pokrytí textur).
+ */
+type PackSource = Extract<PostflopRecommendationSource, { kind: "STRATEGY_PACK" }>;
+
+const TRAINER = ".postflop-output .dx-trainer";
+const ACTION = `${TRAINER} .dx-trainer__actions button`;
+
+/** Rozdání je asynchronní (příprava ulice, tabulka EV), čeká se na tlačítka. */
+async function dealt(root: HTMLElement): Promise<HTMLElement> {
+  await vi.waitFor(() => {
+    expect(root.querySelector(ACTION)).not.toBeNull();
+  }, { timeout: 20000 });
+  return root.querySelector<HTMLElement>(TRAINER)!;
+}
+
+function actions(root: HTMLElement): string[] {
+  return [...root.querySelectorAll<HTMLButtonElement>(ACTION)].map((button) => button.dataset.action ?? "");
+}
+
+function answer(root: HTMLElement, action?: string): void {
+  const selector = action === undefined ? ACTION : `${ACTION}[data-action="${action}"]`;
+  const target = root.querySelector<HTMLButtonElement>(selector);
+  expect(target, selector).not.toBeNull();
+  target!.click();
+}
+
+function feedbackText(root: HTMLElement): string {
+  return root.querySelector<HTMLElement>(`${TRAINER} .dx-trainer__feedback`)?.textContent ?? "";
+}
+
+/** Poznámky modelu v „Podrobnostech“ vyhodnocení. */
+function modelNotes(root: HTMLElement): string {
+  return root.querySelector<HTMLElement>(`${TRAINER} .dx-trainer__notes`)?.textContent ?? "";
+}
+
+async function renderAnswered(
+  source: Partial<PackSource>,
+  options: { action?: string; seed?: number; chosen?: string } = {},
+): Promise<HTMLElement> {
+  const resolver: PostflopStrategyResolver = (input) => ({
+    action: (options.action ?? "BET_BIG") as never,
+    explanation: "Fixture.",
+    source: {
+      kind: "STRATEGY_PACK",
+      provenance: "SOLVER_BACKED",
+      packId: "internal-test-pack",
+      packVersion: "v1",
+      packVerifiedAt: "2026-07-29",
+      ruleId: "internal-test-rule",
+      confidence: "HIGH",
+      matchedTextures: input.textures,
+      sprMin: 0,
+      sprMax: 25,
+      positionPattern: input.positionPattern,
+      sourceUrls: [],
+      assumptions: ["Fixture."],
+      selectionScore: 100,
+      tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+      ...source,
+    } as PackSource,
+  });
+  const root = document.createElement("div");
+  renderPostflopView(root, {
+    initialSeed: options.seed ?? 7,
+    initialStreet: "FLOP",
+    autoGenerate: true,
+    strategyResolver: resolver,
+  });
+  await dealt(root);
+  answer(root, options.chosen ?? "CHECK");
+  return root;
+}
+
+describe("postflopView - panel", () => {
+  beforeEach(() => {
+    setAppLanguage("CZ");
   });
 
-  function renderGeneratedSpot(seed: number, street: "FLOP" | "TURN" | "RIVER" = "FLOP"): HTMLElement {
-    const root = document.createElement("div");
-    renderPostflopView(root, { initialSeed: seed, initialStreet: street });
-    root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
-    return root;
-  }
+  afterEach(() => {
+    document.querySelector<HTMLButtonElement>(".range-modal__close")?.click();
+    document.body.innerHTML = "";
+    setAppLanguage("CZ");
+  });
 
-  it("vykresli postflop prototyp a respektuje seed i street", () => {
+  it("vykresli zadani situace a po rozdani otazku se seedem i ulici", async () => {
     const root = document.createElement("div");
     renderPostflopView(root);
 
     expect(root.querySelector(".postflop-view")).not.toBeNull();
     expect(root.querySelector<HTMLElement>(".postflop-output")?.hidden).toBe(true);
-    expect(root.querySelector<HTMLInputElement>(".postflop-seed")?.placeholder)
-      .toBe("random");
-    expect(root.querySelector<HTMLButtonElement>(".postflop-generate")?.textContent)
-      .toBe("Generate spot");
-    expect([...root.querySelectorAll<HTMLOptionElement>(".postflop-situation option")]
-      .map((option) => option.textContent))
-      .toEqual(["We have initiative", "Facing a bet", "No initiative, first to act"]);
-    expect(root.querySelectorAll(".postflop-card")).toHaveLength(0);
-    expect(root.querySelectorAll(".postflop-action")).toHaveLength(0);
+    expect(root.querySelector<HTMLInputElement>(".postflop-seed")?.placeholder).toBe("random");
+    expect(root.querySelectorAll(".postflop-situation option")).toHaveLength(3);
+    expect(root.querySelector(ACTION)).toBeNull();
 
     const seed = root.querySelector<HTMLInputElement>(".postflop-seed");
     const street = root.querySelector<HTMLSelectElement>(".postflop-street");
     seed!.value = "42";
     street!.value = "RIVER";
     root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+    const screen = await dealt(root);
 
+    // Seed je jednorázový: další spot už má být jiný.
     expect(seed?.value).toBe("");
     expect(root.querySelector<HTMLElement>(".postflop-controls")?.hidden).toBe(true);
-    expect(root.querySelector<HTMLButtonElement>(".postflop-new-spot")?.textContent)
-      .toBe("New spot");
-    expect(root.querySelector<HTMLButtonElement>(".postflop-change-situation")?.textContent)
-      .toBe("Change situation");
-    expect(root.querySelector<HTMLElement>(".postflop-question-title")?.textContent)
-      .toBe("Question");
+    expect(screen.dataset.seed).toBe("42");
+    expect(screen.dataset.street).toBe("RIVER");
+    expect(screen.dataset.actionNode).toBe("RIVER_PRESSURE");
+    expect(isPostflopPositionPattern(screen.dataset.positionPattern)).toBe(true);
+    expect(screen.querySelector(".dx-trainer__meta")?.textContent).toContain("SPR");
+    expect(screen.querySelector(".dx-trainer__title")?.textContent).toContain(" vs ");
+    expect(screen.querySelectorAll(".dx-table__board .dx-card")).toHaveLength(5);
     expect(root.textContent).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.seed).toBe("42");
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("RIVER");
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.actionNode)
-      .toBe("RIVER_PRESSURE");
-    expect(isPostflopPositionPattern(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.positionPattern))
-      .toBe(true);
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.textContent).toContain("SPR");
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.textContent).toContain(" vs ");
-    expect(root.querySelector(".postflop-table")).not.toBeNull();
-    expect(root.querySelector<HTMLElement>(".postflop-table")?.dataset.recommendedAction)
-      .toMatch(/^(CHECK|BET_SMALL|BET_BIG)$/);
-    expect(root.querySelector(".postflop-table__rail")).not.toBeNull();
-    expect(root.querySelector(".postflop-table__center-label")).not.toBeNull();
-    expect(root.querySelector(".postflop-table__bet-geometry")).not.toBeNull();
-    expect(root.querySelectorAll(".postflop-table__chip-stack span")).toHaveLength(3);
-    expect(root.querySelectorAll(".postflop-seat")).toHaveLength(9);
-    expect(root.querySelectorAll(".postflop-seat--active")).toHaveLength(2);
-    expect(root.querySelectorAll(".postflop-seat__status")).toHaveLength(9);
-    expect(root.querySelectorAll(".postflop-seat__badge")).toHaveLength(2);
-    expect(root.querySelectorAll(".postflop-seat__role-chip")).toHaveLength(4);
-    expect(root.querySelector<HTMLElement>(".postflop-seat--aggressor")?.dataset.actionRole)
-      .toBe("aggressor");
-    expect(root.querySelector<HTMLElement>(".postflop-seat--caller")?.dataset.actionRole)
-      .toBe("caller");
-    expect(root.querySelector<HTMLElement>(".postflop-seat--ip")?.dataset.positionRole)
-      .toBe("IP");
-    expect(root.querySelector<HTMLElement>(".postflop-seat--oop")?.dataset.positionRole)
-      .toBe("OOP");
-    expect(root.querySelector(".postflop-seat__role-chip--aggressor")?.textContent)
-      .toBe("Aggressor");
-    expect(root.querySelector(".postflop-seat__role-chip--caller")?.textContent)
-      .toBe("Caller");
-    expect(root.querySelectorAll(".postflop-seat__stack-bar")).toHaveLength(2);
-    expect(root.querySelectorAll(".postflop-seat__stack-chip")).toHaveLength(2);
-    const heroSeat = root.querySelector<HTMLElement>(".postflop-seat--hero");
-    expect(heroSeat?.style.getPropertyValue("--seat-left")).toMatch(/%$/);
-    expect(heroSeat?.style.getPropertyValue("--seat-mobile-left")).toMatch(/%$/);
-    expect(root.querySelectorAll(".postflop-table__board .postflop-card")).toHaveLength(5);
-    expect(root.querySelectorAll(".postflop-card")).toHaveLength(7);
-    expect(root.querySelectorAll(".postflop-texture").length).toBeGreaterThan(0);
   });
 
   it("zobrazi source-free runtime notice pro solver pilot rezim", () => {
@@ -128,46 +164,18 @@ describe("postflopView - DOM", () => {
     expect(notice?.textContent).toContain("za solvenutým rozsahem SPR");
   });
 
-  it("zobrazi pot geometry pro check, small bet a big bet sizing", () => {
-    const checkRoot = renderGeneratedSpot(0, "FLOP");
-    const checkGeometry = checkRoot.querySelector<HTMLElement>(".postflop-table__bet-geometry");
-    expect(checkGeometry?.dataset.recommendedAction).toBe("CHECK");
-    expect(checkGeometry?.dataset.betSizing).toBe("check");
-    expect(checkGeometry?.dataset.betBB).toBe("0");
-    expect(checkGeometry?.style.getPropertyValue("--bet-size")).toBe("0%");
-    expect(checkGeometry?.textContent).toContain("Check");
-    expect(checkGeometry?.querySelectorAll(".postflop-table__bet-chip")).toHaveLength(0);
-
-    const smallRoot = renderGeneratedSpot(1, "FLOP");
-    const smallGeometry = smallRoot.querySelector<HTMLElement>(".postflop-table__bet-geometry");
-    expect(smallGeometry?.dataset.recommendedAction).toBe("BET_SMALL");
-    expect(smallGeometry?.dataset.betSizing).toBe("small");
-    expect(smallGeometry?.dataset.betBB).toBe("2");
-    expect(smallGeometry?.style.getPropertyValue("--bet-size")).toBe("33%");
-    expect(smallGeometry?.textContent).toContain("Small bet 2 BB");
-    expect(smallGeometry?.querySelectorAll(".postflop-table__bet-chip")).toHaveLength(2);
-
-    const bigRoot = renderGeneratedSpot(3, "RIVER");
-    const bigGeometry = bigRoot.querySelector<HTMLElement>(".postflop-table__bet-geometry");
-    expect(bigGeometry?.dataset.recommendedAction).toBe("BET_BIG");
-    expect(bigGeometry?.dataset.betSizing).toBe("big");
-    expect(bigGeometry?.dataset.betBB).toBe("4.5");
-    expect(bigGeometry?.style.getPropertyValue("--bet-size")).toBe("75%");
-    expect(bigGeometry?.textContent).toContain("Big bet 4.5 BB");
-    expect(bigGeometry?.querySelectorAll(".postflop-table__bet-chip")).toHaveLength(4);
-  });
-
-  it("neprozradí doporučenou velikost před odpovědí", () => {
-    // Ukazatel kreslí doporučenou akci. Viditelný u otázky by hráči řekl
+  it("neprozradí doporučenou akci před odpovědí", async () => {
+    // Doporučení se na tlačítkách vyznačí až po odpovědi; dřív by hráči řeklo
     // odpověď dřív, než ji dá.
-    const root = renderGeneratedSpot(1, "FLOP");
-    const geometry = root.querySelector<HTMLElement>(".postflop-table__bet-geometry");
-    expect(geometry?.hidden).toBe(true);
-    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
-    expect(geometry?.hidden).toBe(false);
+    const root = document.createElement("div");
+    renderPostflopView(root, { initialSeed: 1, initialStreet: "FLOP", autoGenerate: true });
+    await dealt(root);
+    expect(root.querySelector(`${ACTION}[data-recommended]`)).toBeNull();
+    answer(root);
+    expect(root.querySelector(`${ACTION}[data-recommended="true"]`)).not.toBeNull();
   });
 
-  it("zobrazi explicitni akci predchoziho hrace v IP c-bet spotu", () => {
+  it("zobrazi check soupere v IP c-bet spotu", async () => {
     const root = document.createElement("div");
     renderPostflopView(root, {
       initialSeed: 42,
@@ -184,24 +192,18 @@ describe("postflopView - DOM", () => {
       },
       autoGenerate: true,
     });
+    const screen = await dealt(root);
 
-    const history = root.querySelector<HTMLElement>(".postflop-action-history");
-    expect(history).not.toBeNull();
-    expect(history?.dataset.actionNode).toBe("SINGLE_RAISED_POT_CBET");
-    expect(history?.dataset.previousActor).toBe("BB");
-    expect(history?.dataset.previousAction).toBe("CHECK");
-    expect(history?.textContent).toContain("Preflop: BTN open raise, BB call.");
-    expect(history?.textContent).toContain("Flop: BB checknul, Hero je na tahu.");
-    expect(history?.textContent).toContain("Soupeř checknul.");
-    const villainSeat = root.querySelector<HTMLElement>('.postflop-seat[data-position="BB"]');
-    const heroSeat = root.querySelector<HTMLElement>('.postflop-seat[data-position="BTN"]');
-    expect(villainSeat?.dataset.currentAction).toBe("CHECK");
-    expect(villainSeat?.textContent).toContain("Check");
-    expect(heroSeat?.dataset.currentAction).toBe("TO_ACT");
-    expect(heroSeat?.textContent).toContain("To act");
+    expect(screen.dataset.actionNode).toBe("SINGLE_RAISED_POT_CBET");
+    expect(screen.querySelector(".dx-trainer__situation")?.textContent).toBe("BB checknul.");
+    expect(screen.querySelector<HTMLElement>('.dx-table__seat[data-position="BB"] .dx-table__badge')
+      ?.dataset.action).toBe("CHECK");
+    expect(screen.querySelector<HTMLElement>('.dx-table__seat[data-position="BTN"]')?.dataset.hero)
+      .toBe("true");
+    expect(actions(root)).toEqual(["CHECK", "BET_SMALL", "BET_BIG"]);
   });
 
-  it("zobrazi predchozi bet soupere ve facing-bet spotu", () => {
+  it("zobrazi predchozi bet soupere ve facing-bet spotu", async () => {
     const root = document.createElement("div");
     renderPostflopView(root, {
       initialSeed: 42,
@@ -218,23 +220,15 @@ describe("postflopView - DOM", () => {
       },
       autoGenerate: true,
     });
+    const screen = await dealt(root);
 
-    const history = root.querySelector<HTMLElement>(".postflop-action-history");
-    expect(history?.dataset.previousActor).toBe("BB");
-    expect(history?.dataset.previousAction).toBe("BET_SMALL");
-    expect(history?.textContent).toContain("Flop: BB betnul, Hero čelí sázce.");
-    expect(history?.textContent).toContain("fold, call nebo raise");
-    const villainSeat = root.querySelector<HTMLElement>('.postflop-seat[data-position="BB"]');
-    const heroSeat = root.querySelector<HTMLElement>('.postflop-seat[data-position="BTN"]');
-    expect(villainSeat?.dataset.currentAction).toBe("BET");
-    expect(villainSeat?.textContent).toContain("Bet");
-    expect(heroSeat?.dataset.currentAction).toBe("TO_ACT");
-    expect([...root.querySelectorAll<HTMLButtonElement>(".postflop-action")]
-      .map((button) => button.dataset.action))
-      .toEqual(["FOLD", "CALL", "RAISE"]);
+    expect(screen.querySelector(".dx-trainer__situation")?.textContent).toMatch(/^BB vsadil/);
+    expect(screen.querySelector<HTMLElement>('.dx-table__seat[data-position="BB"] .dx-table__badge')
+      ?.dataset.action).toBe("BET");
+    expect(actions(root)).toEqual(["FOLD", "CALL", "RAISE"]);
   });
 
-  it("zobrazi ze OOP hero jedna prvni, kdyz pred nim na streetu neni akce", () => {
+  it("zobrazi ze OOP hero jedna prvni, kdyz pred nim na streetu neni akce", async () => {
     const root = document.createElement("div");
     renderPostflopView(root, {
       initialSeed: 42,
@@ -251,724 +245,41 @@ describe("postflopView - DOM", () => {
       },
       autoGenerate: true,
     });
+    const screen = await dealt(root);
 
-    const history = root.querySelector<HTMLElement>(".postflop-action-history");
-    expect(history?.dataset.previousActor).toBe("");
-    expect(history?.dataset.previousAction).toBe("NONE");
-    expect(history?.textContent).toContain("Flop: Hero je OOP a jedná první.");
-    expect(history?.textContent).toContain("Před vámi na této streetě nebyla žádná akce.");
-    const villainSeat = root.querySelector<HTMLElement>('.postflop-seat[data-position="BB"]');
-    const heroSeat = root.querySelector<HTMLElement>('.postflop-seat[data-position="SB"]');
-    expect(villainSeat?.dataset.currentAction).toBe("none");
-    expect(heroSeat?.dataset.currentAction).toBe("TO_ACT");
-    expect(heroSeat?.textContent).toContain("To act");
+    expect(screen.querySelector(".dx-trainer__situation")?.textContent).toBe("Jednáš první.");
+    expect(screen.querySelector('.dx-table__seat[data-position="BB"] .dx-table__badge')).toBeNull();
+    expect(screen.querySelector(".dx-trainer__meta")?.textContent).toContain("OOP");
   });
 
-  it("oddeli zadani situace od postflop otazky a umi se vratit", () => {
+  it("„Změnit situaci“ vrati zadani se zamerenou volbou ulice a dalsi spot vezme novy seed", async () => {
     const root = document.createElement("div");
     document.body.appendChild(root);
     renderPostflopView(root, { initialSeed: 42, initialStreet: "FLOP" });
 
     root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
-    expect(root.querySelector<HTMLInputElement>(".postflop-seed")?.value).toBe("");
-    expect(root.querySelector<HTMLElement>(".postflop-controls")?.hidden).toBe(true);
+    const screen = await dealt(root);
     expect(root.querySelector<HTMLElement>(".postflop-output")?.hidden).toBe(false);
-    expect(root.querySelectorAll(".postflop-action")).toHaveLength(3);
-    expect(document.activeElement).toBe(root.querySelector<HTMLButtonElement>(".postflop-action"));
-    expect(root.querySelector(".postflop-table")).not.toBeNull();
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.seed).toBe("42");
+    expect(actions(root)).toHaveLength(3);
+    expect(document.activeElement).toBe(root.querySelector(ACTION));
+    expect(screen.dataset.seed).toBe("42");
 
-    const seed = root.querySelector<HTMLInputElement>(".postflop-seed");
-    seed!.value = "43";
-    root.querySelector<HTMLButtonElement>(".postflop-new-spot")?.click();
-    expect(seed?.value).toBe("");
-    expect(root.querySelector<HTMLElement>(".postflop-controls")?.hidden).toBe(true);
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.seed).toBe("43");
+    answer(root);
+    root.querySelector<HTMLInputElement>(".postflop-seed")!.value = "43";
+    root.querySelector<HTMLButtonElement>(`${TRAINER} .dx-trainer__next`)?.click();
+    await vi.waitFor(() => {
+      expect(root.querySelector<HTMLElement>(TRAINER)?.dataset.seed).toBe("43");
+    });
+    expect(root.querySelector<HTMLInputElement>(".postflop-seed")?.value).toBe("");
 
-    root.querySelector<HTMLButtonElement>(".postflop-change-situation")?.click();
+    root.querySelector<HTMLButtonElement>(`${TRAINER} .dx-trainer__change`)?.click();
     expect(root.querySelector<HTMLElement>(".postflop-controls")?.hidden).toBe(false);
     expect(root.querySelector<HTMLElement>(".postflop-output")?.hidden).toBe(true);
-    expect(document.activeElement).toBe(root.querySelector<HTMLSelectElement>(".postflop-street"));
-    expect(root.querySelector(".postflop-card")).toBeNull();
-    expect(root.querySelector(".postflop-table")).toBeNull();
-    expect(root.querySelector(".postflop-action")).toBeNull();
+    expect(document.activeElement).toBe(root.querySelector(".postflop-street"));
+    expect(root.querySelector(ACTION)).toBeNull();
   });
 
-  it("podporuje keyboard flow pro postflop action buttons", () => {
-    const root = document.createElement("div");
-    document.body.appendChild(root);
-    renderPostflopView(root, { initialSeed: 42, initialStreet: "FLOP" });
-
-    root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
-    const buttons = [...root.querySelectorAll<HTMLButtonElement>(".postflop-action")];
-    expect(buttons).toHaveLength(3);
-    expect(document.activeElement).toBe(buttons[0]);
-
-    buttons[0].dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
-    expect(document.activeElement).toBe(buttons[1]);
-
-    buttons[1].dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
-    expect(document.activeElement).toBe(buttons[0]);
-
-    buttons[0].dispatchEvent(new KeyboardEvent("keydown", { key: "3", bubbles: true }));
-    expect(buttons[2].classList.contains("postflop-action--chosen")).toBe(true);
-    expect(root.querySelector<HTMLElement>(".postflop-result")?.hidden).toBe(false);
-    expect(document.activeElement).toBe(root.querySelector<HTMLElement>(".postflop-result"));
-  });
-
-  it("po vyberu akce zobrazi doporuceni a prakticke vysvetleni", () => {
-    const root = document.createElement("div");
-    renderPostflopView(root);
-
-    let result: HTMLElement | null = null;
-    for (let seed = 0; seed < 100; seed += 1) {
-      root.querySelector<HTMLInputElement>(".postflop-seed")!.value = String(seed);
-      root.querySelector<HTMLSelectElement>(".postflop-street")!.value = "FLOP";
-      root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
-      root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
-      result = root.querySelector<HTMLElement>(".postflop-result");
-      if (result?.textContent?.includes("Heuristic model")) break;
-    }
-
-    expect(result?.hidden).toBe(false);
-    expect(result?.textContent).toContain("Recommended");
-    expect(root.querySelectorAll<HTMLButtonElement>(".postflop-action:disabled"))
-      .toHaveLength(3);
-    expect(root.querySelector(".postflop-action--recommended")).not.toBeNull();
-    expect(root.querySelectorAll(".postflop-practical__block")).toHaveLength(5);
-    const rangeSummary = root.querySelector<HTMLElement>(".postflop-range-summary");
-    expect(rangeSummary).not.toBeNull();
-    expect(rangeSummary?.dataset.street).toBe("FLOP");
-    expect(rangeSummary?.textContent).toContain("Flop range");
-    expect(rangeSummary?.textContent).toContain("Recommended:");
-    expect(rangeSummary?.textContent).toContain("Your action:");
-    const heroBucket = root.querySelector<HTMLElement>(".postflop-range-summary__hero-bucket");
-    expect(heroBucket).not.toBeNull();
-    expect(heroBucket?.dataset.heroHand).toMatch(/^[AKQJT98765432]{2}[so]?$/);
-    expect(heroBucket?.dataset.heroCategory).toMatch(/^[A-Z_]+$/);
-    expect(heroBucket?.dataset.heroCategoryLabel).toMatch(/^[A-Za-z+ ]+$/);
-    expect(heroBucket?.dataset.heroLane).toMatch(/^(VALUE|BLUFF|CHECK)$/);
-    expect(heroBucket?.dataset.heroLaneLabel).toMatch(/^(Value|Bluffs|Check)$/);
-    expect(heroBucket?.textContent).toContain("Hero hand bucket");
-    expect(heroBucket?.textContent).toContain("Porovnejte ji s value, bluff a check částí range.");
-    expect(rangeSummary?.textContent).toContain("Value");
-    expect(rangeSummary?.textContent).toContain("Bluffs");
-    expect(rangeSummary?.textContent).toContain("Check");
-    expect(root.querySelectorAll(".postflop-flopzilla__cell")).toHaveLength(169);
-    expect(root.querySelector(".postflop-flopzilla__cell--hero")).not.toBeNull();
-    expect(root.querySelector<HTMLElement>(".postflop-flopzilla__cell")
-      ?.dataset.lane).toMatch(/^(VALUE|BLUFF|CHECK)$/);
-    expect(root.querySelector(".postflop-flopzilla__legend")).not.toBeNull();
-    expect(root.querySelector(".postflop-flopzilla__meta")?.textContent).toContain("Hero");
-    expect(root.querySelector(".postflop-flopzilla__legend")?.textContent)
-      .toContain("Top pair");
-    expect(root.querySelector(".postflop-flopzilla__legend")?.textContent)
-      .toMatch(/(Flush draw|Backdoor draw|Overcards|Air)/);
-    expect(root.querySelectorAll(".postflop-flopzilla__legend-count").length)
-      .toBeGreaterThan(3);
-    expect(result?.textContent).toContain("Value range");
-    expect(result?.textContent).toContain("Model");
-    expect(result?.textContent).toContain("Heuristický model");
-    expect(result?.textContent).not.toContain("StrategyPack");
-    expect(result?.textContent).not.toContain("Rule:");
-    expect(result?.textContent).not.toContain("Pack:");
-    expect(result?.textContent).not.toContain("https://");
-    expect(result?.textContent).toContain("Shoda textury:");
-    expect(result?.textContent).toContain("Rozsah SPR:");
-    expect(result?.textContent).not.toContain("Duvod vyberu:");
-    expect(result?.textContent).toContain("Předpoklad 1:");
-    expect(result?.textContent).toContain("Plan");
-    expect(result?.textContent ?? "").not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
-  });
-
-  it("zobrazi mixed-action feedback pro hero production bucket bez source citaci", () => {
-    const resolver: PostflopStrategyResolver = (input) => ({
-      action: "BET_SMALL",
-      explanation: "Range bucket fixture prefers a small bet with a protected check mix.",
-      source: {
-        kind: "STRATEGY_PACK",
-        provenance: "SOLVER_BACKED",
-        packId: "internal-test-pack",
-        packVersion: "v1",
-        packVerifiedAt: "2026-06-11",
-        ruleId: "internal-test-rule",
-        confidence: "HIGH",
-        matchedTextures: input.textures,
-        sprMin: 2,
-        sprMax: 12,
-        positionPattern: input.positionPattern,
-        sourceUrls: ["https://example.test/source"],
-        assumptions: ["Mixed action fixture."],
-        selectionScore: 150,
-        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
-        heroRangeBucket: {
-          lane: "VALUE",
-          label: "top pair value",
-          action: "BET_SMALL",
-          handClass: input.heroHand ?? "AKo",
-          features: ["top pair", "range advantage"],
-          actionMix: [
-            { action: "BET_SMALL", frequencyPct: 70, visibility: "EXACT" },
-            { action: "CHECK", frequencyPct: 30, visibility: "EXACT" },
-          ],
-        },
-      },
-    });
-    const root = document.createElement("div");
-    renderPostflopView(root, {
-      initialSeed: 42,
-      initialStreet: "FLOP",
-      autoGenerate: true,
-      strategyResolver: resolver,
-    });
-
-    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CHECK"]')?.click();
-
-    const heroBucket = root.querySelector<HTMLElement>(".postflop-range-summary__hero-bucket");
-    expect(heroBucket).not.toBeNull();
-    expect(heroBucket?.dataset.rangeBucketLane).toBe("VALUE");
-    expect(heroBucket?.dataset.rangeBucketAction).toBe("BET_SMALL");
-    expect(heroBucket?.dataset.rangeBucketMixed).toBe("true");
-    expect(heroBucket?.textContent).toContain("Mix akcí: Bet small 70% / Check 30%.");
-    expect(heroBucket?.textContent).toContain("Vaše akce je součástí mixu tohoto bucketu.");
-    expect(heroBucket?.textContent).toContain("Hlavní vlastnosti: top pair, range advantage.");
-    expect(heroBucket?.textContent).not.toContain("internal-test-pack");
-    expect(heroBucket?.textContent).not.toContain("internal-test-rule");
-    expect(heroBucket?.textContent).not.toContain("https://");
-    const result = root.querySelector<HTMLElement>(".postflop-result");
-    expect(result?.textContent).toContain("Produkční model");
-    expect(result?.textContent).not.toContain("Heuristický model");
-    expect(result?.textContent).not.toContain("internal-test-pack");
-    expect(result?.textContent).not.toContain("internal-test-rule");
-    expect(result?.textContent).not.toContain("https://");
-  });
-
-  it("zobrazi solveny SPR a varuje, kdyz je zobrazeny spot daleko od nej", () => {
-    const resolver: PostflopStrategyResolver = (input) => ({
-      action: "BET_BIG",
-      explanation: "SPR fidelity fixture.",
-      source: {
-        kind: "STRATEGY_PACK",
-        provenance: "SOLVER_BACKED",
-        packId: "internal-fidelity-pack",
-        packVersion: "v1",
-        packVerifiedAt: "2026-07-25",
-        ruleId: "internal-fidelity-rule",
-        confidence: "HIGH",
-        matchedTextures: input.textures,
-        sprMin: 0,
-        sprMax: 25,
-        positionPattern: input.positionPattern,
-        sourceUrls: [],
-        assumptions: ["SPR fidelity fixture."],
-        selectionScore: 100,
-        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
-        sprFidelity: { shownSpr: 20, solvedSpr: 4, ratio: 5, band: "MISMATCH" },
-      },
-    });
-    const root = document.createElement("div");
-    renderPostflopView(root, {
-      initialSeed: 7,
-      initialStreet: "FLOP",
-      autoGenerate: true,
-      strategyResolver: resolver,
-    });
-
-    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CHECK"]')?.click();
-
-    const result = root.querySelector<HTMLElement>(".postflop-result");
-    expect(result?.textContent).toContain("Solveno na SPR 4");
-    expect(result?.textContent).toContain("Zobrazené SPR je 5x solveného");
-  });
-
-  it("rekne hraci, kdyz je pravidlo poskladane ze dvou solverovych stromu", () => {
-    // Some families were solved partly on a reduced tree that has no turn or
-    // river raise, so their aggregates blend two different games. The release
-    // gate has said so to operators since it was found; the player training the
-    // spot was told nothing, while being told plainly about SPR distance.
-    const resolver: PostflopStrategyResolver = (input) => ({
-      action: "BET_BIG",
-      explanation: "Tree integrity fixture.",
-      source: {
-        kind: "STRATEGY_PACK",
-        provenance: "SOLVER_BACKED",
-        packId: "internal-integrity-pack",
-        packVersion: "v1",
-        packVerifiedAt: "2026-07-29",
-        ruleId: "internal-integrity-rule",
-        confidence: "HIGH",
-        matchedTextures: input.textures,
-        sprMin: 0,
-        sprMax: 25,
-        positionPattern: input.positionPattern,
-        sourceUrls: [],
-        assumptions: ["Tree integrity fixture."],
-        selectionScore: 100,
-        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
-        treeIntegrity: "MIXED_TREES",
-      },
-    });
-    const root = document.createElement("div");
-    renderPostflopView(root, {
-      initialSeed: 7,
-      initialStreet: "FLOP",
-      autoGenerate: true,
-      strategyResolver: resolver,
-    });
-
-    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CHECK"]')?.click();
-
-    const result = root.querySelector<HTMLElement>(".postflop-result");
-    expect(result?.textContent).toContain("ze dvou solverových stromů");
-    expect(result?.textContent).toContain("turnu a riveru ber orientačně");
-  });
-
-  it("rekne all-in tam, kde solver za tim tlacitkem opravdu shoveuje", () => {
-    // In ten of thirteen shipped families the only bet behind BET_BIG is the
-    // solver's all-in, and the button rendered a fixed 75 percent of pot - "big
-    // bet 4 BB" for a 65 BB shove. Grading was never affected; what the player
-    // was reading while practising sizing was.
-    const resolver: PostflopStrategyResolver = (input) => ({
-      action: "BET_BIG",
-      explanation: "All-in sizing fixture.",
-      source: {
-        kind: "STRATEGY_PACK",
-        provenance: "SOLVER_BACKED",
-        packId: "internal-sizing-pack",
-        packVersion: "v1",
-        packVerifiedAt: "2026-07-30",
-        ruleId: "mtt9_100bb_co_bb_srp_cbet_highspr-check-aggregate",
-        confidence: "HIGH",
-        matchedTextures: input.textures,
-        sprMin: 0,
-        sprMax: 25,
-        positionPattern: input.positionPattern,
-        sourceUrls: [],
-        assumptions: ["All-in sizing fixture."],
-        selectionScore: 100,
-        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
-      },
-    });
-    const root = document.createElement("div");
-    renderPostflopView(root, {
-      initialSeed: 7,
-      initialStreet: "FLOP",
-      autoGenerate: true,
-      strategyResolver: resolver,
-    });
-
-    // Matched in both languages: an earlier case in this file switches the UI to
-    // English and the setting persists, so a Czech-only assertion would be
-    // testing the language rather than the sizing.
-    const geometry = root.querySelector<HTMLElement>("[data-bet-sizing]");
-    expect(geometry?.textContent).toContain("All-in");
-    expect(geometry?.textContent).not.toMatch(/Velký bet|Big bet/);
-  });
-
-  it("nechá velky bet velkym betem, kdyz za nim opravdu bet je", () => {
-    // The control: pot 157 puts this family's half-pot bet over the normalizer's
-    // chip threshold, so its BET_BIG is a real bet and must not read as a shove.
-    const resolver: PostflopStrategyResolver = (input) => ({
-      action: "BET_BIG",
-      explanation: "Real big bet fixture.",
-      source: {
-        kind: "STRATEGY_PACK",
-        provenance: "SOLVER_BACKED",
-        packId: "internal-sizing-pack",
-        packVersion: "v1",
-        packVerifiedAt: "2026-07-30",
-        ruleId: "mtt9_80bb_co_btn_3bp_midspr-check-aggregate",
-        confidence: "HIGH",
-        matchedTextures: input.textures,
-        sprMin: 0,
-        sprMax: 25,
-        positionPattern: input.positionPattern,
-        sourceUrls: [],
-        assumptions: ["Real big bet fixture."],
-        selectionScore: 100,
-        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
-      },
-    });
-    const root = document.createElement("div");
-    renderPostflopView(root, {
-      initialSeed: 7,
-      initialStreet: "FLOP",
-      autoGenerate: true,
-      strategyResolver: resolver,
-    });
-
-    const geometry = root.querySelector<HTMLElement>("[data-bet-sizing]");
-    expect(geometry?.textContent).toMatch(/Velký bet|Big bet/);
-    expect(geometry?.textContent).not.toContain("All-in");
-  });
-
-  it("nevydava popis rozdane desky za shodu textury", () => {
-    // Eighteen of the nineteen shipped rules declare every texture in the
-    // taxonomy, so "Texture match: paired, low, dry" was the intersection of the
-    // board's own textures with everything - a description of the board dealt,
-    // presented as evidence the strategy was chosen for it.
-    const resolver: PostflopStrategyResolver = (input) => ({
-      action: "BET_BIG",
-      explanation: "Texture agnostic fixture.",
-      source: {
-        kind: "STRATEGY_PACK",
-        provenance: "SOLVER_BACKED",
-        packId: "internal-texture-pack",
-        packVersion: "v1",
-        packVerifiedAt: "2026-07-29",
-        ruleId: "internal-texture-rule",
-        confidence: "HIGH",
-        matchedTextures: input.textures,
-        sprMin: 0,
-        sprMax: 25,
-        positionPattern: input.positionPattern,
-        sourceUrls: [],
-        assumptions: ["Texture agnostic fixture."],
-        selectionScore: 100,
-        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
-        textureCoverage: { covered: 13, total: 13 },
-      },
-    });
-    const root = document.createElement("div");
-    renderPostflopView(root, {
-      initialSeed: 7,
-      initialStreet: "FLOP",
-      autoGenerate: true,
-      strategyResolver: resolver,
-    });
-
-    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CHECK"]')?.click();
-
-    const result = root.querySelector<HTMLElement>(".postflop-result");
-    expect(result?.textContent).toContain("pro všechny textury desky v tomto pásmu");
-    expect(result?.textContent).not.toContain("Shoda textury");
-  });
-
-  it("rekne, kolik textur pravidlo pokryva, kdyz nepokryva vsechny", () => {
-    // Twelve of thirteen is not a match either, and saying so as a fraction
-    // needs no threshold for anyone to argue about. A genuinely narrow rule -
-    // what a finer pilot would ship - reads as narrow by the same line.
-    const resolver: PostflopStrategyResolver = (input) => ({
-      action: "BET_BIG",
-      explanation: "Texture specific fixture.",
-      source: {
-        kind: "STRATEGY_PACK",
-        provenance: "SOLVER_BACKED",
-        packId: "internal-texture-pack",
-        packVersion: "v1",
-        packVerifiedAt: "2026-07-29",
-        ruleId: "internal-texture-rule",
-        confidence: "HIGH",
-        matchedTextures: input.textures,
-        sprMin: 0,
-        sprMax: 25,
-        positionPattern: input.positionPattern,
-        sourceUrls: [],
-        assumptions: ["Texture specific fixture."],
-        selectionScore: 100,
-        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
-        textureCoverage: { covered: 4, total: 13 },
-      },
-    });
-    const root = document.createElement("div");
-    renderPostflopView(root, {
-      initialSeed: 7,
-      initialStreet: "FLOP",
-      autoGenerate: true,
-      strategyResolver: resolver,
-    });
-
-    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CHECK"]')?.click();
-
-    const result = root.querySelector<HTMLElement>(".postflop-result");
-    expect(result?.textContent).toContain("Pokrývá 4 z 13 textur desky");
-    expect(result?.textContent).toContain("Tahle deska odpovídá:");
-    expect(result?.textContent).not.toContain("pro všechny textury desky");
-  });
-
-  it("mlci o integrite stromu, kdyz je pravidlo z jednoho stromu", () => {
-    // The caveat must be absent rather than reassuring: a line saying "one tree"
-    // on every clean spot would train the eye to skip it on the spots that matter.
-    const resolver: PostflopStrategyResolver = (input) => ({
-      action: "BET_BIG",
-      explanation: "Uniform tree fixture.",
-      source: {
-        kind: "STRATEGY_PACK",
-        provenance: "SOLVER_BACKED",
-        packId: "internal-integrity-pack",
-        packVersion: "v1",
-        packVerifiedAt: "2026-07-29",
-        ruleId: "internal-integrity-rule",
-        confidence: "HIGH",
-        matchedTextures: input.textures,
-        sprMin: 0,
-        sprMax: 25,
-        positionPattern: input.positionPattern,
-        sourceUrls: [],
-        assumptions: ["Uniform tree fixture."],
-        selectionScore: 100,
-        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
-      },
-    });
-    const root = document.createElement("div");
-    renderPostflopView(root, {
-      initialSeed: 7,
-      initialStreet: "FLOP",
-      autoGenerate: true,
-      strategyResolver: resolver,
-    });
-
-    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CHECK"]')?.click();
-
-    const result = root.querySelector<HTMLElement>(".postflop-result");
-    expect(result?.textContent).not.toContain("solverových stromů");
-  });
-
-  it("zobrazi EV vsech akci a oznaci obe solverove rovnocenne volby", () => {
-    const resolver: PostflopStrategyResolver = (input) => ({
-      action: "BET_BIG",
-      actionEvs: {
-        source: "SOLVER",
-        unit: "BB",
-        equivalentThresholdBb: 0.01,
-        acceptableThresholdBb: 0.05,
-        values: [
-          { action: "CHECK", evBb: 0.204 },
-          { action: "BET_SMALL", evBb: 0.1 },
-          { action: "BET_BIG", evBb: 0.21 },
-        ],
-      },
-      explanation: "Reviewed action EV fixture.",
-      source: {
-        kind: "STRATEGY_PACK",
-        provenance: "SOLVER_BACKED",
-        packId: "internal-action-ev-pack",
-        packVersion: "v1",
-        packVerifiedAt: "2026-07-16",
-        ruleId: "internal-action-ev-rule",
-        confidence: "HIGH",
-        matchedTextures: input.textures,
-        sprMin: 1,
-        sprMax: 20,
-        positionPattern: input.positionPattern,
-        sourceUrls: [],
-        assumptions: ["Reviewed solver EV fixture."],
-        selectionScore: 200,
-        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
-      },
-    });
-    const root = document.createElement("div");
-    renderPostflopView(root, {
-      initialSeed: 42,
-      initialStreet: "FLOP",
-      autoGenerate: true,
-      strategyResolver: resolver,
-    });
-
-    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CHECK"]')?.click();
-
-    expect(root.querySelector<HTMLElement>(".action-ev")?.dataset.available).toBe("true");
-    expect(root.querySelectorAll(".action-ev__row")).toHaveLength(3);
-    expect(root.querySelectorAll(".action-ev__row--best")).toHaveLength(2);
-    expect(root.querySelectorAll(".postflop-action--recommended")).toHaveLength(2);
-    expect(root.querySelectorAll(".postflop-action .action-ev-bubble:not([hidden])"))
-      .toHaveLength(3);
-    expect(root.querySelectorAll(".postflop-action .action-ev-bubble--best"))
-      .toHaveLength(2);
-    expect(root.querySelectorAll(".postflop-action .action-ev-bubble--chosen"))
-      .toHaveLength(1);
-    expect(root.querySelector<HTMLElement>(
-      '.postflop-action[data-action="CHECK"] .action-ev-bubble',
-    )?.textContent).toBe("EV +0.204 BB");
-    expect(root.querySelector<HTMLElement>('.action-ev__row[data-action="CHECK"]')?.textContent)
-      .toContain("-0.006 BB");
-    expect(root.querySelector<HTMLElement>(".postflop-result__summary")?.textContent)
-      .toContain("Stejně dobrá akce.");
-  });
-
-  it("skryje exact frequency hodnoty pro kvalitativni mixed-action bucket", () => {
-    const resolver: PostflopStrategyResolver = (input) => ({
-      action: "BET_SMALL",
-      explanation: "Qualitative mix fixture.",
-      source: {
-        kind: "STRATEGY_PACK",
-        provenance: "SOLVER_BACKED",
-        packId: "internal-qual-pack",
-        packVersion: "v1",
-        packVerifiedAt: "2026-06-11",
-        ruleId: "internal-qual-rule",
-        confidence: "MEDIUM",
-        matchedTextures: input.textures,
-        sprMin: 2,
-        sprMax: 12,
-        positionPattern: input.positionPattern,
-        sourceUrls: [],
-        assumptions: ["Qualitative mixed action fixture."],
-        selectionScore: 120,
-        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
-        heroRangeBucket: {
-          lane: "BLUFF",
-          label: "backdoor bluff",
-          action: "BET_SMALL",
-          handClass: input.heroHand ?? "QJs",
-          features: ["backdoor equity"],
-          actionMix: [
-            { action: "BET_SMALL", frequencyPct: 70, visibility: "QUALITATIVE" },
-            { action: "CHECK", frequencyPct: 30, visibility: "QUALITATIVE" },
-          ],
-        },
-      },
-    });
-    const root = document.createElement("div");
-    renderPostflopView(root, {
-      initialSeed: 9,
-      initialStreet: "FLOP",
-      autoGenerate: true,
-      strategyResolver: resolver,
-    });
-
-    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="BET_SMALL"]')?.click();
-
-    const heroBucket = root.querySelector<HTMLElement>(".postflop-range-summary__hero-bucket");
-    expect(heroBucket?.textContent).toContain("Mix akcí: Bet small / Check.");
-    expect(heroBucket?.textContent).toContain("Přesné frekvence jsou pro tento bucket skryté.");
-    expect(heroBucket?.textContent).not.toContain("70%");
-    expect(heroBucket?.textContent).not.toContain("30%");
-    expect(heroBucket?.textContent).not.toContain("internal-qual-pack");
-    expect(heroBucket?.textContent).not.toContain("internal-qual-rule");
-  });
-
-  it("pouzije production range bucket lane pro Flopzilla hero bunku", () => {
-    const resolver: PostflopStrategyResolver = (input) => {
-      const heroHand = input.heroHand ?? "AKo";
-      return {
-        action: "CHECK",
-        explanation: "Production lane fixture.",
-        source: {
-          kind: "STRATEGY_PACK",
-          provenance: "SOLVER_BACKED",
-          packId: "internal-lane-pack",
-          packVersion: "v1",
-          packVerifiedAt: "2026-06-12",
-          ruleId: "internal-lane-rule",
-          confidence: "HIGH",
-          matchedTextures: input.textures,
-          sprMin: 2,
-          sprMax: 12,
-          positionPattern: input.positionPattern,
-          sourceUrls: ["https://example.test/lane-source"],
-          assumptions: ["Production lane fixture."],
-          selectionScore: 160,
-          tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
-          rangeBuckets: [
-            {
-              lane: "CHECK",
-              label: "protected check",
-              action: "CHECK",
-              handClasses: [heroHand],
-              features: ["showdown value"],
-            },
-          ],
-          heroRangeBucket: {
-            lane: "CHECK",
-            label: "protected check",
-            action: "CHECK",
-            handClass: heroHand,
-            features: ["showdown value"],
-          },
-        },
-      };
-    };
-    const root = document.createElement("div");
-    renderPostflopView(root, {
-      initialSeed: 42,
-      initialStreet: "FLOP",
-      autoGenerate: true,
-      strategyResolver: resolver,
-    });
-
-    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CHECK"]')?.click();
-
-    const heroBucket = root.querySelector<HTMLElement>(".postflop-range-summary__hero-bucket");
-    const heroCell = root.querySelector<HTMLElement>(".postflop-flopzilla__cell--hero");
-    expect(heroBucket?.dataset.rangeBucketLane).toBe("CHECK");
-    expect(heroCell?.dataset.lane).toBe("CHECK");
-    expect(heroCell?.dataset.laneSource).toBe("production");
-    expect(heroCell?.classList.contains("postflop-flopzilla__cell--production-lane")).toBe(true);
-    expect(root.textContent).not.toContain("internal-lane-pack");
-    expect(root.textContent).not.toContain("internal-lane-rule");
-    expect(root.textContent).not.toContain("https://");
-  });
-
-  it("umi filtrovat Flopzilla matrix podle value/bluff/check lane", () => {
-    const root = document.createElement("div");
-    renderPostflopView(root, { initialSeed: 42, initialStreet: "FLOP", autoGenerate: true });
-
-    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
-
-    const valueLane = root.querySelector<HTMLElement>(
-      '.postflop-range-summary__lane[data-lane="VALUE"]',
-    );
-    expect(valueLane).not.toBeNull();
-    expect(valueLane?.getAttribute("role")).toBe("button");
-    expect(valueLane?.getAttribute("aria-pressed")).toBe("false");
-
-    valueLane!.click();
-
-    expect(root.querySelector<HTMLElement>(".postflop-range-summary")?.dataset.activeLane)
-      .toBe("VALUE");
-    expect(valueLane?.classList.contains("postflop-range-summary__lane--active")).toBe(true);
-    expect(valueLane?.getAttribute("aria-pressed")).toBe("true");
-    const cells = [...root.querySelectorAll<HTMLElement>(".postflop-flopzilla__cell")];
-    expect(cells.some((cell) => cell.dataset.lane !== "VALUE" &&
-      cell.classList.contains("postflop-flopzilla__cell--muted"))).toBe(true);
-    expect(cells.every((cell) => cell.dataset.lane === "VALUE" ||
-      cell.classList.contains("postflop-flopzilla__cell--muted"))).toBe(true);
-
-    valueLane!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
-
-    expect(valueLane?.classList.contains("postflop-range-summary__lane--active")).toBe(false);
-    expect(valueLane?.getAttribute("aria-pressed")).toBe("false");
-    expect(cells.some((cell) => cell.classList.contains("postflop-flopzilla__cell--muted")))
-      .toBe(false);
-  });
-
-  it("drzi premium Flopzilla matrix styling vcetne mobile scroll pravidel", () => {
-    const root = document.createElement("div");
-    renderPostflopView(root);
-
-    const css = stylesheet("legacy/postflop-view.css");
-    expect(css).toContain(".postflop-flopzilla{border:1px solid rgba(123,211,255,.18)");
-    expect(css).toContain("linear-gradient(180deg,rgba(12,20,32,.94)");
-    expect(css).toContain(".postflop-flopzilla__legend-count");
-    expect(css).toContain(".postflop-range-summary__hero-bucket");
-    expect(css).toContain(".postflop-flopzilla__cell--muted");
-    expect(css).toContain(".postflop-flopzilla__cell--production-lane");
-    expect(css).toContain(".postflop-flopzilla__legend-item--active");
-    expect(css).toContain(".postflop-range-summary__lane--active");
-    expect(css).toContain(".postflop-table__bet-geometry");
-    expect(css).toContain(".postflop-table__bet-fill");
-    expect(css).toContain(".postflop-table__bet-geometry--big");
-    expect(css).toContain(".action-ev-bubble--best");
-    expect(css).toContain('.postflop-action[data-ev-available="true"]:disabled');
-    expect(css).toContain(".postflop-seat__role-chip--aggressor");
-    expect(css).toContain(".postflop-seat__role-chip--oop");
-    expect(css).toContain(".postflop-seat__current-action--to-act");
-    expect(css).toContain(".postflop-seat__current-action--acted");
-    expect(css).toContain(".postflop-flopzilla__header-cell--row{position:sticky");
-    expect(css).toContain(".postflop-flopzilla__header-cell--corner{top:0;z-index:3;}");
-    expect(css).toContain(".postflop-flopzilla__header,.postflop-flopzilla__hint");
-    expect(css).toContain(".postflop-range-summary__hero-bucket{align-items:flex-start;flex-direction:column;}");
-    expect(css).toContain("@media (max-width:640px)");
-    expect(css).toContain(".postflop-table{aspect-ratio:auto;min-height:560px;max-width:390px;margin-bottom:54px;}");
-    expect(css).toContain(".postflop-seat{left:var(--seat-mobile-left);top:var(--seat-mobile-top)");
-    expect(css).toContain(".postflop-table__board .postflop-card{width:36px;height:48px;font-size:16px;}");
-    expect(css).toContain(".postflop-flopzilla__matrix,.postflop-flopzilla__legend,.postflop-flopzilla__detail{min-width:476px;}");
-    expect(css).toContain(".postflop-flopzilla__matrix{gap:1px;padding:4px;}");
-    expect(css).toContain(".postflop-flopzilla__cell{min-height:21px;border-radius:4px;font-size:8px;}");
-  });
-
-  it("po odpovedi zavola callback s postflop training spotem", () => {
+  it("po odpovedi zavola callback s postflop training spotem a dobou odpovedi", async () => {
     const root = document.createElement("div");
     const answered: Array<{ summary: string; responseMs?: number }> = [];
     renderPostflopView(root, {
@@ -976,14 +287,11 @@ describe("postflopView - DOM", () => {
       initialStreet: "FLOP",
       autoGenerate: true,
       onAnswered: (spot, chosen, responseMs) => {
-        answered.push({
-          summary: `${spot.street}|${spot.actionNode}|${chosen}`,
-          responseMs,
-        });
+        answered.push({ summary: `${spot.street}|${spot.actionNode}|${chosen}`, responseMs });
       },
     });
-
-    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+    await dealt(root);
+    answer(root);
 
     expect(answered).toHaveLength(1);
     expect(answered[0].summary).toContain("FLOP|SINGLE_RAISED_POT_CBET|");
@@ -991,7 +299,7 @@ describe("postflopView - DOM", () => {
     expect(answered[0].responseMs).toBeGreaterThanOrEqual(0);
   });
 
-  it("respektuje vstupni postflop pozicni kontext", () => {
+  it("respektuje vstupni postflop pozicni kontext", async () => {
     const root = document.createElement("div");
     renderPostflopView(root, {
       initialSeed: 1788246284,
@@ -1007,33 +315,20 @@ describe("postflopView - DOM", () => {
         positionPattern: "OOP_RAISER_VS_IP_CALLER",
       },
     });
+    const screen = await dealt(root);
 
-    const meta = root.querySelector<HTMLElement>(".postflop-meta");
-    expect(meta?.dataset.positionPattern).toBe("OOP_RAISER_VS_IP_CALLER");
-    expect(meta?.textContent).toContain("LJ vs HJ");
-    expect(meta?.textContent).toContain("(OOP)");
-    expect(meta?.textContent).not.toContain("BTN vs BB");
-    expect(root.querySelector<HTMLElement>(".postflop-table")?.dataset.heroPosition).toBe("LJ");
-    expect(root.querySelector<HTMLElement>(".postflop-table")?.dataset.villainPosition).toBe("HJ");
-    expect(root.querySelector<HTMLElement>('.postflop-seat[data-position="LJ"]')
-      ?.classList.contains("postflop-seat--hero")).toBe(true);
-    expect(root.querySelector<HTMLElement>('.postflop-seat[data-position="HJ"]')
-      ?.classList.contains("postflop-seat--villain")).toBe(true);
-    expect(root.querySelector<HTMLElement>('.postflop-seat[data-position="LJ"]')
-      ?.dataset.actionRole).toBe("aggressor");
-    expect(root.querySelector<HTMLElement>('.postflop-seat[data-position="LJ"]')
-      ?.dataset.positionRole).toBe("OOP");
-    expect(root.querySelector<HTMLElement>('.postflop-seat[data-position="LJ"]')
-      ?.textContent).toContain("Aggressor");
-    expect(root.querySelector<HTMLElement>('.postflop-seat[data-position="HJ"]')
-      ?.dataset.actionRole).toBe("caller");
-    expect(root.querySelector<HTMLElement>('.postflop-seat[data-position="HJ"]')
-      ?.dataset.positionRole).toBe("IP");
-    expect(root.querySelector<HTMLElement>('.postflop-seat[data-position="HJ"]')
-      ?.textContent).toContain("Caller");
+    expect(screen.dataset.positionPattern).toBe("OOP_RAISER_VS_IP_CALLER");
+    expect(screen.querySelector(".dx-trainer__title")?.textContent).toMatch(/^LJ vs HJ · /);
+    expect(screen.querySelector(".dx-trainer__meta")?.textContent).toContain("OOP");
+    expect(screen.querySelector<HTMLElement>('.dx-table__seat[data-position="LJ"]')?.dataset.hero)
+      .toBe("true");
+    expect(screen.querySelector<HTMLElement>('.dx-table__seat[data-position="HJ"]')?.dataset.folded)
+      .toBe("false");
+    expect(screen.querySelector<HTMLElement>('.dx-table__seat[data-position="BTN"]')?.dataset.folded)
+      .toBe("true");
   });
 
-  it("respektuje vstupni 3bet pot kontext", () => {
+  it("respektuje vstupni 3bet pot kontext", async () => {
     const root = document.createElement("div");
     const answered: string[] = [];
     renderPostflopView(root, {
@@ -1054,92 +349,17 @@ describe("postflopView - DOM", () => {
       },
       onAnswered: (spot, chosen) => answered.push(`${spot.potType}|${spot.actionNode}|${chosen}`),
     });
+    const screen = await dealt(root);
 
-    const meta = root.querySelector<HTMLElement>(".postflop-meta");
-    expect(meta?.dataset.potType).toBe("THREE_BET_POT");
-    expect(meta?.dataset.actionNode).toBe("THREE_BET_POT_CBET");
-    expect(meta?.dataset.positionPattern).toBe("OOP_CALLER_VS_IP_3BETTOR");
-    expect(meta?.textContent).toContain("3bet pot");
-    expect(meta?.textContent).toContain("pot 18 BB");
+    expect(screen.dataset.potType).toBe("THREE_BET_POT");
+    expect(screen.dataset.actionNode).toBe("THREE_BET_POT_CBET");
+    expect(screen.dataset.positionPattern).toBe("OOP_CALLER_VS_IP_3BETTOR");
+    expect(screen.querySelector(".dx-trainer__title")?.textContent).toBe("LJ vs HJ · 3bet pot");
+    expect(screen.querySelector(".dx-trainer__meta")?.textContent).toContain("pot 18 BB");
 
-    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+    answer(root);
     expect(answered[0]).toContain("THREE_BET_POT|THREE_BET_POT_CBET|");
-    expect(root.querySelector<HTMLElement>(".postflop-result")?.textContent)
-      .toContain("Základní heuristika");
-    expect(root.querySelector<HTMLElement>(".postflop-result")?.textContent)
-      .not.toContain("https://");
-  });
-
-  it("umi projit celou postflop hand line flop-turn-river", () => {
-    const root = document.createElement("div");
-    const singleStreetAnswers: string[] = [];
-    const completedLines: Array<{
-      streets: string[];
-      chosenStreets: string[];
-      startedAt: number;
-      completedAt: number;
-    }> = [];
-
-    renderPostflopView(root, {
-      initialSeed: 42,
-      initialStreet: "FLOP",
-      onAnswered: (spot, chosen) => singleStreetAnswers.push(`${spot.street}:${chosen}`),
-      onLineCompleted: (line, chosenByStreet, startedAt, completedAt) => {
-        completedLines.push({
-          streets: line.streets.map((street) => street.street),
-          chosenStreets: Object.keys(chosenByStreet).sort(),
-          startedAt,
-          completedAt,
-        });
-      },
-    });
-
-    root.querySelector<HTMLSelectElement>(".postflop-mode")!.value = "line";
-    root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
-
-    expect(root.querySelector<HTMLElement>(".postflop-question-title")?.textContent)
-      .toBe("Hand line 1/3");
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.mode).toBe("line");
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("FLOP");
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.streetIndex).toBe("0");
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.streetTotal).toBe("3");
-
-    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
-    expect(singleStreetAnswers).toHaveLength(0);
-    expect(root.querySelector<HTMLButtonElement>(".postflop-line-next")?.textContent)
-      .toBe("Next: Turn");
-
-    root.querySelector<HTMLButtonElement>(".postflop-line-next")?.click();
-    expect(root.querySelector<HTMLElement>(".postflop-question-title")?.textContent)
-      .toBe("Hand line 2/3");
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("TURN");
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.streetIndex).toBe("1");
-    const turnHistory = root.querySelector<HTMLElement>(".postflop-action-history");
-    expect(turnHistory?.dataset.lineHistoryCount).toBe("1");
-    expect(turnHistory?.textContent).toContain("Dosavadní hand line - Flop:");
-    expect(turnHistory?.textContent).toMatch(/Hero|Soupeř/);
-    expect(turnHistory?.textContent).not.toContain("StrategyPack");
-    expect(turnHistory?.textContent).not.toContain("https://");
-    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
-    expect(root.querySelector<HTMLButtonElement>(".postflop-line-next")?.textContent)
-      .toBe("Next: River");
-
-    root.querySelector<HTMLButtonElement>(".postflop-line-next")?.click();
-    expect(root.querySelector<HTMLElement>(".postflop-question-title")?.textContent)
-      .toBe("Hand line 3/3");
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("RIVER");
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.streetIndex).toBe("2");
-    expect(root.querySelector<HTMLElement>(".postflop-action-history")?.dataset.lineHistoryCount)
-      .toBe("2");
-    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
-
-    const complete = root.querySelector<HTMLElement>(".postflop-line-complete");
-    expect(complete?.textContent).toMatch(/^Hand line complete: \d\/3 streets\.$/);
-    expect(complete?.dataset.totalStreets).toBe("3");
-    expect(completedLines).toHaveLength(1);
-    expect(completedLines[0].streets).toEqual(["FLOP", "TURN", "RIVER"]);
-    expect(completedLines[0].chosenStreets).toEqual(["FLOP", "RIVER", "TURN"]);
-    expect(completedLines[0].completedAt).toBeGreaterThanOrEqual(completedLines[0].startedAt);
+    expect(feedbackText(root)).not.toContain("https://");
   });
 
   it("pred production hand line pocka na asynchronni pripravu street rodiny", async () => {
@@ -1162,14 +382,15 @@ describe("postflopView - DOM", () => {
     root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
 
     expect(modes).toEqual(["line"]);
-    expect(root.querySelector(".postflop-meta")).toBeNull();
+    expect(root.querySelector(TRAINER)).toBeNull();
     releasePreparation();
     await vi.waitFor(() => {
-      expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("FLOP");
+      expect(root.querySelector<HTMLElement>(TRAINER)?.dataset.street).toBe("FLOP");
     });
+    expect(root.querySelector<HTMLElement>(TRAINER)?.dataset.mode).toBe("line");
   });
 
-  it("vetvi hand line pres facing-bet akce bez source detailu v UI", () => {
+  it("vetvi hand line pres facing-bet akce bez source detailu v UI", async () => {
     const root = document.createElement("div");
     const completedLines: Array<{ streets: string[]; actions: string[]; total: number }> = [];
 
@@ -1188,31 +409,26 @@ describe("postflopView - DOM", () => {
 
     root.querySelector<HTMLSelectElement>(".postflop-mode")!.value = "line";
     root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+    const screen = await dealt(root);
 
-    expect([...root.querySelectorAll<HTMLButtonElement>(".postflop-action")]
-      .map((button) => button.dataset.action))
-      .toEqual(["FOLD", "CALL", "RAISE"]);
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.actionNode)
-      .toBe("FLOP_FACING_BET");
+    expect(actions(root)).toEqual(["FOLD", "CALL", "RAISE"]);
+    expect(screen.dataset.actionNode).toBe("FLOP_FACING_BET");
 
-    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CALL"]')?.click();
-    expect(root.querySelector<HTMLButtonElement>(".postflop-line-next")?.textContent)
-      .toBe("Next: Turn");
-    expect(root.querySelector<HTMLElement>(".postflop-result")?.textContent)
-      .not.toContain("https://");
+    answer(root, "CALL");
+    const next = screen.querySelector<HTMLButtonElement>(".dx-trainer__next");
+    // Tlačítko nese i klávesovou nápovědu („Enter“).
+    expect(next?.textContent).toMatch(/^Pokračovat: Turn/);
+    expect(feedbackText(root)).not.toContain("https://");
 
-    root.querySelector<HTMLButtonElement>(".postflop-line-next")?.click();
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.actionNode)
-      .toBe("TURN_FACING_BET");
-    expect([...root.querySelectorAll<HTMLButtonElement>(".postflop-action")]
-      .map((button) => button.dataset.action))
-      .toEqual(["FOLD", "CALL", "RAISE"]);
+    next!.click();
+    expect(screen.dataset.actionNode).toBe("TURN_FACING_BET");
+    expect(screen.querySelector(".dx-trainer__line-history")?.textContent).toBeTruthy();
+    expect(actions(root)).toEqual(["FOLD", "CALL", "RAISE"]);
 
-    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="FOLD"]')?.click();
+    answer(root, "FOLD");
 
-    const complete = root.querySelector<HTMLElement>(".postflop-line-complete");
-    expect(complete?.textContent).toBe("Hand line complete: 1/2 streets.");
-    expect(complete?.dataset.totalStreets).toBe("2");
+    const done = screen.querySelector<HTMLElement>(".dx-trainer__line-done");
+    expect(done?.dataset.total).toBe("2");
     expect(completedLines).toEqual([{
       streets: ["FLOP", "TURN"],
       actions: ["CALL", "FOLD"],
@@ -1220,7 +436,7 @@ describe("postflopView - DOM", () => {
     }]);
   });
 
-  it("umi zvolit facing-bet situaci bez interniho action-node identifikatoru", () => {
+  it("umi zvolit facing-bet situaci bez interniho action-node identifikatoru", async () => {
     const root = document.createElement("div");
     renderPostflopView(root, {
       initialSeed: 42,
@@ -1229,47 +445,21 @@ describe("postflopView - DOM", () => {
 
     root.querySelector<HTMLSelectElement>(".postflop-situation")!.value = "facing-bet";
     root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+    const screen = await dealt(root);
 
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.actionNode)
-      .toBe("RIVER_FACING_BET");
-    expect([...root.querySelectorAll<HTMLButtonElement>(".postflop-action")]
-      .map((button) => button.dataset.action))
-      .toEqual(["FOLD", "CALL", "RAISE"]);
+    expect(screen.dataset.actionNode).toBe("RIVER_FACING_BET");
+    expect(actions(root)).toEqual(["FOLD", "CALL", "RAISE"]);
     expect(root.textContent).not.toContain("RIVER_FACING_BET");
   });
 
   it.each([
-    {
-      street: "FLOP",
-      actionNode: "SINGLE_RAISED_POT_CBET",
-      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
-    },
-    {
-      street: "FLOP",
-      actionNode: "FLOP_FACING_BET",
-      actions: ["FOLD", "CALL", "RAISE"],
-    },
-    {
-      street: "TURN",
-      actionNode: "TURN_BARREL",
-      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
-    },
-    {
-      street: "TURN",
-      actionNode: "TURN_FACING_BET",
-      actions: ["FOLD", "CALL", "RAISE"],
-    },
-    {
-      street: "RIVER",
-      actionNode: "RIVER_PRESSURE",
-      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
-    },
-    {
-      street: "RIVER",
-      actionNode: "RIVER_FACING_BET",
-      actions: ["FOLD", "CALL", "RAISE"],
-    },
-  ] as const)("vykresli single-spot UI pro $actionNode bez source uniků", ({ street, actionNode, actions }) => {
+    { street: "FLOP", actionNode: "SINGLE_RAISED_POT_CBET", actions: ["CHECK", "BET_SMALL", "BET_BIG"] },
+    { street: "FLOP", actionNode: "FLOP_FACING_BET", actions: ["FOLD", "CALL", "RAISE"] },
+    { street: "TURN", actionNode: "TURN_BARREL", actions: ["CHECK", "BET_SMALL", "BET_BIG"] },
+    { street: "TURN", actionNode: "TURN_FACING_BET", actions: ["FOLD", "CALL", "RAISE"] },
+    { street: "RIVER", actionNode: "RIVER_PRESSURE", actions: ["CHECK", "BET_SMALL", "BET_BIG"] },
+    { street: "RIVER", actionNode: "RIVER_FACING_BET", actions: ["FOLD", "CALL", "RAISE"] },
+  ] as const)("vykresli single-spot UI pro $actionNode bez source uniků", async ({ street, actionNode, actions: expected }) => {
     const root = document.createElement("div");
 
     renderPostflopView(root, {
@@ -1278,55 +468,259 @@ describe("postflopView - DOM", () => {
       initialActionNode: actionNode,
       autoGenerate: true,
     });
+    const screen = await dealt(root);
 
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.actionNode)
-      .toBe(actionNode);
-    expect([...root.querySelectorAll<HTMLButtonElement>(".postflop-action")]
-      .map((button) => button.dataset.action))
-      .toEqual(actions);
+    expect(screen.dataset.actionNode).toBe(actionNode);
+    expect(actions(root)).toEqual(expected);
 
-    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+    answer(root);
     const visibleText = root.textContent ?? "";
     expect(visibleText).not.toContain("https://");
     expect(visibleText).not.toContain("StrategyPack");
     expect(visibleText).not.toContain("Rule:");
   });
+});
 
-  it("umi zobrazit source-free model detail pro river pressure spot", () => {
-    const root = document.createElement("div");
-    renderPostflopView(root, { initialStreet: "RIVER", autoGenerate: true });
-
-    let result: HTMLElement | null = null;
-    for (let seed = 0; seed < 200; seed += 1) {
-      root.querySelector<HTMLInputElement>(".postflop-seed")!.value = String(seed);
-      root.querySelector<HTMLSelectElement>(".postflop-street")!.value = "RIVER";
-      root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
-      root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
-      result = root.querySelector<HTMLElement>(".postflop-result");
-      if (result?.textContent?.includes("Heuristic model")) break;
-    }
-
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.actionNode)
-      .toBe("RIVER_PRESSURE");
-    expect(result?.textContent).toContain("Heuristický model");
-    expect(result?.textContent).toContain("Spolehlivost: nízká");
-    expect(result?.textContent).not.toContain("StrategyPack");
-    expect(result?.textContent).not.toContain("Rule:");
-    expect(result?.textContent).not.toContain("https://");
-    expect(root.querySelector(".postflop-range-summary")).toBeNull();
+/**
+ * Co hráči o modelu řekne vyhodnocení v „Podrobnostech“. Každá z těch vět byla
+ * opravou: bez nich by spot předstíral víc, než za ním je.
+ */
+describe("postflopView - poznámky modelu", () => {
+  beforeEach(() => {
+    setAppLanguage("CZ");
   });
 
-  it("akci, kterou rozbor nepočítal, neoznačí za chybu", () => {
-    // Resolver se podstrkuje schválně. První verze tohohle testu procházela
-    // vzorek dvou set padesáti seedů a hledala nespočítanou akci ve skutečném
-    // obsahu - **nenašla ani jednu a tiše neotestovala nic**, protože tabulka EV
-    // se stahuje na pozadí a v synchronním testu nikdy nedorazí. Test, který se
-    // nemůže dostat ke stavu, který má hlídat, je horší než žádný.
+  afterEach(() => {
+    document.body.innerHTML = "";
+    setAppLanguage("CZ");
+  });
+
+  it("heuristický model řekne, že je heuristický, a nic neprozradí o zdroji", async () => {
+    const root = document.createElement("div");
+    renderPostflopView(root, { initialSeed: 42, initialStreet: "RIVER", autoGenerate: true });
+    const screen = await dealt(root);
+    answer(root);
+
+    expect(screen.dataset.actionNode).toBe("RIVER_PRESSURE");
+    const notes = modelNotes(root);
+    expect(notes).toContain("Heuristický model");
+    expect(notes).toContain("Spolehlivost: nízká");
+    expect(notes).toContain("Rozsah SPR:");
+    expect(notes).toContain("Předpoklad 1:");
+    expect(feedbackText(root)).not.toMatch(/StrategyPack|Rule:|Pack:|https:\/\//);
+    expect(feedbackText(root)).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
+  });
+
+  it("produkční mix ukáže jako strategii solveru bez interních id", async () => {
+    const root = await renderAnswered({
+      sprMin: 2,
+      sprMax: 12,
+      sourceUrls: ["https://example.test/source"],
+      heroRangeBucket: {
+        lane: "VALUE",
+        label: "top pair value",
+        action: "BET_SMALL",
+        handClass: "AKo",
+        features: ["top pair", "range advantage"],
+        actionMix: [
+          { action: "BET_SMALL", frequencyPct: 70, visibility: "EXACT" },
+          { action: "CHECK", frequencyPct: 30, visibility: "EXACT" },
+        ],
+      },
+    }, { action: "BET_SMALL", seed: 42 });
+
+    const strategy = root.querySelector<HTMLElement>(`${TRAINER} .dx-trainer__strategy`);
+    expect(strategy?.querySelector(".dx-strategy-bar")?.getAttribute("aria-label")).toContain("70");
+    expect(modelNotes(root)).toContain("Produkční model");
+    expect(modelNotes(root)).not.toContain("Heuristický model");
+    expect(root.textContent).not.toMatch(/internal-test-pack|internal-test-rule|https:\/\//);
+  });
+
+  it("kvalitativni mix neukaze presne frekvence", async () => {
+    const root = await renderAnswered({
+      confidence: "MEDIUM",
+      heroRangeBucket: {
+        lane: "BLUFF",
+        label: "backdoor bluff",
+        action: "BET_SMALL",
+        handClass: "QJs",
+        features: ["backdoor equity"],
+        actionMix: [
+          { action: "BET_SMALL", frequencyPct: 70, visibility: "QUALITATIVE" },
+          { action: "CHECK", frequencyPct: 30, visibility: "QUALITATIVE" },
+        ],
+      },
+    }, { action: "BET_SMALL", seed: 9, chosen: "BET_SMALL" });
+
+    expect(root.querySelector(`${TRAINER} .dx-trainer__strategy`)).toBeNull();
+    expect(feedbackText(root)).not.toMatch(/70\s?%|30\s?%/);
+  });
+
+  it("zobrazi solveny SPR a varuje, kdyz je zobrazeny spot daleko od nej", async () => {
+    const root = await renderAnswered({
+      sprFidelity: { shownSpr: 20, solvedSpr: 4, ratio: 5, band: "MISMATCH" },
+    });
+    expect(modelNotes(root)).toContain("Solveno na SPR 4");
+    expect(modelNotes(root)).toContain("Zobrazené SPR je 5x solveného");
+  });
+
+  it("rekne hraci, kdyz je pravidlo poskladane ze dvou solverovych stromu", async () => {
+    // Some families were solved partly on a reduced tree that has no turn or
+    // river raise, so their aggregates blend two different games.
+    const root = await renderAnswered({ treeIntegrity: "MIXED_TREES" });
+    expect(modelNotes(root)).toContain("ze dvou solverových stromů");
+    expect(modelNotes(root)).toContain("turnu a riveru ber orientačně");
+  });
+
+  it("mlci o integrite stromu, kdyz je pravidlo z jednoho stromu", async () => {
+    // The caveat must be absent rather than reassuring: a line saying "one tree"
+    // on every clean spot would train the eye to skip it on the spots that matter.
+    const root = await renderAnswered({});
+    expect(modelNotes(root)).not.toContain("solverových stromů");
+  });
+
+  it("nevydava popis rozdane desky za shodu textury", async () => {
+    // Pravidlo, které deklaruje všechny textury, nemá „shodu“ s deskou: byl by to
+    // jen popis rozdané desky vydávaný za důvod výběru strategie.
+    const root = await renderAnswered({ textureCoverage: { covered: 13, total: 13 } });
+    expect(modelNotes(root)).toContain("pro všechny textury desky v tomto pásmu");
+    expect(modelNotes(root)).not.toContain("Shoda textury");
+  });
+
+  it("rekne, kolik textur pravidlo pokryva, kdyz nepokryva vsechny", async () => {
+    const root = await renderAnswered({ textureCoverage: { covered: 4, total: 13 } });
+    expect(modelNotes(root)).toContain("Pokrývá 4 z 13 textur desky");
+    expect(modelNotes(root)).toContain("Tahle deska odpovídá:");
+    expect(modelNotes(root)).not.toContain("pro všechny textury desky");
+  });
+
+  it("rekne all-in tam, kde solver za tim tlacitkem opravdu shoveuje", async () => {
+    // V deseti ze třinácti rodin je jediná sázka za BET_BIG all-in solveru, a
+    // tlačítko dřív hlásilo pevných 75 % potu.
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      initialSeed: 7,
+      initialStreet: "FLOP",
+      autoGenerate: true,
+      strategyResolver: (input) => ({
+        action: "BET_BIG",
+        explanation: "All-in sizing fixture.",
+        source: {
+          kind: "STRATEGY_PACK",
+          provenance: "SOLVER_BACKED",
+          packId: "internal-sizing-pack",
+          packVersion: "v1",
+          packVerifiedAt: "2026-07-30",
+          ruleId: "mtt9_100bb_co_bb_srp_cbet_highspr-check-aggregate",
+          confidence: "HIGH",
+          matchedTextures: input.textures,
+          sprMin: 0,
+          sprMax: 25,
+          positionPattern: input.positionPattern,
+          sourceUrls: [],
+          assumptions: ["All-in sizing fixture."],
+          selectionScore: 100,
+          tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+        },
+      }),
+    });
+    await dealt(root);
+    const big = root.querySelector<HTMLElement>(`${ACTION}[data-action="BET_BIG"] .dx-trainer__action-label`);
+    expect(big?.textContent).toBe("All-in");
+  });
+
+  it("nechá velky bet velkym betem, kdyz za nim opravdu bet je", async () => {
+    // Kontrola: pot 157 dá téhle rodině půlpotovou sázku nad prahem, takže její
+    // BET_BIG je skutečná sázka a nesmí se číst jako shove.
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      initialSeed: 7,
+      initialStreet: "FLOP",
+      autoGenerate: true,
+      strategyResolver: (input) => ({
+        action: "BET_BIG",
+        explanation: "Real big bet fixture.",
+        source: {
+          kind: "STRATEGY_PACK",
+          provenance: "SOLVER_BACKED",
+          packId: "internal-sizing-pack",
+          packVersion: "v1",
+          packVerifiedAt: "2026-07-30",
+          ruleId: "mtt9_80bb_co_btn_3bp_midspr-check-aggregate",
+          confidence: "HIGH",
+          matchedTextures: input.textures,
+          sprMin: 0,
+          sprMax: 25,
+          positionPattern: input.positionPattern,
+          sourceUrls: [],
+          assumptions: ["Real big bet fixture."],
+          selectionScore: 100,
+          tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+        },
+      }),
+    });
+    await dealt(root);
+    const big = root.querySelector<HTMLElement>(`${ACTION}[data-action="BET_BIG"] .dx-trainer__action-label`);
+    expect(big?.textContent).not.toBe("All-in");
+    expect(big?.textContent).toMatch(/^Bet \d/);
+  });
+
+  it("obě solverově rovnocenné volby vyznačí jako doporučené", async () => {
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      initialSeed: 42,
+      initialStreet: "FLOP",
+      autoGenerate: true,
+      strategyResolver: (input) => ({
+        action: "BET_BIG",
+        actionEvs: {
+          source: "SOLVER",
+          unit: "BB",
+          equivalentThresholdBb: 0.01,
+          acceptableThresholdBb: 0.05,
+          values: [
+            { action: "CHECK", evBb: 0.204 },
+            { action: "BET_SMALL", evBb: 0.1 },
+            { action: "BET_BIG", evBb: 0.21 },
+          ],
+        },
+        explanation: "Reviewed action EV fixture.",
+        source: {
+          kind: "STRATEGY_PACK",
+          provenance: "SOLVER_BACKED",
+          packId: "internal-action-ev-pack",
+          packVersion: "v1",
+          packVerifiedAt: "2026-07-16",
+          ruleId: "internal-action-ev-rule",
+          confidence: "HIGH",
+          matchedTextures: input.textures,
+          sprMin: 1,
+          sprMax: 20,
+          positionPattern: input.positionPattern,
+          sourceUrls: [],
+          assumptions: ["Reviewed solver EV fixture."],
+          selectionScore: 200,
+          tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+        },
+      }),
+    });
+    await dealt(root);
+    answer(root, "CHECK");
+
+    expect(root.querySelectorAll(`${ACTION}[data-recommended="true"]`)).toHaveLength(2);
+    expect(root.querySelectorAll(`${TRAINER} .dx-trainer__ev-row`)).toHaveLength(3);
+    expect(root.querySelector<HTMLElement>(`${TRAINER} .dx-trainer__verdict .dx-chip`)?.dataset.outcome)
+      .toBe("EQUIVALENT");
+  });
+
+  it("akci, kterou rozbor nepočítal, neoznačí za chybu", async () => {
+    // Resolver se podstrkuje schválně: ve skutečném obsahu se nespočítaná akce
+    // v synchronním testu nikdy neobjeví a test by tiše neověřil nic.
     const root = document.createElement("div");
     renderPostflopView(root, {
       initialSeed: 7,
       initialStreet: "RIVER",
-      // Sada zná dvě akce ze tří: RAISE solver na tomhle uzlu nepočítal.
+      // Sada zná dvě akce ze tří.
       strategyResolver: () => ({
         action: "CHECK",
         explanation: "Vyřešený river.",
@@ -1335,17 +729,13 @@ describe("postflopView - DOM", () => {
           unit: "BB",
           equivalentThresholdBb: 0.1,
           acceptableThresholdBb: 0.3,
-          // Akce musí být z těch, které uzel nabízí, jinak sadu zamítne brána
-          // dřív, než se k třetímu stavu vůbec dojde.
           values: [
             { action: "CHECK", evBb: 3.4 },
             { action: "BET_SMALL", evBb: 1.1 },
           ],
         },
-        // Úplný zdroj přes tutéž funkci, jakou používají resolvery. Dřív tu
-        // stálo šest polí protlačených přes `as never` - tedy obcházení
-        // kontraktu, který vyžaduje šestnáct, a renderer na tom padal. Test,
-        // který si vyrobí nemožný stav, hlásí vadu, která v produktu není.
+        // Úplný zdroj přes tutéž funkci, jakou používají resolvery: test, který si
+        // vyrobí nemožný stav, hlásí vadu, která v produktu není.
         source: solvedStrategySource({
           packId: "test-pack",
           packVersion: "v1",
@@ -1360,40 +750,26 @@ describe("postflopView - DOM", () => {
       }) as never,
     });
     root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+    await dealt(root);
 
-    // Nespočítaná akce se hledá, ne předpokládá: který uzel se rozdá, závisí na
-    // seedu, a napevno zvolené RAISE se na riverových uzlech téhle konfigurace
-    // vůbec nenabízí.
+    // Nespočítaná akce se hledá, ne předpokládá: který uzel se rozdá, závisí na seedu.
     const known = new Set(["CHECK", "BET_SMALL"]);
-    const buttons = [...root.querySelectorAll<HTMLButtonElement>(".postflop-action")];
-    const unsolvedAction = buttons.find((button) => !known.has(button.dataset.action ?? ""));
-    expect(unsolvedAction, "spot nenabídl akci mimo vloženou sadu").toBeDefined();
-    unsolvedAction!.click();
+    const unsolved = actions(root).find((action) => !known.has(action));
+    expect(unsolved, "spot nenabídl akci mimo vloženou sadu").toBeDefined();
+    answer(root, unsolved);
 
-    const result = root.querySelector<HTMLElement>(".postflop-result")!;
-    expect(result.classList.contains("postflop-result--unsolved")).toBe(true);
-    expect(result.classList.contains("postflop-result--wrong"), "nesmí to být chyba").toBe(false);
-    expect(result.classList.contains("postflop-result--correct")).toBe(false);
-    // Sada běží v anglické lokalizaci; česká věta zní „Tuhle akci rozbor
-    // nepočítal". Klíčové je, že verdikt nemluví o chybě.
-    expect(result.textContent).toContain("not solved");
-    // A u nespočítané akce musí být vidět, že hodnota chybí.
-    expect(unsolvedAction!.dataset.evAvailable).toBe("unsolved");
+    expect(root.querySelector<HTMLElement>(`${TRAINER} .dx-trainer__verdict .dx-chip`)?.dataset.outcome)
+      .toBe("UNSOLVED");
+    expect(feedbackText(root)).toContain("Tuhle akci rozbor nepočítal");
   });
 
-  // Vlastní strop: tenhle jediný test načítá **všechny tři sady packů** (48
-  // flopových rodin, 32 turnových, 17 riverových) a to je jeho podstata, ne
-  // režie - bez načteného obsahu by vyřešený resolver neodpověděl a test by
-  // ověřoval heuristiku. Globálních 20 s na to nestačí.
+  // Vlastní strop: test načítá **všechny tři sady packů** a to je jeho podstata -
+  // bez načteného obsahu by vyřešený resolver neodpověděl a test by ověřoval
+  // heuristiku. Globálních 20 s na to nestačí.
   it("vyřešený spot vykreslí celé vysvětlení, ne jen půlku", { timeout: 90_000 }, async () => {
-    // Tohle byla nejzávažnější vada téhle relace a **byla latentní**: všechny tři
-    // vyřešené resolvery skládaly zdroj ze šesti polí a protlačily ho přes
-    // `as PostflopRecommendation`, ačkoli kontrakt jich chce šestnáct.
-    // Přetypování umlčelo kompilátor a renderer pak volal `.map()` nad
-    // `undefined`. Dokud se vyřešený obsah rozdával náhodnou deskou, resolver
-    // skoro nikdy neodpověděl a cesta se nespustila; katalogy ji zpřístupnily.
-    //
-    // Změřeno před opravou: **18 z 18 spotů mělo nula bloků vysvětlení**.
+    // Vyřešené resolvery kdysi skládaly zdroj ze šesti polí z šestnácti a
+    // přetypování umlčelo kompilátor; renderer pak volal `.map()` nad `undefined`.
+    // Změřeno před opravou: 18 z 18 spotů mělo nula bloků vysvětlení.
     await loadAllSolvedTurnPacks("FULL_RING_9|REGULAR|CHIP_EV|TURN|OFF");
     await loadSolvedFlopPacks("FULL_RING_9|REGULAR|CHIP_EV|FLOP");
     await loadSolvedRiverPacks("FULL_RING_9|REGULAR|CHIP_EV|RIVER");
@@ -1403,20 +779,12 @@ describe("postflopView - DOM", () => {
         const root = document.createElement("div");
         renderPostflopView(root, { initialSeed: seed, initialStreet: street });
         root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
-        // Rozdání riveru od 25. 8. 2026 čeká na tabulku EV, takže se spot
-        // nevykreslí ve stejném ticku jako kliknutí. Čeká se na tlačítko akce,
-        // ne na pevný počet ticků: to druhé by prošlo jen shodou okolností.
-        // Strop explicitně: výchozí vteřina `vi.waitFor` stačila samostatně, ale
-        // v plné sadě se dynamický import tabulky EV (kolem 400 kB) nestihne a
-        // test spadl na „expected null not to be null". Dvacet vteřin je proti
-        // naměřeným jednotkám vteřin s rezervou na souběh.
-        await vi.waitFor(() => {
-          expect(root.querySelector(".postflop-action")).not.toBeNull();
-        }, { timeout: 20000 });
-        root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
-        const blocks = root.querySelectorAll(".postflop-practical__block");
-        expect(blocks.length, `${street} seed ${seed}: vysvětlení se nevykreslilo`)
-          .toBeGreaterThan(0);
+        await dealt(root);
+        answer(root);
+        const notes = root.querySelectorAll(`${TRAINER} .dx-trainer__notes li`);
+        expect(notes.length, `${street} seed ${seed}: vysvětlení se nevykreslilo`).toBeGreaterThan(0);
+        expect(root.querySelector(`${TRAINER} .dx-trainer__plan`)?.textContent, `${street} seed ${seed}`)
+          .toBeTruthy();
       }
     }
   });

@@ -49,7 +49,6 @@ import "./ui/styles/tokens.css";
 import "./ui/styles/components.css";
 import "./ui/styles/trainer.css";
 import type {
-  ActionKey,
   ActionContext,
   Filters,
   Spot,
@@ -64,8 +63,6 @@ import {
 import { isFlowAllowed } from "./core/trainingCapability";
 import { resolveSeed } from "./core/drillEngine";
 import { postflopIntentFromFilters } from "./core/postflopIntent";
-import { grade } from "./core/scoring";
-import { buildPreflopExplanationForSpot } from "./core/preflopExplanation";
 import type { PostflopPotType, PostflopStreet } from "./core/postflopGenerator";
 import {
   isPostflopSprCovered,
@@ -115,25 +112,11 @@ import {
   requiredEntitlementsForMttPostflopPilotScopes,
 } from "./data/ranges/mttPostflopPilotCatalog";
 import { renderFilters, type FiltersView } from "./ui/filters";
-import { renderTable } from "./ui/tableRenderer";
 import { loadPreflopEquity } from "./core/preflopEquity";
-import { renderDecisionPrice } from "./ui/decisionPricePanel";
-import { isHotStreak } from "./core/sessionScore";
 import { createPreflopSession } from "./training/preflopSession";
 import { createPreflopTrainerView } from "./ui/trainer/preflopTrainerView";
-import { isNextUiEnabled } from "./ui/trainer/uiFlag";
-import { colorForActionKey } from "./ui/rangeMatrixView";
-import { renderMatrix } from "./ui/rangeMatrixView";
-import { renderRangeModalButton } from "./ui/rangeModal";
 import { renderHHView } from "./ui/hhView";
 import { renderPostflopView, type PostflopRuntimeNotice } from "./ui/postflopView";
-import {
-  formatActionEvBb,
-  revealActionEvButtonBubbles,
-  setActionEvButtonContent,
-} from "./ui/actionEvButtonBubbles";
-import { revealActionPriceLines } from "./ui/actionPriceLines";
-import { preflopDecisionPrices } from "./core/preflopDecisionPrice";
 import {
   CS,
   getAppLanguage,
@@ -143,28 +126,6 @@ import {
   type AppLanguage,
 } from "./ui/cs";
 import { registerServiceWorker } from "./pwa/registerSw";
-
-// ---------------------------------------------------------------------------
-// České popisky Akčních_klíčů (zobrazení doporučení po vyhodnocení, Req 12.3)
-// ---------------------------------------------------------------------------
-
-const ACTION_KEY_LABEL: Record<ActionKey, string> = {
-  FOLD: "Fold",
-  CALL: "Call",
-  LIMP: "Limp / Check",
-  OVERLIMP: "Over-limp",
-  OPEN_2X: "Raise 2x",
-  OPEN_25X: "Raise 2.5x",
-  OPEN_3X: "Raise 3x",
-  ISO_2X: "Iso-raise 2x",
-  ISO_25X: "Iso-raise 2.5x",
-  ISO_3X: "Iso-raise 3x",
-  "3BET": "3-bet",
-  "4BET": "4-bet",
-  SQUEEZE: "Squeeze",
-  JAM: "All-in",
-  CALL_JAM: "Call all-in",
-};
 
 const ACTION_CONTEXT_LABEL: Record<ActionContext, string> = {
   RFI: "RFI / Open",
@@ -178,10 +139,6 @@ const ACTION_CONTEXT_LABEL: Record<ActionContext, string> = {
   VS_ALLIN: "Proti all-inu (call-jam)",
 };
 
-/** Přeloží Akční_klíč na český popisek (fallback = samotný klíč). */
-function actionKeyLabel(key: ActionKey): string {
-  return ACTION_KEY_LABEL[key] ?? key;
-}
 
 function actionContextLabel(context: ActionContext): string {
   return ACTION_CONTEXT_LABEL[context] ?? context;
@@ -321,11 +278,6 @@ export interface BootstrapOptions {
   storage?: Storage;
   /** Zaregistrovat Service Worker? (výchozí: jen v produkčním buildu). */
   registerSw?: boolean;
-  /**
-   * Které GUI tréninku; bez něj rozhoduje přepínač (`uiFlag.ts`). Od 3. 11. 2026
-   * je výchozí nové, takže si ho testy klasického toku vyžádají výslovně.
-   */
-  ui?: "next" | "classic";
 }
 
 /**
@@ -409,13 +361,6 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   const postflopStatsStore = createPostflopStatsStore(storage);
   const postflopLineStatsStore = createPostflopLineStatsStore(storage);
   const hhReviewStore = createHHReviewStore(storage);
-
-  // Nové GUI tréninku je od 3. 11. 2026 výchozí, klasika zůstává za přepínačem
-  // (fáze 1 redesignu). Čte se tady, protože postflopový panel se vykresluje
-  // dřív než trénink.
-  const nextUi = options.ui !== undefined
-    ? options.ui === "next"
-    : isNextUiEnabled(typeof location === "undefined" ? "" : location.search, storage);
 
   // Statistiky (dashboard) a HH import jsou dostupné nezávisle na Range_Store.
   let sessionCount = 0;
@@ -562,7 +507,6 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       initialPotBB: postflopIntent?.potBB,
       initialEffectiveStackBB: postflopIntent?.effectiveStackBB,
       autoGenerate: options.autoGenerate === true,
-      nextUi,
       runtimeNotice,
       strategyResolver: runtimeProfileForView
         ? (input) => postflopRuntime?.resolver?.(input) ?? null
@@ -773,7 +717,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
         shell.selectTab("postflop");
       });
     },
-  }, nextUi);
+  });
   startPreflopFocusSession = trainingController.startPreflopFocusSession;
   getSelectedTrainingProfile = trainingController.getProfile;
 
@@ -1186,7 +1130,6 @@ function setupTraining(
   shell: AppShell,
   statsStore: StatsStore,
   hooks: TrainingHooks,
-  nextUi: boolean,
 ): TrainingController {
   const panel = shell.trainingPanel;
   panel.innerHTML = "";
@@ -1198,82 +1141,23 @@ function setupTraining(
   panel.appendChild(filtersBox);
   panel.appendChild(gameBox);
 
-  // Herní sub-oblasti.
-  const sessionBar = el("div", "training__session-bar");
-  const sessionInfo = el("div", "training__session-info");
-  const sessionTitle = el("div", "training__session-title", CS.training.question);
-  const sessionMeta = el("div", "training__session-meta");
-  const changeSituationBtn = document.createElement("button");
-  changeSituationBtn.type = "button";
-  changeSituationBtn.className = "training__change-situation";
-  changeSituationBtn.textContent = CS.training.changeSituation;
-  sessionInfo.appendChild(sessionTitle);
-  sessionInfo.appendChild(sessionMeta);
-
-  /**
-   * How this session is going, on the bar above the table.
-   *
-   * The trainer graded every answer and then forgot it until the dashboard. A
-   * player working through spots had nothing in front of them that moved, which
-   * is the difference between practising and playing. The streak is the part
-   * that pulls - it is the number you do not want to reset - and the tally is
-   * the part that keeps it honest, because a streak alone hides a bad session.
-   *
-   * Session-scoped and deliberately not persisted: this is the run you are in,
-   * not your record. The dashboard already owns the long view.
-   */
-  const scoreboard = el("div", "training__scoreboard");
-  const streakChip = el("div", "training__streak");
-  const tallyChip = el("div", "training__tally");
-  scoreboard.appendChild(streakChip);
-  scoreboard.appendChild(tallyChip);
-
   // Sekvence spotů, vyhodnocení, záznam do statistik i skóre relace jsou
-  // v řadiči, který používá i nové GUI (Agents/ui-redesign-plan.md, fáze 1).
-  // Tady zůstává jen vykreslení.
+  // v řadiči relace; obrazovka je od 4. 11. 2026 jen nová (klasika smazána,
+  // majitel - Agents/ui-redesign-plan.md, fáze 5 dřív kvůli rozpočtu CSS).
   const session = createPreflopSession(statsStore);
-
-  function renderScoreboard(): void {
-    const sessionScore = session.score;
-    streakChip.dataset.streak = String(sessionScore.streak);
-    streakChip.textContent = CS.training.streak(sessionScore.streak);
-    streakChip.classList.toggle("training__streak--hot", isHotStreak(sessionScore));
-    tallyChip.textContent = sessionScore.answered === 0
-      ? CS.training.tallyEmpty
-      : CS.training.tally(sessionScore.correct, sessionScore.answered, sessionScore.bestStreak);
-  }
-
-  renderScoreboard();
-  sessionBar.appendChild(sessionInfo);
-  sessionBar.appendChild(scoreboard);
-  sessionBar.appendChild(changeSituationBtn);
-  const tableContainer = el("div", "training__table");
-  const actionsContainer = el("div", "training__actions");
-  const resultContainer = el("div", "training__result");
-  const matrixContainer = el("div", "training__matrix");
-  gameBox.appendChild(sessionBar);
-  gameBox.appendChild(tableContainer);
-  gameBox.appendChild(actionsContainer);
-  gameBox.appendChild(resultContainer);
-  gameBox.appendChild(matrixContainer);
-
-  // Nová obrazovka tréninku za přepínačem (Agents/ui-redesign-plan.md, fáze 1).
-  // Bere tutéž relaci jako starý pohled; ten zůstává, dokud nové GUI neprojde E2E.
-  const trainerView = nextUi
-    ? createPreflopTrainerView(document, {
-      session,
-      title: spotTitle,
-      onAnswered: () => {
-        hooks.onAnswered();
-        hooks.refreshDashboard();
-      },
-      onChangeSituation: () => changeSituation(),
-      onSessionEnded: () => {
-        gameBox.hidden = true;
-      },
-    })
-    : null;
-  if (trainerView) gameBox.replaceChildren(trainerView.element);
+  const trainerView = createPreflopTrainerView(document, {
+    session,
+    title: spotTitle,
+    onAnswered: () => {
+      hooks.onAnswered();
+      hooks.refreshDashboard();
+    },
+    onChangeSituation: () => changeSituation(),
+    onSessionEnded: () => {
+      gameBox.hidden = true;
+    },
+  });
+  gameBox.replaceChildren(trainerView.element);
 
   // The equity table prices the action buttons. It is fetched rather than bundled
   // - 115 KB has no business on the install path - and the fetch starts here, at
@@ -1353,8 +1237,6 @@ function setupTraining(
     focusElement(filtersBox.querySelector<HTMLElement>(".profile-variant"));
   }
 
-  changeSituationBtn.addEventListener("click", () => changeSituation());
-
   function startPostflopSession(
     filters: Filters,
     seed: number | null,
@@ -1414,14 +1296,12 @@ function setupTraining(
     // Nová relace: vynuluj počet spotů relace (Req 9.5) a vyčisti výsledek.
     // Skóre relace vynuloval řadič při startu.
     hooks.resetSession();
-    renderScoreboard();
     hooks.refreshDashboard();
     filtersView.clearWarning();
 
     filtersBox.hidden = true;
     gameBox.hidden = false;
-    if (trainerView) trainerView.show(started.spot);
-    else showSpot(started.spot, filters);
+    trainerView.show(started.spot);
   }
 
   function startPreflopFocusSession(filters: Filters): void {
@@ -1443,227 +1323,9 @@ function setupTraining(
     startSession(filters, null, resolvedProfile, pack);
   }
 
-  /** Zobrazí spot: vykreslí stůl a nabídku akcí, vyčistí předchozí výsledek. */
+  /** Vyčistí rozehranou otázku (při změně situace nebo prázdném startu). */
   function clearActiveQuestion(): void {
-    sessionTitle.textContent = CS.training.question;
-    sessionMeta.textContent = "";
-    tableContainer.innerHTML = "";
-    actionsContainer.innerHTML = "";
-    resultContainer.innerHTML = "";
-    matrixContainer.innerHTML = "";
-    trainerView?.clear();
-  }
-
-  function showSpot(spot: Spot, filters: Filters): void {
-    sessionTitle.textContent = spotTitle(spot);
-    sessionMeta.textContent =
-      `${spot.effStack} BB - ${filters.ante === "ON" ? "ante ON" : "ante OFF"} - ` +
-      `seed ${filtersView.getSeed() ?? CS.filters.random}`;
-    renderTable(spot, filters.ante, tableContainer);
-    resultContainer.innerHTML = "";
-    matrixContainer.innerHTML = "";
-    renderActions(spot);
-    focusElement(actionsContainer.querySelector<HTMLButtonElement>(".action-btn"));
-  }
-
-  /** Vykreslí tlačítka nabízených akcí (Req 3.12 — 1 klíč na akci). */
-  function renderActions(spot: Spot): void {
-    actionsContainer.innerHTML = "";
-
-    const heading = el("div", "training__actions-title", CS.app.actionsTitle);
-    actionsContainer.appendChild(heading);
-
-    const row = el("div", "training__actions-row");
-    for (const answer of spot.answers) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "action-btn";
-      btn.dataset.action = answer.key;
-      // The same colour this action wears in the range matrix, so pressing a
-      // button and reading the grid afterwards are visibly the same decision.
-      // Applied as an accent rather than a fill: eleven saturated backgrounds
-      // behind white text would be a colour test, not a poker trainer.
-      const accent = colorForActionKey(answer.key);
-      btn.style.setProperty("--action-accent", accent);
-      setActionEvButtonContent(btn, answer.label);
-      btn.addEventListener("click", () => handleAnswer(answer.key));
-      row.appendChild(btn);
-    }
-    actionsContainer.appendChild(row);
-  }
-
-  /**
-   * Vyhodnotí zvolenou akci (Req 7), zobrazí správnost + zdůvodnění +
-   * doporučené klíče, vykreslí range matici (Req 10), zaznamená výsledek do
-   * Stats_Store PŘED dalším spotem (Req 9.1) a nabídne tlačítko „Další".
-   */
-  function handleAnswer(chosen: ActionKey): void {
-    // Řadič vyhodnotí odpověď a zapíše ji do statistik PŘED dalším spotem
-    // (Req 9.1); druhou odpověď na tentýž spot odmítne.
-    const outcome = session.answer(chosen);
-    const store = session.rangeStore;
-    if (!outcome || !store) return;
-    const { spot, grade: result } = outcome;
-
-    // Zablokuj tlačítka akcí a zvýrazni zvolené.
-    const buttons = actionsContainer.querySelectorAll<HTMLButtonElement>(".action-btn");
-    buttons.forEach((b) => {
-      b.disabled = true;
-      if (b.dataset.action === chosen) b.classList.add("action-btn--chosen");
-      if (result.recommended.includes(b.dataset.action as ActionKey)) {
-        b.classList.add("action-btn--recommended");
-      }
-    });
-    revealActionEvButtonBubbles(buttons, spot.actionEvs, result.actionEv);
-    // Cena vedle EV, ne místo ní. EV říká, co akce vynese; cena, kolik musí
-    // vydělat, aby se zaplatila - a je jich víc: přesnou EV má 33,1 % spotů,
-    // aspoň jednu cenu 100 %.
-    revealActionPriceLines(buttons, preflopDecisionPrices(spot, store));
-
-    // Inkrement počtu spotů relace + překreslení dashboardu (Req 9.5).
-    hooks.onAnswered();
-    hooks.refreshDashboard();
-
-    // Skóre počítá řadič podle toho, co rozhodl hodnotitel: EQUIVALENT
-    // a ACCEPTABLE se netrestají jako chyba, stejně jako to říká verdikt.
-    renderScoreboard();
-
-    // Zobrazení výsledku, zdůvodnění a doporučení; selhání záznamu ⇒
-    // upozornění (Req 9.6).
-    renderResult(spot, result, outcome.saved, session.filters);
-
-    // Range matice pro daný spot (Req 10) + legacy parity modal.
-    matrixContainer.innerHTML = "";
-    renderRangeModalButton(spot, store, matrixContainer);
-    const inlineMatrix = el("div", "training__matrix-inline");
-    matrixContainer.appendChild(inlineMatrix);
-    renderMatrix(spot, store, inlineMatrix);
-  }
-
-  /** Vykreslí indikaci správnosti, zdůvodnění a doporučené Akční_klíče (Req 7.4). */
-  function renderResult(
-    spot: Spot,
-    result: ReturnType<typeof grade>,
-    saveOk: boolean,
-    filters: Filters | null,
-  ): void {
-    resultContainer.innerHTML = "";
-
-    const box = el("div", "result");
-    box.classList.add(result.correct ? "result--correct" : "result--wrong");
-
-    const verdictText = result.actionEv?.outcome === "EQUIVALENT"
-      ? CS.training.equivalent
-      : result.actionEv?.outcome === "ACCEPTABLE"
-        ? CS.training.acceptable
-        : result.correct
-          ? CS.training.correct
-          : CS.training.incorrect;
-    const verdict = el(
-      "div",
-      "result__verdict",
-      verdictText,
-    );
-    box.appendChild(verdict);
-
-    // Doporučené Akční_klíče z Range_Store (Req 7.4 / 7.7).
-    if (result.recommended.length > 0) {
-      const rec = el(
-        "div",
-        "result__recommended",
-        `${CS.training.recommended}: ${result.recommended.map(actionKeyLabel).join(" / ")}`,
-      );
-      box.appendChild(rec);
-    }
-    box.appendChild(renderPreflopActionEv(spot, result));
-
-    // What the decision cost, derived from the pot and the stack rather than
-    // looked up, so every all-in spot can be priced whether or not a pack ships
-    // a number for it.
-    const price = filters === null ? null : renderDecisionPrice(document, spot, filters);
-    if (price !== null) box.appendChild(price);
-
-    // Zdůvodnění (Req 7.4); při nedostupnosti zobraz náhradní text (Req 7.5).
-    const explanation = el("div", "result__explanation");
-    if (result.explanationAvailable) {
-      explanation.textContent = buildPreflopExplanationForSpot(spot, getAppLanguage());
-    } else {
-      explanation.textContent = CS.training.explanationUnavailable;
-      explanation.classList.add("result__explanation--unavailable");
-    }
-    box.appendChild(explanation);
-
-    // Req 9.6: výsledek se nepodařilo uložit ⇒ upozornění, ale pokračujeme.
-    if (!saveOk) {
-      const warn = el(
-        "div",
-        "result__save-warning",
-        CS.training.saveWarning,
-      );
-      box.appendChild(warn);
-    }
-
-    // Tlačítko „Další" — zobrazí další spot ze sekvence.
-    const nextBtn = document.createElement("button");
-    nextBtn.type = "button";
-    nextBtn.className = "result__next";
-    nextBtn.textContent = CS.training.nextSpot;
-    nextBtn.addEventListener("click", () => advance());
-    box.appendChild(nextBtn);
-
-    resultContainer.appendChild(box);
-    focusElement(nextBtn);
-  }
-
-  /** Posune sekvenci na další spot (Req 6.6 — sekvence cyklí deterministicky). */
-  function renderPreflopActionEv(
-    spot: Spot,
-    result: ReturnType<typeof grade>,
-  ): HTMLElement {
-    const section = el("section", "action-ev");
-    section.dataset.available = result.actionEv ? "true" : "false";
-    section.appendChild(el("div", "action-ev__title", CS.training.actionEv.title));
-
-    if (!result.actionEv || !spot.actionEvs) {
-      section.appendChild(el("p", "action-ev__unavailable", CS.training.actionEv.unavailable));
-      return section;
-    }
-
-    const list = el("div", "action-ev__list");
-    const sorted = [...spot.actionEvs.values].sort((left, right) => right.evBb - left.evBb);
-    for (const item of sorted) {
-      const lossBb = Math.max(0, result.actionEv.bestEvBb - item.evBb);
-      const row = el("div", "action-ev__row");
-      row.classList.toggle("action-ev__row--chosen", item.action === result.actionEv.chosenAction);
-      row.classList.toggle("action-ev__row--best", result.actionEv.bestActions.includes(item.action));
-      row.dataset.action = item.action;
-      row.dataset.evBb = String(item.evBb);
-      row.append(
-        el("span", "action-ev__action", actionKeyLabel(item.action)),
-        el("span", "action-ev__value", `${formatActionEvBb(item.evBb)} BB`),
-        el(
-          "span",
-          "action-ev__delta",
-          lossBb <= 1e-9 ? CS.training.actionEv.best : `${formatActionEvBb(-lossBb)} BB`,
-        ),
-      );
-      list.appendChild(row);
-    }
-    section.appendChild(list);
-    section.appendChild(el("p", "action-ev__note", CS.training.actionEv.note));
-    return section;
-  }
-
-  function advance(): void {
-    if (!session.spot) return;
-    const next = session.next();
-    if (!next) {
-      // Pojistka: neprázdná sekvence cyklí donekonečna, sem bychom se neměli
-      // dostat. Řadič relaci ukončil, skryjeme ji i tady.
-      gameBox.hidden = true;
-      return;
-    }
-    showSpot(next, filtersView.getFilters());
+    trainerView.clear();
   }
 
   return {

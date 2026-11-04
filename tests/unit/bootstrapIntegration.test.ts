@@ -105,6 +105,11 @@ const validFlopHh = [
   "*** SUMMARY ***",
 ].join("\n");
 
+/** Nové GUI tréninku (od 4. 11. 2026 jediné, klasika smazána). */
+const PREFLOP_ACTION = ".training__game .dx-trainer__actions button";
+const POSTFLOP_TRAINER = ".postflop-output .dx-trainer";
+const POSTFLOP_ACTION = `${POSTFLOP_TRAINER} .dx-trainer__actions button`;
+
 describe("bootstrap - inicializacni tok", () => {
   afterEach(() => {
     document.body.innerHTML = "";
@@ -117,7 +122,7 @@ describe("bootstrap - inicializacni tok", () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
 
-    bootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
 
     expect(root.querySelector(".filters")).not.toBeNull();
     expect(stylesheet("legacy/app-shell.css")).toContain("@media (max-width:720px)");
@@ -143,11 +148,10 @@ describe("bootstrap - inicializacni tok", () => {
       .toBe("Postflop training");
     expect(root.querySelector(".postflop-view")).not.toBeNull();
     expect(root.querySelector<HTMLElement>(".postflop-output")?.hidden).toBe(true);
-    expect(root.querySelector(".postflop-meta")).toBeNull();
-    expect(root.querySelector(".postflop-card")).toBeNull();
+    expect(root.querySelector(".postflop-output .dx-trainer__actions button")).toBeNull();
     expect(root.querySelector(".filter-start")).not.toBeNull();
     expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(true);
-    expect(root.querySelector(".poker-table")).toBeNull();
+    expect(root.querySelector(".training__game .dx-table")).toBeNull();
   });
 
   it("9-max regular chipEV preflop spusti lazy-loaded production pack", async () => {
@@ -156,11 +160,11 @@ describe("bootstrap - inicializacni tok", () => {
     const storage = new MemoryStorage();
     document.body.appendChild(root);
 
-    bootstrap({ root, storage, registerSw: false, ui: "classic" });
+    bootstrap({ root, storage, registerSw: false });
 
     expect(root.querySelector<HTMLElement>(".training__filters")?.hidden).toBe(false);
     expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(true);
-    expect(root.querySelector(".poker-table")).toBeNull();
+    expect(root.querySelector(".training__game .dx-table")).toBeNull();
 
     root.querySelector<HTMLInputElement>('.filter-context[data-context="VS_3BET"]')!.checked = true;
     root.querySelector<HTMLInputElement>('.filter-context[data-context="VS_3BET"]')!
@@ -171,17 +175,16 @@ describe("bootstrap - inicializacni tok", () => {
 
     expect(root.querySelector<HTMLElement>(".training__filters")?.hidden).toBe(true);
     expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(false);
-    expect(root.querySelector(".poker-table")).not.toBeNull();
-    expect(root.querySelector(".action-btn")).not.toBeNull();
-    expect(root.querySelectorAll(".action-btn .action-ev-bubble")).toHaveLength(
-      root.querySelectorAll(".action-btn").length,
-    );
-    expect(root.querySelectorAll(".action-btn .action-ev-bubble:not([hidden])")).toHaveLength(0);
+    expect(root.querySelector(".training__game .dx-table")).not.toBeNull();
+    expect(root.querySelector(PREFLOP_ACTION)).not.toBeNull();
+    // EV se ukáže až ve vyhodnocení, před odpovědí ho hráč nevidí.
+    expect(root.querySelector<HTMLElement>(".training__game .dx-trainer__feedback")?.hidden).toBe(true);
+    expect(root.querySelector(".training__game .dx-trainer__actions .dx-trainer__ev")).toBeNull();
     const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
     expect(warning?.hidden).toBe(true);
     expect(warning?.textContent).not.toMatch(/https?:|RangePack|mtt-/i);
 
-    root.querySelector<HTMLButtonElement>(".action-btn")?.click();
+    root.querySelector<HTMLButtonElement>(PREFLOP_ACTION)?.click();
     const events = JSON.parse(storage.getItem(KEY_EVENTS) ?? "[]") as Array<{
       identity?: {
         profileId?: string;
@@ -200,7 +203,7 @@ describe("bootstrap - inicializacni tok", () => {
     const storage = new MemoryStorage();
     document.body.appendChild(root);
 
-    bootstrap({ root, storage, registerSw: false, ui: "classic" });
+    bootstrap({ root, storage, registerSw: false });
 
     const street = root.querySelector<HTMLSelectElement>(".profile-street");
     const seed = root.querySelector<HTMLInputElement>(".filter-seed");
@@ -223,12 +226,13 @@ describe("bootstrap - inicializacni tok", () => {
     expect(notice?.dataset.kind).toBe("SOLVED_BETA");
     expect(notice?.textContent).toContain("Vyřešené flopové desky jsou v betě dostupné bez licence");
     expect(notice?.textContent).not.toMatch(/https?:|www\.|source|zdroj|RangePack|StrategyPack|mtt-/i);
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("FLOP");
-    expect(root.querySelector(".poker-table")).toBeNull();
-    expect(document.activeElement).toBe(root.querySelector<HTMLButtonElement>(".postflop-action"));
+    expect(root.querySelector<HTMLElement>(POSTFLOP_TRAINER)?.dataset.street).toBe("FLOP");
+    expect(root.querySelector(".training__game .dx-table")).toBeNull();
+    expect(document.activeElement).toBe(root.querySelector<HTMLButtonElement>(POSTFLOP_ACTION));
 
-    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
-    expect(document.activeElement).toBe(root.querySelector<HTMLElement>(".postflop-result"));
+    root.querySelector<HTMLButtonElement>(POSTFLOP_ACTION)?.click();
+    expect(root.querySelector<HTMLElement>(`${POSTFLOP_TRAINER} .dx-trainer__feedback`)?.hidden).toBe(false);
+    expect(document.activeElement).toBe(root.querySelector<HTMLElement>(`${POSTFLOP_TRAINER} .dx-trainer__next`));
 
     await waitForDashboard(root);
     expect(root.querySelector<HTMLElement>(".dashboard-session-count")?.dataset.sessionCount)
@@ -250,7 +254,7 @@ describe("bootstrap - inicializacni tok", () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
 
-    bootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
 
     const street = root.querySelector<HTMLSelectElement>(".profile-street");
     const seed = root.querySelector<HTMLInputElement>(".filter-seed");
@@ -262,16 +266,14 @@ describe("bootstrap - inicializacni tok", () => {
     // Riverové rozdání od 25. 8. 2026 čeká na tabulku EV, takže se spot
     // nevykreslí ve stejném ticku jako kliknutí. Čeká se na vykreslená
     // metadata, ne na pevný počet ticků - to druhé projde jen náhodou.
-    await vi.waitFor(() => {
-      expect(root.querySelector(".postflop-meta")).not.toBeNull();
-    }, { timeout: 20000 });
+    await waitForPostflopSpot(root);
 
     expect(root.querySelector<HTMLElement>(".app__panel--postflop")?.hidden).toBe(false);
     expect(root.querySelector<HTMLInputElement>(".postflop-seed")?.value).toBe("");
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("RIVER");
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.actionNode)
+    expect(root.querySelector<HTMLElement>(POSTFLOP_TRAINER)?.dataset.street).toBe("RIVER");
+    expect(root.querySelector<HTMLElement>(POSTFLOP_TRAINER)?.dataset.actionNode)
       .toBe("RIVER_PRESSURE");
-    expect(root.querySelector(".poker-table")).toBeNull();
+    expect(root.querySelector(".training__game .dx-table")).toBeNull();
   });
 
   it("9-max regular chipEV production pri quota selhani zobrazi notice bez ulozeni", async () => {
@@ -280,15 +282,16 @@ describe("bootstrap - inicializacni tok", () => {
     const storage = new QuotaAfterBootstrapStorage();
     document.body.appendChild(root);
 
-    bootstrap({ root, storage, registerSw: false, ui: "classic" });
+    bootstrap({ root, storage, registerSw: false });
     storage.failWrites = true;
     root.querySelector<HTMLButtonElement>(".filter-start")?.click();
     await waitForPreflopSession(root);
-    root.querySelector<HTMLButtonElement>(".action-btn")?.click();
+    root.querySelector<HTMLButtonElement>(PREFLOP_ACTION)?.click();
 
-    const saveWarning = root.querySelector<HTMLElement>(".result__save-warning");
-    expect(root.querySelector(".action-btn")).not.toBeNull();
-    expect(saveWarning?.textContent).toContain("Výsledek se nepodařilo uložit");
+    const saveWarning = root.querySelector<HTMLElement>(".training__game .dx-trainer__warning");
+    expect(root.querySelector(PREFLOP_ACTION)).not.toBeNull();
+    expect(saveWarning?.getAttribute("role")).toBe("alert");
+    expect(saveWarning?.textContent).toContain("Odpověď se nepodařilo uložit");
     expect(saveWarning?.textContent).not.toMatch(/https?:|www\.|source|zdroj|RangePack|mtt-/i);
     expect(JSON.parse(storage.getItem(KEY_EVENTS) ?? "[]")).toEqual([]);
   });
@@ -299,7 +302,7 @@ describe("bootstrap - inicializacni tok", () => {
     const storage = new QuotaAfterBootstrapStorage();
     document.body.appendChild(root);
 
-    bootstrap({ root, storage, registerSw: false, ui: "classic" });
+    bootstrap({ root, storage, registerSw: false });
     const street = root.querySelector<HTMLSelectElement>(".profile-street");
     street!.value = "FLOP";
     street!.dispatchEvent(new Event("change"));
@@ -307,10 +310,10 @@ describe("bootstrap - inicializacni tok", () => {
     await waitForPostflopSpot(root);
 
     storage.failWrites = true;
-    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+    root.querySelector<HTMLButtonElement>(POSTFLOP_ACTION)?.click();
 
     const notice = root.querySelector<HTMLElement>(".app__notice");
-    expect(root.querySelector<HTMLElement>(".postflop-result")).not.toBeNull();
+    expect(root.querySelector<HTMLElement>(`${POSTFLOP_TRAINER} .dx-trainer__feedback`)?.hidden).toBe(false);
     expect(notice?.hidden).toBe(false);
     expect(notice?.textContent).toContain("Postflop odpověď se nepodařilo uložit");
     expect(notice?.textContent).not.toMatch(/https?:|www\.|source|zdroj|RangePack|mtt-/i);
@@ -326,7 +329,7 @@ describe("bootstrap - inicializacni tok", () => {
     const storage = new MemoryStorage();
     document.body.appendChild(root);
 
-    bootstrap({ root, storage, registerSw: false, ui: "classic" });
+    bootstrap({ root, storage, registerSw: false });
 
     const ante = root.querySelector<HTMLInputElement>(".filter-ante");
     ante!.checked = false;
@@ -368,7 +371,7 @@ describe("bootstrap - inicializacni tok", () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
 
-    bootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
 
     const street = root.querySelector<HTMLSelectElement>(".profile-street");
     const seed = root.querySelector<HTMLInputElement>(".filter-seed");
@@ -388,7 +391,7 @@ describe("bootstrap - inicializacni tok", () => {
     root.querySelector<HTMLButtonElement>(".filter-start")?.click();
     await waitForPostflopSpot(root);
 
-    const meta = root.querySelector<HTMLElement>(".postflop-meta");
+    const meta = root.querySelector<HTMLElement>(POSTFLOP_TRAINER);
     expect(root.querySelector<HTMLElement>(".app__panel--postflop")?.hidden).toBe(false);
     expect(meta?.dataset.seed).toBe("1788246284");
     expect(meta?.dataset.street).toBe("FLOP");
@@ -406,14 +409,14 @@ describe("bootstrap - inicializacni tok", () => {
     let main = await importFreshMain();
     const firstRoot = document.createElement("div");
 
-    main.bootstrap({ root: firstRoot, storage, registerSw: false, ui: "classic" });
+    main.bootstrap({ root: firstRoot, storage, registerSw: false });
 
     const street = firstRoot.querySelector<HTMLSelectElement>(".profile-street");
     street!.value = "FLOP";
     street!.dispatchEvent(new Event("change"));
     firstRoot.querySelector<HTMLButtonElement>(".filter-start")?.click();
     await waitForPostflopSpot(firstRoot);
-    firstRoot.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+    firstRoot.querySelector<HTMLButtonElement>(POSTFLOP_ACTION)?.click();
 
     await waitForDashboard(firstRoot);
     expect(firstRoot.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total)
@@ -421,7 +424,7 @@ describe("bootstrap - inicializacni tok", () => {
 
     main = await importFreshMain();
     const secondRoot = document.createElement("div");
-    main.bootstrap({ root: secondRoot, storage, registerSw: false, ui: "classic" });
+    main.bootstrap({ root: secondRoot, storage, registerSw: false });
 
     await waitForDashboard(secondRoot);
     expect(secondRoot.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total)
@@ -442,7 +445,7 @@ describe("bootstrap - inicializacni tok", () => {
     const root = document.createElement("div");
     document.body.appendChild(root);
 
-    bootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
 
     const format = root.querySelector<HTMLSelectElement>(".profile-format");
     format!.value = "SIX_MAX";
@@ -465,7 +468,7 @@ describe("bootstrap - inicializacni tok", () => {
     }, { timeout: 15000 });
     // A dealt table, which is the whole difference: this profile used to reach
     // the start button and stop there.
-    expect(root.querySelector(".poker-table")).not.toBeNull();
+    expect(root.querySelector(".training__game .dx-table")).not.toBeNull();
   });
 
   /**
@@ -551,7 +554,7 @@ describe("bootstrap - inicializacni tok", () => {
     "MTT preflop gate: $format $speed ante $ante",
     async (scenario) => {
       const root = document.createElement("div");
-      gateBootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
+      gateBootstrap({ root, storage: new MemoryStorage(), registerSw: false });
 
       const format = root.querySelector<HTMLSelectElement>(".profile-format");
       const speed = root.querySelector<HTMLSelectElement>(".profile-speed");
@@ -568,12 +571,12 @@ describe("bootstrap - inicializacni tok", () => {
       if (scenario.playable) {
         await waitForPreflopSession(root);
         expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(false);
-        expect(root.querySelector(".poker-table")).not.toBeNull();
+        expect(root.querySelector(".training__game .dx-table")).not.toBeNull();
         expect(root.querySelector<HTMLElement>(".filter-empty-warning")?.hidden).toBe(true);
       } else {
         const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
         expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(true);
-        expect(root.querySelector(".poker-table")).toBeNull();
+        expect(root.querySelector(".training__game .dx-table")).toBeNull();
         expect(warning?.hidden).toBe(false);
         expect(warning?.textContent).toContain(scenario.warning);
       }
@@ -584,7 +587,7 @@ describe("bootstrap - inicializacni tok", () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
 
-    bootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
 
     const variant = root.querySelector<HTMLSelectElement>(".profile-variant");
     variant!.value = "SNG";
@@ -598,7 +601,7 @@ describe("bootstrap - inicializacni tok", () => {
     expect(warning?.textContent).toContain("SNG chipEV preview");
     expect(warning?.textContent).not.toContain("https://");
     expect(warning?.textContent).not.toContain("RangePack");
-    expect(root.querySelector(".poker-table")).toBeNull();
+    expect(root.querySelector(".training__game .dx-table")).toBeNull();
     expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(true);
   });
 
@@ -606,7 +609,7 @@ describe("bootstrap - inicializacni tok", () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
 
-    bootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
 
     const variant = root.querySelector<HTMLSelectElement>(".profile-variant");
     variant!.value = "CASH";
@@ -620,7 +623,7 @@ describe("bootstrap - inicializacni tok", () => {
     expect(warning?.textContent).toContain("Cash rake preview");
     expect(warning?.textContent).not.toContain("https://");
     expect(warning?.textContent).not.toContain("RangePack");
-    expect(root.querySelector(".poker-table")).toBeNull();
+    expect(root.querySelector(".training__game .dx-table")).toBeNull();
     expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(true);
   });
 
@@ -629,11 +632,11 @@ describe("bootstrap - inicializacni tok", () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
 
-    bootstrap({ root, storage: new BrokenWriteStorage(), registerSw: false, ui: "classic" });
+    bootstrap({ root, storage: new BrokenWriteStorage(), registerSw: false });
 
     expect(root.querySelector(".fatal")?.textContent).toContain("Úložiště není konzistentní");
     expect(root.querySelector(".filter-start")).toBeNull();
-    expect(root.querySelector(".poker-table")).toBeNull();
+    expect(root.querySelector(".training__game .dx-table")).toBeNull();
   });
 
   it("globalni error boundary pouzije aktivni EN jazyk", async () => {
@@ -643,7 +646,7 @@ describe("bootstrap - inicializacni tok", () => {
     const storage = new MemoryStorage();
     storage.setItem(APP_LANGUAGE_STORAGE_KEY, "EN");
 
-    bootstrap({ root, storage, registerSw: false, ui: "classic" });
+    bootstrap({ root, storage, registerSw: false });
     window.dispatchEvent(new ErrorEvent("error", {
       error: new Error("simulated runtime failure"),
       message: "simulated runtime failure",
@@ -668,7 +671,7 @@ describe("bootstrap - inicializacni tok", () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
 
-    bootstrap({ root, storage: new MemoryStorage(), registerSw: false, ui: "classic" });
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
 
     expect(root.querySelector(".fatal")).toBeNull();
     expect(root.querySelector(".filter-start")).not.toBeNull();
@@ -681,7 +684,7 @@ describe("bootstrap - inicializacni tok", () => {
     expect(warning?.hidden).toBe(false);
     expect(warning?.textContent).toContain("Referenční range nejsou dostupné");
     expect(warning?.textContent).not.toContain("https://");
-    expect(root.querySelector(".poker-table")).toBeNull();
+    expect(root.querySelector(".training__game .dx-table")).toBeNull();
   });
 });
 
@@ -699,7 +702,7 @@ async function importFreshMain(): Promise<typeof import("../../src/main")> {
  */
 async function waitForPostflopSpot(root: HTMLElement): Promise<void> {
   await vi.waitFor(() => {
-    expect(root.querySelector(".postflop-meta")).not.toBeNull();
+    expect(root.querySelector(POSTFLOP_ACTION)).not.toBeNull();
   }, { timeout: 20000 });
 }
 
@@ -725,7 +728,8 @@ async function waitForDashboard(root: HTMLElement): Promise<void> {
 async function waitForPreflopSession(root: HTMLElement): Promise<void> {
   await vi.waitFor(() => {
     expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(false);
-    expect(root.querySelector(".poker-table")).not.toBeNull();
+    expect(root.querySelector(".training__game .dx-table")).not.toBeNull();
+    expect(root.querySelector(PREFLOP_ACTION)).not.toBeNull();
     // Stejná rezerva jako u dashboardu a ze stejného měřeného důvodu.
   }, { timeout: 25000 });
 }

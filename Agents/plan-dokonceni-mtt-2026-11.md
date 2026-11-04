@@ -153,10 +153,13 @@ která na nich stojí.
    dodány u 35 z 55 turnových rodin a 1 flopové, k packům beze změny
    obsahu; zbytek turnu a celý river přijde se sobotní přestavbou packů,
    bod 336. Před fází 3 část úklidu starých stylů, protože CSS je na 79,96
-   z 80 KiB.)*
+   z 80 KiB. 4. 11.: klasické GUI smazané i se styly, CSS 51,52 z 80 KiB,
+   bod 340.)*
 9. Packy pro rodiny z dávky, jak se dokončují; mechanická kontrola; čtení
    majitelem přes `mtt:review-desk` (druhé sezení).
 10. GUI fáze 4 (statistiky a slabá místa) a 5 (úklid starých stylů).
+    *(4. 11.: z fáze 5 smazané klasické GUI i s přepínačem, bod 340; zbývá
+    přestěhovat živé staré styly a smazat `src/ui/styles/legacy`.)*
 11. Noci: dávka 204 desek, pak rozklad nových rodin (turnová EV). Pokus D6.
     *(3. 11.: D6 v runneru a ve wrapperu, bod 330; první souběžná noc je
     první noc šířky. Rozhodnout po dvou nocích podle řádku `propustnost:`.
