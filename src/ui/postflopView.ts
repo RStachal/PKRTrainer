@@ -93,7 +93,11 @@ export interface PostflopViewOptions {
   /** False when the runtime cannot serve turn and river, so a line cannot run. */
   lineModeAvailable?: boolean;
   runtimeNotice?: PostflopRuntimeNotice | null;
-  beforeGenerate?: (mode: "single" | "line") => Promise<void> | void;
+  /**
+   * Příprava před rozdáním. Dostává i ulici, protože si ji hráč může v panelu
+   * změnit a vyřešené packy se načítají po ulicích (deník 337).
+   */
+  beforeGenerate?: (mode: "single" | "line", street: PostflopStreet) => Promise<void> | void;
   onLineCompleted?: (
     line: PostflopLine,
     chosenByStreet: Partial<Record<PostflopStreet, PostflopAction>>,
@@ -116,7 +120,7 @@ export interface PostflopViewOptions {
 const NEXT_VIEWS = new WeakMap<HTMLElement, PostflopTrainerView>();
 
 export interface PostflopRuntimeNotice {
-  kind: "SCOPED_PILOT" | "LOCKED_PILOT" | "PRODUCTION" | "PREVIEW" | "DEEP_STACK_UNCOVERED";
+  kind: "SCOPED_PILOT" | "SOLVED_BETA" | "LOCKED_PILOT" | "PRODUCTION" | "PREVIEW" | "DEEP_STACK_UNCOVERED";
   text: string;
 }
 
@@ -382,7 +386,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
     );
     try {
       const mode = modeSelect.value === "line" ? "line" : "single";
-      const preparation = options.beforeGenerate?.(mode);
+      const preparation = options.beforeGenerate?.(mode, street);
       if (preparation) await preparation;
       if (modeSelect.value === "line") {
         // Postavit linku kolem vyřešeného turnu, když nějaký je. Bez toho se

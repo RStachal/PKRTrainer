@@ -195,6 +195,71 @@ describe("hláška o neověřeném obsahu", () => {
 });
 
 /**
+ * Vyřešené desky v betě bez licence (majitel 4. 11. 2026, deník 337).
+ *
+ * Jednotlivý spot se k vyřešeným packům do té doby nedostal vůbec: načítala je
+ * jen produkční linka a rozbor HH. Od 4. 11. se načítají každému, a výchozí
+ * řetězec je obslouží i bez licence - hláška „bez licence běží jen náhled"
+ * by tedy lhala. Placený pilot s licencí zůstává přísný a jeho hláška se nemění.
+ */
+describe("hláška u vyřešených desek v betě", () => {
+  it("bez licence řekne, že vyřešené desky běží, ne že je to placené", async () => {
+    const { postflopRuntimeNotice } = await import("../../src/main");
+    const turn = postflopRuntimeNotice({
+      street: "TURN",
+      hasScopedPilotCoverage: true,
+      hasActivePilotEntitlement: false,
+      productionReady: false,
+      solvedBoards: { unreviewed: false },
+    });
+    expect(turn?.kind).toBe("SOLVED_BETA");
+    expect(turn?.text).toContain("Vyřešené turnové desky jsou v betě dostupné bez licence");
+    expect(turn?.text).not.toContain("placený");
+    expect(turn?.text).not.toContain("nikdo neprošel");
+  });
+
+  it("platí pro každou ulici zvlášť a u flopu přebije zamčeného pilota", async () => {
+    const { postflopRuntimeNotice } = await import("../../src/main");
+    const flop = postflopRuntimeNotice({
+      street: "FLOP",
+      hasScopedPilotCoverage: true,
+      hasActivePilotEntitlement: false,
+      productionReady: false,
+      solvedBoards: { unreviewed: false },
+    });
+    expect(flop?.kind).toBe("SOLVED_BETA");
+    expect(flop?.text).toContain("flopové desky");
+    const river = postflopRuntimeNotice({
+      street: "RIVER",
+      hasScopedPilotCoverage: false,
+      hasActivePilotEntitlement: false,
+      productionReady: false,
+      solvedBoards: { unreviewed: true },
+    });
+    expect(river?.kind).toBe("SOLVED_BETA");
+    expect(river?.text).toContain("riverové desky");
+    expect(river?.text).toContain("nikdo neprošel");
+  });
+
+  it("s licencí zůstává přísný pilot a bez načtených desek zámek jako dřív", async () => {
+    const { postflopRuntimeNotice } = await import("../../src/main");
+    expect(postflopRuntimeNotice({
+      street: "TURN",
+      hasScopedPilotCoverage: true,
+      hasActivePilotEntitlement: true,
+      productionReady: false,
+      solvedBoards: { unreviewed: false },
+    })?.kind).toBe("SCOPED_PILOT");
+    expect(postflopRuntimeNotice({
+      street: "TURN",
+      hasScopedPilotCoverage: true,
+      hasActivePilotEntitlement: false,
+      productionReady: false,
+    })?.kind).toBe("LOCKED_PILOT");
+  });
+});
+
+/**
  * Varování o hloubce platí pro flop, protože z flopu pochází.
  *
  * SPR pásma se počítají z flopových pilotů. Vyřešený turn je nechtěně zpřístupnil

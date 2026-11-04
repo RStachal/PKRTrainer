@@ -96,10 +96,12 @@ import {
 } from "./data/ranges/mttPreflopRangePacks";
 import { mttProductionImportSlotId } from "./data/ranges/mttImportSlotNaming";
 import { mttProductionLazyLoader } from "./data/ranges/mttProductionLazyLoader";
-import { loadSolvedTurnPacks } from "./data/ranges/turnSolvedStrategyPacks";
+import { loadAllSolvedTurnPacks, loadSolvedTurnPacks } from "./data/ranges/turnSolvedStrategyPacks";
 import { loadSolvedRiverPacks } from "./data/ranges/riverSolvedStrategyPacks";
 import { loadSolvedFlopPacks } from "./data/ranges/flopSolvedStrategyPacks";
 import { runtimeSolvedTurnPacks } from "./data/ranges/turnSolvedRuntimeRegistry";
+import { runtimeSolvedRiverPacks } from "./data/ranges/riverSolvedRuntimeRegistry";
+import { runtimeSolvedFlopPacks } from "./data/ranges/flopSolvedRuntimeRegistry";
 
 /** Oprávnění k vyřešenému turn obsahu; jedno na celý turn, ne na rodinu. */
 const SOLVED_TURN_PILOT_ENTITLEMENT = "mtt.postflop.turn.solved.pilot" as const;
@@ -512,10 +514,24 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
     const unreviewedContent = hasSolvedTurnCoverage &&
       runtimeSolvedTurnPacks.every((pack) => pack.confidence === "LOW");
 
+    // Načtené vyřešené desky vybrané ulice. Výchozí řetězec resolverů je
+    // obslouží komukoli (`createDefaultPostflopStrategyResolver`) a od 4. 11.
+    // 2026 se načítají každému ještě před rozdáním (`loadSolvedPostflopStreets`)
+    // - majitel: v betě MTT 1.0 je vyřešený postflop dostupný bez licence
+    // (deník 337).
+    const solvedStreetPacks: readonly { confidence: string }[] = resolvedProfile?.street === "TURN"
+      ? runtimeSolvedTurnPacks
+      : resolvedProfile?.street === "RIVER"
+        ? runtimeSolvedRiverPacks
+        : resolvedProfile?.street === "FLOP" ? runtimeSolvedFlopPacks : [];
+
     const runtimeNotice = postflopRuntimeNotice({
       // Preflop se sem nedostane, ale typ to neví; hláška je postflopová.
       street: resolvedProfile?.street === "PREFLOP" ? undefined : resolvedProfile?.street,
       unreviewedContent,
+      solvedBoards: solvedStreetPacks.length > 0
+        ? { unreviewed: solvedStreetPacks.every((pack) => pack.confidence === "LOW") }
+        : undefined,
       hasScopedPilotCoverage: hasScopedPilotCoverage || hasSolvedTurnCoverage,
       hasActivePilotEntitlement: hasActivePilotEntitlement || hasSolvedTurnEntitlement,
       productionReady: capability?.status === "PRODUCTION",
@@ -564,25 +580,30 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
         && POSTFLOP_LINE_STREETS.every((street) => (
           trainingCapabilityForProfile({ ...resolvedProfile, street }).status === "PRODUCTION"
         ))),
-      beforeGenerate: runtimeProfileForView
-        ? async (mode) => {
-          const { buildMttPostflopTrainingRuntime } = await import("./data/ranges/mttPostflopTrainingRuntime");
-          postflopRuntime = buildMttPostflopTrainingRuntime({
-            profile: runtimeProfileForView,
-            grants,
-          });
-          if (postflopRuntime.mode === "PRODUCTION" && mode === "line") {
-            const profileKeys = (["FLOP", "TURN", "RIVER"] as const)
-              .map((street) => mttProductionProfileKey({
-                ...runtimeProfileForView,
-                street,
-              }))
-              .filter((profileKey): profileKey is string => profileKey !== null);
-            await mttProductionLazyLoader.loadProfiles(profileKeys);
-            await loadSolvedTurnPacksForProfiles(profileKeys);
-          }
+      beforeGenerate: async (mode, street) => {
+        // Vyřešené packy pro každého, ne jen pro produkční linku (deník 337):
+        // spot potřebuje svou ulici, linka všechny tři. Co už je načtené, se
+        // jen znovu zaregistruje.
+        if (resolvedProfile) {
+          await loadSolvedPostflopStreets(resolvedProfile, mode === "line" ? POSTFLOP_LINE_STREETS : [street]);
         }
-        : undefined,
+        if (!runtimeProfileForView) return;
+        const { buildMttPostflopTrainingRuntime } = await import("./data/ranges/mttPostflopTrainingRuntime");
+        postflopRuntime = buildMttPostflopTrainingRuntime({
+          profile: runtimeProfileForView,
+          grants,
+        });
+        if (postflopRuntime.mode === "PRODUCTION" && mode === "line") {
+          const profileKeys = (["FLOP", "TURN", "RIVER"] as const)
+            .map((lineStreet) => mttProductionProfileKey({
+              ...runtimeProfileForView,
+              street: lineStreet,
+            }))
+            .filter((profileKey): profileKey is string => profileKey !== null);
+          await mttProductionLazyLoader.loadProfiles(profileKeys);
+          await loadSolvedTurnPacksForProfiles(profileKeys);
+        }
+      },
       onAnswered: (spot, chosen, responseMs) => {
         const record = buildPostflopResultRecord(spot, chosen, Date.now(), responseMs);
         const save = postflopStatsStore.record(bridgePostflopResultRecordToStatsV2(record, {
@@ -721,6 +742,9 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   });
   renderPostflopPanel();
 
+  // Kolikátý start postflopu běží; vykreslí se jen ten poslední.
+  let postflopStarts = 0;
+
   // --- Krok 3: filtry + tréninková smyčka (Req 13.4) ---
   const trainingController = setupTraining(shell, statsStore, {
     onAnswered: () => {
@@ -732,15 +756,22 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
     },
     refreshDashboard,
     startPostflopFlow: (seed, street, profile, filters) => {
-      renderPostflopPanel({
-        initialSeed: seed,
-        initialStreet: street,
-        profile,
-        filters,
-        autoGenerate: true,
+      // Vyřešené packy ulice napřed (`loadSolvedPostflopStreets`): krytí
+      // i hláška se počítají při vykreslení panelu a první spot se má rozdat
+      // z celého katalogu. Dvojí klepnutí na start vykreslí jen ten druhý.
+      const start = ++postflopStarts;
+      void loadSolvedPostflopStreets(runtimeProfile(profile, filters), [street]).then(() => {
+        if (start !== postflopStarts) return;
+        renderPostflopPanel({
+          initialSeed: seed,
+          initialStreet: street,
+          profile,
+          filters,
+          autoGenerate: true,
+        });
+        refreshDashboard();
+        shell.selectTab("postflop");
       });
-      refreshDashboard();
-      shell.selectTab("postflop");
     },
   }, nextUi);
   startPreflopFocusSession = trainingController.startPreflopFocusSession;
@@ -945,6 +976,12 @@ export function postflopRuntimeNotice(input: {
   street?: PostflopStreet;
   /** Pravda, dokud žádná z dodaných rodin neprošla čtením hráče. */
   unreviewedContent?: boolean;
+  /**
+   * Vyřešené desky vybrané ulice jsou načtené a výchozí řetězec je obslouží
+   * i bez licence - majitel 4. 11. 2026: v betě MTT 1.0 zdarma (deník 337).
+   * `unreviewed`: žádný z jejich packů zatím neprošel čtením.
+   */
+  solvedBoards?: { unreviewed: boolean };
 }): PostflopRuntimeNotice | null {
   // Nepřečtený obsah to musí říct právě tady.
   //
@@ -954,12 +991,11 @@ export function postflopRuntimeNotice(input: {
   // servírujeme solverová data s tichým předpokladem, že solverové znamená
   // prověřené. Neznamená: brána kontroluje tvar solvu, ne jestli je strategie
   // dobrá.
-  const unreviewed = input.unreviewedContent === true
-    ? localizedText(
-      " Nobody has reviewed this content yet, so it is shipped content, not verified content.",
-      " Tenhle obsah zatím nikdo neprošel, takže je dodaný, ne ověřený.",
-    )
-    : "";
+  const unreviewedSentence = localizedText(
+    " Nobody has reviewed this content yet, so it is shipped content, not verified content.",
+    " Tenhle obsah zatím nikdo neprošel, takže je dodaný, ne ověřený.",
+  );
+  const unreviewed = input.unreviewedContent === true ? unreviewedSentence : "";
   // Každá ulice vyjmenovaná, žádná přes `else`.
   //
   // Dřív tu byl turn a všechno ostatní spadlo na „flopové situace" - takže river
@@ -1019,6 +1055,24 @@ export function postflopRuntimeNotice(input: {
       text: localizedText(
         `A solver pilot is active for ${pilotSubject}. This is a narrow pilot, not complete postflop production coverage.${unreviewed}`,
         `Solverový pilot je aktivní pro ${pilotSubject}. Jde o úzký pilotní režim, ne kompletní produkční pokrytí.${unreviewed}`,
+      ),
+    };
+  }
+  // Vyřešené desky bez licence (beta MTT 1.0, majitel 4. 11. 2026). Věta
+  // o placeném obsahu a náhledu by tu lhala: výchozí řetězec vyřešenou desku
+  // obslouží každému, kdo má pack načtený, a od 4. 11. se načítá každému.
+  // Placený pilot s licencí (výš) zůstává přísný a jeho hláška se nemění.
+  if (input.solvedBoards !== undefined) {
+    const boards = {
+      FLOP: localizedText("Solved flop boards", "Vyřešené flopové desky"),
+      TURN: localizedText("Solved turn boards", "Vyřešené turnové desky"),
+      RIVER: localizedText("Solved river boards", "Vyřešené riverové desky"),
+    }[input.street ?? "FLOP"];
+    return {
+      kind: "SOLVED_BETA",
+      text: localizedText(
+        `${boards} are available without a licence during the beta. Where a board is not solved, the preview model answers.${input.solvedBoards.unreviewed ? unreviewedSentence : ""}`,
+        `${boards} jsou v betě dostupné bez licence. Kde deska vyřešená není, odpoví náhledový model.${input.solvedBoards.unreviewed ? unreviewedSentence : ""}`,
       ),
     };
   }
@@ -1642,6 +1696,36 @@ function renderStorageError(panel: HTMLElement): void {
 }
 
 /** Zobrazí nenásilné upozornění v banneru (Req 12.4, 14.3). */
+/**
+ * Vyřešené packy ulic, na které se bude rozdávat, celé a ještě před rozdáním.
+ *
+ * Do 4. 11. 2026 je načítala jen produkční linka a rozbor HH, takže jednotlivý
+ * spot se k vyřešenému obsahu nedostal - ani s licencí, protože krytí vyřešeným
+ * turnem se počítá z packů, které už musí být načtené. Změřeno v Chrome nad
+ * produkčním buildem: 0 stažených vyřešených packů na flopu, turnu i riveru.
+ * Měřicí skripty si packy načítají samy, a proto hlásily doručení, které hráč
+ * neviděl (deník 337). Majitel 4. 11. 2026: v betě MTT 1.0 je vyřešený postflop
+ * dostupný bez licence.
+ *
+ * Celé, ne jen první rodina jako `loadSolvedTurnPacks`: katalog rozdává podle
+ * seedu ze všech načtených rodin, takže s částí by týž seed dal podle rychlosti
+ * sítě jiný spot. Chyba se spolkne - bez packů odpoví řetězec o stupeň méně
+ * přesně, jako dosud.
+ */
+async function loadSolvedPostflopStreets(
+  profile: TrainingProfile,
+  streets: readonly PostflopStreet[],
+): Promise<void> {
+  await Promise.all(streets.map((street) => {
+    const profileKey = mttProductionProfileKey({ ...profile, street });
+    if (profileKey === null) return undefined;
+    const load = street === "TURN"
+      ? loadAllSolvedTurnPacks
+      : street === "RIVER" ? loadSolvedRiverPacks : loadSolvedFlopPacks;
+    return load(profileKey).catch(() => []);
+  }));
+}
+
 /**
  * Fetch solved turn content alongside the production packs, without gating on it.
  *

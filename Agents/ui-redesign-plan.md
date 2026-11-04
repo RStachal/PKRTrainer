@@ -462,8 +462,10 @@ sám; cyklus necommituje, takže obsah i frekvence projdou pondělní kontrolou.
   frekvencí měly projít E2E na turnovém spotu, jenže aplikace vyřešené packy
   načítá jen v produkční lince a v rozboru HH: v prohlížeči se na žádné
   ulici nestáhl ani jeden chunk `*-solved-*`, ani s licencí. Frekvence proto
-  hlídá test nad dodanými daty (`solvedClassMixData.test.ts`) a v aplikaci se
-  ukážou, až se načítání opraví (rozhodnutí majitele).
+  hlídá test nad dodanými daty (`solvedClassMixData.test.ts`). Majitel 4. 11.
+  rozhodl, že vyřešený postflop je v betě bez licence; start postflopu teď
+  packy své ulice načte před prvním rozdáním a E2E ověřuje stažení
+  vyřešeného flopového i turnového packu a pruhy v turnové matici (deník 338).
 
 **Rozpočet CSS je skoro vyčerpaný:** 79,96 z 80 KiB. Položka legendy proto
 používá tlačítko z kitu. Fáze 3 a 4 se do stropu nevejdou, dokud se neuklidí

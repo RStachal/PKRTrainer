@@ -656,6 +656,7 @@ try {
     feedbackMs: number;
     line: "passed" | "unavailable";
     rangeCellPx: number;
+    classMixCells: number;
   }> = [];
   for (const viewport of activeViewports) {
     if (expectedPreflop !== "blocked") {
@@ -801,7 +802,8 @@ try {
     console.log(
       `- next UI postflop ${result.viewport}: board/question/feedback/next passed, feedback ${result.feedbackMs} ms,`
       + ` range 169 cells ${result.rangeCellPx} px,`
-      + ` line ${result.line === "passed" ? "passed" : "not offered in this build"}`,
+      + ` line ${result.line === "passed" ? "passed" : "not offered in this build"},`
+      + ` solved flop and turn packs fetched, turn range with per-hand mix in ${result.classMixCells} cells`,
     );
   }
 } catch (error) {
@@ -1285,7 +1287,13 @@ async function runNextUiPostflopScenario(
   viewport: Viewport,
   browserErrors: string[],
   contrastAudits: Array<{ viewport: string; surface: string; entries: ContrastAuditEntry[] }>,
-): Promise<{ viewport: string; feedbackMs: number; line: "passed" | "unavailable"; rangeCellPx: number }> {
+): Promise<{
+  viewport: string;
+  feedbackMs: number;
+  line: "passed" | "unavailable";
+  rangeCellPx: number;
+  classMixCells: number;
+}> {
   const input = viewport.mobile ? "touch" : "keyboard";
   const scope = ".postflop-output .dx-trainer";
   browserErrors.length = 0;
@@ -1313,6 +1321,11 @@ async function runNextUiPostflopScenario(
   })()`);
   await activate(client, ".filter-start", input);
   await waitForSelector(client, `${scope} .dx-trainer__actions button`);
+  // Do 4. 11. 2026 jednotlivý spot vyřešené packy nenačetl vůbec - ani s licencí
+  // (deník 337). Start je teď stáhne dřív, než rozdá.
+  const flopSolved = await evaluate<number>(client, `performance.getEntriesByType("resource")
+    .filter((entry) => /mtt-flop-solved-/.test(entry.name)).length`);
+  assert(flopSolved > 0, `${viewport.name} next UI postflop: the flop start fetched no solved flop pack`);
 
   const question = await evaluate<{
     actions: number;
@@ -1490,8 +1503,85 @@ async function runNextUiPostflopScenario(
     });
     line = "passed";
   }
+  const classMixCells = await checkClassMixRange(client, input, scope, label);
   assert(browserErrors.length === 0, `${label}: ${browserErrors.join(" | ")}`);
-  return { viewport: viewport.name, feedbackMs: Math.round(feedbackMs * 10) / 10, line, rangeCellPx };
+  return {
+    viewport: viewport.name,
+    feedbackMs: Math.round(feedbackMs * 10) / 10,
+    line,
+    rangeCellPx,
+    classMixCells,
+  };
+}
+
+/**
+ * Vyřešený turn v jednotlivém spotu a frekvence po třídách rukou v jeho
+ * matici (majitel 3. a 4. 11. 2026, deník 336 a 337).
+ *
+ * Start turnu musí stáhnout vyřešené turnové packy a rozdat z nich; matice se
+ * otevře hned s převažující akcí a vlastní chunk frekvencí si dotáhne líně.
+ * Jméno chunku, import `?raw` ani dekódování v produkčním buildu jednotkové
+ * testy s podvrženým loaderem nepokryjí.
+ *
+ * Frekvence nemá každá turnová rodina (4. 11. 2026: 35 z 55, zbytek přijde
+ * s přestavbou packu), proto se jde přes další spoty, dokud se neukáže první
+ * rodina s nimi. Vrací počet buněk s pruhy.
+ */
+async function checkClassMixRange(
+  client: CdpClient,
+  input: "keyboard" | "touch",
+  scope: string,
+  label: string,
+): Promise<number> {
+  await navigate(client, withUi(targetUrl, "next"));
+  await waitForSelector(client, ".filter-start");
+  await evaluate(client, `(() => {
+    const select = document.querySelector(".profile-street");
+    if (!(select instanceof HTMLSelectElement)) throw new Error("Missing street selector");
+    select.value = "TURN";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    const seed = document.querySelector(".filter-seed");
+    if (!(seed instanceof HTMLInputElement)) throw new Error("Missing seed input");
+    seed.value = ${JSON.stringify(postflopSeed)};
+    seed.dispatchEvent(new Event("input", { bubbles: true }));
+  })()`);
+  await activate(client, ".filter-start", input);
+  await waitForSelector(client, `${scope} .dx-trainer__actions button`);
+  const turnSolved = await evaluate<number>(client, `performance.getEntriesByType("resource")
+    .filter((entry) => /mtt-turn-solved-/.test(entry.name)).length`);
+  assert(turnSolved > 0, `${label}: the turn start fetched no solved turn pack`);
+
+  const escape = { key: "Escape", code: "Escape", windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 };
+  const states: string[] = [];
+  for (let spot = 0; spot < 6; spot += 1) {
+    await waitForSelector(client, `${scope} .dx-trainer__actions button`);
+    await activate(client, `${scope} .dx-trainer__actions button`, input);
+    await waitForSelector(client, `${scope} .dx-trainer__feedback:not([hidden])`);
+    await activate(client, `${scope} .dx-trainer__range`, input);
+    await waitForSelector(client, '.range-modal .dx-range-host:not([data-class-mix="loading"])');
+    const view = await evaluate<{ state: string; cells: number; mixed: number; chunk: boolean; overflow: number }>(
+      client,
+      `(() => ({
+        state: document.querySelector(".range-modal .dx-range-host")?.getAttribute("data-class-mix") ?? "",
+        cells: document.querySelectorAll(".range-modal .dx-matrix__cell").length,
+        mixed: document.querySelectorAll('.range-modal .dx-matrix__cell[data-mixed="true"]').length,
+        chunk: performance.getEntriesByType("resource").some((entry) => /-mix-solved-/.test(entry.name)),
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
+      }))()`,
+    );
+    states.push(view.state || "missing");
+    await client.send("Input.dispatchKeyEvent", { type: "keyDown", ...escape });
+    await client.send("Input.dispatchKeyEvent", { type: "keyUp", ...escape });
+    await waitForSelector(client, "body:not(:has(.range-modal))");
+    if (view.state === "ready") {
+      assert(view.chunk, `${label} turn range: per-hand mix ready, but no mix chunk was fetched`);
+      assert(view.cells === 169 && view.mixed > 0, `${label} turn range: ${view.mixed} of ${view.cells} cells with a mix`);
+      assert(view.overflow <= 1, `${label} turn range: page overflow ${view.overflow}px`);
+      return view.mixed;
+    }
+    await activate(client, `${scope} .dx-trainer__next`, input);
+  }
+  throw new Error(`${label} turn range: no spot with a per-hand mix in ${states.length} turn spots (${states.join(", ")})`);
 }
 
 async function runServiceWorkerUpgradeScenario(

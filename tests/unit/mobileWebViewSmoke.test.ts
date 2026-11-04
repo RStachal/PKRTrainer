@@ -114,6 +114,7 @@ describe("mobile / Android WebView smoke", () => {
     street!.value = "FLOP";
     street!.dispatchEvent(new Event("change"));
     root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+    await waitForPostflopSpot(root);
 
     expect(root.querySelector<HTMLElement>(".app__panel--postflop")?.hidden).toBe(false);
     expect(root.querySelector(".postflop-view")).not.toBeNull();
@@ -170,6 +171,7 @@ describe("mobile / Android WebView smoke", () => {
       street!.value = "FLOP";
       street!.dispatchEvent(new Event("change"));
       root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+      await waitForPostflopSpot(root);
 
       expect(root.querySelector(".postflop-table")).not.toBeNull();
       expect(root.querySelectorAll(".postflop-seat").length).toBeGreaterThanOrEqual(2);
@@ -198,6 +200,7 @@ describe("mobile / Android WebView smoke", () => {
       street!.value = "FLOP";
       street!.dispatchEvent(new Event("change"));
       root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+      await waitForPostflopSpot(root);
       root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
       expect(root.querySelector<HTMLElement>(".postflop-result")?.hidden).toBe(false);
     }
@@ -218,6 +221,17 @@ describe("mobile / Android WebView smoke", () => {
     }
   });
 });
+
+/**
+ * Start postflopu od 4. 11. 2026 napřed načte vyřešené packy ulice
+ * (`loadSolvedPostflopStreets` v `main.ts`, deník 338), takže se spot
+ * nevykreslí ve stejném ticku jako kliknutí.
+ */
+async function waitForPostflopSpot(root: HTMLElement): Promise<void> {
+  await vi.waitFor(() => {
+    expect(root.querySelector(".postflop-meta")).not.toBeNull();
+  }, { timeout: 20000 });
+}
 
 async function waitForDashboard(root: HTMLElement): Promise<void> {
   // Dashboard se načítá dynamickým importem, takže se při prvním otevření musí

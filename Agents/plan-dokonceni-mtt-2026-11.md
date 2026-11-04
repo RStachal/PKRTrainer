@@ -167,7 +167,9 @@ která na nich stojí.
     aplikace dnes vyřešené packy načítá jen v produkční lince a v rozboru
     HH, takže je jednotlivý spot nedostane ani s licencí - změřeno
     v Chrome, 0 stažených chunků. Bez toho MTT 1.0 (D1) vyřešený postflop
-    hráči nedodá. Čeká na majitele: má být v betě bez licence?
+    hráči nedodá. Majitel 4. 11. („souhlasím s tebou“): v betě bez
+    licence. Opraveno týž den - start postflopu packy své ulice načte před
+    prvním rozdáním, E2E stažení ověřuje, bod 338.
 
 **Fáze D – vydání (týden 4)**
 

@@ -208,15 +208,20 @@ describe("bootstrap - inicializacni tok", () => {
     street!.dispatchEvent(new Event("change"));
     seed!.value = "123";
     root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+    await waitForPostflopSpot(root);
 
+    // Start napřed načte vyřešené flopové packy a hláška to řekne pravdivě:
+    // dřív se jednotlivý spot k vyřešenému obsahu nedostal (deník 337).
+    const { loadedSolvedFlopPackCount } = await import("../../src/data/ranges/flopSolvedStrategyPacks");
+    expect(loadedSolvedFlopPackCount()).toBeGreaterThan(0);
     expect(root.querySelector<HTMLElement>(".app__panel--postflop")?.hidden).toBe(false);
     expect(root.querySelector<HTMLButtonElement>('[data-tab="postflop"]')).toBeNull();
     expect(root.querySelector<HTMLButtonElement>('[data-tab="training"]')
       ?.classList.contains("app__tab--active")).toBe(false);
     expect(root.querySelector<HTMLInputElement>(".postflop-seed")?.value).toBe("");
     const notice = root.querySelector<HTMLElement>(".postflop-runtime-notice");
-    expect(notice?.dataset.kind).toBe("PREVIEW");
-    expect(notice?.textContent).toContain("náhledovém režimu");
+    expect(notice?.dataset.kind).toBe("SOLVED_BETA");
+    expect(notice?.textContent).toContain("Vyřešené flopové desky jsou v betě dostupné bez licence");
     expect(notice?.textContent).not.toMatch(/https?:|www\.|source|zdroj|RangePack|StrategyPack|mtt-/i);
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("FLOP");
     expect(root.querySelector(".poker-table")).toBeNull();
@@ -299,6 +304,7 @@ describe("bootstrap - inicializacni tok", () => {
     street!.value = "FLOP";
     street!.dispatchEvent(new Event("change"));
     root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+    await waitForPostflopSpot(root);
 
     storage.failWrites = true;
     root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
@@ -380,6 +386,7 @@ describe("bootstrap - inicializacni tok", () => {
     seed!.value = "1788246284";
 
     root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+    await waitForPostflopSpot(root);
 
     const meta = root.querySelector<HTMLElement>(".postflop-meta");
     expect(root.querySelector<HTMLElement>(".app__panel--postflop")?.hidden).toBe(false);
@@ -405,6 +412,7 @@ describe("bootstrap - inicializacni tok", () => {
     street!.value = "FLOP";
     street!.dispatchEvent(new Event("change"));
     firstRoot.querySelector<HTMLButtonElement>(".filter-start")?.click();
+    await waitForPostflopSpot(firstRoot);
     firstRoot.querySelector<HTMLButtonElement>(".postflop-action")?.click();
 
     await waitForDashboard(firstRoot);
@@ -681,6 +689,18 @@ async function importFreshMain(): Promise<typeof import("../../src/main")> {
   document.body.innerHTML = "";
   vi.resetModules();
   return import("../../src/main");
+}
+
+/**
+ * Start postflopu od 4. 11. 2026 napřed načte vyřešené packy ulice
+ * (`loadSolvedPostflopStreets` v `main.ts`, deník 337), takže se spot
+ * nevykreslí ve stejném ticku jako kliknutí. Čeká se na vykreslená metadata,
+ * stejně jako u riveru.
+ */
+async function waitForPostflopSpot(root: HTMLElement): Promise<void> {
+  await vi.waitFor(() => {
+    expect(root.querySelector(".postflop-meta")).not.toBeNull();
+  }, { timeout: 20000 });
 }
 
 async function waitForDashboard(root: HTMLElement): Promise<void> {

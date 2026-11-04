@@ -14,9 +14,8 @@ import { CLASS_MIX_ORDER, CLASS_MIX_SCHEMA, type SolvedClassMixFile } from "../.
  * nesmí mít frekvence vůbec. 4. 11. 2026 na 37 rodinách a 395 181 třídách
  * bez jediného rozporu.
  *
- * Do preview E2E se to dát nedá: aplikace vyřešené packy pro jednotlivý spot
- * nenačítá, ani s licencí (`beforeGenerate` v `main.ts`, deník 337), takže
- * prohlížeč k frekvencím nedojde.
+ * V prohlížeči od 4. 11. pruhy ověřuje E2E na turnovém spotu (deník 338); tenhle
+ * test hlídá každý dodaný soubor, ne jen ten, který E2E zrovna rozdá.
  */
 
 interface PackRule {
