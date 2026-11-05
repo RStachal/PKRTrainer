@@ -1,4 +1,4 @@
-import { spawn, spawnSync, type ChildProcess } from "node:child_process";
+import { spawnSync, type ChildProcess } from "node:child_process";
 import {
   existsSync,
   mkdirSync,
@@ -10,20 +10,18 @@ import {
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-interface Viewport {
-  name: string;
-  width: number;
-  height: number;
-  mobile: boolean;
-}
-
-interface CdpMessage {
-  id?: number;
-  method?: string;
-  params?: unknown;
-  result?: unknown;
-  error?: { message?: string };
-}
+import {
+  CdpClient,
+  createTarget,
+  evaluate,
+  findChromePath,
+  launchHeadlessChrome,
+  navigate,
+  reload,
+  waitForDevToolsPort,
+  waitForSelector,
+} from "./lib/chromeCdp.mts";
+import { QA_VIEWPORTS as VIEWPORTS, type Viewport } from "./lib/viewports.mts";
 
 interface ContrastAuditEntry {
   selector: string;
@@ -33,12 +31,6 @@ interface ContrastAuditEntry {
   fontWeight: string;
 }
 
-const VIEWPORTS: readonly Viewport[] = [
-  { name: "desktop-1280", width: 1280, height: 900, mobile: false },
-  { name: "mobile-360", width: 360, height: 800, mobile: true },
-  { name: "mobile-390", width: 390, height: 844, mobile: true },
-  { name: "mobile-412", width: 412, height: 915, mobile: true },
-];
 const activeViewports = process.env.MTT_E2E_VIEWPORTS === "desktop"
   ? [VIEWPORTS[0]]
   : VIEWPORTS;
@@ -63,95 +55,37 @@ const VALID_HH = [
   "*** SUMMARY ***",
 ].join("\n");
 
-class CdpClient {
-  private socket: WebSocket | null = null;
-  private nextId = 1;
-  private readonly pending = new Map<number, {
-    resolve: (value: unknown) => void;
-    reject: (error: Error) => void;
-  }>();
-  private readonly listeners = new Map<string, Array<(params: unknown) => void>>();
-
-  constructor(private readonly url: string) {}
-
-  async connect(): Promise<void> {
-    this.socket = new WebSocket(this.url);
-    this.socket.addEventListener("message", (event) => {
-      const message = JSON.parse(String(event.data)) as CdpMessage;
-      if (message.id !== undefined) {
-        const pending = this.pending.get(message.id);
-        if (!pending) return;
-        this.pending.delete(message.id);
-        if (message.error) pending.reject(new Error(message.error.message ?? "CDP command failed"));
-        else pending.resolve(message.result);
-        return;
-      }
-      if (message.method) {
-        for (const listener of this.listeners.get(message.method) ?? []) {
-          listener(message.params);
-        }
-      }
-    });
-    await new Promise<void>((resolvePromise, reject) => {
-      this.socket?.addEventListener("open", () => resolvePromise(), { once: true });
-      this.socket?.addEventListener("error", () => reject(new Error("Chrome CDP connection failed")), {
-        once: true,
-      });
-    });
-  }
-
-  send(method: string, params: Record<string, unknown> = {}): Promise<unknown> {
-    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-      return Promise.reject(new Error("Chrome CDP is not connected"));
-    }
-    const id = this.nextId++;
-    return new Promise((resolvePromise, reject) => {
-      this.pending.set(id, { resolve: resolvePromise, reject });
-      this.socket?.send(JSON.stringify({ id, method, params }));
-    });
-  }
-
-  on(method: string, listener: (params: unknown) => void): void {
-    const listeners = this.listeners.get(method) ?? [];
-    listeners.push(listener);
-    this.listeners.set(method, listeners);
-  }
-
-  waitFor(method: string, timeoutMs = 15_000): Promise<unknown> {
-    return new Promise((resolvePromise, reject) => {
-      const timer = setTimeout(() => reject(new Error(`Timed out waiting for ${method}`)), timeoutMs);
-      const listener = (params: unknown) => {
-        clearTimeout(timer);
-        const listeners = this.listeners.get(method) ?? [];
-        this.listeners.set(method, listeners.filter((item) => item !== listener));
-        resolvePromise(params);
-      };
-      this.on(method, listener);
-    });
-  }
-
-  close(): void {
-    this.socket?.close();
-  }
-}
-
 const targetUrl = process.env.MTT_E2E_URL ?? "http://127.0.0.1:4173/";
 const artifactDirectory = resolve(process.env.MTT_E2E_ARTIFACTS ?? "artifacts/e2e-chrome");
 const buildDirectory = resolve(process.env.MTT_E2E_DIST ?? "dist");
-const expectedPreflop = process.env.MTT_E2E_EXPECT_PREFLOP === "production"
-  ? "production"
-  : process.env.MTT_E2E_EXPECT_PREFLOP === "blocked"
-    ? "blocked"
-    : "preview";
+const expectedPreflop = process.env.MTT_E2E_EXPECT_PREFLOP === "blocked"
+  ? "blocked"
+  : process.env.MTT_E2E_EXPECT_PREFLOP === "preview"
+    ? "preview"
+    : "production";
 const expectedPostflopPackId = process.env.MTT_E2E_EXPECT_POSTFLOP_PACK_ID ?? "";
 const expectedTurnPackId = process.env.MTT_E2E_EXPECT_TURN_PACK_ID ?? "";
 const expectedRiverPackId = process.env.MTT_E2E_EXPECT_RIVER_PACK_ID ?? "";
+const expectActionEv = process.env.MTT_E2E_EXPECT_ACTION_EV === "true";
 const expectedPostflopPackIds = [
   expectedPostflopPackId,
   expectedTurnPackId,
   expectedRiverPackId,
 ].filter((packId) => packId.length > 0);
 const postflopSeed = process.env.MTT_E2E_POSTFLOP_SEED ?? "1788246284";
+
+// Selektory jediného GUI tréninku (klasické smazáno 4. 11. 2026).
+const PREFLOP_TABLE = ".training__game .dx-table";
+const PREFLOP_ACTION = ".training__game .dx-trainer__actions button";
+const PREFLOP_NEXT = ".training__game .dx-trainer__next";
+const PREFLOP_CHANGE = ".training__game .dx-trainer__change";
+const POSTFLOP_SCREEN = ".postflop-output .dx-trainer";
+const POSTFLOP_ACTION = `${POSTFLOP_SCREEN} .dx-trainer__actions button`;
+const POSTFLOP_FEEDBACK = `${POSTFLOP_SCREEN} .dx-trainer__feedback:not([hidden])`;
+const POSTFLOP_NEXT = `${POSTFLOP_SCREEN} .dx-trainer__next`;
+const POSTFLOP_CHANGE = `${POSTFLOP_SCREEN} .dx-trainer__change`;
+const FOCUS_SEAT = '.dx-table__seat[data-focus="true"]';
+
 const chromePath = findChromePath();
 const profileDirectory = mkdtempSync(join(tmpdir(), "pkrtrainer-chrome-e2e-"));
 let chrome: ChildProcess | null = null;
@@ -159,21 +93,7 @@ let cdp: CdpClient | null = null;
 
 try {
   mkdirSync(artifactDirectory, { recursive: true });
-  chrome = spawn(chromePath, [
-    "--headless=new",
-    "--remote-debugging-port=0",
-    `--user-data-dir=${profileDirectory}`,
-    "--no-first-run",
-    "--no-default-browser-check",
-    "--disable-background-networking",
-    "--disable-component-update",
-    "--disable-sync",
-    "--hide-scrollbars",
-    "about:blank",
-  ], {
-    stdio: ["ignore", "ignore", "pipe"],
-    windowsHide: true,
-  });
+  chrome = launchHeadlessChrome(chromePath, profileDirectory);
 
   const port = await waitForDevToolsPort(profileDirectory);
   const target = await createTarget(port, "about:blank");
@@ -212,7 +132,7 @@ try {
   }> = [];
   for (const viewport of activeViewports) {
     if (expectedPreflop === "production") {
-      console.log(`Production fixture viewport: ${viewport.name}`);
+      console.log(`Production preflop viewport: ${viewport.name}`);
     }
     browserErrors.length = 0;
     await cdp.send("Emulation.setDeviceMetricsOverride", {
@@ -232,20 +152,66 @@ try {
     await waitForSelector(cdp, ".filter-start");
     await ensureServiceWorkerControl(cdp);
 
+    await activate(cdp, ".language-switch__option:nth-child(1)", viewport.mobile ? "touch" : "keyboard");
+    await waitForSelector(cdp, ".filter-start");
+    const englishLanguage = await evaluate(cdp, `(() => ({
+      lang: document.documentElement.lang,
+      stored: localStorage.getItem("pkrtrainer.ui.language.v1"),
+      start: document.querySelector(".filter-start")?.textContent ?? "",
+      subtitle: document.querySelector(".app__subtitle")?.textContent ?? ""
+    }))()`);
+    assert(englishLanguage.lang === "en", `${viewport.name}: EN language did not update document.lang`);
+    assert(englishLanguage.stored === "EN", `${viewport.name}: EN language was not persisted`);
+    assert(englishLanguage.start === "Start training", `${viewport.name}: EN control label is incorrect`);
+    assert(
+      englishLanguage.subtitle === "Poker decision trainer for tournament play.",
+      `${viewport.name}: EN explanatory copy is incorrect`,
+    );
+    await activate(cdp, ".language-switch__option:nth-child(2)", viewport.mobile ? "touch" : "keyboard");
+    await waitForSelector(cdp, ".filter-start");
+    const czechLanguage = await evaluate(cdp, `(() => ({
+      lang: document.documentElement.lang,
+      stored: localStorage.getItem("pkrtrainer.ui.language.v1"),
+      start: document.querySelector(".filter-start")?.textContent ?? "",
+      subtitle: document.querySelector(".app__subtitle")?.textContent ?? ""
+    }))()`);
+    assert(czechLanguage.lang === "cs", `${viewport.name}: CZ language did not update document.lang`);
+    assert(czechLanguage.stored === "CZ", `${viewport.name}: CZ language was not persisted`);
+    assert(czechLanguage.start === "Spustit trénink", `${viewport.name}: CZ start label is "${czechLanguage.start}"`);
+    assert(
+      czechLanguage.subtitle !== englishLanguage.subtitle,
+      `${viewport.name}: CZ explanatory copy did not change`,
+    );
+
     const initial = await evaluate(cdp, `(() => ({
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       fatal: document.querySelector(".fatal")?.textContent ?? "",
       profileStatus: document.querySelector(".profile-selector__note")?.getAttribute("data-status"),
-      profileText: document.querySelector(".profile-selector__note")?.textContent ?? ""
+      profileText: document.querySelector(".profile-selector__note")?.textContent ?? "",
+      startBottom: (document.querySelector(".filter-start")?.getBoundingClientRect().bottom ?? Infinity) + window.scrollY,
+      windowHeight: window.innerHeight,
+      emptyTrainer: document.querySelector(".training__game")?.getBoundingClientRect().height ?? 0,
+      settingsOpen: document.querySelector(".filters__settings")?.open ?? null
     }))()`);
     assert(initial.overflow <= 1, `${viewport.name}: page has horizontal overflow ${initial.overflow}px`);
     assert(initial.fatal === "", `${viewport.name}: fatal bootstrap error: ${initial.fatal}`);
+    // Plán redesignu, fáze 3: trénink se spustí jedním klepnutím z výchozího stavu.
+    assert(
+      initial.startBottom <= initial.windowHeight,
+      `${viewport.name}: start button ends at ${Math.round(initial.startBottom)}px, below the ${initial.windowHeight}px screen`,
+    );
+    assert(initial.settingsOpen === false, `${viewport.name}: settings are not folded on the start screen`);
+    assert(initial.emptyTrainer === 0, `${viewport.name}: an empty trainer is showing under the start`);
     if (expectedPreflop === "blocked") {
       assert(initial.profileStatus === "blocked", `${viewport.name}: unloaded preflop must fail closed`);
     } else if (expectedPreflop === "production") {
       assert(
-        initial.profileStatus === "production" || initial.profileStatus === "preview",
-        `${viewport.name}: production preflop is not marked ready or preview before lazy activation`,
+        initial.profileStatus === "production",
+        `${viewport.name}: bundled production preflop is not marked production before lazy activation`,
+      );
+      assert(
+        initial.profileText.includes("MTT ChipEV Core"),
+        `${viewport.name}: production preflop release label is missing`,
       );
     } else {
       assert(initial.profileStatus === "preview", `${viewport.name}: playable preflop preview is not marked preview`);
@@ -269,6 +235,10 @@ try {
         "h1",
         ".profile-selector__note",
         ".filter-start",
+        ".dx-mode__name",
+        ".dx-mode__text",
+        ".dx-mode__note",
+        ".filters__settings-title",
       ]),
     });
 
@@ -276,7 +246,7 @@ try {
     if (expectedPreflop === "blocked") {
       await waitForSelector(cdp, ".filter-empty-warning:not([hidden])");
       const preflopGate = await evaluate(cdp, `(() => ({
-        table: Boolean(document.querySelector(".poker-table")),
+        table: Boolean(document.querySelector(${JSON.stringify(PREFLOP_TABLE)})),
         warning: document.querySelector(".filter-empty-warning")?.textContent ?? ""
       }))()`);
       assert(!preflopGate.table, `${viewport.name}: blocked preflop rendered a poker table`);
@@ -292,9 +262,9 @@ try {
         ]),
       });
     } else {
-      await waitForSelector(cdp, ".action-btn");
+      await waitForSelector(cdp, PREFLOP_ACTION);
       const playablePreflop = await evaluate(cdp, `(() => ({
-        table: Boolean(document.querySelector(".poker-table")),
+        table: Boolean(document.querySelector(${JSON.stringify(PREFLOP_TABLE)})),
         productionChunk: performance.getEntriesByType("resource").some((entry) => (
           entry.name.includes("mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1")
         ))
@@ -311,13 +281,13 @@ try {
           `${viewport.name}: preview preflop unexpectedly requested production chunk`,
         );
       }
-      await activate(cdp, ".action-btn", viewport.mobile ? "touch" : "keyboard");
-      await waitForSelector(cdp, ".result__next");
-      await activate(cdp, ".result__next", viewport.mobile ? "touch" : "keyboard");
-      await waitForSelector(cdp, ".action-btn");
+      await activate(cdp, PREFLOP_ACTION, viewport.mobile ? "touch" : "keyboard");
+      await waitForSelector(cdp, PREFLOP_NEXT);
+      await activate(cdp, PREFLOP_NEXT, viewport.mobile ? "touch" : "keyboard");
+      await waitForSelector(cdp, ".training__game .dx-trainer__feedback[hidden]");
       await activate(
         cdp,
-        ".training__change-situation",
+        PREFLOP_CHANGE,
         viewport.mobile ? "touch" : "keyboard",
       );
       await waitForSelector(cdp, ".filter-start");
@@ -361,22 +331,23 @@ try {
       }
     })()`);
     await activate(cdp, ".filter-start", viewport.mobile ? "touch" : "keyboard");
-    await waitForSelector(cdp, ".postflop-action");
+    await waitForSelector(cdp, POSTFLOP_ACTION);
     const postflop = await evaluate(cdp, `(() => ({
-      actions: document.querySelectorAll(".postflop-action").length,
-      street: document.querySelector(".postflop-meta")?.getAttribute("data-street"),
-      potType: document.querySelector(".postflop-meta")?.getAttribute("data-pot-type"),
-      positionPattern: document.querySelector(".postflop-meta")?.getAttribute("data-position-pattern"),
+      actions: document.querySelectorAll(${JSON.stringify(POSTFLOP_ACTION)}).length,
+      street: document.querySelector(${JSON.stringify(POSTFLOP_SCREEN)})?.getAttribute("data-street"),
+      potType: document.querySelector(${JSON.stringify(POSTFLOP_SCREEN)})?.getAttribute("data-pot-type"),
+      positionPattern: document.querySelector(${JSON.stringify(POSTFLOP_SCREEN)})?.getAttribute("data-position-pattern"),
+      title: document.querySelector(${JSON.stringify(`${POSTFLOP_SCREEN} .dx-trainer__title`)})?.textContent ?? "",
       text: document.querySelector(".app")?.textContent ?? "",
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
     }))()`);
     assert(postflop.actions >= 3, `${viewport.name}: postflop actions did not render`);
     assert(postflop.street === "FLOP", `${viewport.name}: wrong postflop street`);
     if (expectedPostflopPackId) {
-      assert(postflop.potType === "THREE_BET_POT", `${viewport.name}: wrong fixture pot type`);
+      assert(postflop.potType === "THREE_BET_POT", `${viewport.name}: wrong fixture pot type ${postflop.potType}`);
       assert(
         postflop.positionPattern === "OOP_CALLER_VS_IP_3BETTOR",
-        `${viewport.name}: wrong fixture position pattern`,
+        `${viewport.name}: wrong fixture position pattern ${postflop.positionPattern} (${postflop.title})`,
       );
     }
     assert(postflop.overflow <= 1, `${viewport.name}: postflop page overflow ${postflop.overflow}px`);
@@ -392,15 +363,34 @@ try {
       );
     }
 
-    await activate(cdp, ".postflop-action", viewport.mobile ? "touch" : "keyboard");
-    await waitForSelector(cdp, ".postflop-result");
+    await activate(cdp, POSTFLOP_ACTION, viewport.mobile ? "touch" : "keyboard");
+    await waitForSelector(cdp, POSTFLOP_FEEDBACK);
+    if (expectActionEv) {
+      const actionEv = await evaluate(cdp, `(() => {
+        const rows = [...document.querySelectorAll(${JSON.stringify(`${POSTFLOP_FEEDBACK} .dx-trainer__ev-row`)})];
+        return {
+          rows: rows.length,
+          bestRows: rows.filter((row) => row.getAttribute("data-best") === "true").length,
+          chosenRows: rows.filter((row) => row.getAttribute("data-chosen") === "true").length,
+          recommended: document.querySelectorAll(
+            ${JSON.stringify(`${POSTFLOP_ACTION}[data-recommended="true"]`)},
+          ).length,
+          text: document.querySelector(${JSON.stringify(`${POSTFLOP_FEEDBACK} .dx-trainer__ev`)})?.textContent ?? ""
+        };
+      })()`);
+      assert(actionEv.rows === postflop.actions, `${viewport.name}: not every offered action has an EV row`);
+      assert(actionEv.bestRows === 2, `${viewport.name}: equivalent best actions were not both marked`);
+      assert(actionEv.chosenRows === 1, `${viewport.name}: chosen EV action was not marked exactly once`);
+      assert(actionEv.recommended === 2, `${viewport.name}: equivalent best actions were not both recommended`);
+      assert(actionEv.text.includes("BB"), `${viewport.name}: action EV values do not show the BB unit`);
+    }
     contrastAudits.push({
       viewport: viewport.name,
       surface: "postflop-result",
       entries: await auditContrast(cdp, viewport.name, "postflop result", [
-        ".postflop-meta",
-        ".postflop-action",
-        ".postflop-result",
+        `${POSTFLOP_SCREEN} .dx-trainer__title`,
+        POSTFLOP_ACTION,
+        POSTFLOP_FEEDBACK,
       ]),
     });
 
@@ -408,7 +398,7 @@ try {
     if (productionHandLine) {
       await activate(
         cdp,
-        ".postflop-change-situation",
+        POSTFLOP_CHANGE,
         viewport.mobile ? "touch" : "keyboard",
       );
       await waitForSelector(cdp, ".postflop-generate");
@@ -428,7 +418,7 @@ try {
         seed.value = ${JSON.stringify(postflopSeed)};
       })()`);
       await activate(cdp, ".postflop-generate", viewport.mobile ? "touch" : "keyboard");
-      await waitForSelector(cdp, '.postflop-meta[data-mode="line"][data-street="FLOP"]');
+      await waitForSelector(cdp, `${POSTFLOP_SCREEN}[data-mode="line"][data-street="FLOP"]`);
       const familyChunksLoaded = await evaluate<boolean>(cdp, (
         `(() => { const resources = performance.getEntriesByType("resource"); return (` +
         `resources.some((entry) => entry.name.includes(${JSON.stringify(expectedTurnPackId)})) && ` +
@@ -440,28 +430,29 @@ try {
       );
       await activate(
         cdp,
-        '.postflop-action[data-action="CALL"]',
+        `${POSTFLOP_ACTION}[data-action="CALL"]`,
         viewport.mobile ? "touch" : "keyboard",
       );
-      await waitForSelector(cdp, ".postflop-line-next");
-      await activate(cdp, ".postflop-line-next", viewport.mobile ? "touch" : "keyboard");
-      await waitForSelector(cdp, '.postflop-meta[data-mode="line"][data-street="TURN"]');
+      await waitForSelector(cdp, POSTFLOP_NEXT);
+      await activate(cdp, POSTFLOP_NEXT, viewport.mobile ? "touch" : "keyboard");
+      await waitForSelector(cdp, `${POSTFLOP_SCREEN}[data-mode="line"][data-street="TURN"]`);
       await activate(
         cdp,
-        '.postflop-action[data-action="CALL"]',
+        `${POSTFLOP_ACTION}[data-action="CALL"]`,
         viewport.mobile ? "touch" : "keyboard",
       );
-      await waitForSelector(cdp, ".postflop-line-next");
-      await activate(cdp, ".postflop-line-next", viewport.mobile ? "touch" : "keyboard");
-      await waitForSelector(cdp, '.postflop-meta[data-mode="line"][data-street="RIVER"]');
+      await waitForSelector(cdp, POSTFLOP_NEXT);
+      await activate(cdp, POSTFLOP_NEXT, viewport.mobile ? "touch" : "keyboard");
+      await waitForSelector(cdp, `${POSTFLOP_SCREEN}[data-mode="line"][data-street="RIVER"]`);
       await activate(
         cdp,
-        '.postflop-action[data-action="CALL"]',
+        `${POSTFLOP_ACTION}[data-action="CALL"]`,
         viewport.mobile ? "touch" : "keyboard",
       );
-      await waitForSelector(cdp, ".postflop-line-complete");
+      await waitForSelector(cdp, `${POSTFLOP_SCREEN} .dx-trainer__line-done`);
       const lineState = await evaluate(cdp, `(() => ({
-        total: document.querySelector(".postflop-line-complete")?.getAttribute("data-total-streets"),
+        total: document.querySelector(${JSON.stringify(`${POSTFLOP_SCREEN} .dx-trainer__line-done`)})
+          ?.getAttribute("data-total"),
         text: document.querySelector(".postflop-output")?.textContent ?? ""
       }))()`);
       assert(lineState.total === "3", `${viewport.name}: production hand-line was incomplete`);
@@ -479,14 +470,14 @@ try {
       await activate(cdp, ".filter-start", viewport.mobile ? "touch" : "keyboard");
       await waitForSelector(
         cdp,
-        `.postflop-meta[data-street="${expectedStreet.street}"]`,
+        `${POSTFLOP_SCREEN}[data-street="${expectedStreet.street}"]`,
       );
-      await waitForSelector(cdp, ".postflop-action");
+      await waitForSelector(cdp, POSTFLOP_ACTION);
       const streetState = await evaluate(cdp, `(() => (({
-        actions: document.querySelectorAll(".postflop-action").length,
-        street: document.querySelector(".postflop-meta")?.getAttribute("data-street"),
-        potType: document.querySelector(".postflop-meta")?.getAttribute("data-pot-type"),
-        positionPattern: document.querySelector(".postflop-meta")?.getAttribute("data-position-pattern"),
+        actions: document.querySelectorAll(${JSON.stringify(POSTFLOP_ACTION)}).length,
+        street: document.querySelector(${JSON.stringify(POSTFLOP_SCREEN)})?.getAttribute("data-street"),
+        potType: document.querySelector(${JSON.stringify(POSTFLOP_SCREEN)})?.getAttribute("data-pot-type"),
+        positionPattern: document.querySelector(${JSON.stringify(POSTFLOP_SCREEN)})?.getAttribute("data-position-pattern"),
         productionChunk: performance.getEntriesByType("resource").some((entry) => (
           entry.name.includes(${JSON.stringify(expectedStreet.packId)})
         ))
@@ -505,14 +496,14 @@ try {
       );
       assert(
         streetState.positionPattern === "OOP_CALLER_VS_IP_3BETTOR",
-        `${viewport.name}: wrong ${expectedStreet.street} fixture position pattern`,
+        `${viewport.name}: wrong ${expectedStreet.street} fixture position pattern ${streetState.positionPattern}`,
       );
       assert(
         streetState.productionChunk,
         `${viewport.name}: production ${expectedStreet.street} lazy chunk was not requested`,
       );
-      await activate(cdp, ".postflop-action", viewport.mobile ? "touch" : "keyboard");
-      await waitForSelector(cdp, ".postflop-result");
+      await activate(cdp, POSTFLOP_ACTION, viewport.mobile ? "touch" : "keyboard");
+      await waitForSelector(cdp, POSTFLOP_FEEDBACK);
     }
 
     await evaluate(cdp, `(() => {
@@ -577,6 +568,11 @@ try {
       `document.querySelector(".stats-json-box")?.value ?? ""`,
     );
     assert(exportedStats.includes('"postflopRecords"'), `${viewport.name}: stats export is incomplete`);
+    if (expectActionEv) {
+      assert(exportedStats.includes('"actionEvOutcome"'), `${viewport.name}: action EV outcome was not persisted`);
+      assert(exportedStats.includes('"equivalentBestActions"'), `${viewport.name}: equivalent best actions were not persisted`);
+      assert(exportedStats.includes('"evLossBb"'), `${viewport.name}: action EV loss was not persisted`);
+    }
     if (productionHandLine) {
       assert(
         exportedStats.includes('"postflopLineRecords"'),
@@ -638,10 +634,10 @@ try {
     await waitForSelector(cdp, ".filter-start");
     if (expectedPreflop !== "blocked") {
       await activate(cdp, ".filter-start", viewport.mobile ? "touch" : "keyboard");
-      await waitForSelector(cdp, ".action-btn");
+      await waitForSelector(cdp, PREFLOP_ACTION);
       await activate(
         cdp,
-        ".training__change-situation",
+        PREFLOP_CHANGE,
         viewport.mobile ? "touch" : "keyboard",
       );
       await waitForSelector(cdp, ".filter-start");
@@ -673,6 +669,29 @@ try {
       browserErrors: 0,
     });
   }
+
+  // Podrobné scénáře obrazovky tréninku (Agents/ui-redesign-plan.md, fáze 1,
+  // krok 5): měřené vyhodnocení, matice range, linka a mix po třídách. Běží na
+  // všech šířkách a stejnými vstupy jako zbytek E2E.
+  const nextUiResults: Array<{ viewport: string; feedbackMs: number; rangeCellPx: number }> = [];
+  const nextUiPostflopResults: Array<{
+    viewport: string;
+    feedbackMs: number;
+    line: "passed" | "unavailable";
+    rangeCellPx: number;
+    classMixCells: number;
+  }> = [];
+  for (const viewport of activeViewports) {
+    if (expectedPreflop !== "blocked") {
+      nextUiResults.push(await runNextUiScenario(cdp, viewport, browserErrors, contrastAudits));
+      await runNextUiRealEvScenario(cdp, viewport, browserErrors, contrastAudits);
+    }
+    nextUiPostflopResults.push(await runNextUiPostflopScenario(cdp, viewport, browserErrors, contrastAudits));
+    await runNextUiPostflopRealScenario(cdp, viewport, browserErrors);
+  }
+  // Zbytek běhu: odolnost a Service Worker.
+  await navigate(cdp, targetUrl);
+  await waitForSelector(cdp, ".filter-start");
 
   browserErrors.length = 0;
   await cdp.send("Network.emulateNetworkConditions", {
@@ -706,7 +725,8 @@ try {
       "mtt_preflop_postflop_events_v1",
       "mtt_preflop_postflop_line_events_v1",
       "mtt_preflop_hh_v1",
-      "mtt_preflop_hh_reviews_v1"
+      "mtt_preflop_hh_reviews_v1",
+      "pkrtrainer.ui.player-choice.v1"
     ]) localStorage.setItem(key, "{broken-json");
   })()`);
   await reload(cdp);
@@ -726,7 +746,7 @@ try {
     street.dispatchEvent(new Event("change", { bubbles: true }));
     document.querySelector(".filter-start")?.click();
   })()`);
-  await waitForSelector(cdp, ".postflop-action");
+  await waitForSelector(cdp, POSTFLOP_ACTION);
   await evaluate(cdp, `(() => {
     const original = Storage.prototype.setItem;
     Object.defineProperty(window, "__pkrOriginalSetItem", { value: original, configurable: true });
@@ -734,8 +754,8 @@ try {
       throw new DOMException("Simulated quota failure", "QuotaExceededError");
     };
   })()`);
-  await activate(cdp, ".postflop-action", "keyboard");
-  await waitForSelector(cdp, ".postflop-result");
+  await activate(cdp, POSTFLOP_ACTION, "keyboard");
+  await waitForSelector(cdp, POSTFLOP_FEEDBACK);
   await waitForSelector(cdp, ".app__notice:not([hidden])");
   const quotaNotice = await evaluate<string>(
     cdp,
@@ -770,6 +790,8 @@ try {
     contrastAudits,
     resilience,
     serviceWorkerUpgrade,
+    nextUi: nextUiResults,
+    nextUiPostflop: nextUiPostflopResults,
   };
   writeFileSync(join(artifactDirectory, "report.json"), JSON.stringify(report, null, 2));
   console.log("MTT Chrome E2E");
@@ -784,8 +806,23 @@ try {
   console.log("- resilience: zoom 200% / corrupt storage / quota failure passed");
   console.log(`- contrast: ${contrastAudits.flatMap((audit) => audit.entries).length} checks passed`);
   console.log("- service worker: real upgrade and previous-build chunk rollback passed");
+  for (const result of nextUiResults) {
+    console.log(
+      `- next UI ${result.viewport}: question/feedback/next passed, feedback ${result.feedbackMs} ms,`
+      + ` range 169 cells ${result.rangeCellPx} px`,
+    );
+  }
+  for (const result of nextUiPostflopResults) {
+    console.log(
+      `- next UI postflop ${result.viewport}: board/question/feedback/next passed, feedback ${result.feedbackMs} ms,`
+      + ` range 169 cells ${result.rangeCellPx} px,`
+      + ` line ${result.line === "passed" ? "passed" : "not offered in this build"},`
+      + ` solved flop and turn packs fetched, turn range with per-hand mix in ${result.classMixCells} cells`,
+    );
+  }
 } catch (error) {
-  console.error(error instanceof Error ? error.message : String(error));
+  // Se zásobníkem: chyba ze stránky jinak neřekne, který krok scénáře padl.
+  console.error(error instanceof Error ? error.stack ?? error.message : String(error));
   process.exitCode = 1;
 } finally {
   cdp?.close();
@@ -805,15 +842,6 @@ try {
   } catch {
     console.warn(`Chrome profile cleanup deferred: ${profileDirectory}`);
   }
-}
-
-async function navigate(client: CdpClient, url: string): Promise<void> {
-  const loaded = client.waitFor("Page.loadEventFired", 30_000);
-  await client.send("Page.navigate", { url });
-  await Promise.race([
-    loaded,
-    waitForPageReady(client, url, 30_000),
-  ]);
 }
 
 async function ensureServiceWorkerControl(client: CdpClient): Promise<void> {
@@ -858,79 +886,6 @@ async function ensureServiceWorkerControl(client: CdpClient): Promise<void> {
   assert(controlledAfterReload, "Service worker did not control the page after reload");
 }
 
-async function reload(client: CdpClient): Promise<void> {
-  const loaded = client.waitFor("Page.loadEventFired", 30_000);
-  await client.send("Page.reload", { ignoreCache: false });
-  await Promise.race([
-    loaded,
-    waitForPageReady(client, null, 30_000, 100),
-  ]);
-}
-
-async function waitForPageReady(
-  client: CdpClient,
-  expectedUrl: string | null,
-  timeoutMs: number,
-  initialDelayMs = 0,
-): Promise<void> {
-  if (initialDelayMs > 0) await sleep(initialDelayMs);
-  const deadline = Date.now() + timeoutMs;
-  let lastError = "";
-  while (Date.now() < deadline) {
-    try {
-      const state = await evaluate<{
-        href: string;
-        readyState: DocumentReadyState;
-      }>(client, `(() => ({ href: location.href, readyState: document.readyState }))()`);
-      const expectedMatches = expectedUrl === null || state.href === expectedUrl;
-      if (
-        expectedMatches &&
-        (state.readyState === "interactive" || state.readyState === "complete")
-      ) {
-        return;
-      }
-    } catch (error) {
-      lastError = error instanceof Error ? error.message : String(error);
-    }
-    await sleep(100);
-  }
-  throw new Error(
-    `Timed out waiting for page readiness${lastError ? `: ${lastError}` : ""}`,
-  );
-}
-
-async function evaluate<T = any>(client: CdpClient, expression: string): Promise<T> {
-  const response = await client.send("Runtime.evaluate", {
-    expression,
-    awaitPromise: true,
-    returnByValue: true,
-  }) as {
-    result?: { value?: T };
-    exceptionDetails?: { text?: string };
-  };
-  if (response.exceptionDetails) {
-    throw new Error(response.exceptionDetails.text ?? `Browser evaluation failed: ${expression}`);
-  }
-  return response.result?.value as T;
-}
-
-async function waitForSelector(client: CdpClient, selector: string, timeoutMs = 15_000): Promise<void> {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    if (await evaluate<boolean>(client, `Boolean(document.querySelector(${JSON.stringify(selector)}))`)) {
-      return;
-    }
-    await sleep(100);
-  }
-  const debug = await evaluate<{ url: string; text: string }>(client, `(() => ({
-    url: location.href,
-    text: (document.body?.innerText ?? "").slice(0, 500)
-  }))()`);
-  throw new Error(
-    `Timed out waiting for selector: ${selector} at ${debug.url}; body=${debug.text}`,
-  );
-}
-
 async function configureProductionPostflopProfile(
   client: CdpClient,
   street: "TURN" | "RIVER",
@@ -969,6 +924,24 @@ async function configureProductionPostflopProfile(
   })()`);
 }
 
+/**
+ * Výraz ve stránce s chybou pro chybějící prvek: kromě selektoru i stav
+ * obrazovek tréninku, ať se z logu pozná, co prvek odstranilo.
+ */
+function missingElementError(selector: string): string {
+  return `new Error(${JSON.stringify(`Missing interactive element: ${selector}`)} + " | trainers: " + ([
+    ...document.querySelectorAll(".dx-trainer"),
+  ].map((frame) => [
+    frame.closest(".postflop-output") ? "postflop" : "preflop",
+    frame.dataset.street ?? "-",
+    frame.dataset.mode ?? "-",
+    frame.dataset.seed ?? "-",
+    frame.querySelector(".dx-trainer__feedback")?.hidden ? "feedback-hidden" : "feedback-shown",
+    frame.closest("[hidden]") ? "panel-hidden" : "panel-shown",
+  ].join("/")).join(", ") || "none") + " | modal: " + Boolean(document.querySelector(".range-modal"))
+    + " | focus: " + (document.activeElement?.className || document.activeElement?.tagName || ""))`;
+}
+
 async function activate(
   client: CdpClient,
   selector: string,
@@ -977,7 +950,7 @@ async function activate(
   if (mode === "keyboard") {
     await evaluate(client, `(() => {
       const element = document.querySelector(${JSON.stringify(selector)});
-      if (!(element instanceof HTMLElement)) throw new Error("Missing interactive element");
+      if (!(element instanceof HTMLElement)) throw ${missingElementError(selector)};
       element.scrollIntoView({ block: "center" });
       element.focus();
     })()`);
@@ -994,13 +967,21 @@ async function activate(
     return;
   }
 
-  const point = await evaluate<{ x: number; y: number }>(client, `(() => {
+  const point = await evaluate<{ x: number; y: number; covered: string }>(client, `(() => {
     const element = document.querySelector(${JSON.stringify(selector)});
-    if (!(element instanceof HTMLElement)) throw new Error("Missing interactive element");
+    if (!(element instanceof HTMLElement)) throw ${missingElementError(selector)};
     element.scrollIntoView({ block: "center" });
     const rect = element.getBoundingClientRect();
-    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    const hit = document.elementFromPoint(x, y);
+    const reached = hit !== null && (hit === element || element.contains(hit));
+    return { x, y, covered: reached ? "" : hit === null ? "nothing" : hit.tagName + "." + hit.className };
   })()`);
+  // Klepnutí dostane to, co na tom místě leží nahoře. Dotykový hráč by trefil
+  // něco jiného, takže zakrytý prvek je chyba obrazovky (5. 11. 2026: dok přes
+  // „Změnit situaci“ rozdával místo zadání další spot).
+  assert(point.covered === "", `A tap on ${selector} would land on ${point.covered}`);
   await client.send("Input.dispatchTouchEvent", {
     type: "touchStart",
     touchPoints: [{ x: point.x, y: point.y }],
@@ -1009,6 +990,34 @@ async function activate(
     type: "touchEnd",
     touchPoints: [],
   });
+}
+
+/** Zvolí přepínač skutečným vstupem: dotykem, nebo mezerníkem (Enter ho nepřepne). */
+async function selectRadio(
+  client: CdpClient,
+  selector: string,
+  mode: "keyboard" | "touch",
+): Promise<void> {
+  if (mode === "touch") {
+    await activate(client, selector, mode);
+    return;
+  }
+  await evaluate(client, `(() => {
+    const element = document.querySelector(${JSON.stringify(selector)});
+    if (!(element instanceof HTMLElement)) throw ${missingElementError(selector)};
+    element.scrollIntoView({ block: "center" });
+    element.focus();
+  })()`);
+  const key = {
+    key: " ",
+    code: "Space",
+    text: " ",
+    unmodifiedText: " ",
+    windowsVirtualKeyCode: 32,
+    nativeVirtualKeyCode: 32,
+  };
+  await client.send("Input.dispatchKeyEvent", { type: "keyDown", ...key });
+  await client.send("Input.dispatchKeyEvent", { type: "keyUp", ...key });
 }
 
 async function auditContrast(
@@ -1020,6 +1029,17 @@ async function auditContrast(
   const entries = await evaluate<ContrastAuditEntry[]>(client, `(() => {
     const selectors = ${JSON.stringify(selectors)};
     const parseColor = (value) => {
+      // color-mix() vrací Chrome jako color(srgb r g b / a) se složkami 0..1.
+      const srgb = value.match(/color\\(srgb\\s+([^)]+)\\)/i);
+      if (srgb) {
+        const parts = srgb[1].split(/[ /]+/).filter(Boolean).map(Number);
+        return {
+          r: parts[0] * 255,
+          g: parts[1] * 255,
+          b: parts[2] * 255,
+          a: Number.isFinite(parts[3]) ? parts[3] : 1
+        };
+      }
       const match = value.match(/rgba?\\(([^)]+)\\)/i);
       if (!match) throw new Error("Unsupported computed color: " + value);
       const parts = match[1].split(/[ ,/]+/).filter(Boolean).map(Number);
@@ -1103,6 +1123,750 @@ async function auditContrast(
     )).join(", ")}`,
   );
   return entries;
+}
+
+/**
+ * Nová obrazovka preflopového tréninku: otázka, odpověď, vyhodnocení, další
+ * spot a znovu odpověď - skutečným vstupem (klávesnice, dotyk). Čas od
+ * kliknutí po prvním snímku s vyhodnocením se měří ve stránce, bez latence
+ * protokolu, a jde do reportu, ať je vidět, kdyby rostl.
+ */
+async function runNextUiScenario(
+  client: CdpClient,
+  viewport: Viewport,
+  browserErrors: string[],
+  contrastAudits: Array<{ viewport: string; surface: string; entries: ContrastAuditEntry[] }>,
+): Promise<{ viewport: string; feedbackMs: number; rangeCellPx: number }> {
+  const input = viewport.mobile ? "touch" : "keyboard";
+  browserErrors.length = 0;
+  await client.send("Emulation.setDeviceMetricsOverride", {
+    width: viewport.width,
+    height: viewport.height,
+    deviceScaleFactor: 1,
+    mobile: viewport.mobile,
+  });
+  await client.send("Emulation.setTouchEmulationEnabled", {
+    enabled: viewport.mobile,
+    maxTouchPoints: viewport.mobile ? 5 : 1,
+  });
+  await navigate(client, targetUrl);
+  await waitForSelector(client, ".filter-start");
+  // Tenhle scénář jede v režimu REAL (plán GTO/REAL): stůl s typy hráčů musí
+  // projít stejnými šířkami a stejnou kontrolou překryvu jako GTO v hlavním toku.
+  await selectRadio(client, '.filter-mode[value="REAL"]', input);
+  await waitForSelector(client, ".dx-opponents:not([hidden]) .filter-opponent");
+  // I s řadou soupeřů se spuštění vejde na první obrazovku (plán redesignu, fáze 3).
+  const startFit = await evaluate<{ bottom: number; height: number }>(client, `(() => ({
+    bottom: document.querySelector(".filter-start").getBoundingClientRect().bottom + window.scrollY,
+    height: window.innerHeight
+  }))()`);
+  assert(
+    startFit.bottom <= startFit.height,
+    `${viewport.name} next UI REAL: start button ends at ${Math.round(startFit.bottom)}px, below the ${startFit.height}px screen`,
+  );
+  contrastAudits.push({
+    viewport: viewport.name,
+    surface: "next-ui-opponents",
+    entries: await auditContrast(client, viewport.name, "next UI opponents", [
+      ".dx-opponents__legend",
+      ".dx-opponent__name",
+      ".dx-opponents__hint",
+    ]),
+  });
+  await activate(client, ".filter-start", input);
+  await waitForSelector(client, ".dx-trainer__actions button");
+
+  const question = await evaluate<{
+    actions: number;
+    cards: number;
+    feedbackHidden: boolean;
+    overflow: number;
+    seats: number;
+    overlaps: string[];
+    avatars: number;
+    heroAvatars: number;
+    typedAvatars: number;
+  }>(client, `(() => {
+    const kinds = [...document.querySelectorAll(".training__game .dx-table__seat .dx-avatar")]
+      .map((avatar) => avatar.getAttribute("data-kind"));
+    // Štítky sedadel se nesmějí překrývat na žádné šířce - starý stůl to
+    // na 360 px dělal (Agents/ui-redesign-plan.md).
+    const seats = [...document.querySelectorAll(".dx-table__seat")];
+    const boxes = seats.map((seat) => ({ name: seat.dataset.position, box: seat.getBoundingClientRect() }));
+    const overlaps = [];
+    for (let i = 0; i < boxes.length; i += 1) {
+      for (let j = i + 1; j < boxes.length; j += 1) {
+        const a = boxes[i].box;
+        const b = boxes[j].box;
+        if (a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) {
+          overlaps.push(boxes[i].name + "/" + boxes[j].name);
+        }
+      }
+    }
+    return {
+      actions: document.querySelectorAll(".dx-trainer__actions button").length,
+      cards: document.querySelectorAll(".dx-trainer__prompt .dx-card").length,
+      feedbackHidden: document.querySelector(".dx-trainer__feedback")?.hidden === true,
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      seats: seats.length,
+      overlaps,
+      avatars: kinds.length,
+      heroAvatars: kinds.filter((kind) => kind === "HERO").length,
+      typedAvatars: kinds.filter((kind) => kind !== "HERO" && kind !== "GTO").length
+    };
+  })()`);
+  assert(question.actions >= 2, `${viewport.name} next UI: only ${question.actions} actions`);
+  assert(question.cards === 2, `${viewport.name} next UI: hero cards missing beside the actions`);
+  assert(question.feedbackHidden, `${viewport.name} next UI: feedback visible before an answer`);
+  assert(question.overflow <= 1, `${viewport.name} next UI: page overflow ${question.overflow}px`);
+  assert(question.seats === 9, `${viewport.name} next UI: ${question.seats} seats on the table`);
+  assert(
+    question.avatars === 9 && question.heroAvatars === 1 && question.typedAvatars === 8,
+    `${viewport.name} next UI REAL: ${question.avatars} avatars, ${question.heroAvatars} hero, ${question.typedAvatars} player types`,
+  );
+  assert(
+    question.overlaps.length === 0,
+    `${viewport.name} next UI: overlapping seats ${question.overlaps.join(", ")}`,
+  );
+  contrastAudits.push({
+    viewport: viewport.name,
+    surface: "next-ui-question",
+    entries: await auditContrast(client, viewport.name, "next UI question", [
+      ".dx-trainer__title",
+      ".dx-trainer__meta",
+      ".dx-trainer__prompt",
+      ".dx-btn--action",
+    ]),
+  });
+
+  const feedbackMs = await evaluate<number>(client, `new Promise((resolve) => {
+    const action = document.querySelector(".dx-trainer__actions button");
+    const feedback = document.querySelector(".dx-trainer__feedback");
+    const started = performance.now();
+    action.click();
+    requestAnimationFrame(() => resolve(feedback && !feedback.hidden ? performance.now() - started : -1));
+  })`);
+  assert(feedbackMs >= 0, `${viewport.name} next UI: feedback did not render after an answer`);
+  // Pojistka proti patologii, ne cíl: běžně jde o jeden snímek.
+  assert(feedbackMs < 1000, `${viewport.name} next UI: feedback took ${Math.round(feedbackMs)} ms`);
+
+  const answered = await evaluate<{ outcome: string; locked: boolean; nextFocused: boolean }>(
+    client,
+    `(() => ({
+      outcome: document.querySelector(".dx-trainer__feedback .dx-chip")?.getAttribute("data-outcome") ?? "",
+      locked: [...document.querySelectorAll(".dx-trainer__actions button")].every((button) => button.disabled),
+      nextFocused: document.activeElement?.classList.contains("dx-trainer__next") ?? false
+    }))()`,
+  );
+  assert(answered.outcome !== "", `${viewport.name} next UI: verdict chip missing`);
+  assert(answered.locked, `${viewport.name} next UI: actions still enabled after an answer`);
+  assert(answered.nextFocused, `${viewport.name} next UI: focus did not move to the next spot`);
+  await assertStoredVillain(
+    client,
+    "mtt_preflop_events_v1",
+    `.training__game ${FOCUS_SEAT}`,
+    `${viewport.name} next UI REAL`,
+  );
+  contrastAudits.push({
+    viewport: viewport.name,
+    surface: "next-ui-feedback",
+    entries: await auditContrast(client, viewport.name, "next UI feedback", [
+      ".dx-trainer__feedback .dx-chip",
+      ".dx-trainer__choice",
+      ".dx-trainer__plan",
+      ".dx-trainer__next",
+    ]),
+  });
+
+  const rangeCellPx = await checkRangeDialog(
+    client,
+    viewport,
+    input,
+    ".dx-trainer__feedback:not([hidden]) .dx-trainer__range",
+    `${viewport.name} next UI`,
+    contrastAudits,
+  );
+
+  await activate(client, ".dx-trainer__next", input);
+  await waitForSelector(client, ".dx-trainer__feedback[hidden]");
+  await activate(client, ".dx-trainer__actions button", input);
+  await waitForSelector(client, ".dx-trainer__feedback:not([hidden])");
+  assert(browserErrors.length === 0, `${viewport.name} next UI: ${browserErrors.join(" | ")}`);
+  return { viewport: viewport.name, feedbackMs: Math.round(feedbackMs * 10) / 10, rangeCellPx };
+}
+
+/**
+ * Režim REAL ve statistikách: poslední záznam nese režim a typ soupeře, kterého
+ * hráč viděl u stolu. Bez soupeře ve hře (první vstup do potu) typ chybí.
+ */
+async function assertStoredVillain(
+  client: CdpClient,
+  storageKey: string,
+  focusSeat: string,
+  label: string,
+): Promise<void> {
+  const stored = await evaluate<{ mode: string | null; archetype: string | null; focus: string | null }>(
+    client,
+    `(() => {
+      const events = JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)}) ?? "[]");
+      const last = events[events.length - 1];
+      return {
+        mode: last?.trainingMode ?? null,
+        archetype: last?.villainArchetype ?? null,
+        focus: document.querySelector(${JSON.stringify(focusSeat)})?.getAttribute("data-player") ?? null
+      };
+    })()`,
+  );
+  assert(stored.mode === "REAL", `${label}: stored answer has training mode ${stored.mode}`);
+  assert(
+    stored.archetype === stored.focus,
+    `${label}: stored villain ${stored.archetype}, table showed ${stored.focus}`,
+  );
+}
+
+/**
+ * Preflop v režimu REAL proti zvolenému typu: all-in spot se hodnotí proti němu
+ * a vyhodnocení řekne, co by platilo v GTO a z čeho to je (plán GTO/REAL, 3.3).
+ */
+async function runNextUiRealEvScenario(
+  client: CdpClient,
+  viewport: Viewport,
+  browserErrors: string[],
+  contrastAudits: Array<{ viewport: string; surface: string; entries: ContrastAuditEntry[] }>,
+): Promise<void> {
+  const input = viewport.mobile ? "touch" : "keyboard";
+  const label = `${viewport.name} next UI REAL EV`;
+  browserErrors.length = 0;
+  await navigate(client, targetUrl);
+  await waitForSelector(client, ".filter-start");
+  await evaluate(client, `(() => {
+    const context = document.querySelector('.filter-context[data-context="VS_ALLIN"]');
+    if (!(context instanceof HTMLInputElement)) throw new Error("Missing VS_ALLIN context");
+    context.click();
+  })()`);
+  await selectRadio(client, '.filter-mode[value="REAL"]', input);
+  await selectRadio(client, '.filter-opponent[value="DICE"]', input);
+  await activate(client, ".filter-start", input);
+
+  // Odhad, který jde proti chartu, se neukazuje, takže první spot nemusí být oceněný.
+  let found = false;
+  for (let spot = 0; spot < 12 && !found; spot += 1) {
+    await waitForSelector(client, `${PREFLOP_ACTION}:not([disabled])`);
+    await activate(client, PREFLOP_ACTION, input);
+    await waitForSelector(client, ".training__game .dx-trainer__feedback:not([hidden])");
+    found = await evaluate<boolean>(client, `document.querySelector(".dx-trainer__real") !== null`);
+    if (!found) {
+      await activate(client, PREFLOP_NEXT, input);
+      await waitForSelector(client, ".training__game .dx-trainer__feedback[hidden]");
+    }
+  }
+  assert(found, `${label}: no spot of 12 showed the comparison with GTO`);
+
+  const shown = await evaluate<{ line: string; origin: string; villain: string | null; source: string | null }>(
+    client,
+    `(() => {
+      const events = JSON.parse(localStorage.getItem("mtt_preflop_events_v1") ?? "[]");
+      return {
+        line: document.querySelector(".dx-trainer__real-line")?.textContent ?? "",
+        origin: document.querySelector(".dx-trainer__origin")?.textContent ?? "",
+        villain: document.querySelector(${JSON.stringify(`.training__game ${FOCUS_SEAT}`)})?.getAttribute("data-player") ?? null,
+        source: events[events.length - 1]?.villainArchetype ?? null
+      };
+    })()`,
+  );
+  assert(shown.line.includes("GTO"), `${label}: comparison says "${shown.line}"`);
+  assert(/kostce/i.test(shown.line), `${label}: comparison does not name the opponent: "${shown.line}"`);
+  assert(shown.origin === "Model hráče (odhad)", `${label}: origin says "${shown.origin}"`);
+  assert(shown.villain === "DICE" && shown.source === "DICE", `${label}: table ${shown.villain}, record ${shown.source}`);
+  contrastAudits.push({
+    viewport: viewport.name,
+    surface: "next-ui-real-ev",
+    entries: await auditContrast(client, viewport.name, label, [
+      ".dx-trainer__real-line",
+      ".dx-trainer__origin",
+    ]),
+  });
+  assert(browserErrors.length === 0, `${label}: ${browserErrors.join(" | ")}`);
+}
+
+/**
+ * Postflop v režimu REAL: stejný stůl jako GTO, ale s typy hráčů a delšími
+ * jmenovkami, tedy na překryvy horší případ, a soupeř z něj jde do statistik.
+ * Celý tok (range, linka) jede v GTO ve scénáři výše.
+ */
+async function runNextUiPostflopRealScenario(
+  client: CdpClient,
+  viewport: Viewport,
+  browserErrors: string[],
+): Promise<void> {
+  const input = viewport.mobile ? "touch" : "keyboard";
+  const scope = ".postflop-output .dx-trainer";
+  const label = `${viewport.name} next UI postflop REAL`;
+  browserErrors.length = 0;
+  await navigate(client, targetUrl);
+  await waitForSelector(client, ".filter-start");
+  await evaluate(client, `(() => {
+    const select = document.querySelector(".profile-street");
+    if (!(select instanceof HTMLSelectElement)) throw new Error("Missing street selector");
+    select.value = "FLOP";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    const seed = document.querySelector(".filter-seed");
+    if (!(seed instanceof HTMLInputElement)) throw new Error("Missing seed input");
+    seed.value = ${JSON.stringify(postflopSeed)};
+    seed.dispatchEvent(new Event("input", { bubbles: true }));
+  })()`);
+  await selectRadio(client, '.filter-mode[value="REAL"]', input);
+  await activate(client, ".filter-start", input);
+  await waitForSelector(client, `${scope} .dx-trainer__actions button`);
+
+  const table = await evaluate<{ kinds: Array<string | null>; focus: string | null; overlaps: string[] }>(
+    client,
+    `(() => {
+      const scope = document.querySelector(${JSON.stringify(scope)});
+      const seats = [...scope.querySelectorAll(".dx-table__seat")];
+      const boxes = seats.map((seat) => ({ name: seat.dataset.position, box: seat.getBoundingClientRect() }));
+      const center = scope.querySelector(".dx-table__center");
+      if (center) boxes.push({ name: "deska", box: center.getBoundingClientRect() });
+      const overlaps = [];
+      for (let i = 0; i < boxes.length; i += 1) {
+        for (let j = i + 1; j < boxes.length; j += 1) {
+          const a = boxes[i].box;
+          const b = boxes[j].box;
+          if (a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) {
+            overlaps.push(boxes[i].name + "/" + boxes[j].name);
+          }
+        }
+      }
+      return {
+        kinds: seats.map((seat) => seat.dataset.player ?? null),
+        focus: scope.querySelector(${JSON.stringify(FOCUS_SEAT)})?.getAttribute("data-player") ?? null,
+        overlaps
+      };
+    })()`,
+  );
+  assert(table.kinds.length === 9, `${label}: ${table.kinds.length} seats`);
+  assert(
+    table.kinds.filter((kind) => kind === "HERO").length === 1
+      && table.kinds.filter((kind) => kind !== "HERO" && kind !== "GTO" && kind !== null).length === 8,
+    `${label}: seats ${table.kinds.join(", ")}`,
+  );
+  assert(table.focus !== null && table.focus !== "HERO", `${label}: villain seat shows ${table.focus}`);
+  assert(table.overlaps.length === 0, `${label}: overlapping ${table.overlaps.join(", ")}`);
+
+  await activate(client, `${scope} .dx-trainer__actions button`, input);
+  await waitForSelector(client, `${scope} .dx-trainer__feedback:not([hidden])`);
+  await assertStoredVillain(client, "mtt_preflop_postflop_events_v1", `${scope} ${FOCUS_SEAT}`, label);
+
+  // Volba režimu se pamatuje (plán GTO/REAL, 3.1): po znovunačtení je start v REAL.
+  await navigate(client, targetUrl);
+  await waitForSelector(client, ".filter-start");
+  const remembered = await evaluate<{ real: boolean; opponents: boolean }>(client, `(() => ({
+    real: document.querySelector('.filter-mode[value="REAL"]')?.checked === true,
+    opponents: document.querySelector(".dx-opponents")?.hidden === false
+  }))()`);
+  assert(remembered.real && remembered.opponents, `${label}: the mode was not remembered after a reload`);
+  assert(browserErrors.length === 0, `${label}: ${browserErrors.join(" | ")}`);
+}
+
+/**
+ * Range v dialogu nového GUI (plán redesignu, fáze 2, „hotovo, když“: 169
+ * buněk bez vodorovného posunu na 360 px). Na každé šířce ověří mřížku,
+ * přetečení dialogu i stránky, šířku buňky, detail k ruce hráče hned a k jiné
+ * ruce po skutečném vstupu, kontrast a zavření Escapem. Vrací šířku buňky
+ * v px, ať je v reportu vidět, kolik zbylo.
+ */
+async function checkRangeDialog(
+  client: CdpClient,
+  viewport: Viewport,
+  input: "keyboard" | "touch",
+  button: string,
+  label: string,
+  contrastAudits: Array<{ viewport: string; surface: string; entries: ContrastAuditEntry[] }>,
+): Promise<number> {
+  await activate(client, button, input);
+  await waitForSelector(client, ".range-modal .dx-matrix__cell");
+  const view = await evaluate<{
+    cells: number;
+    rows: number;
+    dialogOverflow: number;
+    pageOverflow: number;
+    matrixOverflow: number;
+    cellPx: number;
+    heroSelected: boolean;
+    detailHand: string;
+    heroHand: string;
+    text: string;
+  }>(client, `(() => {
+    const dialog = document.querySelector(".range-modal__dialog");
+    const cells = [...dialog.querySelectorAll(".dx-matrix__cell")];
+    const hero = dialog.querySelector(".dx-matrix__cell[data-hero]");
+    const matrix = dialog.querySelector(".dx-matrix").getBoundingClientRect();
+    const inner = dialog.getBoundingClientRect();
+    return {
+      cells: cells.length,
+      rows: dialog.querySelectorAll('.dx-matrix [role="row"]').length,
+      dialogOverflow: dialog.scrollWidth - dialog.clientWidth,
+      pageOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      matrixOverflow: matrix.right - inner.right,
+      cellPx: Math.min(...cells.map((cell) => cell.getBoundingClientRect().width)),
+      heroSelected: hero?.getAttribute("aria-selected") === "true",
+      detailHand: dialog.querySelector(".dx-range__detail")?.dataset.hand ?? "",
+      heroHand: hero?.dataset.hand ?? "",
+      text: dialog.textContent ?? ""
+    };
+  })()`);
+  assertSourceFree(view.text, `${label} range`);
+  assert(view.cells === 169 && view.rows === 13, `${label} range: ${view.cells} cells in ${view.rows} rows`);
+  assert(view.dialogOverflow <= 1, `${label} range: dialog scrolls sideways by ${view.dialogOverflow}px`);
+  assert(view.pageOverflow <= 1, `${label} range: page overflow ${view.pageOverflow}px`);
+  assert(view.matrixOverflow <= 0, `${label} range: matrix sticks out of the dialog by ${view.matrixOverflow}px`);
+  // Návrh počítá s buňkou kolem 22 px na telefonu; pod 18 px se popisek nevejde.
+  assert(view.cellPx >= 18, `${label} range: cells only ${view.cellPx}px wide`);
+  assert(
+    view.heroSelected && view.detailHand === view.heroHand,
+    `${label} range: detail shows ${view.detailHand}, hero hand ${view.heroHand}`,
+  );
+  contrastAudits.push({
+    viewport: viewport.name,
+    surface: "next-ui-range",
+    entries: await auditContrast(client, viewport.name, `${label} range`, [
+      ".range-modal .dx-matrix__cell[data-hero] .dx-matrix__label",
+      ".range-modal .dx-range__detail .dx-range__title",
+      ".range-modal .dx-range__summary .dx-range__title",
+      ".range-modal .dx-range__key",
+    ]),
+  });
+
+  const other = view.heroHand === "AA" ? "KK" : "AA";
+  await activate(client, `.range-modal .dx-matrix__cell[data-hand="${other}"]`, input);
+  const picked = await evaluate<string>(
+    client,
+    `document.querySelector(".range-modal .dx-range__detail")?.dataset.hand ?? ""`,
+  );
+  assert(picked === other, `${label} range: tapping ${other} showed ${picked}`);
+
+  const escape = { key: "Escape", code: "Escape", windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 };
+  await client.send("Input.dispatchKeyEvent", { type: "keyDown", ...escape });
+  await client.send("Input.dispatchKeyEvent", { type: "keyUp", ...escape });
+  await waitForSelector(client, "body:not(:has(.range-modal))");
+  return Math.round(view.cellPx * 10) / 10;
+}
+
+/**
+ * Nová obrazovka jednoho postflopového spotu (plán redesignu, fáze 1, krok
+ * 3d): start flopu přes dnešní formulář, otázka s deskou, odpověď skutečným
+ * vstupem, vyhodnocení a další spot. Selektory jsou omezené na postflopový
+ * panel, protože preflopová obrazovka zůstává ve skrytém panelu tréninku.
+ */
+async function runNextUiPostflopScenario(
+  client: CdpClient,
+  viewport: Viewport,
+  browserErrors: string[],
+  contrastAudits: Array<{ viewport: string; surface: string; entries: ContrastAuditEntry[] }>,
+): Promise<{
+  viewport: string;
+  feedbackMs: number;
+  line: "passed" | "unavailable";
+  rangeCellPx: number;
+  classMixCells: number;
+}> {
+  const input = viewport.mobile ? "touch" : "keyboard";
+  const scope = ".postflop-output .dx-trainer";
+  browserErrors.length = 0;
+  await client.send("Emulation.setDeviceMetricsOverride", {
+    width: viewport.width,
+    height: viewport.height,
+    deviceScaleFactor: 1,
+    mobile: viewport.mobile,
+  });
+  await client.send("Emulation.setTouchEmulationEnabled", {
+    enabled: viewport.mobile,
+    maxTouchPoints: viewport.mobile ? 5 : 1,
+  });
+  await navigate(client, targetUrl);
+  await waitForSelector(client, ".filter-start");
+  await evaluate(client, `(() => {
+    const select = document.querySelector(".profile-street");
+    if (!(select instanceof HTMLSelectElement)) throw new Error("Missing street selector");
+    select.value = "FLOP";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    const seed = document.querySelector(".filter-seed");
+    if (!(seed instanceof HTMLInputElement)) throw new Error("Missing seed input");
+    seed.value = ${JSON.stringify(postflopSeed)};
+    seed.dispatchEvent(new Event("input", { bubbles: true }));
+  })()`);
+  // Scénář jede v GTO; preflopový před ním nechal zapamatované REAL.
+  await selectRadio(client, '.filter-mode[value="GTO"]', input);
+  await activate(client, ".filter-start", input);
+  await waitForSelector(client, `${scope} .dx-trainer__actions button`);
+  // Do 4. 11. 2026 jednotlivý spot vyřešené packy nenačetl vůbec - ani s licencí
+  // (deník 337). Start je teď stáhne dřív, než rozdá.
+  const flopSolved = await evaluate<number>(client, `performance.getEntriesByType("resource")
+    .filter((entry) => /mtt-flop-solved-/.test(entry.name)).length`);
+  assert(flopSolved > 0, `${viewport.name} next UI postflop: the flop start fetched no solved flop pack`);
+
+  const question = await evaluate<{
+    actions: number;
+    board: number;
+    cards: number;
+    active: number;
+    feedbackHidden: boolean;
+    overflow: number;
+    seats: number;
+    situation: string;
+    overlaps: string[];
+  }>(client, `(() => {
+    const scope = document.querySelector(${JSON.stringify(scope)});
+    // Ani sedadla, ani deska s potem se nesmějí překrývat na žádné šířce.
+    const seats = [...scope.querySelectorAll(".dx-table__seat")];
+    const boxes = seats.map((seat) => ({ name: seat.dataset.position, box: seat.getBoundingClientRect() }));
+    const center = scope.querySelector(".dx-table__center");
+    if (center) boxes.push({ name: "deska", box: center.getBoundingClientRect() });
+    const overlaps = [];
+    for (let i = 0; i < boxes.length; i += 1) {
+      for (let j = i + 1; j < boxes.length; j += 1) {
+        const a = boxes[i].box;
+        const b = boxes[j].box;
+        if (a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) {
+          overlaps.push(boxes[i].name + "/" + boxes[j].name);
+        }
+      }
+    }
+    return {
+      actions: scope.querySelectorAll(".dx-trainer__actions button").length,
+      board: scope.querySelectorAll(".dx-table__board .dx-card").length,
+      cards: scope.querySelectorAll(".dx-trainer__prompt .dx-card").length,
+      active: scope.querySelectorAll('.dx-table__seat[data-folded="false"]').length,
+      feedbackHidden: scope.querySelector(".dx-trainer__feedback")?.hidden === true,
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      seats: seats.length,
+      situation: scope.querySelector(".dx-trainer__situation")?.textContent ?? "",
+      overlaps
+    };
+  })()`);
+  const label = `${viewport.name} next UI postflop`;
+  assert(question.actions >= 2, `${label}: only ${question.actions} actions`);
+  assert(question.board === 3, `${label}: flop shows ${question.board} board cards`);
+  assert(question.cards === 2, `${label}: hero cards missing beside the actions`);
+  assert(question.seats === 9 && question.active === 2, `${label}: table ${question.seats} seats, ${question.active} active`);
+  assert(question.situation !== "", `${label}: villain action before the question is missing`);
+  assert(question.feedbackHidden, `${label}: feedback visible before an answer`);
+  assert(question.overflow <= 1, `${label}: page overflow ${question.overflow}px`);
+  assert(question.overlaps.length === 0, `${label}: overlapping ${question.overlaps.join(", ")}`);
+  contrastAudits.push({
+    viewport: viewport.name,
+    surface: "next-ui-postflop-question",
+    entries: await auditContrast(client, viewport.name, "next UI postflop question", [
+      `${scope} .dx-trainer__title`,
+      `${scope} .dx-trainer__meta`,
+      `${scope} .dx-trainer__situation`,
+      `${scope} .dx-trainer__prompt`,
+      `${scope} .dx-btn--action`,
+      `${scope} .dx-table__pot`,
+    ]),
+  });
+
+  const feedbackMs = await evaluate<number>(client, `new Promise((resolve) => {
+    const scope = document.querySelector(${JSON.stringify(scope)});
+    const action = scope.querySelector(".dx-trainer__actions button");
+    const feedback = scope.querySelector(".dx-trainer__feedback");
+    const started = performance.now();
+    action.click();
+    requestAnimationFrame(() => resolve(feedback && !feedback.hidden ? performance.now() - started : -1));
+  })`);
+  assert(feedbackMs >= 0, `${label}: feedback did not render after an answer`);
+  assert(feedbackMs < 1000, `${label}: feedback took ${Math.round(feedbackMs)} ms`);
+
+  const answered = await evaluate<{ outcome: string; locked: boolean; nextFocused: boolean; text: string }>(
+    client,
+    `(() => {
+      const scope = document.querySelector(${JSON.stringify(scope)});
+      return {
+        outcome: scope.querySelector(".dx-trainer__feedback .dx-chip")?.getAttribute("data-outcome") ?? "",
+        locked: [...scope.querySelectorAll(".dx-trainer__actions button")].every((button) => button.disabled),
+        nextFocused: document.activeElement?.classList.contains("dx-trainer__next") ?? false,
+        text: scope.textContent ?? ""
+      };
+    })()`,
+  );
+  assert(answered.outcome !== "", `${label}: verdict chip missing`);
+  assert(answered.locked, `${label}: actions still enabled after an answer`);
+  assert(answered.nextFocused, `${label}: focus did not move to the next spot`);
+  assertSourceFree(answered.text, label);
+  contrastAudits.push({
+    viewport: viewport.name,
+    surface: "next-ui-postflop-feedback",
+    entries: await auditContrast(client, viewport.name, "next UI postflop feedback", [
+      `${scope} .dx-trainer__feedback .dx-chip`,
+      `${scope} .dx-trainer__choice`,
+      `${scope} .dx-trainer__plan`,
+      `${scope} .dx-trainer__next`,
+    ]),
+  });
+  const rangeCellPx = await checkRangeDialog(
+    client,
+    viewport,
+    input,
+    `${scope} .dx-trainer__range`,
+    label,
+    contrastAudits,
+  );
+
+  await activate(client, `${scope} .dx-trainer__next`, input);
+  await waitForSelector(client, `${scope} .dx-trainer__feedback[hidden]`);
+  await activate(client, `${scope} .dx-trainer__actions button`, input);
+  await waitForSelector(client, `${scope} .dx-trainer__feedback:not([hidden])`);
+
+  // Linka v nové obrazovce (fáze 1, krok 3c): tytéž vstupy jako linka starého
+  // GUI nad produkční fixturou (situace facing-bet, týž seed, CALL na každé
+  // ulici), ale tady v náhledu, tedy v bráně. Linka smí skončit dřív (fold,
+  // all-in), proto se jde, dokud se neukáže její konec.
+  await activate(client, `${scope} .dx-trainer__change`, input);
+  // Viditelné zadání, ne jen tlačítko v DOM: schované se nedá stisknout. Dokud
+  // ho CSS neschovávalo (do 5. 11. 2026), „Generovat“ prošlo, i když klepnutí
+  // na „Změnit situaci“ minulo.
+  await waitForSelector(client, ".postflop-controls:not([hidden]) .postflop-generate");
+  const lineOffered = await evaluate<boolean>(client, `(() => {
+    const mode = document.querySelector(".postflop-mode");
+    if (!(mode instanceof HTMLSelectElement)) throw new Error("Missing postflop mode");
+    const option = [...mode.options].find((item) => item.value === "line");
+    if (!option || option.disabled) return false;
+    mode.value = "line";
+    mode.dispatchEvent(new Event("change", { bubbles: true }));
+    const situation = document.querySelector(".postflop-situation");
+    if (!(situation instanceof HTMLSelectElement)) throw new Error("Missing postflop situation");
+    situation.value = "facing-bet";
+    situation.dispatchEvent(new Event("change", { bubbles: true }));
+    const seed = document.querySelector(".postflop-seed");
+    if (!(seed instanceof HTMLInputElement)) throw new Error("Missing postflop seed");
+    seed.value = ${JSON.stringify(postflopSeed)};
+    return true;
+  })()`);
+  let line: "passed" | "unavailable" = "unavailable";
+  if (lineOffered) {
+    await activate(client, ".postflop-generate", input);
+    let streets = 0;
+    for (; streets < 3; streets += 1) {
+      const current = `${scope}[data-mode="line"][data-line-index="${streets}"]`;
+      await waitForSelector(client, `${current} .dx-trainer__actions button`);
+      const lineView = await evaluate<{ history: number; overflow: number; chip: string }>(client, `(() => ({
+        history: document.querySelectorAll(${JSON.stringify(`${current} .dx-trainer__line-history`)}).length,
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        chip: document.querySelector(${JSON.stringify(`${current} .dx-chip`)})?.textContent ?? ""
+      }))()`);
+      assert(lineView.history === streets, `${label} line: ${lineView.history} earlier streets shown on street ${streets + 1}`);
+      assert(lineView.overflow <= 1, `${label} line: page overflow ${lineView.overflow}px on street ${streets + 1}`);
+      assert(/ \d\/\d$/.test(lineView.chip), `${label} line: street chip "${lineView.chip}" without progress`);
+      const call = `${current} .dx-trainer__actions button[data-action="CALL"]`;
+      const hasCall = await evaluate<boolean>(client, `document.querySelector(${JSON.stringify(call)}) !== null`);
+      await activate(client, hasCall ? call : `${current} .dx-trainer__actions button`, input);
+      await waitForSelector(client, `${scope} .dx-trainer__feedback:not([hidden])`);
+      const ended = await evaluate<boolean>(
+        client,
+        `document.querySelector(${JSON.stringify(`${scope} .dx-trainer__line-done`)}) !== null`,
+      );
+      if (ended) break;
+      await activate(client, `${scope} .dx-trainer__next`, input);
+    }
+    const done = await evaluate<{ total: string; text: string }>(client, `(() => ({
+      total: document.querySelector(${JSON.stringify(`${scope} .dx-trainer__line-done`)})?.getAttribute("data-total") ?? "",
+      text: document.querySelector(${JSON.stringify(scope)})?.textContent ?? ""
+    }))()`);
+    assert(done.total === String(streets + 1), `${label} line: summary says ${done.total} streets after ${streets + 1}`);
+    assertSourceFree(done.text, `${label} line`);
+    contrastAudits.push({
+      viewport: viewport.name,
+      surface: "next-ui-postflop-line",
+      entries: await auditContrast(client, viewport.name, "next UI postflop line", [
+        `${scope} .dx-trainer__line-done`,
+        `${scope} .dx-trainer__next`,
+      ]),
+    });
+    line = "passed";
+  }
+  const classMixCells = await checkClassMixRange(client, input, scope, label);
+  assert(browserErrors.length === 0, `${label}: ${browserErrors.join(" | ")}`);
+  return {
+    viewport: viewport.name,
+    feedbackMs: Math.round(feedbackMs * 10) / 10,
+    line,
+    rangeCellPx,
+    classMixCells,
+  };
+}
+
+/**
+ * Vyřešený turn v jednotlivém spotu a frekvence po třídách rukou v jeho
+ * matici (majitel 3. a 4. 11. 2026, deník 336 a 337).
+ *
+ * Start turnu musí stáhnout vyřešené turnové packy a rozdat z nich; matice se
+ * otevře hned s převažující akcí a vlastní chunk frekvencí si dotáhne líně.
+ * Jméno chunku, import `?raw` ani dekódování v produkčním buildu jednotkové
+ * testy s podvrženým loaderem nepokryjí.
+ *
+ * Frekvence nemá každá turnová rodina (4. 11. 2026: 35 z 55, zbytek přijde
+ * s přestavbou packu), proto se jde přes další spoty, dokud se neukáže první
+ * rodina s nimi. Vrací počet buněk s pruhy.
+ */
+async function checkClassMixRange(
+  client: CdpClient,
+  input: "keyboard" | "touch",
+  scope: string,
+  label: string,
+): Promise<number> {
+  await navigate(client, targetUrl);
+  await waitForSelector(client, ".filter-start");
+  await evaluate(client, `(() => {
+    const select = document.querySelector(".profile-street");
+    if (!(select instanceof HTMLSelectElement)) throw new Error("Missing street selector");
+    select.value = "TURN";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    const seed = document.querySelector(".filter-seed");
+    if (!(seed instanceof HTMLInputElement)) throw new Error("Missing seed input");
+    seed.value = ${JSON.stringify(postflopSeed)};
+    seed.dispatchEvent(new Event("input", { bubbles: true }));
+  })()`);
+  await activate(client, ".filter-start", input);
+  await waitForSelector(client, `${scope} .dx-trainer__actions button`);
+  const turnSolved = await evaluate<number>(client, `performance.getEntriesByType("resource")
+    .filter((entry) => /mtt-turn-solved-/.test(entry.name)).length`);
+  assert(turnSolved > 0, `${label}: the turn start fetched no solved turn pack`);
+
+  const escape = { key: "Escape", code: "Escape", windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 };
+  const states: string[] = [];
+  for (let spot = 0; spot < 6; spot += 1) {
+    await waitForSelector(client, `${scope} .dx-trainer__actions button`);
+    await activate(client, `${scope} .dx-trainer__actions button`, input);
+    await waitForSelector(client, `${scope} .dx-trainer__feedback:not([hidden])`);
+    await activate(client, `${scope} .dx-trainer__range`, input);
+    await waitForSelector(client, '.range-modal .dx-range-host:not([data-class-mix="loading"])');
+    const view = await evaluate<{ state: string; cells: number; mixed: number; chunk: boolean; overflow: number }>(
+      client,
+      `(() => ({
+        state: document.querySelector(".range-modal .dx-range-host")?.getAttribute("data-class-mix") ?? "",
+        cells: document.querySelectorAll(".range-modal .dx-matrix__cell").length,
+        mixed: document.querySelectorAll('.range-modal .dx-matrix__cell[data-mixed="true"]').length,
+        chunk: performance.getEntriesByType("resource").some((entry) => /-mix-solved-/.test(entry.name)),
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
+      }))()`,
+    );
+    states.push(view.state || "missing");
+    await client.send("Input.dispatchKeyEvent", { type: "keyDown", ...escape });
+    await client.send("Input.dispatchKeyEvent", { type: "keyUp", ...escape });
+    await waitForSelector(client, "body:not(:has(.range-modal))");
+    if (view.state === "ready") {
+      assert(view.chunk, `${label} turn range: per-hand mix ready, but no mix chunk was fetched`);
+      assert(view.cells === 169 && view.mixed > 0, `${label} turn range: ${view.mixed} of ${view.cells} cells with a mix`);
+      assert(view.overflow <= 1, `${label} turn range: page overflow ${view.overflow}px`);
+      return view.mixed;
+    }
+    await activate(client, `${scope} .dx-trainer__next`, input);
+    // Rozdání je asynchronní (načtení packů ulice), a do té doby zůstává starý
+    // spot i s vyhodnocením. Bez čekání se další kolo trefilo do starého spotu
+    // a „Další“ pak zmizelo pod rukama (pád 4. 11. 2026 na desktopu).
+    await waitForSelector(client, `${scope} .dx-trainer__feedback[hidden]`);
+  }
+  throw new Error(`${label} turn range: no spot with a per-hand mix in ${states.length} turn spots (${states.join(", ")})`);
 }
 
 async function runServiceWorkerUpgradeScenario(
@@ -1244,52 +2008,6 @@ async function runServiceWorkerUpgradeScenario(
     previousChunkRollback: "passed",
     stableAssetIsolation: "passed",
   };
-}
-
-async function waitForDevToolsPort(directory: string): Promise<number> {
-  const path = join(directory, "DevToolsActivePort");
-  const deadline = Date.now() + 15_000;
-  while (Date.now() < deadline) {
-    if (existsSync(path)) {
-      try {
-        const port = Number(readFileSync(path, "utf8").split(/\r?\n/)[0]);
-        if (Number.isInteger(port) && port > 0) return port;
-      } catch {
-        // Chrome can briefly lock DevToolsActivePort while finishing startup.
-      }
-    }
-    await sleep(100);
-  }
-  throw new Error("Chrome did not expose a DevTools port");
-}
-
-async function createTarget(
-  port: number,
-  url: string,
-): Promise<{ webSocketDebuggerUrl: string }> {
-  const response = await fetch(
-    `http://127.0.0.1:${port}/json/new?${encodeURIComponent(url)}`,
-    { method: "PUT" },
-  );
-  if (!response.ok) throw new Error(`Chrome target creation failed: HTTP ${response.status}`);
-  return response.json() as Promise<{ webSocketDebuggerUrl: string }>;
-}
-
-function findChromePath(): string {
-  const candidates = [
-    process.env.CHROME_PATH,
-    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-    "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
-    "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
-    "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
-    "/usr/bin/google-chrome",
-    "/usr/bin/chromium",
-    "/usr/bin/chromium-browser",
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  ].filter((value): value is string => Boolean(value));
-  const path = candidates.find(existsSync);
-  if (!path) throw new Error("Chrome/Edge executable was not found; set CHROME_PATH.");
-  return path;
 }
 
 function assertSourceFree(text: string, surface: string): void {

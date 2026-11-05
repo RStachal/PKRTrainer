@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
 const DEFAULT_FAMILY_ID = "MTT9_50BB_BTN_BB_SRP";
@@ -8,7 +8,9 @@ interface CliArgs {
   familyId: string;
   json: boolean;
   outputPath: string | null;
+  queueLogDir: string;
   rawDir: string;
+  reviewEvidencePath: string | null;
   reviewTemplate: boolean;
   solverOutputDir: string;
   summary: boolean;
@@ -53,11 +55,14 @@ function usage(): string {
     "  npm run mtt:stage-texas-solver -- --write --review-template",
     "  npm run mtt:stage-texas-solver -- --family=MTT9_40BB_UTG_BB_SRP --write",
     "  npm run mtt:stage-texas-solver -- --raw-dir=<path> --solver-output-dir=<path>",
+    "  npm run mtt:stage-texas-solver -- --review-evidence=<validated cumulative review.json> --write",
+    "  npm run mtt:stage-texas-solver -- --queue-log-dir=artifacts/texas-solver-autostart",
     "",
     "Notes:",
     "  This command stages raw TexasSolver JSON exports for review.",
     "  It never creates production normalized.json files.",
     "  By default it writes strategy-export.json and accuracy-report.json only.",
+    "  --review-evidence reuses a fresh validated MEMORY_SAFE_REVIEW_ONLY report instead of reparsing raw JSON.",
     "  review-notes.md is created only with --review-template and still requires human review.",
   ].join("\n");
 }
@@ -82,7 +87,9 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let familyId = DEFAULT_FAMILY_ID;
   let json = false;
   let outputPath: string | null = null;
+  let queueLogDir = resolve("artifacts/texas-solver-autostart");
   let rawDir: string | null = null;
+  let reviewEvidencePath: string | null = null;
   let reviewTemplate = false;
   let solverOutputDir: string | null = null;
   let summary = false;
@@ -124,6 +131,17 @@ function parseArgs(argv: readonly string[]): CliArgs {
       rawDir = resolve(value);
       continue;
     }
+    if (item.startsWith("--review-evidence=")) {
+      const value = item.slice("--review-evidence=".length).trim();
+      if (value.length === 0) throw new Error(`--review-evidence requires a path.\n\n${usage()}`);
+      reviewEvidencePath = resolve(value);
+      continue;
+    }
+    if (item === "--review-evidence") {
+      reviewEvidencePath = resolve(nextArgValue(argv, index, "--review-evidence"));
+      index += 1;
+      continue;
+    }
     if (item === "--raw-dir") {
       rawDir = resolve(nextArgValue(argv, index, "--raw-dir"));
       index += 1;
@@ -146,6 +164,17 @@ function parseArgs(argv: readonly string[]): CliArgs {
       outputPath = resolve(value);
       continue;
     }
+    if (item.startsWith("--queue-log-dir=")) {
+      const value = item.slice("--queue-log-dir=".length).trim();
+      if (value.length === 0) throw new Error(`--queue-log-dir requires a path.\n\n${usage()}`);
+      queueLogDir = resolve(value);
+      continue;
+    }
+    if (item === "--queue-log-dir") {
+      queueLogDir = resolve(nextArgValue(argv, index, "--queue-log-dir"));
+      index += 1;
+      continue;
+    }
     if (item === "--output") {
       outputPath = resolve(nextArgValue(argv, index, "--output"));
       index += 1;
@@ -161,7 +190,9 @@ function parseArgs(argv: readonly string[]): CliArgs {
     familyId,
     json,
     outputPath,
+    queueLogDir,
     rawDir: resolvedRawDir,
+    reviewEvidencePath,
     reviewTemplate,
     solverOutputDir: resolvedSolverOutputDir,
     summary,
@@ -180,7 +211,9 @@ function nextArgValue(argv: readonly string[], index: number, flag: string): str
 }
 
 function buildStageReport(args: CliArgs): StageReport {
-  const rawExports = readRawExports(args.rawDir);
+  const rawExports = args.reviewEvidencePath === null
+    ? readRawExports(args.rawDir)
+    : readRawExportsFromReviewEvidence(args.reviewEvidencePath, args.familyId, args.rawDir);
   const invalidJson = rawExports.filter((item) => !item.parseableJson);
   const plannedFiles = plannedStageFiles(args, rawExports.length > 0);
   const blockers = [
@@ -212,6 +245,57 @@ function buildStageReport(args: CliArgs): StageReport {
       "Run npm run mtt:solver-verification -- --solver=texas-solver to check readiness.",
     ],
   };
+}
+
+function readRawExportsFromReviewEvidence(
+  reviewPath: string,
+  familyId: string,
+  rawDir: string,
+): RawExportInfo[] {
+  if (!existsSync(reviewPath)) throw new Error(`Review evidence report is missing: ${reviewPath}`);
+  const parsed = JSON.parse(readFileSync(reviewPath, "utf8")) as Record<string, unknown>;
+  if (
+    parsed.valid !== true
+    || parsed.status !== "REVIEW_ONLY_EVIDENCE"
+    || parsed.productionReady !== false
+    || parsed.reviewOnlyTreeProfile !== "MEMORY_SAFE_REVIEW_ONLY"
+    || parsed.familyId !== familyId
+  ) {
+    throw new Error(`Review evidence is not a valid MEMORY_SAFE_REVIEW_ONLY report for ${familyId}: ${reviewPath}`);
+  }
+  const reportBlockers = Array.isArray(parsed.blockers) ? parsed.blockers : [];
+  if (reportBlockers.length > 0) throw new Error(`Review evidence contains blockers: ${reviewPath}`);
+  const requestedBoards = Array.isArray(parsed.requestedBoards) ? parsed.requestedBoards : [];
+  const files = Array.isArray(parsed.files) ? parsed.files : [];
+  if (files.length === 0 || requestedBoards.length !== files.length) {
+    throw new Error(`Review evidence board/file coverage is incomplete: ${reviewPath}`);
+  }
+
+  const resolvedRawDir = resolve(rawDir);
+  const reportWrite = statSync(reviewPath).mtimeMs;
+  const seen = new Set<string>();
+  return files.map((value) => {
+    if (typeof value !== "object" || value === null) throw new Error(`Review evidence contains an invalid file row: ${reviewPath}`);
+    const row = value as Record<string, unknown>;
+    const fileName = typeof row.fileName === "string" ? row.fileName : "";
+    const path = typeof row.path === "string" ? resolve(row.path) : "";
+    const blockers = Array.isArray(row.blockers) ? row.blockers : [];
+    const expectedPath = resolve(resolvedRawDir, fileName);
+    if (!/^pkrtrainer_[A-Za-z0-9_-]+\.json$/i.test(fileName) || path !== expectedPath || seen.has(fileName.toLowerCase())) {
+      throw new Error(`Review evidence contains an unsafe or duplicate raw path: ${fileName || "<missing>"}`);
+    }
+    if (blockers.length > 0 || !existsSync(path)) throw new Error(`Reviewed raw export is missing or blocked: ${path}`);
+    if (statSync(path).mtimeMs > reportWrite) throw new Error(`Review evidence is older than raw export: ${path}`);
+    seen.add(fileName.toLowerCase());
+    return {
+      fileName,
+      path,
+      bytes: statSync(path).size,
+      parseableJson: true,
+      topLevelKind: "object" as const,
+      topLevelKeys: [],
+    };
+  }).sort((a, b) => a.fileName.localeCompare(b.fileName, "en"));
 }
 
 function readRawExports(rawDir: string): RawExportInfo[] {
@@ -279,6 +363,7 @@ function plannedStageFiles(args: CliArgs, hasRawExports: boolean): StageReport["
 
 function writeStageFiles(args: CliArgs, report: StageReport): void {
   mkdirSync(args.solverOutputDir, { recursive: true });
+  const logSummary = summarizeSolverLogs(args, report.rawExports);
   writeFileSync(
     join(args.solverOutputDir, "strategy-export.json"),
     `${JSON.stringify({
@@ -287,6 +372,7 @@ function writeStageFiles(args: CliArgs, report: StageReport): void {
       status: "RAW_EXPORT_STAGED",
       rawExportCount: report.rawExports.length,
       rawExports: report.rawExports,
+      ...(args.reviewEvidencePath === null ? {} : { reviewEvidencePath: args.reviewEvidencePath }),
       warning: "Raw solver dumps are staged for review only; do not import directly as production normalized.json.",
     }, null, 2)}\n`,
     "utf8",
@@ -300,8 +386,16 @@ function writeStageFiles(args: CliArgs, report: StageReport): void {
       rawExportCount: report.rawExports.length,
       parseableJson: report.counts.parseableJson,
       invalidJson: report.counts.invalidJson,
-      accuracySource: "Not parsed from TexasSolver logs yet; reviewer must inspect raw run output.",
-      warning: "This file is a staging summary, not a production accuracy certificate.",
+      ...(args.reviewEvidencePath === null ? {} : {
+        reviewEvidencePath: args.reviewEvidencePath,
+        evidenceScope: "APPROVED_MEMORY_SAFE_REVIEW_ONLY_MANIFEST_UNION",
+      }),
+      solverLogCoverage: logSummary,
+      accuracySource: logSummary.parsedLogs > 0
+        ? "Parsed from local TexasSolver console evidence; human review still decides adequacy."
+        : "No per-board TexasSolver console evidence is available yet; reviewer must inspect raw run output.",
+      exploitability: report.rawExports.length === 1 ? logSummary.lastTotalExploitability : null,
+      warning: "This file is a staging summary, not a production accuracy certificate. Multi-board families retain exploitability only per raw export in solverLogCoverage.evidence.",
     }, null, 2)}\n`,
     "utf8",
   );
@@ -312,6 +406,139 @@ function writeStageFiles(args: CliArgs, report: StageReport): void {
       "utf8",
     );
   }
+}
+
+interface SolverLogEvidence {
+  rawFileName: string;
+  source: "PER_BOARD_LOG" | "QUEUE_LOG";
+  sourceName: string;
+  value: number;
+}
+
+function summarizeSolverLogs(args: CliArgs, rawExports: readonly RawExportInfo[]) {
+  const logRoot = join(args.solverOutputDir, "solver-logs");
+  const expectedLogs = rawExports.map((item) => item.fileName.replace(/\.json$/i, ".log"));
+  const perBoardEvidence = expectedLogs.flatMap((name) => {
+    const path = join(logRoot, name);
+    if (!existsSync(path)) return [];
+    const value = lastExploitability(readSolverText(path));
+    return value === null ? [] : [{
+      rawFileName: name.replace(/\.log$/i, ".json"),
+      source: "PER_BOARD_LOG" as const,
+      sourceName: name,
+      value,
+    }];
+  });
+  const perBoardByRaw = new Map(perBoardEvidence.map((item) => [item.rawFileName, item]));
+  const queueEvidence = queueLogEvidence(args.queueLogDir, rawExports)
+    .filter((item) => !perBoardByRaw.has(item.rawFileName));
+  const evidence = [...perBoardEvidence, ...queueEvidence];
+  return {
+    expectedLogs: expectedLogs.length,
+    parsedLogs: evidence.length,
+    perBoardLogs: perBoardEvidence.length,
+    queueLogEntries: queueEvidence.length,
+    missingLogs: expectedLogs.filter((name) => !evidence.some((item) => item.rawFileName === name.replace(/\.log$/i, ".json"))),
+    evidence,
+    lastTotalExploitability: evidence.at(-1)?.value ?? null,
+  };
+}
+
+function queueLogEvidence(
+  queueLogDir: string,
+  rawExports: readonly RawExportInfo[],
+): SolverLogEvidence[] {
+  if (!existsSync(queueLogDir)) return [];
+  const entries = readdirSync(queueLogDir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && /^queue-.*\.log$/i.test(entry.name))
+    .map((entry) => entry.name)
+    .sort((a, b) => a.localeCompare(b, "en"));
+  const attempts = new Map<string, Array<{
+    parameter: string;
+    rawFileName: string;
+    sourceName: string;
+    value: number;
+  }>>();
+
+  for (const name of entries) {
+    let active: {
+      parameter: string;
+      rawFileName: string;
+      exploitability: number | null;
+    } | null = null;
+    for (const line of readSolverText(join(queueLogDir, name)).split(/\r?\n/)) {
+      const begin = line.match(/\bPKRTRAINER_SOLVER_BEGIN\s+parameter=([^\s]+\.txt)\s+raw=([^\s]+\.json)\b/i);
+      if (begin !== null) {
+        active = {
+          parameter: markerFileName(begin[1]),
+          rawFileName: markerFileName(begin[2]),
+          exploitability: null,
+        };
+      }
+      const value = lastExploitability(line);
+      if (active !== null && value !== null) active.exploitability = value;
+      const end = line.match(/\bPKRTRAINER_SOLVER_END\s+parameter=([^\s]+\.txt)\s+raw=([^\s]+\.json)\s+exit=0\b/i);
+      if (end === null) continue;
+      const parameter = markerFileName(end[1]);
+      const rawFileName = markerFileName(end[2]);
+      if (
+        active !== null
+        && active.parameter === parameter
+        && active.rawFileName === rawFileName
+        && active.exploitability !== null
+      ) {
+        const key = rawFileName.toLowerCase();
+        const values = attempts.get(key) ?? [];
+        values.push({
+          parameter,
+          rawFileName,
+          sourceName: name,
+          value: active.exploitability,
+        });
+        attempts.set(key, values);
+      }
+      active = null;
+    }
+  }
+
+  return rawExports.flatMap((raw) => {
+    const expectedParameter = raw.fileName
+      .replace(/^pkrtrainer_/i, "")
+      .replace(/\.json$/i, ".txt");
+    const matches = (attempts.get(raw.fileName.toLowerCase()) ?? [])
+      .filter((evidence) => evidence.parameter.replace(/^\d+_/, "") === expectedParameter);
+    if (matches.length !== 1) return [];
+    return [{
+      rawFileName: raw.fileName,
+      source: "QUEUE_LOG" as const,
+      sourceName: matches[0].sourceName,
+      value: matches[0].value,
+    }];
+  });
+}
+
+function readSolverText(path: string): string {
+  const content = readFileSync(path);
+  if (content.length >= 2 && content[0] === 0xff && content[1] === 0xfe) {
+    return content.subarray(2).toString("utf16le");
+  }
+  if (content.length >= 2 && content[0] === 0xfe && content[1] === 0xff) {
+    const body = Buffer.from(content.subarray(2));
+    if (body.length % 2 !== 0) throw new Error(`Invalid UTF-16BE solver log: ${path}`);
+    body.swap16();
+    return body.toString("utf16le");
+  }
+  return content.toString("utf8").replace(/^\uFEFF/, "");
+}
+
+function markerFileName(value: string): string {
+  return value.trim().replace(/^.*[\\/]/, "");
+}
+
+function lastExploitability(text: string): number | null {
+  const matches = [...text.matchAll(/Total exploitability\s+(-?\d+(?:\.\d+)?)\s+(?:precent|percent)/gi)];
+  const value = matches.at(-1)?.[1];
+  return value === undefined ? null : Number(value);
 }
 
 function renderReviewTemplate(args: CliArgs, report: StageReport): string {

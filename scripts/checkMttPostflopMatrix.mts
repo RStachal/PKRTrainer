@@ -5,6 +5,7 @@ import {
   type MttCompletionImportSlotHint,
   type MttCompletionReadinessRow,
 } from "../src/data/ranges/mttProductionReadiness.ts";
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 import {
   MTT_INTAKE_PRIORITY_KEYS,
   mttIntakePriorityForProfile,
@@ -71,6 +72,7 @@ function usage(): string {
 
 try {
   const args = parseArgs(process.argv.slice(2));
+  await loadCompleteMttProductionRegistry();
   const report = buildPostflopMatrixReport();
   if (args.outputPath !== null) {
     mkdirSync(dirname(args.outputPath), { recursive: true });
@@ -229,5 +231,3 @@ function renderPostflopMatrixReport(report: PostflopMatrixReport): string {
 
   return lines.join("\n");
 }
-import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
-await loadCompleteMttProductionRegistry();

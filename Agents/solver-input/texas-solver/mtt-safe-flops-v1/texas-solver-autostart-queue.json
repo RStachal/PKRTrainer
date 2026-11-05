@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "queueId": "mtt-large-flop-review-autostart-v1",
+  "description": "Restartable review-only TexasSolver queue for the current high-value MTT flop evidence batch.",
+  "createdAt": "2026-07-13",
+  "items": [
+    {
+      "id": "large-flop-review-v1",
+      "enabled": true,
+      "priority": 1,
+      "parameterRoot": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1",
+      "manifest": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-large-flop-review-v1-manifest.json",
+      "expectedBoards": 72,
+      "limit": 999,
+      "ingestOnCompletion": true,
+      "completionAction": "STOP_FOR_REVIEW"
+    }
+  ],
+  "guardrails": [
+    "Existing raw outputs are checkpoints and must be skipped unless Force is explicitly requested outside autostart.",
+    "Only one queue worker or console_solver process may run at a time.",
+    "Solver output remains review-only until poker review, provenance and scoped validation pass.",
+    "Do not append another expansion batch before this queue is complete and its evidence yield is reviewed."
+  ]
+}

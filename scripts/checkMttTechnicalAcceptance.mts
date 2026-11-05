@@ -7,9 +7,10 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, join, resolve } from "node:path";
+
+import { findAvailablePort, stopProcessTree, waitForUrl } from "./lib/previewServer.mts";
 
 interface CliArgs {
   json: boolean;
@@ -49,7 +50,7 @@ interface TechnicalAcceptanceReport {
 
 const root = resolve(".");
 const nodeExecutable = process.execPath;
-const viteNodeCli = resolve("node_modules/vite-node/vite-node.mjs");
+const viteNodeCli = resolve("scripts/run-cli.mjs");
 const viteCli = resolve("node_modules/vite/bin/vite.js");
 const tscCli = resolve("node_modules/typescript/bin/tsc");
 const vitestCli = resolve("node_modules/vitest/vitest.mjs");
@@ -168,6 +169,9 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let json = false;
   let outputPath = resolve(artifactDirectory, "report.json");
   for (const item of argv) {
+    if (item === "--summary") {
+      continue;
+    }
     if (item === "--json") {
       json = true;
       continue;
@@ -187,6 +191,7 @@ function usage(): string {
   return [
     "Usage:",
     "  npm run mtt:technical-acceptance",
+    "  npm run mtt:technical-acceptance -- --summary",
     "  npm run mtt:technical-acceptance -- --json",
     "  npm run mtt:technical-acceptance -- --output=artifacts/mtt-technical-acceptance/report.json",
   ].join("\n");
@@ -353,53 +358,6 @@ function createNpmShim(): string {
     ].join("\n"), { encoding: "utf8", mode: 0o755 });
   }
   return directory;
-}
-
-async function findAvailablePort(): Promise<number> {
-  return await new Promise<number>((resolvePort, reject) => {
-    const server = createServer();
-    server.unref();
-    server.once("error", reject);
-    server.listen(0, "127.0.0.1", () => {
-      const address = server.address();
-      if (address === null || typeof address === "string") {
-        server.close();
-        reject(new Error("Could not allocate a preview port."));
-        return;
-      }
-      const port = address.port;
-      server.close((error) => {
-        if (error) reject(error);
-        else resolvePort(port);
-      });
-    });
-  });
-}
-
-async function waitForUrl(url: string): Promise<void> {
-  const deadline = Date.now() + 20_000;
-  while (Date.now() < deadline) {
-    try {
-      const response = await fetch(url);
-      if (response.ok) return;
-    } catch {
-      // Preview is still starting.
-    }
-    await new Promise((resolvePromise) => setTimeout(resolvePromise, 250));
-  }
-  throw new Error(`Preview did not start: ${url}`);
-}
-
-function stopProcessTree(processToStop: ChildProcess | null): void {
-  if (!processToStop?.pid) return;
-  if (process.platform === "win32") {
-    spawnSync("taskkill", ["/PID", String(processToStop.pid), "/T", "/F"], {
-      stdio: "ignore",
-      windowsHide: true,
-    });
-    return;
-  }
-  processToStop.kill("SIGTERM");
 }
 
 function relativePath(path: string): string {

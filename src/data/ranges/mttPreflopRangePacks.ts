@@ -1,5 +1,6 @@
 import type { AnteMode } from "../../core/types";
 import type { BlindSpeed, TrainingProfile } from "../../core/trainingProfile";
+import { sixMaxPositionMap, unmappedFullRingPositions } from "../../core/tableFormatConversion";
 import type { RangeFile } from "./schema";
 import type { RangePack, RangeSourceEvidence } from "./rangePack";
 import {
@@ -10,6 +11,9 @@ import { rangePackMatchesTrainingProfile } from "./rangePackProfileGuard";
 import { anteOffRanges } from "./ante-off";
 import { anteOnRanges } from "./ante-on";
 import { runtimeMttPreflopRangePacks } from "./mttProductionRuntimeRegistry";
+import { isPlayableMttPreflopPreview } from "./trainingCapability";
+import { buildMttIcmDerivedRangePacks } from "./mttIcmDerivedRangePacks";
+import { mttIcmPreviewRangePack } from "./mttIcmPreviewRangePack.generated";
 
 const VERIFIED_AT = "2026-06-01";
 
@@ -168,6 +172,10 @@ export function rangeFileToMttPreflopRangePack(file: RangeFile): RangePack {
           position: record.position,
           bucket: record.bucket,
           context: record.context,
+          // Zpřesnění musí projít i sem: bez něj by se obrana BB proti SB
+          // (`VS_OPEN|BB|vsSB`) slila s obecným záznamem téže buňky.
+          ...(record.vsSeat ? { vsSeat: record.vsSeat } : {}),
+          ...(record.stackSetupId ? { stackSetupId: record.stackSetupId } : {}),
           lenient: record.lenient,
           strict: record.strict,
         }));
@@ -213,12 +221,94 @@ function mttSixMaxCandidateRangePack(
   };
 }
 
+/**
+ * Six-max records carried across from the measured nine-handed pack.
+ *
+ * The six-max packs shipped with zero records - the format was supported and had
+ * nothing to teach - while nine-handed carries 507 measured records per ante mode.
+ * `tableFormatConversion` maps the seats by how many opponents are still to act,
+ * so a six-max under-the-gun inherits the nine-handed lojack: both have five
+ * behind them and face the same chance of running into a better hand.
+ *
+ * Marked derived, not measured. Confidence stays LOW, the assumption list says
+ * where every record came from, and the three nine-handed early seats that no
+ * six-max seat matches are named rather than quietly folded into the nearest one.
+ * Předpoklad, že poběží těsně, se nepotvrdil. Když se šířky poprvé porovnaly s
+ * veřejně uváděnými šestistolovými frekvencemi (`sixMaxOpenWidthAudit`), sedly
+ * do pásma na všech sedačkách bez ante a s ante přesáhly horní mez o desetiny
+ * až 1,4 bodu. Odvození tedy neběží těsně, ale při horní hraně - a to je jiná
+ * chyba než ta, kterou komentář předpovídal. Zůstává odvozené a LOW, dokud ho
+ * nenahradí měřená data; nově ale existuje kontrola, která to umí ukázat.
+ */
+/**
+ * Kontexty, ve kterých hrdina **čelí** dobrovolné akci před sebou.
+ *
+ * Pro první sedačku u stolu nemohou nastat: před ní nikdo nejednal. Devítistolová
+ * data tenhle problém nemají, protože se obrana měří až od lojacku - jenže
+ * mapování sedaček přenáší lojack na **šest-maxový UTG**, který je první.
+ *
+ * Změřeno 27. 8. 2026: takhle vzniklo **66 záznamů popisujících spot, který
+ * nemůže nastat** (33 na pack, `VS_OPEN|UTG`, `VS_4BET|UTG` a `VS_LIMP|UTG` po
+ * jedenácti hloubkách). Drill se na ně nikdy nezeptá, protože jeho vlastní
+ * pravidla první sedačku z těchhle kontextů vylučují, takže to zatím nikoho
+ * nezranilo - ale nafukovalo to počet záznamů v packu o 7,8 % a čekalo to na
+ * den, kdy six-max dostane vlastní množiny pozic.
+ */
+const FACING_CONTEXTS = new Set(["VS_OPEN", "VS_4BET", "VS_LIMP", "SQUEEZE"]);
+
+function deriveSixMaxRecords(source: RangePack): RangePack["records"] {
+  const pairs = sixMaxPositionMap();
+  const map = new Map(pairs.map((pair) => [pair.fullRing, pair.sixMax]));
+  // První sedačka se bere z mapování, ne natvrdo: kdyby se pořadí u stolu
+  // změnilo, tahle podmínka se změní s ním.
+  const firstSeat = pairs[0]?.sixMax;
+  const out: RangePack["records"] = [];
+  for (const record of source.records) {
+    const seat = map.get(record.position);
+    if (seat === undefined) continue;
+    if (seat === firstSeat && FACING_CONTEXTS.has(record.context)) continue;
+    out.push({ ...record, position: seat });
+  }
+  return out;
+}
+
+export function mttSixMaxDerivedRangePack(
+  blindSpeed: BlindSpeed,
+  ante: AnteMode,
+): RangePack {
+  const base = mttSixMaxCandidateRangePack(blindSpeed, ante);
+  const source = ante === "ON" ? mttPreflopAnteOnRangePack : mttPreflopAnteOffRangePack;
+  const records = deriveSixMaxRecords(source);
+  const dropped = unmappedFullRingPositions().join(", ");
+  return {
+    ...base,
+    id: base.id.replace("candidate-v0", "derived-v1"),
+    version: "derived-v1",
+    assumptions: [
+      ...base.assumptions.filter((line) => !line.startsWith("Records are intentionally empty")),
+      "DERIVED, not measured: every record is a nine-handed record re-labelled to the six-max seat with the same number of opponents left to act.",
+      `Seat mapping: ${sixMaxPositionMap().map((p) => `${p.sixMax}<-${p.fullRing}`).join(", ")}.`,
+      `Nine-handed seats with no six-max counterpart, and so not carried over: ${dropped}.`,
+      "Záznamy, kde by první sedačka čelila akci před sebou, se nepřenášejí: před ní nikdo nejedná, takže by popisovaly spot, který nemůže nastat.",
+      "Šířky otevírání byly porovnány s veřejně uváděnými šestistolovými frekvencemi: bez ante sedí do pásma na všech sedačkách, s ante leží při jeho horní hraně.",
+    ],
+    records,
+  };
+}
+
 export const mttPreflopAnteOnRangePack = rangeFileToMttPreflopRangePack(anteOnRanges);
 export const mttPreflopAnteOffRangePack = rangeFileToMttPreflopRangePack(anteOffRanges);
 
 export const mttPreflopRangePacks = [
   mttPreflopAnteOnRangePack,
   mttPreflopAnteOffRangePack,
+] as const;
+
+export const mttSixMaxDerivedRangePacks = [
+  mttSixMaxDerivedRangePack("REGULAR", "ON"),
+  mttSixMaxDerivedRangePack("REGULAR", "OFF"),
+  mttSixMaxDerivedRangePack("TURBO", "ON"),
+  mttSixMaxDerivedRangePack("TURBO", "OFF"),
 ] as const;
 
 export const mttSixMaxPreflopRangePackCandidates = [
@@ -228,14 +318,55 @@ export const mttSixMaxPreflopRangePackCandidates = [
   mttSixMaxCandidateRangePack("TURBO", "OFF"),
 ] as const;
 
+// Built from the packs the app exposes, so the note a player reads describes
+// what they will actually drill. Built from the empty candidates it reported
+// zero records for a profile that now has data.
+// Regular six-max derived; turbo left empty on purpose.
+//
+// The derivation re-labels nine-handed records, and there is one nine-handed
+// pack per ante mode - so a derived turbo pack would be the derived regular pack
+// with a different label and nothing else. That is exactly the silent
+// metadata-only reuse `mttPreflopRangeAudit` exists to catch, and it caught it.
+// Turbo differs by blind schedule and stack distribution; without turbo data
+// there is nothing honest to derive, so it keeps its empty candidate.
+const mttSixMaxExposedPacks = [
+  ...mttSixMaxDerivedRangePacks.filter((pack) => pack.dimensions.blindSpeed === "REGULAR"),
+  ...mttSixMaxPreflopRangePackCandidates.filter((pack) => pack.dimensions.blindSpeed === "TURBO"),
+];
+
 export const mttSixMaxCandidateImportReports: readonly RangePackImportReport[] =
-  mttSixMaxPreflopRangePackCandidates.map(buildRangePackImportReport);
+  mttSixMaxExposedPacks.map(buildRangePackImportReport);
 
 const mutableAllMttPreflopRangePacks =
   runtimeMttPreflopRangePacks as RangePack[];
+// The derived six-max packs, not the empty candidates.
+//
+// Both describe the same four slots and only one can be exposed. It was the pair
+// with no records, so six-max sat in the profile picker teaching nothing while
+// the derivation existed, tested, and unwired.
+//
+// Derived is not measured and the packs say so: LOW confidence, an assumption
+// naming the nine-handed seat each record came from, and the three early seats
+// with no six-max counterpart listed rather than folded into the nearest one.
+// They stay preview-grade for that reason - the production gate refuses inferred
+// chart values and should - but a tight floor a player can drill, and is told
+// the provenance of, beats an empty profile.
+// Odvozené ICM packy pro bublinový scénář jdou stejnou cestou jako šestistolové:
+// zablokovaný profil bez dat nahradí odvozený s poctivou nálepkou. Platí jen pro
+// scénář pojmenovaný v jejich `assumptions` a zůstávají preview.
+// Šestistolový $EV profil s ante: schválené ICM mřížky RYE, se scénářem v klíči.
+//
+// Rozhodnutí vlastníka 22. 9. 2026 (3a, 4a, 5b). Na rozdíl od odvozených packů
+// tohle nejsou přeznačené devítistolové záznamy - sedačky zdroje sedí na
+// šestistolovou sadu 1:1 a hodnoty jsou z koupených chartů vlastníka. Pack je
+// **neúplný schválně**: odpovídá jen na buňky, které zdroj tvrdí, a pod
+// scénářem nic neoceňuje. Produkční brána ho nepustí (LOW, chybí sedačky
+// i hloubky), a to je ta dohoda, ne nedodělek.
 mutableAllMttPreflopRangePacks.push(
   ...mttPreflopRangePacks,
-  ...mttSixMaxPreflopRangePackCandidates,
+  ...mttSixMaxExposedPacks,
+  ...buildMttIcmDerivedRangePacks(mttPreflopAnteOffRangePack, mttPreflopAnteOnRangePack),
+  mttIcmPreviewRangePack,
 );
 
 export const allMttPreflopRangePacks: readonly RangePack[] =
@@ -259,4 +390,41 @@ export function mttSixMaxCandidateImportReportForProfile(
   const pack = mttPreflopRangePackForProfile(profile);
   if (!pack || pack.dimensions.tableFormat !== "SIX_MAX") return undefined;
   return mttSixMaxCandidateImportReports.find((report) => report.packId === pack.id);
+}
+
+/**
+ * The preflop pack a profile may actually train against, or undefined.
+ *
+ * This is the only thing standing between a blocked profile and a drill. The
+ * postflop path refuses explicitly on `canStartTraining`; the preflop path does
+ * not, and instead depends on this returning nothing - so a six-max profile with
+ * no data was kept out of training by a helper's internal logic rather than by
+ * the capability contract, and nothing said so or tested it.
+ *
+ * Two ways a pack is startable and no others. Production requires the pack to be
+ * the exact one readiness declared, so a stale or renamed pack cannot stand in.
+ * Preview is limited to the 9-max chipEV shape that has playable historical data,
+ * and must have records.
+ */
+export function startableMttPreflopRangePack(
+  profile: TrainingProfile,
+  capability: {
+    status: string;
+    mttReadiness: { productionReady?: boolean; packId?: string | null } | null;
+  },
+): RangePack | undefined {
+  const pack = mttPreflopRangePackForProfile(profile);
+  const readiness = capability.mttReadiness;
+  if (capability.status === "PRODUCTION" && readiness?.productionReady === true) {
+    return pack?.id === readiness.packId ? pack : undefined;
+  }
+  if (
+    capability.status === "PREVIEW" &&
+    isPlayableMttPreflopPreview(profile) &&
+    pack &&
+    pack.records.length > 0
+  ) {
+    return pack;
+  }
+  return undefined;
 }

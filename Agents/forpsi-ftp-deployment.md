@@ -1,6 +1,6 @@
 # FORPSI FTP Deployment
 
-Updated: 2026-06-17
+Updated: 2026-07-22
 
 This guide is for a password-protected staging deployment of the static Vite build to FORPSI Linux webhosting.
 
@@ -15,6 +15,23 @@ Sources:
 
 ## Local Build
 
+Preferred release path:
+
+```powershell
+npm run mtt:playable-beta -- --summary
+npm run mtt:ftp-package -- --write --confirm=PACKAGE_MTT_PLAYABLE_BETA --summary
+```
+
+The confirmed package command requires a clean commit and reruns typecheck, the
+full test suite, registry/Core/beta/range gates, production build, precache,
+bundle budget and self-hosted Chrome preview E2E. It writes a ZIP plus JSON manifest under
+`deploy/`, then verifies every archived file by size and SHA-256. Local hidden
+source maps remain available for diagnostics but are excluded from FTP. Add
+`--require-target-complete` only for the final eight-profile playable-beta
+milestone; current incremental packages retain explicit known limitations.
+
+Manual troubleshooting path:
+
 Run the normal production checks first:
 
 ```powershell
@@ -24,7 +41,8 @@ npm run build
 npm run bundle:budget
 ```
 
-The upload source is `dist/`.
+The manual upload source is `dist/`. The automated ZIP contains the same files
+plus `.htaccess.example`; it never includes raw solver or range-intake files.
 
 Expected files:
 

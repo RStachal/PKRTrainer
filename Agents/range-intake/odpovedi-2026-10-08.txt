@@ -1,0 +1,80 @@
+# DrillEV — 8. 10. 2026, čtení 54 mřížek z ranze-nove 2026-10-08 08:05 (draft ze 7. 10.)
+# Vyplnil Claude v nejlepší víře z podkladů (PKR, RYE db, draft.json) - návrh, ne vlastníkův zápis.
+# Vlastník soubor předal 9. 10. 2026 slovy „zde mas vyplneno, pokracuj" - tedy přijal ho jako vstup.
+# Zpracuje (i se zápisem do historie, bez --out se čtení ztratí jako 29. 9. a 1. 10.):
+#   npm run mtt:rye-answers -- --answers-file=<tenhle soubor> --out=Agents/range-intake/answers-2026-10-08.json
+
+DRILLEV-REVIEW-V2 12o 18o 72o 75o 78o 95o 97o 100x3 121o 122o 123o 124o 125o 126o 127o 128o 129o 130o 131o 132o 133o 135o 136x23 138o 139o 140o 141o 142o 143o 144o 146o 147o 148o 149o 150o 151x23 152o 153o 154o 155o 156o 157o 158o 159o 160o 161o 162o 163o 164o 209o 211o 214o 216o 217o
+
+# ── Proč přišlo týchž 54 mřížek znovu ────────────────────────────────────────
+#
+# Stránka z 8. 10. je obsahem tatáž jako z 1. 10. (stejná id i zdrojové soubory) - jen deset
+# mřížek se překreslilo opravou „3bet/call" → SQUEEZE. Čtení z 29. 9. ani z 1. 10. se ale do
+# historie nikdy nezapsalo: loadAnswerHistory (scripts/lib/ryeAnswerHistory.mts) čte jen
+# Agents/range-intake/answers-RRRR-MM-DD.json, a ty vznikají jen s přepínačem --out.
+# Leží tam odpovedi-2026-09-29.txt a odpovedi-2026-10-01.txt, ale answers-2026-09-29.json
+# ani answers-2026-10-01.json ne. Proto stránka i deník 298 počítají „52 bez odpovědi".
+#
+#
+# ── Co jsem ověřil ───────────────────────────────────────────────────────────
+#
+# Vlastním parserem jsem znovu přečetl všech 54 zdrojových stránek z RYE db a porovnal je
+# buňku po buňce, včetně vah u mixů: sedí 54 z 54. Proti stránce z 1. 10. se změnilo jen
+# to, co mělo: u mřížek 136, 151, 154-161 se hodnotový squeeze („3bet/call to 9bb") kreslí
+# jako SQUEEZE, nic jiného se nepohnulo.
+#
+# 54 mřížek: 51x ✓, 3x ✗.
+#
+#
+# ── Tři ✗ ────────────────────────────────────────────────────────────────────
+#
+#  136 151   ✗23  BB 20 bb a BB 40 bb proti UTG (MUL-20BB-BB-vs-EP_MP, MUL-40BB-BB-vs-EP_MP)
+#       Mřížka i legenda jsou totožné s MUL-40BB-BTN-vs-EP_MP (id156), takže je to range pro
+#       BTN. BB tu dorovnává 190 kombinací, kdežto na ostatních pěti BB stránkách na 40 bb
+#       506-751, a squeezuje na 9 bb, ostatní BB stránky na 40 bb na 11 bb. Po opravě slovníku
+#       už nejde o sloučení akcí, takže příznaky jen „moc těsné" a „špatné ruce".
+#
+#  100   ✗3   SB 18 bb proti EP 30 bb (ICM3-sb18bb-ep30bb)
+#       Páry: QQ+ 3bet, JJ-99 jam, 88-66 fold, 55 jam, 44-22 fold. Legenda „Jam 5 % (64 combos)"
+#       pětky do jamu počítá, takže je to chyba zdroje, ne čtení. Jediná díra v řadě párů na
+#       celé stránce. Pozor: po rozhodnutí 1a z 1. 10. ji brána „jen jedna větev" už nedrží,
+#       takže bez tohohle ✗ by šla do packu.
+#
+#
+# ── Proti čtení z 1. 10. jinak ──────────────────────────────────────────────
+#
+#  154-161   ✓ místo ✗5 - oprava slovníku je v datech, sloučení zmizelo. Obsah jsem prošel
+#            znovu: BTN 40 bb proti UTG hraje 242-270 kombinací, z toho squeeze 62-74 a jam
+#            6-16 (TT, JJ nebo AQs); CO (220-228), HJ (127) a LJ (97) hrají celkově úžeji, jak
+#            mají. Blafy jsou hlavně suited broadway, suited esa a AQo/AJo - AQo se squeezuje
+#            a AQs dorovnává, což je u multiway správně (AQs hraje lépe ve víc lidech).
+#  209       ✓ místo ✗2 - brána ji po opravě pravopisu drží („jen jedna větev"), jako squeeze
+#            chart je věrná. Stejně jako 211, 214, 216 a 217.
+#
+#
+# ── Před doručením: dvanáct mřížek má jednoho dorovnávajícího, ne dva ────────
+#
+# Mřížky 121, 122, 132, 135, 143, 144, 146, 149, 150, 160, 161, 163 nesou v draftu
+# flatCallers [EP, MP] nebo [CO, BTN] a drill z nich rozdá dva cally. Zdroj tím myslí
+# jednoho dorovnávajícího ze skupiny: nabídka píše „EP/MP FLATCALL", „CO/BU FLATCALL"
+# v jednotném čísle a velikost squeeze se proti jednomu dorovnávajícímu nemění (důkaz
+# a tabulka v T1 a v souboru Agents/decisions/odpovedi-2026-10-08.txt). ✓ u nich říká
+# „mřížka sedí na zdroj"; doručit je ale jako pot ve čtyřech by učilo range pro jiný spot.
+#
+#
+# ── Drobnosti ───────────────────────────────────────────────────────────────
+#
+#  * Kolize 156 x 211 a 151 x 209 (MUL a SQU se stejným dorovnávajícím) stránka popisuje
+#    větou „která z nich přistane, neurčuje žádné napsané pravidlo". Pravidlo je napsané od
+#    b52ab96 (MUL před SQU), takže je ta věta zastaralá. Prakticky to nevadí: 209 drží brána
+#    a 151 je ✗, takže buňka BB 40 bb proti UTG s flatem z LJ zůstane bez RYE záznamu.
+#  * Kopie v korpusu mimo tuhle stránku, totožná mřížka pod jiným hrdinou:
+#    SQU-40BBMais-BU-vs-HJ-CO = SQU-40BBMais-HJ-vs-EP-MP (id214, kopie je ta BU),
+#    ICM-utg20bb = ICM-hj45bb-ep20bb (id75; UTG otevírá první, takže kopie je ta UTG),
+#    ICM2-sb18bb = ICM4-sb18bb, ICM4-utg30bb-bb22bb = ICM4-utg75bb-bb22bb,
+#    MUL-20BB-BB-vs-CO_BTN = MUL-20BB-SB-vs-CO_BTN. Mechanická kontrola kopii nepozná,
+#    protože se zkopírovala i legenda; stálo by za bránu „stejná mřížka pod jiným hrdinou
+#    nebo hloubkou → ke čtení".
+#  * V CSS pořád chybí .opts--flags[hidden]{display:none}, takže zaškrtávátka „Co je
+#    špatně" svítí u všech mřížek. Ve vyplněné kopii je doplněné; KEY úložiště je v kopii
+#    jiný, aby prohlížeč nepřepsal předvyplněné odpovědi.

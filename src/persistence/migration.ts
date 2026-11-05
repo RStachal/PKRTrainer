@@ -89,6 +89,13 @@ export interface MigrationResult {
   migratedEventCount?: number;
   /** Počet legacy event záznamů přeskočených jako strukturně nekompatibilní. */
   skippedEventCount?: number;
+  /**
+   * Legacy události existovaly, ale nešly přečíst (nevalidní JSON nebo jiný tvar
+   * než pole). Odlišeno od "žádné události", protože obojí dříve vypadalo
+   * stejně: migrace hlásila úspěch s nulou záznamů a hráč tiše začal od nuly,
+   * přestože jeho data v úložišti dál leží.
+   */
+  legacyEventsUnreadable?: boolean;
   /** Popis chyby, je-li `status === "failed"`. */
   error?: string;
 }
@@ -223,23 +230,25 @@ function normalizeRecord(r: ResultRecord): ResultRecord {
 function extractCompatibleEvents(raw: string | null): {
   records: ResultRecord[];
   skipped: number;
+  unreadable: boolean;
 } {
-  if (!raw) return { records: [], skipped: 0 };
+  if (!raw) return { records: [], skipped: 0, unreadable: false };
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
   } catch {
-    // Nečitelný JSON ⇒ nic kompatibilního.
-    return { records: [], skipped: 0 };
+    // Data tu byla, jen je nelze přečíst. To není totéž co prázdná historie a
+    // nesmí to tak vypadat, jinak hráč dostane čistý štít bez varování.
+    return { records: [], skipped: 0, unreadable: true };
   }
-  if (!Array.isArray(parsed)) return { records: [], skipped: 0 };
+  if (!Array.isArray(parsed)) return { records: [], skipped: 0, unreadable: true };
   const records: ResultRecord[] = [];
   let skipped = 0;
   for (const item of parsed) {
     if (isCompatibleRecord(item)) records.push(normalizeRecord(item));
     else skipped += 1;
   }
-  return { records, skipped };
+  return { records, skipped, unreadable: false };
 }
 
 /**
@@ -348,7 +357,7 @@ export function runMigration(storage: Storage = localStorage): MigrationResult {
     }
 
     // 3) Vytěžit strukturně kompatibilní data z legacy.
-    const { records, skipped } = extractCompatibleEvents(legacyEventsRaw);
+    const { records, skipped, unreadable } = extractCompatibleEvents(legacyEventsRaw);
     const hhText = extractCompatibleHh(legacyHhRaw);
 
     // Serializace mimo zápis: případná chyba serializace neovlivní úložiště.
@@ -390,6 +399,7 @@ export function runMigration(storage: Storage = localStorage): MigrationResult {
       migratedKeys,
       migratedEventCount: records.length,
       skippedEventCount: skipped,
+      ...(unreadable ? { legacyEventsUnreadable: true } : {}),
     };
   } catch (err) {
     // Pojistka: žádná cesta nesmí vyhodit výjimku ven.

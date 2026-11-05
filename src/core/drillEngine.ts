@@ -37,11 +37,16 @@
  *   1. pozice hrdiny,
  *   2. efektivní stack (hloubkový koš),
  *   3. (kontextově) počet limperů / callerů,
+ *   3b. (kontextově) protihráč - otvírač u `VS_OPEN` a `SQUEEZE`, tříbetující
+ *       u `VS_3BET`; losuje se jen mezi sedačkami, o kterých knihovna něco
+ *       tvrdí (`opponentSeatCandidates`), a bez kandidáta se `rng()` nevolá,
  *   4. třída ruky,
  *   5. barvy karet.
  *
- * Pro daný `context` je počet i pořadí volání `rng()` jednoznačné, takže stejná
- * sekvence `rng()` ⇒ bitově shodný Spot.
+ * Pro daný `context` a obsah knihovny je počet i pořadí volání `rng()`
+ * jednoznačné, takže stejná sekvence `rng()` ⇒ bitově shodný Spot. Krok 3b
+ * přibyl 15. 9. 2026 (osa otvírače, bod 234): sekvence pro daný seed se u
+ * `VS_OPEN` a `SQUEEZE` od té verze liší, obsah odpovědí ne.
  *
  * ## Konzistence kontextu a stavu stolu
  *
@@ -84,11 +89,19 @@ import {
   type TableState,
 } from "./types";
 import { ALL_HAND_CLASSES, SUITS, isPair, isSuited } from "./poker";
-import { offeredActions } from "./actionTree";
+import { offeredActions, rangeTeachesJam } from "./actionTree";
+import { preflopActionKindToKey } from "./preflopActionOptions";
 import { questionId } from "./questionId";
 import { mulberry32, hashStr } from "./rng";
 import { buildPreflopExplanation } from "./preflopExplanation";
+import { bestActionsForActionEv, cloneActionEvSet, isActionEvSetComplete } from "./actionEv";
+import { ACTION_KEY_LABEL } from "./actionKeyLabels";
+import { nashActionEvs } from "./preflop/nashTable";
+import { REJAM_EV_OPENER_BY_HERO, agreesWithChart, computeActionEvs, openSizeAtDepth } from "./preflop/preflopEv";
+import { preflopFocusSeat } from "./villain/tableCast";
 import { rangeStore, type RangeKey, type RangeStore } from "../data/rangeStore";
+
+export { REJAM_EV_OPENER_BY_HERO, openSizeAtDepth };
 
 // ---------------------------------------------------------------------------
 // Rozdělení hloubkových košů (Req 2.3)
@@ -113,15 +126,30 @@ const POS_DEFEND: Position[] = ["LJ", "HJ", "CO", "BTN", "SB", "BB"];
 /** Pozice, kde se může nabídnout squeeze (open + 1–7 callerů před hrdinou). */
 const POS_SQUEEZE: Position[] = ["HJ", "CO", "BTN", "SB", "BB"];
 
-/** Blind-vs-blind: hrdina je výhradně SB nebo BB (Req 3.11, Property 7). */
-const POS_BVB: Position[] = ["SB", "BB"];
+/**
+ * Blind-vs-blind: hrdina je SB, který jde první do potu (Req 3.11, Property 7).
+ *
+ * Do 17. 9. 2026 sem patřil i BB, který brání proti otevření SB. Tatáž
+ * situace ale od 16. 9. existuje jako `VS_OPEN` z SB se zpřesněným záznamem
+ * (osa otvírače, RYE ji čte tak, parser historie taky), takže jedna otázka
+ * měla dvě ID a dvě odpovědi. Vlastník rozhodl držet RYE: obrana BB proti SB
+ * je `VS_OPEN|BB|vsSB`, `BVB` zůstává jen pro SB. Uložené výsledky BB v BvB
+ * tím dostaly jiné ID (bod 254).
+ */
+const POS_BVB: Position[] = ["SB"];
 
 /**
  * Vrátí přípustné pozice hrdiny pro daný kontext. Množiny odpovídají
  * sémantice akčního stromu (Req 3) i pokrytí referenčních dat, takže lookup
  * Range_Store pro vybranou kombinaci uspěje.
+ *
+ * Exportované schválně: tohle je **jediná autorita** na to, na kterou dvojici
+ * (kontext, pozice) se trenažér umí zeptat, a testy se jí musí ptát, ne si ta
+ * pravidla opisovat. Opsaná kopie by znamenala dvě místa, kde se opravuje jedna
+ * změna - a přesně tenhle rozpor 27. 8. 2026 propustil 66 záznamů o spotu,
+ * který nemůže nastat.
  */
-function positionsForContext(context: ActionContext): Position[] {
+export function positionsForContext(context: ActionContext): Position[] {
   switch (context) {
     case "RFI":
     case "VS_3BET":
@@ -142,8 +170,50 @@ function positionsForContext(context: ActionContext): Position[] {
   }
 }
 
-/** Vrátí přípustné hloubkové koše pro daný kontext (push/fold vs hluboké). */
-function bucketsForContext(context: ActionContext): StackBucket[] {
+/**
+ * Hloubky, pro které daný výběr kontextů **doopravdy něco má**.
+ *
+ * Knihovna je na to, **na co se drill ptá, úplná**: změřeno 27. 8. 2026, že ze
+ * 487 dvojic (kontext, hloubka × sedačka), na které se podle vlastních pravidel
+ * ptá, chybí **nula**. Prázdné relace tedy nevznikají chybějícím obsahem.
+ *
+ * Vznikají tím, že **filtry jsou tři nezávislé dimenze**. Hráč si může vybrat
+ * push/fold a k tomu 20 BB, jenže push/fold se hraje do 12 BB, takže se ta
+ * dvojice nikdy nesejde a relace rozdá nula spotů. Hláška přitom zněla „vybrané
+ * filtry neodpovídají žádnému spotu", což zní jako chyba jeho výběru - a je to
+ * chyba nabídky, která tu kombinaci vůbec dovolila.
+ *
+ * Tahle funkce dovolí říct, co funguje. Počítá se z obsahu, takže když obsah
+ * přibude, hláška se opraví sama.
+ */
+export function bucketsWithSpots(
+  contexts: readonly ActionContext[],
+  ante: AnteMode,
+  store: RangeStore = rangeStore,
+): StackBucket[] {
+  const wanted = contexts.length > 0 ? contexts : ALL_CONTEXTS;
+  const found = new Set<StackBucket>();
+  for (const context of wanted) {
+    for (const bucket of bucketsForContext(context)) {
+      const hit = positionsForContext(context).some((position) => (
+        store.lookup({ ante, position, bucket, context }) !== undefined
+      ));
+      if (hit) found.add(bucket);
+    }
+  }
+  return [...found].sort((left, right) => left - right);
+}
+
+/**
+ * Vrátí přípustné hloubkové koše pro daný kontext (push/fold vs hluboké).
+ *
+ * Exportované ze stejného důvodu jako `positionsForContext`: je to jediná
+ * autorita na to, na kterou hloubku se trenažér u daného kontextu ptá. Rozdíl
+ * mezi „hloubka se nabízí, ale nemáme obsah" a „hloubka se u tohohle kontextu
+ * vůbec nerozdává" je jinak nepoznatelný - a plete se: obojí vypadá jako nula
+ * spotů, přitom první se dá spravit obsahem a druhé ne.
+ */
+export function bucketsForContext(context: ActionContext): StackBucket[] {
   return context === "PUSH_FOLD" || context === "VS_ALLIN"
     ? PUSH_FOLD_BUCKETS
     : DEEP_BUCKETS;
@@ -227,23 +297,6 @@ function facingFor(context: ActionContext, heroPos: Position): TableState["facin
 // ---------------------------------------------------------------------------
 
 /** Český popisek pro každý Akční_klíč (label v `Answer`). */
-const ACTION_KEY_LABEL: Record<ActionKey, string> = {
-  FOLD: "Fold",
-  CALL: "Call",
-  LIMP: "Limp / Check",
-  OVERLIMP: "Over-limp",
-  OPEN_2X: "Raise 2x",
-  OPEN_25X: "Raise 2.5x",
-  OPEN_3X: "Raise 3x",
-  ISO_2X: "Iso-raise 2x",
-  ISO_25X: "Iso-raise 2.5x",
-  ISO_3X: "Iso-raise 3x",
-  "3BET": "3-bet",
-  "4BET": "4-bet",
-  SQUEEZE: "Squeeze",
-  JAM: "All-in",
-  CALL_JAM: "Call all-in",
-};
 
 /** Český popisek akčního kontextu (pro zdůvodnění). */
 // ---------------------------------------------------------------------------
@@ -343,65 +396,129 @@ function pickCallsBefore(rng: () => number, heroPos: Position): number {
   return 1 + randIndex(rng, maxCalls);
 }
 
-// ---------------------------------------------------------------------------
-// Mapování ActionKind → ActionKey (Req 3.12, Property 8)
-// ---------------------------------------------------------------------------
-
-/** Výchozí open sizing dle hloubky (mimo range hrdinovy ruky). */
-function defaultOpenKey(bucket: StackBucket): ActionKey {
-  return bucket <= 25 ? "OPEN_2X" : "OPEN_25X";
-}
-
 /**
- * Reprezentativní raise-sizing klíč pro daný prefix (OPEN/ISO):
- * přednostně sizing doporučený pro konkrétní ruku hrdiny ve STRICT sadě,
- * jinak výchozí sizing dle hloubky.
+ * Sedačky, které mohly jednat proti hrdinovi a mezi kterými se losuje.
+ *
+ * Losuje se jen mezi sedačkami, **o kterých knihovna něco tvrdí**: buď má
+ * proti nim zpřesněný záznam (`RangeEntry.vsSeat`), nebo je to otvírač, proti
+ * kterému je obecný záznam kalibrovaný (`REJAM_EV_OPENER_BY_HERO`). Losovat
+ * libovolnou sedačku před hrdinou by otázka říkala „UTG otevírá“ a odpověď
+ * brala z range proti HJ - hráč by odpovídal na jinou otázku než range
+ * (bod 234). Takhle obrázek, text otázky i EV jmenují téhož otvírače a z
+ * předpokladu produktu se stává pravda na stole (rozhodnutí majitele
+ * 4. 9. 2026).
+ *
+ * `VS_3BET` kalibrovaného protihráče nemá (EV se tam nepočítá), takže se losuje
+ * jen mezi zpřesněnými záznamy; bez nich zůstává spot bez sedačky jako dřív.
+ *
+ * SB jako otvírač u BB se losuje jen se zpřesněným záznamem: kalibrovaný
+ * otvírač BB je HJ a obecný záznam o SB nic netvrdí. Vlastník 16. 9. 2026
+ * rozhodl, že se tu drží RYE: otevření SB proti BB je `VS_OPEN` z SB, ne
+ * zvláštní kontext. `BVB` v drillu zůstává vedle toho; sjednocení je
+ * samostatný krok (bod 254).
  */
-function pickSizingKey(
-  prefix: "OPEN" | "ISO",
-  handStrict: ActionKey[] | undefined,
+export function opponentSeatCandidates(
+  context: ActionContext,
+  heroPos: Position,
   bucket: StackBucket,
-): ActionKey {
-  const found = handStrict?.find((k) => k.startsWith(`${prefix}_`));
-  if (found) return found;
-  return prefix === "OPEN" ? defaultOpenKey(bucket) : "ISO_25X";
-}
-
-/**
- * Přeloží druh akce (`ActionKind`) na konkrétní Akční_klíč. Raise akce s
- * variantním sizingem (OPEN/ISO) získají reprezentativní sizing dle ruky.
- */
-function actionKindToKey(
-  kind: ActionKind,
-  handStrict: ActionKey[] | undefined,
-  bucket: StackBucket,
-): ActionKey {
-  switch (kind) {
-    case "FOLD":
-      return "FOLD";
-    case "CALL":
-      return "CALL";
-    case "LIMP":
-      return "LIMP";
-    case "OVERLIMP":
-      return "OVERLIMP";
-    case "3BET":
-      return "3BET";
-    case "4BET":
-      return "4BET";
+  ante: AnteMode,
+  store: RangeStore,
+): Position[] {
+  const heroIdx = POSITION_ORDER.indexOf(heroPos);
+  let seats: Position[];
+  switch (context) {
+    case "VS_OPEN":
     case "SQUEEZE":
-      return "SQUEEZE";
-    case "JAM":
-      return "JAM";
-    case "CALL_JAM":
-      return "CALL_JAM";
-    case "OPEN":
-      return pickSizingKey("OPEN", handStrict, bucket);
-    case "ISO":
-      return pickSizingKey("ISO", handStrict, bucket);
+      seats = POSITION_ORDER.slice(0, heroIdx);
+      break;
+    case "VS_3BET":
+      seats = POSITION_ORDER.slice(heroIdx + 1);
+      break;
     default:
-      return assertNeverKind(kind);
+      return [];
   }
+  // Sedačka je kandidát, když o ní knihovna něco tvrdí - ať bez scénáře, nebo
+  // pod některým scénářem. Pack se scénáři (ICM) obecné záznamy nemá, takže
+  // hledat jen bez scénáře by o jeho sedačkách nenašlo nic a profil by
+  // nerozdal ani jeden spot. Prázdný katalog scénářů se chová jako dřív.
+  const setups = Object.keys(store.stackSetups ?? {});
+  const candidates = new Set<Position>(seats.filter((seat) => (
+    store.lookup({ ante, position: heroPos, bucket, context, vsSeat: seat })?.vsSeat === seat
+    || setups.some((stackSetupId) => (
+      store.lookup({ ante, position: heroPos, bucket, context, vsSeat: seat, stackSetupId })?.vsSeat === seat
+    ))
+  )));
+  if (context !== "VS_3BET") {
+    const calibrated = REJAM_EV_OPENER_BY_HERO[heroPos];
+    const general = store.lookup({ ante, position: heroPos, bucket, context });
+    if (calibrated !== undefined && seats.includes(calibrated)
+      && general !== undefined && general.vsSeat === undefined) {
+      candidates.add(calibrated);
+    }
+  }
+  return POSITION_ORDER.filter((seat) => candidates.has(seat));
+}
+
+/**
+ * Scénáře (rozložení stacků), pro které knihovna v téhle buňce něco tvrdí.
+ *
+ * Táž konstrukce jako `opponentSeatCandidates`: losuje se jen mezi scénáři se
+ * záznamem pro tu sedačku, hloubku, kontext a otvírače - vylosovat scénář bez
+ * záznamu by stůl kreslil rozložení, na které odpověď neplatí. Pack bez
+ * katalogu scénářů (všechny chipEV packy) vrací prázdno a `rng()` se nevolá,
+ * takže seedované sekvence zůstávají bajt po bajtu jako dřív.
+ */
+export function scenarioCandidates(
+  context: ActionContext,
+  heroPos: Position,
+  bucket: StackBucket,
+  ante: AnteMode,
+  store: RangeStore,
+  vsSeat?: Position,
+): string[] {
+  const catalog = store.stackSetups ?? {};
+  return Object.keys(catalog).sort().filter((stackSetupId) => (
+    store.lookup({
+      ante, position: heroPos, bucket, context, stackSetupId, ...(vsSeat === undefined ? {} : { vsSeat }),
+    })?.stackSetupId === stackSetupId
+  ));
+}
+
+/**
+ * Kombinace dorovnávajících, které spot v téhle buňce smí rozdat.
+ *
+ * Táž zásada jako u otvírače a scénáře: **losuje se jen mezi tím, o čem
+ * knihovna něco tvrdí.** Losovat libovolnou sedačku před hrdinou by znamenalo,
+ * že otázka řekne „CO dorovnal" a odpověď se vezme z range proti MP - hráč by
+ * odpovídal na jinou otázku než range (tatáž vada jako bod 234, jen o osu dál).
+ *
+ * Kontroluje se to dotazem, ne jen katalogem: záznam musí po `lookup` doopravdy
+ * vyjít s tou osou. Katalog říká, co v packu leží; dotaz říká, co se vrátí -
+ * a mezi tím je řetěz pádu, který může vrátit něco obecnějšího.
+ *
+ * Pack, který tu osu neumí (`flatCallerSets` chybí), nedá kandidáta a `rng()`
+ * se nevolá, takže seedované sekvence zůstávají bajt po bajtu jako dřív.
+ */
+export function flatCallerCandidates(
+  context: ActionContext,
+  heroPos: Position,
+  bucket: StackBucket,
+  ante: AnteMode,
+  store: RangeStore,
+  vsSeat?: Position,
+): readonly string[][] {
+  const sets = store.flatCallerSets?.({
+    ante, position: heroPos, bucket, context, ...(vsSeat === undefined ? {} : { vsSeat }),
+  }) ?? [];
+  return sets
+    .filter((flatCallers) => {
+      const entry = store.lookup({
+        ante, position: heroPos, bucket, context, flatCallers,
+        ...(vsSeat === undefined ? {} : { vsSeat }),
+      });
+      return entry?.flatCallers?.join("+") === flatCallers.join("+");
+    })
+    .map((flatCallers) => [...flatCallers]);
 }
 
 // ---------------------------------------------------------------------------
@@ -412,6 +529,9 @@ function actionKindToKey(
  * Startovní velikost potu v BB před akcí hrdiny.
  *   - ante = ON  ⇒ 2,5 BB (SB 0,5 + BB 1 + ante 1),
  *   - ante = OFF ⇒ 1,5 BB (SB 0,5 + BB 1).
+ */
+/**
+ * Hands a range entry actually plays, as a list of classes.
  */
 function startingPotFor(ante: AnteMode): number {
   return ante === "ON" ? 2.5 : 1.5;
@@ -490,23 +610,65 @@ export function generateSpot(
     callsBefore = pickCallsBefore(rng, heroPos);
   }
 
-  const tableState: TableState = {
-    heroPos,
-    pushFold,
-    limpsBefore,
-    callsBefore,
-    facing: facingFor(context, heroPos),
-    isBvB: context === "BVB",
-  };
+  // (3b) protihráč, jen mezi sedačkami, o kterých knihovna něco tvrdí.
+  const opponents = opponentSeatCandidates(context, heroPos, effStack, ante, store);
+  const vsSeat = opponents.length === 0 ? undefined : pickFrom(rng, opponents);
+  // (3c) scénář (rozložení stacků), jen mezi těmi, pro které je záznam.
+  const scenarios = scenarioCandidates(context, heroPos, effStack, ante, store, vsSeat);
+  const stackSetupId = scenarios.length === 0 ? undefined : pickFrom(rng, scenarios);
+  /*
+   * (3d) kdo otevření dorovnal, jen mezi kombinacemi, pro které je záznam
+   * (rozhodnutí vlastníka 4a, 1. 10. 2026).
+   *
+   * Pořadí je podstatné: losuje se **po** scénáři, takže pack bez téhle osy
+   * `rng()` nezavolá a seedované sekvence zůstanou jako dřív - tatáž vlastnost,
+   * jakou má osa scénáře od 22. 9. 2026.
+   */
+  const flatSets = flatCallerCandidates(context, heroPos, effStack, ante, store, vsSeat);
+  const flatCallers = flatSets.length === 0 ? undefined : pickFrom(rng, flatSets);
 
   // (4) ruka + (5) karty.
   const hand = pickFrom(rng, ALL_HAND_CLASSES);
   const heroCards = dealCards(rng, hand);
 
-  // Lookup Range_Store; chybějící kombinace ⇒ null (Req 4.8).
-  const key: RangeKey = { position: heroPos, bucket: effStack, context, ante };
+  // Lookup Range_Store; chybějící kombinace ⇒ null (Req 4.8). Se sedačkou se
+  // zkusí zpřesněný záznam a bez něj se vrátí obecný (`RangeKey.vsSeat`).
+  const key: RangeKey = {
+    position: heroPos, bucket: effStack, context, ante,
+    ...(vsSeat === undefined ? {} : { vsSeat }),
+    ...(stackSetupId === undefined ? {} : { stackSetupId }),
+    ...(flatCallers === undefined ? {} : { flatCallers }),
+  };
   const entry = store.lookup(key);
   if (entry === undefined) return null;
+
+  // Stav stolu až po záznamu: nabídka shove nad listy vlastníka závisí na tom,
+  // jestli ho tahle range učí (`jamTaught`, rozhodnutí 8a).
+  const tableState: TableState = {
+    heroPos,
+    pushFold,
+    effectiveStackBB: effStack,
+    limpsBefore,
+    /*
+     * Počet dorovnávajících musí sedět na **jmenované** dorovnávající.
+     *
+     * `pickCallsBefore` losuje 1 az 7 callerů a o jejich jménech neví nic. Když
+     * spot dostane záznam s osou (`@BU+SB`), stůl by jinak nakreslil tři callery
+     * k range, která platí pro dva - a hráč by odpovídal na jinou situaci, než
+     * jakou vidí. Bere se `entry`, ne `flatCallers`: po pádu v `lookup` může
+     * přijít obecnější záznam a stav stolu má přiznat, co se doopravdy vrátilo.
+     */
+    callsBefore: entry.flatCallers?.length ?? callsBefore,
+    facing: facingFor(context, heroPos),
+    isBvB: context === "BVB",
+    ...(vsSeat === undefined ? {} : { vsSeat }),
+    ...(entry.stackSetupId === undefined ? {} : { stackSetupId: entry.stackSetupId }),
+    ...(entry.flatCallers === undefined ? {} : { flatCallers: entry.flatCallers }),
+    jamTaught: rangeTeachesJam(entry),
+  };
+  const seatStacks = entry.stackSetupId === undefined
+    ? undefined
+    : store.stackSetups?.[entry.stackSetupId]?.stacksBB;
 
   const handStrict = entry.strict[hand] as ActionKey[] | undefined;
   const handLenient = entry.actions[hand] as ActionKey[] | undefined;
@@ -522,7 +684,7 @@ export function generateSpot(
     : offeredKinds.includes("LIMP")
       ? "LIMP"
       : offeredKinds[0];
-  const defaultKey = actionKindToKey(defaultKind, handStrict, effStack);
+  const defaultKey = preflopActionKindToKey(defaultKind, handStrict, effStack, handLenient);
 
   const strictCorrect: ActionKey[] =
     handStrict && handStrict.length > 0 ? [...handStrict] : [defaultKey];
@@ -531,19 +693,66 @@ export function generateSpot(
 
   // answers: bijekce nabízená akce → právě jeden Akční_klíč (Property 8).
   const answers: Answer[] = offeredKinds.map((kind) => {
-    const akey = actionKindToKey(kind, handStrict, effStack);
+    const akey = preflopActionKindToKey(kind, handStrict, effStack, handLenient);
     return { key: akey, label: ACTION_KEY_LABEL[akey] };
   });
-
-  const id = questionId({ context, heroPos, effStack, hand, ante });
+  const candidateActionEvs = entry.actionEvs?.[hand];
+  const offeredActionKeys = answers.map((answer) => answer.key);
+  // Zpřesněná odpověď je jiná otázka a dostane jiné ID; obecná odpověď pod
+  // vylosovanou sedačkou má ID bajt po bajtu jako dřív (viz `questionId`).
+  const id = questionId({
+    context, heroPos, effStack, hand, ante,
+    ...(entry.vsSeat === undefined ? {} : { vsSeat: entry.vsSeat }),
+    ...(entry.stackSetupId === undefined ? {} : { stackSetupId: entry.stackSetupId }),
+    ...(entry.flatCallers === undefined ? {} : { flatCallers: entry.flatCallers }),
+  });
   const startingPot = startingPotFor(ante);
+
+  // A reviewed export wins where one exists; otherwise the two contexts whose
+  // price the spot fixes are computed. Nothing is invented for the rest.
+  // Under an ICM scenario nothing is priced at all: the chip-EV equity model
+  // would put a chip price on a $EV question (owner's decision 5b, 2026-09-22:
+  // ranges only, no price, until payouts are known).
+  const nashEvs = isActionEvSetComplete(candidateActionEvs, offeredActionKeys) || entry.stackSetupId !== undefined
+    ? undefined
+    : nashActionEvs({
+      context,
+      heroPos,
+      hand,
+      effStack,
+      ante,
+      offered: offeredActionKeys,
+      ...(context === "VS_ALLIN" ? { shover: preflopFocusSeat({ heroPos, tableState }) } : {}),
+    });
+  const computedActionEvs = isActionEvSetComplete(candidateActionEvs, offeredActionKeys) ||
+    entry.stackSetupId !== undefined || nashEvs !== undefined
+    ? undefined
+    : computeActionEvs(
+      context,
+      heroPos,
+      hand,
+      effStack,
+      ante,
+      startingPot,
+      offeredActionKeys,
+      store,
+      tableState.callsBefore,
+      vsSeat,
+    );
+  const actionEvs = isActionEvSetComplete(candidateActionEvs, offeredActionKeys)
+    ? cloneActionEvSet(candidateActionEvs)
+    : nashEvs ?? (computedActionEvs !== undefined && agreesWithChart(computedActionEvs, strictCorrect)
+      ? computedActionEvs
+      : undefined);
   const explanation = buildPreflopExplanation({
     context,
     heroPos,
     effStack,
     hand,
-    recommended: strictCorrect,
+    // Kde rozhoduje rovnováha, musí text říkat totéž co známka.
+    recommended: nashEvs === undefined ? strictCorrect : bestActionsForActionEv(nashEvs),
     tableState,
+    ...(seatStacks === undefined ? {} : { seatStacks }),
   });
 
   return {
@@ -556,9 +765,11 @@ export function generateSpot(
     hand,
     heroCards,
     tableState,
+    ...(seatStacks === undefined ? {} : { seatStacks }),
     answers,
     correctKeys,
     strictCorrect,
+    ...(actionEvs ? { actionEvs } : {}),
     explanation,
     startingPot,
   };
@@ -911,8 +1122,4 @@ export function spotSequence(
 
 function assertNever(x: never): never {
   throw new Error(`Unexpected action context: ${String(x)}`);
-}
-
-function assertNeverKind(x: never): never {
-  throw new Error(`Unexpected action kind: ${String(x)}`);
 }

@@ -1,0 +1,5 @@
+#F0F0F0  x87   K8o, Q8o, J8o, T8o, 98o, K7o, Q7o, J7o, T7o, 97o, 87o, K6o, Q6o, J6o, T6o, 96o, 86o, 76o, K5o, Q5o, J5o, T5o, 95o, 85o, 75o, 65o, K4o, Q4o, J4o, T4o, 94o, 84o, 74o, 64o, 54o, K3o, Q3o, J3o, T3o, 93o, 83o, 73o, 63o, 53o, 43o, K2o, Q2o, J2o, T2o, 92o, 82o, 72o, 62o, 52o, 42o, 32o, Q4s, Q3s, Q2s, J6s, J5s, J4s, J3s, J2s, T6s, T5s, T4s, T3s, T2s, 95s, 94s, 93s, 92s, 85s, 84s, 83s, 82s, 74s, 73s, 72s, 63s, 62s, 53s, 52s, 43s, 42s, 32s
+#90A890  x46   Q9s, KJo, QJo, JTs, J8s, KTo, QTo, JTo, T9s, T8s, A9o, 98s, 97s, A8o, 87s, 86s, A7o, 77, 76s, 75s, A6o, 66, 65s, 64s, A5o, 54s, A4o, A3o, A2o, A7s, A6s, A5s, A4s, A3s, A2s, KTs, K9s, K8s, K7s, K6s, K5s, QJs, QTs, Q8s, J9s, T7s
+#304830  x26   AQs, AJs, ATs, A9s, A8s, AKo, KQs, KJs, K4s, K3s, K2s, AQo, KQo, Q7s, Q6s, Q5s, AJo, J7s, ATo, K9o, Q9o, J9o, T9o, 99, 96s, 88
+#D87878  x6    AA, AKs, KK, QQ, JJ, TT
+#483000  x4    55, 44, 33, 22

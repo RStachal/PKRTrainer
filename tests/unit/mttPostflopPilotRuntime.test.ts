@@ -16,8 +16,9 @@ describe("MTT postflop pilot runtime", () => {
   it("exposes all generated scoped pilot packs without registering them as production", () => {
     const entries = mttPostflopPilotRuntimeEntries();
 
-    expect(entries).toHaveLength(6);
+    expect(entries).toHaveLength(7);
     expect(entries.map((entry) => entry.catalog.fullProductionReady)).toEqual([
+      false,
       false,
       false,
       false,
@@ -27,6 +28,50 @@ describe("MTT postflop pilot runtime", () => {
     ]);
     expect(findMttPostflopPilotRuntimeEntry("BTN_vs_BB_SRP_FLOP_FACING_BET")?.catalog.rangeBuckets)
       .toBe(174);
+    expect(findMttPostflopPilotRuntimeEntry("CO_vs_BB_SRP_FLOP_CBET")?.catalog.rangeBuckets)
+      .toBe(162);
+  });
+
+  // Od rozhodnutí vlastníka 9a (22. 9. 2026) nese šest pilotů `LOW`, protože je
+  // čtenář 14. 9. odmítl, a resolver na `LOW` pack neodpovídá. Testy níž proto
+  // rozlišují dva stavy: pilot, který odpovídá, odpovídá **strategií**, a pilot,
+  // který mlčí, mlčí **úplně** - heuristika se pod hlavičku pilota nedostane.
+  it("starts every scoped pilot through an entitled resolver: strategy from an accepted pilot, silence from a rejected one", () => {
+    const grants = grantsForTier("PRO_PLUS", { startsAt: "2026-07-01T00:00:00.000Z" });
+    const entries = mttPostflopPilotRuntimeEntries();
+
+    expect(entries).toHaveLength(7);
+    let answering = 0;
+    let silent = 0;
+    for (const entry of entries) {
+      const report = createMttPostflopPilotResolver(entry.catalog.scope, grants, {
+        now: "2026-07-10T00:00:00.000Z",
+      });
+      const rule = entry.packEntry.pack.rules[0];
+      expect(rule, entry.catalog.scope).toBeDefined();
+      expect(report.allowed, entry.catalog.scope).toBe(true);
+      expect(report.resolver, entry.catalog.scope).not.toBeNull();
+
+      const recommendation = report.resolver?.({
+        street: "FLOP",
+        textures: rule.boardTextures,
+        potType: rule.potType,
+        potBB: 10,
+        effectiveStackBB: ((rule.sprMin + rule.sprMax) / 2) * 10,
+        positionPattern: rule.positionPattern,
+        actionNode: rule.actionNode,
+      });
+      if (entry.packEntry.pack.confidence === "LOW") {
+        expect(recommendation ?? null, `${entry.catalog.scope} (LOW)`).toBeNull();
+        silent += 1;
+        continue;
+      }
+      expect(recommendation?.source?.kind, entry.catalog.scope).toBe("STRATEGY_PACK");
+      answering += 1;
+    }
+    // Stráž na stráži: kdyby přestaly odpovídat všechny, test by prošel prázdný.
+    expect(answering).toBeGreaterThan(0);
+    expect(answering + silent).toBe(entries.length);
   });
 
   it("requires paid pilot entitlement before creating a resolver", () => {
@@ -42,8 +87,9 @@ describe("MTT postflop pilot runtime", () => {
   });
 
   it("creates a scoped resolver for entitled PRO_PLUS users", () => {
+    // Přijatý pilot (UTG vs BB): jediný, který po rozhodnutí 9a odpovídá.
     const report = createMttPostflopPilotResolver(
-      "BTN_vs_BB_SRP_FLOP_FACING_BET",
+      "UTG_vs_BB_SRP_FLOP_CBET",
       grantsForTier("PRO_PLUS", { startsAt: "2026-07-01T00:00:00.000Z" }),
       { now: "2026-07-07T00:00:00.000Z" },
     );
@@ -141,6 +187,27 @@ describe("MTT postflop pilot runtime", () => {
     expect(inputReport.entry?.catalog.id).toBe("sb-bb-srp-oop-flop-cbet-low-mid-high");
   });
 
+  it("maps CO vs BB SRP c-bet to explicit paid scoped pilot runtime", () => {
+    const input = {
+      street: "FLOP",
+      textures: ["ace-high", "dry", "rainbow", "disconnected"],
+      potType: "SINGLE_RAISED",
+      potBB: 50,
+      effectiveStackBB: 125,
+      positionPattern: "SRP_CO_VS_BB",
+      actionNode: "SINGLE_RAISED_POT_CBET",
+    } as const;
+    const report = createMttPostflopPilotResolverForInput(
+      input,
+      grantsForTier("PRO_PLUS", { startsAt: "2026-07-01T00:00:00.000Z" }),
+      { now: "2026-07-08T00:00:00.000Z" },
+    );
+
+    expect(mttPostflopPilotScopeForInput(input)).toBe("CO_vs_BB_SRP_FLOP_CBET");
+    expect(report.allowed).toBe(true);
+    expect(report.entry?.catalog.id).toBe("co-bb-srp-flop-cbet-low-mid-high");
+  });
+
   it("normalizuje legacy UI position patterny pro BTN/SB SRP scoped piloty", () => {
     const legacySbInput = {
       street: "FLOP",
@@ -180,7 +247,9 @@ describe("MTT postflop pilot runtime", () => {
   });
 
   it("pilot-aware resolver uses entitled pilot before heuristic fallback", () => {
-    const input = supportedFacingBetInput();
+    // Přijatý pilot: ten odmítnutý (LOW) mlčí a fallback by vyhrál právem, takže
+    // by se tu netestovalo pořadí, ale ticho.
+    const input = acceptedPilotInput();
     const resolver = createMttPostflopPilotAwareResolver({
       grants: grantsForTier("PRO_PLUS", { startsAt: "2026-07-01T00:00:00.000Z" }),
       now: "2026-07-07T00:00:00.000Z",
@@ -212,6 +281,26 @@ describe("MTT postflop pilot runtime", () => {
     });
   });
 });
+
+/**
+ * Vstup, který trefí jediný pilot, co po rozhodnutí 9a odpovídá (UTG vs BB).
+ *
+ * Bere se z prvního pravidla jeho packu, aby test nezkameněl na hodnotách
+ * opsaných do testu - přesolvení pilota tím projde, změna rozsahu ne.
+ */
+function acceptedPilotInput() {
+  const rule = findMttPostflopPilotRuntimeEntry("UTG_vs_BB_SRP_FLOP_CBET")?.packEntry.pack.rules[0];
+  if (rule === undefined) throw new Error("UTG vs BB pilot pack has no rules.");
+  return {
+    street: "FLOP",
+    textures: rule.boardTextures,
+    potType: rule.potType,
+    potBB: 50,
+    effectiveStackBB: ((rule.sprMin + rule.sprMax) / 2) * 50,
+    positionPattern: rule.positionPattern,
+    actionNode: rule.actionNode,
+  } as const;
+}
 
 function supportedFacingBetInput() {
   return {

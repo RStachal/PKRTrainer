@@ -6,11 +6,13 @@ const DEFAULT_TEXAS_SOLVER_OUTPUT_ROOT = "Agents/solver-input/gto-plus/sample-po
 const RANK_ORDER = "AKQJT98765432";
 
 interface CliArgs {
+  boards: string[] | null;
   familyId: string;
   json: boolean;
   nodeHistory: string[];
   outputPath: string | null;
   rawDir: string;
+  reviewOnlyTreeProfile: "MEMORY_SAFE_REVIEW_ONLY" | null;
   solverOutputDir: string;
   summary: boolean;
   write: boolean;
@@ -62,13 +64,17 @@ interface ReviewFile {
 
 interface ReviewReport {
   valid: boolean;
-  status: "NEEDS_REVIEW";
+  status: "NEEDS_REVIEW" | "REVIEW_ONLY_EVIDENCE";
   productionReady: false;
   familyId: string;
   nodeHistory: string[];
+  requestedBoards: string[];
   rawDir: string;
+  reviewOnlyTreeProfile: "MEMORY_SAFE_REVIEW_ONLY" | null;
   solverOutputDir: string;
   counts: {
+    requestedBoards: number;
+    missingBoards: number;
     rawFiles: number;
     parsedFiles: number;
     blockedFiles: number;
@@ -105,9 +111,11 @@ function usage(): string {
     "  npm run mtt:texas-solver-review -- --family=MTT9_50BB_BTN_BB_SRP --write",
     "  npm run mtt:texas-solver-review -- --family=MTT9_50BB_BTN_BB_SRP --node-history=CHECK",
     "  npm run mtt:texas-solver-review -- --raw-dir=<path> --solver-output-dir=<path>",
+    "  npm run mtt:texas-solver-review -- --family=<id> --boards=AKQtt,K72r --review-only-tree-profile=MEMORY_SAFE_REVIEW_ONLY --output=<report.json>",
     "",
     "Extracts source-safe review summaries from raw TexasSolver JSON exports.",
     "It never creates production normalized.json files.",
+    "Review-only tree mode requires an exact board allowlist and forbids --write.",
   ].join("\n");
 }
 
@@ -128,11 +136,13 @@ try {
 }
 
 function parseArgs(argv: readonly string[]): CliArgs {
+  let boards: string[] | null = null;
   let familyId = DEFAULT_FAMILY_ID;
   let json = false;
   let nodeHistory: string[] = [];
   let outputPath: string | null = null;
   let rawDir: string | null = null;
+  let reviewOnlyTreeProfile: "MEMORY_SAFE_REVIEW_ONLY" | null = null;
   let solverOutputDir: string | null = null;
   let summary = false;
   let write = false;
@@ -150,6 +160,24 @@ function parseArgs(argv: readonly string[]): CliArgs {
     }
     if (item === "--write") {
       write = true;
+      continue;
+    }
+    if (item.startsWith("--boards=")) {
+      boards = parseBoards(requiredInlineValue(item, "--boards"));
+      continue;
+    }
+    if (item === "--boards") {
+      boards = parseBoards(nextArgValue(argv, index, "--boards"));
+      index += 1;
+      continue;
+    }
+    if (item.startsWith("--review-only-tree-profile=")) {
+      reviewOnlyTreeProfile = parseReviewOnlyTreeProfile(requiredInlineValue(item, "--review-only-tree-profile"));
+      continue;
+    }
+    if (item === "--review-only-tree-profile") {
+      reviewOnlyTreeProfile = parseReviewOnlyTreeProfile(nextArgValue(argv, index, "--review-only-tree-profile"));
+      index += 1;
       continue;
     }
     if (item.startsWith("--node-history=")) {
@@ -200,17 +228,43 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
+  if (reviewOnlyTreeProfile !== null && boards === null) {
+    throw new Error("--review-only-tree-profile requires an exact --boards allowlist.");
+  }
+  if (reviewOnlyTreeProfile !== null && write) {
+    throw new Error("--write is forbidden for review-only tree evidence.");
+  }
+
   const resolvedSolverOutputDir = solverOutputDir ?? resolve(DEFAULT_TEXAS_SOLVER_OUTPUT_ROOT, familyId);
   return {
+    boards,
     familyId,
     json,
     nodeHistory,
     outputPath,
     rawDir: rawDir ?? join(resolvedSolverOutputDir, "raw"),
+    reviewOnlyTreeProfile,
     solverOutputDir: resolvedSolverOutputDir,
     summary,
     write,
   };
+}
+
+function parseBoards(value: string): string[] {
+  const boards = value.split(",").map((item) => item.trim()).filter(Boolean);
+  if (boards.length === 0) throw new Error("--boards requires at least one board ID.");
+  if (boards.some((board) => !/^[A-Za-z0-9_-]+$/.test(board))) {
+    throw new Error("--boards contains an unsupported board ID.");
+  }
+  if (new Set(boards).size !== boards.length) throw new Error("--boards must not contain duplicates.");
+  return boards;
+}
+
+function parseReviewOnlyTreeProfile(value: string): "MEMORY_SAFE_REVIEW_ONLY" {
+  if (value !== "MEMORY_SAFE_REVIEW_ONLY") {
+    throw new Error("--review-only-tree-profile must be MEMORY_SAFE_REVIEW_ONLY.");
+  }
+  return value;
 }
 
 function parseNodeHistory(value: string): string[] {
@@ -236,24 +290,38 @@ function nextArgValue(argv: readonly string[], index: number, flag: string): str
 
 function buildReviewReport(args: CliArgs): ReviewReport {
   const files = readReviewFiles(args);
-  const plannedFiles = plannedReviewFiles(args);
+  const plannedFiles = args.reviewOnlyTreeProfile === null ? plannedReviewFiles(args) : [];
+  const requestedBoards = args.boards ?? [];
+  const boardCounts = new Map<string, number>();
+  for (const file of files) boardCounts.set(file.boardId, (boardCounts.get(file.boardId) ?? 0) + 1);
+  const missingBoards = requestedBoards.filter((board) => !boardCounts.has(board));
+  const duplicateBoards = requestedBoards.filter((board) => (boardCounts.get(board) ?? 0) > 1);
   const blockers = [
     ...(existsSync(args.rawDir) ? [] : [`Raw TexasSolver export directory is missing: ${args.rawDir}`]),
     ...(files.length === 0 ? [`No raw TexasSolver JSON exports found in: ${args.rawDir}`] : []),
+    ...missingBoards.map((board) => `Requested board ${board} is missing from the raw export directory.`),
+    ...duplicateBoards.map((board) => `Requested board ${board} resolves to more than one raw export.`),
     ...files.flatMap((file) => file.blockers.map((blocker) => `${file.fileName}: ${blocker}`)),
   ];
   const uniqueHandClasses = new Set(files.flatMap((file) => Object.keys(file.handClasses)));
   const anomalies = buildReviewAnomalies(files);
-  const reviewNotes = readReviewNotesStatus(args);
+  const reviewNotes = args.reviewOnlyTreeProfile === null
+    ? readReviewNotesStatus(args)
+    : reviewOnlyNotesStatus(args, args.reviewOnlyTreeProfile);
+  const reviewOnly = args.reviewOnlyTreeProfile !== null;
   return {
     valid: blockers.length === 0,
-    status: "NEEDS_REVIEW",
+    status: reviewOnly ? "REVIEW_ONLY_EVIDENCE" : "NEEDS_REVIEW",
     productionReady: false,
     familyId: args.familyId,
     nodeHistory: args.nodeHistory,
+    requestedBoards,
     rawDir: args.rawDir,
+    reviewOnlyTreeProfile: args.reviewOnlyTreeProfile,
     solverOutputDir: args.solverOutputDir,
     counts: {
+      requestedBoards: requestedBoards.length,
+      missingBoards: missingBoards.length,
       rawFiles: files.length,
       parsedFiles: files.filter((file) => file.blockers.length === 0).length,
       blockedFiles: files.filter((file) => file.blockers.length > 0).length,
@@ -267,15 +335,22 @@ function buildReviewReport(args: CliArgs): ReviewReport {
     reviewNotes,
     anomalies,
     blockers,
-    nextSteps: [
-      "Human-review the extracted root strategies and solver assumptions.",
-      "Use --node-history=<ACTION>[>ACTION...] when reviewing a non-root decision node.",
-      "Inspect anomalies before promoting any solver output into canonical range imports.",
-      "Complete review-notes.md with Status: REVIEWED and an explicit Usable for production decision.",
-      "Confirm tree sizing, player mapping, board coverage and exploitability evidence.",
-      "Only after review, map approved strategy data into canonical normalized.json + permission.json.",
-      "Run validate:range-import and build:range-module --dry-run before any production promotion.",
-    ],
+    nextSteps: reviewOnly
+      ? [
+          "Inspect strategy frequencies and texture differences as review evidence only.",
+          "Do not write review-notes.md or use the owner production-decision workflow for this reduced tree.",
+          "Use the evidence to decide whether a separate full-tree solve is warranted.",
+          "Never map this report directly into normalized.json or production runtime strategy.",
+        ]
+      : [
+          "Human-review the extracted root strategies and solver assumptions.",
+          "Use --node-history=<ACTION>[>ACTION...] when reviewing a non-root decision node.",
+          "Inspect anomalies before promoting any solver output into canonical range imports.",
+          "Complete review-notes.md with Status: REVIEWED and an explicit Usable for production decision.",
+          "Confirm tree sizing, player mapping, board coverage and exploitability evidence.",
+          "Only after review, map approved strategy data into canonical normalized.json + permission.json.",
+          "Run validate:range-import and build:range-module --dry-run before any production promotion.",
+        ],
   };
 }
 
@@ -363,6 +438,23 @@ function readReviewNotesStatus(args: CliArgs): ReviewNotesStatus {
   };
 }
 
+function reviewOnlyNotesStatus(
+  args: CliArgs,
+  treeProfile: "MEMORY_SAFE_REVIEW_ONLY",
+): ReviewNotesStatus {
+  return {
+    path: join(args.solverOutputDir, "review-notes.md"),
+    present: false,
+    status: "NOT_APPLICABLE",
+    reviewed: false,
+    usableForProduction: "NO",
+    usableScope: "",
+    reviewer: "",
+    reviewedAt: "",
+    blockers: [`${treeProfile} evidence cannot receive a production sign-off.`],
+  };
+}
+
 function fieldValue(text: string, label: string): string {
   const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const match = text.match(new RegExp(`^\\s*${escaped}\\s*:\\s*(.+?)\\s*$`, "im"));
@@ -384,8 +476,10 @@ function actionSignature(file: ReviewFile): string {
 
 function readReviewFiles(args: CliArgs): ReviewFile[] {
   if (!existsSync(args.rawDir)) return [];
+  const allowedBoards = args.boards === null ? null : new Set(args.boards);
   return readdirSync(args.rawDir, { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.toLowerCase().endsWith(".json"))
+    .filter((entry) => allowedBoards === null || allowedBoards.has(boardIdFromFileName(entry.name, args.familyId)))
     .sort((a, b) => a.name.localeCompare(b.name, "en"))
     .map((entry) => reviewFile(join(args.rawDir, entry.name), entry.name, args));
 }
@@ -679,6 +773,9 @@ function renderReport(report: ReviewReport, summaryOnly: boolean): string {
     `status: ${report.status}`,
     `productionReady: ${report.productionReady}`,
     `family: ${report.familyId}`,
+    `review-only tree profile: ${report.reviewOnlyTreeProfile ?? "none"}`,
+    `requested boards: ${report.counts.requestedBoards || "all"}`,
+    `missing requested boards: ${report.counts.missingBoards}`,
     `node history: ${report.nodeHistory.length > 0 ? report.nodeHistory.join(" > ") : "ROOT"}`,
     `raw files: ${report.counts.rawFiles}`,
     `parsed files: ${report.counts.parsedFiles}`,

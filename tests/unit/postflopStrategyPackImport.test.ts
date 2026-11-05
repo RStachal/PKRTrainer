@@ -20,7 +20,10 @@ describe("postflopStrategyPackImport", () => {
       packId: "mtt-full-ring-9-flop-single-raised-chip-ev-public-heuristic-v1",
       valid: true,
       sourceCount: 4,
-      ruleCount: 7,
+      // Seven rules for the raiser's flop, plus two for the defender's - the
+      // player who called and has to act first, who had no rules at all until
+      // the same decision was named on every street.
+      ruleCount: 9,
       unsupportedActionCount: 0,
     });
     expect(report.warnings).toEqual(expect.arrayContaining([
@@ -82,7 +85,7 @@ describe("postflopStrategyPackImport", () => {
     expect(text).toContain(
       "PostflopStrategyPack: mtt-full-ring-9-flop-single-raised-chip-ev-public-heuristic-v1",
     );
-    expect(text).toContain("rules: 7");
+    expect(text).toContain("rules: 9");
     expect(text).toContain("overlap details:");
   });
 });

@@ -1,11 +1,12 @@
 # MTT P1 preflop CHIP_EV intake checklist
 
-Updated: 2026-07-07  
-Status: source-safe operator guide
+Updated: 2026-07-22
+Status: full-ring wave promoted; six-max wave pending
 
-This guide covers the first production data wave for the full MTT trainer:
-8 preflop CHIP_EV slots across table format, speed and ante. It intentionally
-does not contain hand recommendations or range values.
+This guide covers the original first production data wave of 8 preflop CHIP_EV
+slots across table format, speed and ante. Four full-ring slots are now
+production; four six-max slots remain pending. It intentionally does not contain
+hand recommendations or range values.
 
 ## Current gate state
 
@@ -16,28 +17,43 @@ npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all --summary
 Current expected result:
 
 ```text
-queue rows: 8
+queue rows: 4
 ready for validation: 0
-missing normalized.json: 8
-missing permission.json: 8
+missing normalized.json: 4
+missing permission.json: 0
 ```
+
+Generate the source-safe packet for all four pending slots with:
+
+```powershell
+npm run mtt:p1-intake-packets
+```
+
+It writes only ignored checklists and a machine-readable report below
+`artifacts/mtt-next-action/p1-preflop-chip-ev/`; it never creates range data or
+changes a slot status. Treat that folder's `summary.json` as the authoritative
+current packet list; older ignored packet folders may remain from prior runs.
 
 ## Required P1 slots
 
 | Slot | Pack id | Current state | Main blocker |
 |---|---|---:|---|
-| FULL_RING_9 REGULAR CHIP_EV ante ON | `mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1` | candidate | canonical production provenance missing |
-| FULL_RING_9 REGULAR CHIP_EV ante OFF | `mtt-full-ring-9-regular-preflop-chip-ev-ante-off-production-v1` | candidate | canonical production provenance missing |
-| FULL_RING_9 TURBO CHIP_EV ante ON | `mtt-full-ring-9-turbo-preflop-chip-ev-ante-on-production-v1` | missing | dedicated turbo hand recommendations or reviewed reuse policy required |
-| FULL_RING_9 TURBO CHIP_EV ante OFF | `mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1` | missing | dedicated turbo hand recommendations or reviewed reuse policy required |
+| FULL_RING_9 REGULAR CHIP_EV ante ON | `mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1` | production | none |
+| FULL_RING_9 REGULAR CHIP_EV ante OFF | `mtt-full-ring-9-regular-preflop-chip-ev-ante-off-production-v1` | production | none |
+| FULL_RING_9 TURBO CHIP_EV ante ON | `mtt-full-ring-9-turbo-preflop-chip-ev-ante-on-production-v1` | production | reviewed `BLIND_SPEED` reuse recorded |
+| FULL_RING_9 TURBO CHIP_EV ante OFF | `mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1` | production | reviewed `BLIND_SPEED` reuse recorded |
 | SIX_MAX REGULAR CHIP_EV ante ON | `mtt-six-max-regular-preflop-chip-ev-ante-on-production-v1` | candidate | no normalized production records |
 | SIX_MAX REGULAR CHIP_EV ante OFF | `mtt-six-max-regular-preflop-chip-ev-ante-off-production-v1` | candidate | no normalized production records |
 | SIX_MAX TURBO CHIP_EV ante ON | `mtt-six-max-turbo-preflop-chip-ev-ante-on-production-v1` | candidate | no normalized production records; turbo cannot be metadata-only |
 | SIX_MAX TURBO CHIP_EV ante OFF | `mtt-six-max-turbo-preflop-chip-ev-ante-off-production-v1` | candidate | no normalized production records; turbo cannot be metadata-only |
 
+The owner-confirmed `permission.json` manifests for all four slots were staged
+on 2026-07-13. Each slot still requires its own exact reviewed
+`normalized.json`; full-ring or regular-speed reuse is not an approved shortcut.
+
 ## Files to provide per slot
 
-For each pack id:
+For each pending pack id:
 
 ```text
 Agents/range-intake/raw/<packId>/normalized.json
@@ -60,6 +76,127 @@ The CSV template is only an operator preparation format. It must not be treated
 as a production `normalized.json` until converted, reviewed and validated by the
 canonical import pipeline.
 
+## Owned solver CSV conversion
+
+When an exact six-max solver export has been transcribed or exported into the
+provided CSV schema, create a source-safe draft for that one pack only. This
+command does not create any missing hand decisions; it rejects incomplete CSV
+coverage.
+
+```powershell
+npm run mtt:preflop-csv-draft -- --csv <six-max-export.csv> --pack-id <packId> --out artifacts/mtt-preflop-csv-draft/<packId>/normalized.candidate.json --license-kind OWNED_SOLVER_EXPORT --license-note "Owner-confirmed canonical permission manifest is staged separately." --confidence HIGH --summary
+```
+
+The owner-confirmed redistribution and review facts already live in the
+canonical `Agents/range-intake/raw/<packId>/permission.json`; do not create a
+second candidate permission manifest. For a valid reviewed draft, use the
+existing explicit staging command to validate that canonical manifest and write
+the normalized raw intake file. Do not copy the candidate manually:
+
+```powershell
+npm run mtt:p1-stage-reviewed-preflop -- --pack-id <packId> --draft-dir artifacts/mtt-preflop-csv-draft --permission Agents/range-intake/raw/<packId>/permission.json --write --confirm=STAGE_REVIEWED_MTT_P1_PREFLOP
+```
+
+## Four-pack batch preflight
+
+The four prepared six-max workbench files can be checked together. The command
+does not write anything by default. Atomic mode refuses the whole write if even
+one CSV is incomplete or mapped to the wrong slot. Incremental mode treats
+absent CSV files as waiting and advances every currently complete export; a
+present but invalid CSV still blocks the write.
+
+```powershell
+npm run mtt:sixmax-preflop-intake-batch -- --json
+npm run mtt:sixmax-preflop-intake-batch -- --write --confidence=HIGH --confirm=BUILD_MTT_SIXMAX_P1_CANDIDATES
+```
+
+For progressive intake as each export arrives:
+
+```powershell
+npm run mtt:sixmax-preflop-intake-progress
+npm run mtt:sixmax-preflop-intake-batch -- --incremental --write --confidence=HIGH --confirm=BUILD_MTT_SIXMAX_P1_CANDIDATES
+```
+
+Keep the four ignored workbench CSVs aligned with the current action-EV schema:
+
+```powershell
+npm run mtt:sixmax-preflop-workbench-refresh
+```
+
+The refresh command recognizes the exact generated 118,638-row structure for
+each slot. It may upgrade only a complete legacy scaffold whose strategy,
+action-EV, reviewer, source and notes cells are still untouched. Any human edit,
+truncated file or unknown header is reported and protected from overwrite. The
+ten-minute MTT task runs the same guard and exposes current/blank/nonblank/stale
+counts in `mtt:autonomous-cycle-status`. The command creates no strategy or EV.
+
+The same report measures progressive owner work without interpreting it. It
+publishes exact parsed/expected, content-touched, complete/partial strategy,
+complete/partial action-EV and reviewer-metadata row counts per pack and across
+all four workbenches. These are cell-presence counters, not poker validation.
+A structurally exact workbench with whole strategy pairs in only some rows stays
+`WAITING`, and full candidate validation is deferred until all 118,638 strategy
+rows are populated. This prevents a first completed chunk from generating
+hundreds of thousands of expected blank-row errors. A changed immutable cell,
+truncated structure, one-sided strategy pair or partial three-cell EV set is
+still `INVALID` and never advances to a candidate.
+
+The current live baseline is 4/4 measurable and structurally safe workbenches,
+474,552/474,552 parsed rows, zero touched rows, zero strategy or EV rows and
+0/4/0 exports ready/waiting/invalid. No values were generated and no workbench
+CSV was rewritten by the measurement pass.
+
+## Progressive reviewed-chunk merge
+
+A reviewed export does not have to arrive as one 118,638-row file. Prepare a
+smaller CSV containing the exact current 20-column header and only the completed
+decision rows, then preflight it against its canonical workbench:
+
+```powershell
+npm run mtt:sixmax-preflop-merge-chunk -- --pack-id=<packId> --chunk=<reviewed-chunk.csv> --summary
+```
+
+Dry-run is the default and never changes the workbench. After checking the
+matched, changed, unchanged, conflict and progress counts, apply that exact
+chunk explicitly:
+
+```powershell
+npm run mtt:sixmax-preflop-merge-chunk -- --pack-id=<packId> --chunk=<reviewed-chunk.csv> --write --confirm=MERGE_REVIEWED_MTT_SIXMAX_PREFLOP_CHUNK
+```
+
+The first 11 identity cells must match an existing canonical row exactly.
+`strictActions` and `lenientActions` are an atomic pair; `actionEvsBb` and both
+thresholds are an independent atomic triple; reviewer and date are an atomic
+pair. Blank incoming editable cells never delete existing work. An identical
+chunk is an idempotent no-op, while any differing populated value, duplicate
+decision, malformed group or immutable mismatch blocks the entire write.
+Immediately before a backup-based replacement, the command verifies that the
+workbench SHA-256 is unchanged.
+
+This is only a private workbench merge. It generates no poker value, candidate,
+permission or production module. `sourceReferenceId` remains optional for the
+owner-confirmed `OWNED_SOLVER_EXPORT` path. Full 118,638-row coverage must still
+pass the canonical batch candidate validator, explicit staging and separate
+promotion gates below.
+
+Its output stays under `artifacts/mtt-sixmax-preflop-intake/`. It writes only
+`normalized.candidate.json` and a concise `BATCH_REPORT.md`; permission mode
+`CANONICAL_STAGED_MANIFEST` means the owner-confirmed manifest remains in its
+canonical raw slot. Reviewed normalized-data staging to
+`Agents/range-intake/raw/` remains a separate explicit action.
+
+Candidates may be staged atomically as one set or incrementally as reviewed
+exports arrive. In incremental mode, a canonical permission awaiting its
+candidate is `WAITING`; a candidate without permission or any invalid pair is
+`INVALID` and blocks the write. Promotion remains a later explicit gate:
+
+```powershell
+npm run mtt:sixmax-preflop-stage-batch -- --draft-dir=artifacts/mtt-sixmax-preflop-intake
+npm run mtt:sixmax-preflop-stage-batch -- --draft-dir=artifacts/mtt-sixmax-preflop-intake --write --confirm=STAGE_REVIEWED_MTT_SIXMAX_P1_BATCH
+npm run mtt:sixmax-preflop-stage-progress
+npm run mtt:sixmax-preflop-stage-batch -- --draft-dir=artifacts/mtt-sixmax-preflop-intake --incremental --write --confirm=STAGE_REVIEWED_MTT_SIXMAX_P1_BATCH
+```
+
 ## Normalized data requirements
 
 Each `normalized.json` must be for exactly one target slot and must not silently
@@ -77,6 +214,8 @@ Minimum required dimensions:
 - stack buckets: `5, 10, 15, 20, 25, 30, 40, 50, 60, 75, 100, 125, 150`
 - action contexts: `RFI, VS_LIMP, VS_OPEN, VS_3BET, VS_4BET, SQUEEZE, BVB, PUSH_FOLD, VS_ALLIN`
 - all 169 hand classes in strict and lenient maps for every covered row
+- `actionEvsBb`, `equivalentThresholdBb` and `acceptableThresholdBb` for every
+  decision where reviewed counterfactual EV is available; partial EV sets are invalid
 - no placeholder strategy values
 
 ## Provenance manifest requirements
@@ -85,14 +224,19 @@ Each `permission.json` must:
 
 - use the same `packId` as the slot;
 - identify reviewer and review date;
-- identify source-free evidence references;
+- identify source-free evidence references for third-party/public-permission inputs;
 - use `licenseKind: OWNED_SOLVER_EXPORT`, `PUBLIC_CHART_WITH_PERMISSION`, or `EXPLICIT_WRITTEN_PERMISSION`;
 - allow `PKRTRAINER_RUNTIME_BUNDLE`;
 - include reuse policy only when reuse is actually reviewed.
 
-Turbo slots must not become production by copying regular-speed metadata. If
-the strategic recommendations are intentionally reused, the manifest must
-contain explicit blind-speed reuse rationale and reviewer sign-off.
+For an owner-confirmed `OWNED_SOLVER_EXPORT`, external evidence references are
+not required. Reviewer, rights owner, source material location, runtime-bundle
+permission and any reused strategic dimension remain explicit.
+
+Turbo slots must not become production by changing regular-speed metadata only.
+If the strategic recommendations are intentionally reused, the manifest must
+contain explicit blind-speed reuse rationale and reviewer sign-off. The two
+full-ring turbo slots satisfy this rule.
 
 ## Validation sequence
 

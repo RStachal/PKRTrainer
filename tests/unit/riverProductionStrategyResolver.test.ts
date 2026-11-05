@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { generatePostflopSpot } from "../../src/core/postflopGenerator";
+import { gradePostflopAction } from "../../src/core/postflopScoring";
+import { postflopSpotToTrainingSpot } from "../../src/core/postflopTrainingSpot";
 import {
   createRiverProductionStrategyResolver,
 } from "../../src/data/ranges/riverProductionStrategyResolver";
@@ -172,6 +174,110 @@ describe("riverProductionStrategyResolver", () => {
         handClass: "AA",
       });
     }
+  });
+
+  it("doporuci akci konkretniho hero bucketu, ne rule-wide akci, kdyz chybi action EV", () => {
+    // The flop resolver's defect, held on the river before content exists: the
+    // rule pressures BET_BIG overall, but 72o is a give-up in the CHECK lane and
+    // this pack has no action EV. 72o must be told to CHECK.
+    const resolver = createRiverProductionStrategyResolver(productionPack());
+
+    const checkHand = resolver({ ...input, heroHand: "72o" });
+    expect(checkHand?.action).toBe("CHECK");
+    expect(checkHand?.source?.kind).toBe("STRATEGY_PACK");
+    if (checkHand?.source?.kind === "STRATEGY_PACK") {
+      expect(checkHand.source.heroRangeBucket).toMatchObject({ lane: "CHECK", action: "CHECK", handClass: "72o" });
+    }
+
+    // A blocker-bluff hand in the same rule bets; its bucket action still leads.
+    expect(resolver({ ...input, heroHand: "QJs" })?.action).toBe("BET_BIG");
+
+    // A hand outside the range was never solved here, so the pack refuses rather
+    // than passing off a rule-wide average as a solver result.
+    expect(resolver({ ...input, heroHand: "K3o" })).toBeNull();
+
+    // Without a hero hand the caller asks about the rule itself.
+    expect(resolver({ ...input })?.action).toBe("BET_BIG");
+  });
+
+  it("hodnoti hrace podle akce jeho ruky, ne podle rule-wide akce", () => {
+    // 72o is a check-lane give-up on this blank river: checking must grade correct
+    // even though the rule's most-common action is BET_BIG.
+    const spot = generatePostflopSpot({
+      seed: 11,
+      street: "RIVER",
+      board: [
+        { rank: "A", suit: "s" },
+        { rank: "K", suit: "d" },
+        { rank: "9", suit: "c" },
+        { rank: "4", suit: "h" },
+        { rank: "3", suit: "s" },
+      ],
+      heroCards: [
+        { rank: "7", suit: "h" },
+        { rank: "2", suit: "s" },
+      ],
+      potType: "SINGLE_RAISED",
+      potBB: 15,
+      effectiveStackBB: 35,
+      positionContext: {
+        heroPosition: "BTN",
+        villainPosition: "BB",
+        aggressorPosition: "BTN",
+        callerPosition: "BB",
+        inPosition: true,
+        callerType: "BIG_BLIND",
+        positionPattern: "BTN_VS_BB",
+      },
+      strategyResolver: createRiverProductionStrategyResolver(productionPack()),
+    });
+
+    expect(spot.recommendedAction).toBe("CHECK");
+    expect(gradePostflopAction(postflopSpotToTrainingSpot(spot), "CHECK").correct).toBe(true);
+    expect(gradePostflopAction(postflopSpotToTrainingSpot(spot), "BET_BIG").correct).toBe(false);
+  });
+
+  it("rozdava hrdinu z range, kterou pack skutecne resil", () => {
+    const resolver = createRiverProductionStrategyResolver(productionPack());
+    const packHands = new Set(
+      productionPack().rules.flatMap((rule) => rule.rangeBuckets.flatMap((bucket) => bucket.handClasses)),
+    );
+
+    let withBucket = 0;
+    const spots = 60;
+    for (let seed = 1; seed <= spots; seed += 1) {
+      const spot = generatePostflopSpot({
+        seed,
+        street: "RIVER",
+        potType: "SINGLE_RAISED",
+        potBB: 15,
+        effectiveStackBB: 35,
+        board: [
+          { rank: "A", suit: "s" },
+          { rank: "K", suit: "d" },
+          { rank: "9", suit: "c" },
+          { rank: "4", suit: "h" },
+          { rank: "3", suit: "s" },
+        ],
+        positionContext: {
+          heroPosition: "BTN",
+          villainPosition: "BB",
+          aggressorPosition: "BTN",
+          callerPosition: "BB",
+          inPosition: true,
+          callerType: "BIG_BLIND",
+          positionPattern: "BTN_VS_BB",
+        },
+        strategyResolver: resolver,
+      });
+      // A freely dealt hand is almost never in the solved range, so without the
+      // re-deal these spots would grade against the rule-wide action instead.
+      if (spot.strategySource.kind === "STRATEGY_PACK" && spot.strategySource.heroRangeBucket) {
+        withBucket += 1;
+        expect(packHands.has(spot.strategySource.heroRangeBucket.handClass)).toBe(true);
+      }
+    }
+    expect(withBucket).toBe(spots);
   });
 
   it("registry preferuje river production pack pred public heuristic fallbackem", () => {

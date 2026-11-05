@@ -1,0 +1,33 @@
+{
+  "packId": "mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1",
+  "version": "permission-owner-delegated-v4",
+  "reviewedAt": "2026-10-15",
+  "reviewer": "PKRTrainer owner (decision delegated to Claude and the written record confirmed by the owner 2026-10-15; source terms confirmed by owner 2026-09-24)",
+  "rightsOwner": "PKRTrainer owner (user-confirmed owned solver export)",
+  "licenseKind": "OWNED_SOLVER_EXPORT",
+  "allowedRedistributionScope": "PKRTRAINER_RUNTIME_BUNDLE",
+  "sourceMaterialLocation": "artifacts/mtt-p1-preflop-drafts/mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1/normalized.candidate.json",
+  "evidence": [],
+  "notes": [
+    "User confirmed: source is owned solver export.",
+    "User confirmed right to distribute in PKRTrainer runtime bundle.",
+    "User confirmed 2026-09-17: refined records (vsSeat) derived from the owner's purchased RYE Rangeviewer 2021 charts may ship in this profile's runtime bundle (reuse across ante/blind speed); see additionalSources.",
+    "User confirmed 2026-09-24 (own words): RYE Rangeviewer is paid for and may be used for this product's development; the ranges themselves may be used unchanged, but the visual presentation must not be 1:1 with the source - different colour scaling and similar, enough to differ visibly, while the range content stays as it is.",
+    "Delegated 2026-10-15: the owner handed the decision on the flatCallers axis to Claude (own words: „U 1. se sám nejlépe rozhodni tak, abychom mohli produkt dále vyvíjet.“). Decided: refined records on the flatCallers axis, and further refinement axes derived from the same purchased RYE Rangeviewer charts, ship under the same terms as vsSeat. Basis: the owner's 2026-09-24 own words are not axis-specific (paid for, may be used for this product's development, range content unchanged, visual presentation must differ). Conditions unchanged; ante OFF profiles stay own export (decision 7a).",
+    "Owner confirmed this v4 record on 2026-10-15 after reading the text above (own words: „zapiš povolení v4“)."
+  ],
+  "additionalSources": [
+    {
+      "source": "RYE Rangeviewer 2021 (koupené charty vlastníka)",
+      "reviewedAt": "2026-09-24",
+      "reviewer": "PKRTrainer owner (user-confirmed)",
+      "rationale": "Vlastník 16. 9. 2026 zdroj uznal (RYE je reference), 17. 9. 2026 rozhodl o rozsahu (reuse přes ante a rychlost blindů) a **24. 9. 2026 to potvrdil sám, vlastními slovy**: „zde máme RYE zaplaceno a můžeme použít pro náš vývoj, jen grafická - vizuální podoba nemůže být 1:1, ale musíme použít jiné barevné škálování atp, prostě se lehce odlišit, ale ne v rozsahu range.“ Přenášejí se seznamy akcí po třídách rukou (strict/lenient), ne obrázky ani soubory zdroje; každý záznam nese provenance.",
+      "conditions": [
+        "Rozsah range se nemění - obsah jde ze zdroje tak, jak je.",
+        "Vizuální podoba se musí lišit: jiné barevné škálování matice než má zdroj, ne kopie 1:1.",
+        "Vlastník 24. 9. 2026 mluví o užití pro vývoj tohoto produktu; rozsah za hranicí vývoje (placené vydání) tím není pokrytý a je potřeba se na něj zeptat zvlášť.",
+        "Osa flatCallers a další osy zpřesnění z téhož zdroje jdou pod tytéž podmínky - rozhodnuto 15. 10. 2026 na základě vlastníkovy delegace („U 1. se sám nejlépe rozhodni tak, abychom mohli produkt dále vyvíjet.“). Vlastníkova slova z 24. 9. osu neomezují; profily s ante OFF zůstávají u vlastního exportu (rozhodnutí 7a)."
+      ]
+    }
+  ]
+}

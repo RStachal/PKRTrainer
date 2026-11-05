@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest";
 
+import { stylesheet } from "../stylesheets";
 import { renderTable } from "../../src/ui/tableRenderer";
 import type { Card, Spot, TableState } from "../../src/core/types";
 
@@ -12,6 +13,7 @@ const heroCards: [Card, Card] = [
 const tableState: TableState = {
   heroPos: "BTN",
   pushFold: false,
+  effectiveStackBB: 100,
   limpsBefore: 0,
   callsBefore: 0,
   facing: "OPEN",
@@ -56,6 +58,8 @@ describe("tableRenderer - DOM vykresleni stolu", () => {
     expect(root.querySelector(".poker-table__center")).not.toBeNull();
     expect(root.querySelectorAll(".poker-table__chip-stack span")).toHaveLength(3);
     expect(root.querySelectorAll(".seat__stack-bar").length).toBeGreaterThan(0);
+    expect(root.querySelectorAll(".seat__status")).toHaveLength(9);
+    expect(root.querySelectorAll(".seat__stack-chip").length).toBeGreaterThan(0);
     expect(root.querySelectorAll(".badge-btn")).toHaveLength(1);
     expect(root.querySelectorAll(".badge-sb")).toHaveLength(1);
     expect(root.querySelectorAll(".badge-bb")).toHaveLength(1);
@@ -66,9 +70,9 @@ describe("tableRenderer - DOM vykresleni stolu", () => {
       .toMatch(/%$/);
     expect(root.querySelector<HTMLElement>(".seat--hero")?.style.getPropertyValue("--seat-mobile-left"))
       .toMatch(/%$/);
-    expect(root.querySelector("style")?.textContent).toContain("@media (max-width:640px)");
+    expect(stylesheet("legacy/table.css")).toContain("@media (max-width:640px)");
 
     const pot = root.querySelector<HTMLElement>(".pot");
-    expect(pot?.textContent).toBe("Bank: 2.5 BB");
+    expect(pot?.textContent).toBe("Pot: 2.5 BB");
   });
 });

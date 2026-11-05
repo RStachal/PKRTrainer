@@ -1,0 +1,26 @@
+# DrillEV — 29. 9. 2026, přečtené mřížky z draftu `ranze-nove-2026-09-29-0847.html`
+#
+# Původ: vráceno vlastníkem, ale vyplněno návrhem („Claude, v nejlepší víře
+# z podkladů“). Stejná výhrada jako u rozhodnutí — zpracovává se jako jeho
+# verdikt, ale ten rozdíl má zůstat čitelný.
+#
+# 54 mřížek: 48× ✓, 4× ✗ (136, 151, 100, 130), 2× ? (143, 144).
+#
+# Čtyři odmítnuté a proč:
+#   136 a 151  BB 20 bb a BB 40 bb proti UTG — v souboru je range pro BTN, ne BB.
+#              Mřížka je do posledního políčka totožná s MUL-40BB-BTN-vs-EP_MP,
+#              šířka 53 tříd sedí do pásma BTN (46–58), ne BB (81–130),
+#              a squeeze je „to 9bb“ proti „to 11bb“ u všech pěti sourozenců.
+#              Příznaky: moc těsné (2) + špatné ruce (3).
+#   100        VS_OPEN SB 20 bb proti UTG — zdroj jamuje 55 a skládá 66, 77 i 88.
+#              Ověřeno v HTML (cid_55 má lime, 66/77/88 nemají barvu).
+#              Pro tohle není ICM ani blokerové vysvětlení. Příznak: špatné ruce (3).
+#   130        SQUEEZE HJ 100 bb proti UTG — jediná mřížka se dvěma velikostmi
+#              squeeze (blafy 11 bb, value 13 bb); produkt je slučuje do SQUEEZE.
+#              Příznak: sloučení akcí vadí (5).
+#
+# Dvě nejisté (143, 144): stránka je hlásí jako překreslené, ale nemají jedinou
+# míchanou buňku, takže se jich překreslení nemohlo dotknout a verdikt „nesedí“
+# z 15. 9. platí dál. Zůstávají otevřené.
+
+DRILLEV-REVIEW-V2 12o 18o 72o 75o 78o 95o 97o 100x3 121o 122o 123o 124o 125o 126o 127o 128o 129o 130x5 131o 132o 133o 135o 136x23 138o 139o 140o 141o 142o 143? 144? 146o 147o 148o 149o 150o 151x23 152o 153o 154o 155o 156o 157o 158o 159o 160o 161o 162o 163o 164o 209o 211o 214o 216o 217o

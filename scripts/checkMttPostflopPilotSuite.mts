@@ -8,7 +8,6 @@ import {
 } from "../src/data/ranges/mttPostflopPilotGate.ts";
 import type { ProductionPermissionManifest } from "../src/data/ranges/productionPermissionManifest.ts";
 
-const DEFAULT_OUTPUT = "artifacts/mtt-postflop-pilot-suite/report.json";
 
 interface CliArgs {
   json: boolean;
@@ -106,6 +105,26 @@ const TARGETS: readonly PilotTarget[] = [
         permissionPath:
           "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR-ROOT/permission.candidate.json",
         description: "SB vs BB SRP OOP low-SPR flop c-bet pilot from ROOT TexasSolver node.",
+      },
+    ],
+  },
+  {
+    id: "co-bb-srp-flop-cbet-low-mid-high",
+    scope: "CO_vs_BB_SRP_FLOP_CBET",
+    normalizedPath:
+      "artifacts/texas-solver-review-integration/normalized-drafts/CO_BB_SRP_FLOP_CBET_PILOT-CHECK/normalized.candidate.json",
+    permissionPath:
+      "artifacts/texas-solver-review-integration/normalized-drafts/CO_BB_SRP_FLOP_CBET_PILOT-CHECK/permission.candidate.json",
+    description: "Merged CO vs BB SRP flop c-bet pilot across available SPR bands.",
+    expectedInputCount: 3,
+    alternatives: [
+      {
+        id: "co-bb-srp-flop-cbet-lowspr",
+        normalizedPath:
+          "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_25BB_CO_BB_SRP_CBET_LOWSPR-CHECK/normalized.candidate.json",
+        permissionPath:
+          "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_25BB_CO_BB_SRP_CBET_LOWSPR-CHECK/permission.candidate.json",
+        description: "CO vs BB SRP low-SPR flop c-bet pilot.",
       },
     ],
   },

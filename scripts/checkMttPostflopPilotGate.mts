@@ -126,7 +126,17 @@ function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, "utf8")) as T;
 }
 
-function buildPilotGateReport(args: CliArgs) {
+/**
+ * Návratový typ je napsaný, ne odvozený.
+ *
+ * Funkce má dvě větve a bez anotace se z nich odvodí **sjednocení dvou tvarů**,
+ * které se pak nedá předat `renderReport`. Napsat typ je zároveň kontrola: obě
+ * větve teď musí vydat totéž, což u brány dává smysl - report, který podle
+ * okolností postrádá pole, se špatně čte i špatně testuje.
+ */
+function buildPilotGateReport(
+  args: CliArgs,
+): MttPostflopPilotGateReport & { normalizedPath: string; permissionPath: string } {
   const fileErrors = [
     ...(existsSync(args.normalizedPath) ? [] : [`Missing normalized candidate: ${args.normalizedPath}`]),
     ...(existsSync(args.permissionPath) ? [] : [`Missing permission candidate: ${args.permissionPath}`]),
@@ -141,6 +151,10 @@ function buildPilotGateReport(args: CliArgs) {
       permissionReady: false,
       legalImportSlot: false,
       runtimeSmokeValid: false,
+      // Prázdné, ne chybějící: když soubory nejsou, není z čeho číst rodiny -
+      // ale konzument tohle pole čeká vždycky. Dosud v téhle větvi chybělo a
+      // vracelo se `undefined`.
+      provenanceFamilyIds: [],
       errors: fileErrors,
       warnings: [],
       counts: { rules: 0, rangeBuckets: 0, runtimeSmokeSamples: 0 },

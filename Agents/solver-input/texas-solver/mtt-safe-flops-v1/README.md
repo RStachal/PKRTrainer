@@ -145,6 +145,17 @@ npm run mtt:stage-texas-solver -- --write
 npm run mtt:stage-texas-solver -- --write --review-template
 ```
 
+`mtt:stage-texas-solver` nejdřív čte per-board soubory pod `solver-logs/`.
+Když je Windows autostart nezapsal, může jako fail-closed doplněk načíst lokální
+`artifacts/texas-solver-autostart/queue-*.log`: přijme jen jeden přesně
+spárovaný parametr a jeho `Total exploitability` pro již existující raw JSON.
+Segment musí mít shodný `PKRTRAINER_SOLVER_BEGIN` a `PKRTRAINER_SOLVER_END`,
+stejný parameter file, stejný raw JSON a `exit=0`. Nejednoznačný, chybějící nebo
+neshodný segment se neinterpretuje jako evidence. Výsledek
+zůstává review-only a adequacy vždy potvrzuje člověk.
+U family s více boardy zůstává exploitability výhradně u jednotlivých raw
+exportů; report nevydává jednu hodnotu za celou family.
+
 Pro PKRTrainer solver-verification čekáme pro každou family:
 
 ```text
@@ -201,6 +212,13 @@ Invoke-Item .\artifacts\texas-solver-review-integration\viewer\index.html
 The viewer is for checking hand matrices, dominant actions, frequencies and boards. It scans the current staged
 TexasSolver output folder by default, so newly reviewed LOW/HIGH SPR families appear after `mtt:texas-solver-review`.
 It is not a production import.
+
+The viewer also includes an **Owner Decisions** workbench for the current unique
+solver families. It can copy or download a source-safe
+`owner-review-decisions.json` document after the owner fills a decision, scope
+when applicable and caveats. The viewer cannot write the document into review
+notes; preview and apply it through the explicit batch command described in
+the review-notes sign-off section.
 
 To create the first canonical import candidate from the recommended pilot:
 
@@ -339,6 +357,92 @@ running even after the original shell session is closed:
   -StartWatcher
 ```
 
+### Overnight maximum-performance mode
+
+Use this mode only with an incomplete reviewed parameter batch. Existing raw
+checkpoints are skipped; do not add `-Force`, because that would recalculate
+already completed boards. The preflight below also refuses to start unless
+every parameter file explicitly uses eight TexasSolver threads.
+
+```powershell
+Set-Location C:\Users\stachal\PKRTrainer\PKRTrainer
+
+$parameterRoot = Join-Path $PWD "Agents\solver-input\texas-solver\mtt-safe-flops-v1\parameters\pkrtrainer_mtt_NEXT_BATCH"
+$manifest = Join-Path $PWD "Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-NEXT-BATCH-manifest.json"
+$parameterFiles = @(Get-ChildItem -LiteralPath $parameterRoot -Filter *.txt -File)
+$nonEightThreadFiles = @($parameterFiles | Where-Object {
+  -not (Select-String -LiteralPath $_.FullName -Pattern '^set_thread_num\s+8\s*$' -Quiet)
+})
+if ($parameterFiles.Count -eq 0) { throw "No TexasSolver parameter files found in $parameterRoot" }
+if ($nonEightThreadFiles.Count -gt 0) {
+  throw "Eight-thread preflight failed: $($nonEightThreadFiles.Name -join ', ')"
+}
+
+npm run mtt:autonomous-cycle-uninstall
+npm run mtt:texas-solver-low-memory-uninstall
+powercfg /setactive SCHEME_MIN
+npm run mtt:texas-solver-overnight -- -ParameterRoot "$parameterRoot" -Manifest "$manifest" -LogName "overnight-maximum"
+```
+
+The overnight wrapper uses 100% as the CPU start ceiling, inherits eight
+threads from each checked parameter file, runs the queue at `AboveNormal`
+priority and continues past a single failed board while recording it. A
+separate resource guard samples RAM every 15 seconds and stops only this
+queue's solver after three consecutive samples below 10% free memory. The
+guard stays active, and the queue cannot start its next board until at least
+10% RAM is free again. `High` and `RealTime` process priorities are
+intentionally unsupported.
+
+Restore the normal daytime automation and balanced Windows power plan in the
+morning:
+
+```powershell
+Set-Location C:\Users\stachal\PKRTrainer\PKRTrainer
+powercfg /setactive SCHEME_BALANCED
+npm run mtt:autonomous-cycle-install
+npm run mtt:texas-solver-low-memory-install
+npm run mtt:texas-solver-background-status -- --manifest "$manifest" --summary
+npm run mtt:texas-solver-ingest-completed -- --dry-run --summary
+npm run mtt:texas-solver-ingest-completed -- --summary
+```
+
+For the current large 72-board review batch, prefer the restartable Windows
+queue. It skips existing raw JSON checkpoints, rejects duplicate workers and
+resumes automatically after the next Windows sign-in without VS Code:
+
+```powershell
+npm run mtt:texas-solver-autostart-install
+npm run mtt:texas-solver-autostart-status
+```
+
+The scheduled task is named `PKRTrainer-TexasSolver-Autostart`. Its action is a
+hidden PowerShell process with an AtLogOn trigger, `IgnoreNew`,
+`StartWhenAvailable`, no execution time limit and three five-minute failure
+restarts. Queue logs and state are written under
+`artifacts/texas-solver-autostart/`.
+
+Dry-run or remove only future sign-in automation without starting a solve:
+
+```powershell
+npm run mtt:texas-solver-queue -- -DryRun
+npm run mtt:texas-solver-autostart-uninstall
+```
+
+To stop the currently running local queue now, while retaining every completed
+raw checkpoint for a later resume, run:
+
+```powershell
+npm run mtt:texas-solver-autostart-stop
+```
+
+The stop command targets only this repository's queue worker, its child solver
+processes and its watcher. It does not remove the scheduled task; run the
+uninstall command above when future sign-in starts should also be disabled.
+
+If Windows interrupts a board, the next run removes only that stale dump from
+the verified TexasSolver tool directory and solves the board again. Completed
+raw outputs in the PKRTrainer workspace are never removed by autostart.
+
 Dry-run the wrapper without starting TexasSolver:
 
 ```powershell
@@ -384,7 +488,24 @@ Smoke-test the watcher without waiting for a long solve:
 ```
 
 The watcher accepts both relative and absolute manifest paths and writes logs under
-`artifacts/texas-solver-background/`.
+`artifacts/texas-solver-background/`. At full coverage it persists a scenario
+audit under `artifacts/texas-solver-scenario-audit/` before final ingest and
+review staging. An audit failure remains fail-closed for review but never deletes
+raw checkpoints.
+
+For `MEMORY_SAFE_REVIEW_ONLY` phases, the watcher and recurring MTT cycle share
+one locked cumulative refresh instead of staging or normalizing strategy:
+
+```powershell
+npm run mtt:texas-solver-review-only-refresh -- --dry-run --summary
+npm run mtt:texas-solver-review-only-refresh -- --summary
+```
+
+The command unions solved boards across the six approved derived manifests,
+refreshes only stale family evidence and rebuilds its read-only viewer when
+needed. Its PID lock prevents the watcher and scheduled cycle from writing the
+same report concurrently. It cannot write production strategy, owner decisions
+or `normalized.json`.
 
 ## 3BP repair batch
 
@@ -551,6 +672,22 @@ Reviewed at: <YYYY-MM-DD>
 Usable for production: yes | no | scoped: <exact scope>
 Usable scope: <spot family, node, SPR/board/position limitations>
 Production caveats: <tree sizing, accuracy, range and validation caveats>
+```
+
+For a completed human review, use the explicit owner-decision writer. It defaults
+to dry-run and changes only the selected family's `review-notes.md` after the
+confirmation token; it never derives a decision from solver output:
+
+```powershell
+npm run mtt:texas-solver-owner-review -- --family=MTT9_50BB_BTN_BB_SRP --reviewer "project owner" --reviewed-at=2026-07-15 --decision=scoped --scope="BTN vs BB SRP pilot" --caveats="Review scope is limited to the solved tree and boards." --write --confirm=RECORD_TEXAS_SOLVER_OWNER_REVIEW
+```
+
+For all families, create one blank decision document, fill only the families you have personally reviewed, then preview and explicitly apply that subset. Blank rows remain untouched; the batch writer does not infer decisions from a solver result:
+
+```powershell
+npm run mtt:texas-solver-owner-review-batch -- --write-template --out=.\artifacts\texas-solver-review-protocol\owner-review-decisions.json
+npm run mtt:texas-solver-owner-review-batch -- --decisions=.\artifacts\texas-solver-review-protocol\owner-review-decisions.json
+npm run mtt:texas-solver-owner-review-batch -- --decisions=.\artifacts\texas-solver-review-protocol\owner-review-decisions.json --write --confirm=RECORD_TEXAS_SOLVER_OWNER_REVIEW_BATCH
 ```
 
 If the notes are missing, still say `Status: NEEDS_REVIEW`, or omit the usable decision, the review report stays

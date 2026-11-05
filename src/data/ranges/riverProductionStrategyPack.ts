@@ -1,4 +1,5 @@
 import { ALL_HAND_CLASSES } from "../../core/poker";
+import { validateActionEvSet, type ActionEvSet } from "../../core/actionEv";
 import type {
   PostflopAction,
   PostflopOpponentPolicyBranch,
@@ -62,6 +63,7 @@ export interface RiverProductionRangeBucket {
   blockerRelevance: RiverProductionBlockerRelevance;
   weightPct?: number;
   actionMix?: readonly RiverProductionActionFrequency[];
+  actionEvs?: ActionEvSet<PostflopAction>;
 }
 
 export interface RiverProductionStrategyRule {
@@ -288,6 +290,14 @@ export function validateRiverProductionRule(
     }
     if (bucket.actionMix !== undefined) {
       errors.push(...validateBucketActionMix(rule, bucket, options.exactFrequencyAllowed === true));
+    }
+    if (bucket.actionEvs !== undefined) {
+      for (const error of validateActionEvSet(bucket.actionEvs, rule.actions)) {
+        errors.push(`${rule.id}: range bucket ${bucket.label} actionEvs ${error}.`);
+      }
+      if (options.exactFrequencyAllowed !== true) {
+        errors.push(`${rule.id}: range bucket ${bucket.label} action EV requires owned export or explicit written permission.`);
+      }
     }
     for (const hand of bucket.handClasses) {
       if (!HAND_CLASS_SET.has(hand)) errors.push(`${rule.id}: range bucket ${bucket.label} contains invalid hand ${hand}.`);

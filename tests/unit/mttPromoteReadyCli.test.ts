@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("mtt:promote-ready CLI", () => {
-  it("v dry-run rezimu projde bez ready slotu a nevytvari moduly", () => {
+  it("v dry-run rezimu po promotion projde bez dalsich ready slotu a nevytvari moduly", () => {
     const result = runPromoteReady();
 
     expect(result.status).toBe(0);
@@ -14,9 +14,9 @@ describe("mtt:promote-ready CLI", () => {
     expect(result.stdout).toContain("valid: true");
     expect(result.stdout).toContain("priority: all");
     expect(result.stdout).toContain("ready rows: 0");
-    expect(result.stdout).toContain("waiting rows: 64");
-    expect(result.stdout).toContain("missing normalized.json: 64");
-    expect(result.stdout).toContain("missing permission.json: 64");
+    expect(result.stdout).toContain("waiting rows: 60");
+    expect(result.stdout).toContain("missing normalized.json: 60");
+    expect(result.stdout).toContain("missing permission.json: 56");
     expect(result.stdout).toContain("writeReady rows: 0");
     expect(result.stdout).toContain("blocked rows: 0");
     expect(result.stdout).toContain("written rows: 0");
@@ -42,7 +42,7 @@ describe("mtt:promote-ready CLI", () => {
         writeReadyRows: number;
         blockedRows: number;
         existingOutputRows: number;
-        writtenRows: number;
+      writtenRows: number;
       };
       nextActionCommand: string;
       rows: unknown[];
@@ -54,9 +54,9 @@ describe("mtt:promote-ready CLI", () => {
     expect(parsed.force).toBe(false);
     expect(parsed.counts).toEqual({
       readyRows: 0,
-      waitingRows: 8,
-      missingNormalized: 8,
-      missingPermission: 8,
+      waitingRows: 4,
+      missingNormalized: 4,
+      missingPermission: 0,
       writeReadyRows: 0,
       blockedRows: 0,
       existingOutputRows: 0,
@@ -125,9 +125,9 @@ describe("mtt:promote-ready CLI", () => {
       expect(parsed.priority).toBe("P1_PREFLOP_CHIP_EV");
       expect(parsed.counts).toMatchObject({
         readyRows: 0,
-        waitingRows: 8,
-        missingNormalized: 8,
-        missingPermission: 8,
+        waitingRows: 4,
+        missingNormalized: 4,
+        missingPermission: 0,
       });
       expect(parsed.rows).toEqual([]);
     } finally {

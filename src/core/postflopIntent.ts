@@ -8,6 +8,7 @@ import {
 import type {
   PostflopPositionContext,
   PostflopPotType,
+  PostflopPositionPattern,
 } from "./postflopGenerator";
 
 export interface PostflopIntent {
@@ -88,6 +89,30 @@ function postflopPositionContextFromSortedPositions(
       : epVsBbContext(firstNonBlind);
   }
 
+  /*
+   * Otvírač proti dorovnávajícímu **malému** blindu.
+   *
+   * Do 14. 10. 2026 tu tahle větev chyběla a výběr třeba „CO + SB" spadl až na
+   * `return null`. Pohled pak `null` bere jako „hráč nic nevybral" a rozdá
+   * **cokoli** z celého katalogu - hráč chtěl CO proti SB a dostal třeba UTG
+   * proti BTN, bez jediného slova. Změřeno: 7 ze 45 výběrů pozic, které filtry
+   * umí, takhle tiše propadalo (`npm run mtt:picked-situation`). Vyřešený obsah
+   * přitom pro všech sedm existuje (`SRP_CO_VS_SB` a spol.) - noc 13.-14. 10.
+   * dodala třeba `MTT9_50BB_LJ_SB_SRP`.
+   *
+   * Vzor je rovnou jemný (`SRP_CO_VS_SB`): hrubý pilotní vzor pro malý blind
+   * jako dorovnávajícího neexistuje, takže není co zachovávat. Jen pro single
+   * raised pot - „otvírač a SB" ve 3bet potu je jiný spot a zůstává, jak byl.
+   */
+  if (
+    firstNonBlind
+    && positions.includes("SB")
+    && !positions.includes("BB")
+    && potType !== "THREE_BET_POT"
+  ) {
+    return openerVsSbCallerContext(firstNonBlind);
+  }
+
   if (positions.length === 1) {
     const only = positions[0];
     if (only === "BTN") return btnVsBbContext();
@@ -158,6 +183,21 @@ function epVsBbContext(heroPosition: Position): PostflopPositionContext {
   };
 }
 
+/** Otvírač proti malému blindu, který dorovnal; zrcadlo `epVsBbContext`. */
+function openerVsSbCallerContext(heroPosition: Position): PostflopPositionContext {
+  return {
+    heroPosition,
+    villainPosition: "SB",
+    aggressorPosition: heroPosition,
+    callerPosition: "SB",
+    // Malý blind jedná po flopu první proti každé sedačce, takže otvírač je
+    // v pozici - stejně jako proti velkému blindu.
+    inPosition: true,
+    callerType: "OUT_OF_POSITION_CALLER",
+    positionPattern: `SRP_${heroPosition.replace("+", "_")}_VS_SB` as PostflopPositionPattern,
+  };
+}
+
 function btnVsBbContext(): PostflopPositionContext {
   return {
     heroPosition: "BTN",
@@ -193,8 +233,22 @@ function oopRaiserVsIpCallerContext(
     callerPosition: villainPosition,
     inPosition: false,
     callerType: "IN_POSITION_CALLER",
-    positionPattern: "OOP_RAISER_VS_IP_CALLER",
+    // By seat, for the reason the three-bet version is: both are arguments to
+    // this function, and spelling the pattern by role discarded them at the one
+    // point a solved pack has to be matched. This is the single-raised half of
+    // the same defect.
+    positionPattern: `SRP_${patternToken(heroPosition)}_VS_${patternToken(villainPosition)}` as PostflopPositionContext["positionPattern"],
   };
+}
+
+/**
+ * The seat token a position takes inside a `3BP_` or `SRP_` pattern name.
+ *
+ * UTG+1 and UTG+2 carry a plus sign the pattern grammar spells with an
+ * underscore; every other seat is written as it is named.
+ */
+function patternToken(position: Position): string {
+  return position.replace("+", "_");
 }
 
 function oopCallerVsIpThreeBettorContext(
@@ -208,7 +262,16 @@ function oopCallerVsIpThreeBettorContext(
     callerPosition: heroPosition,
     inPosition: false,
     callerType: "OUT_OF_POSITION_CALLER",
-    positionPattern: "OOP_CALLER_VS_IP_3BETTOR",
+    // Named by seat rather than by role. The seats are right here - the
+    // three-bettor and the caller are both arguments - and spelling the pattern
+    // OOP_CALLER_VS_IP_3BETTOR threw them away, so a solved pack carrying
+    // 3BP_BTN_VS_CO could never match a spot that was exactly that. Measured
+    // over 2000 button-versus-cutoff three-bet pots: none reached the solver,
+    // and two of the seven pilot packs answer only this pattern.
+    //
+    // The role information is not lost; aggressorPosition and callerPosition
+    // still carry it, and every consumer that wanted the role reads those.
+    positionPattern: `3BP_${patternToken(villainPosition)}_VS_${patternToken(heroPosition)}` as PostflopPositionContext["positionPattern"],
   };
 }
 

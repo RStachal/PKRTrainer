@@ -31,6 +31,12 @@ export interface StatsV2KpiOptions {
   minLeakSample?: number;
   leakRateThreshold?: number;
   leakDimensions?: readonly StatsV2BreakdownDim[];
+  /**
+   * Restricts leak detection to one training profile. The lifetime and recent
+   * figures stay whole-store - "how am I doing" is a fair thing to pool - but a
+   * leak is a thing to act on, and acting on it means training in one profile.
+   */
+  leakProfileId?: string;
 }
 
 export interface StatsV2LeakCandidate extends StatsV2Group {
@@ -103,15 +109,22 @@ export function buildStatsV2KpiModel(
   const minLeakSample = normalizePositiveInt(options.minLeakSample, 5);
   const leakRateThreshold = normalizeRateThreshold(options.leakRateThreshold, 60);
   const summary = summarizeStatsV2(records);
-  const recentRecords = records.slice(-recentWindowSize);
+  // Streaks and the recent window are claims about time, so they are read from
+  // the timestamps rather than from where a record happens to sit in the array.
+  // Import replaces the whole store with the order of the file it was given, and
+  // since there is no merge, combining two devices means pasting two exports
+  // together - which puts the older device's whole history last and made the
+  // current streak zero while the player was on a run of three.
+  const inTimeOrder = [...records].sort((a, b) => a.ts - b.ts);
+  const recentRecords = inTimeOrder.slice(-recentWindowSize);
   const recent = summarizeStatsV2(recentRecords);
 
   return {
     total: summary.total,
     correct: summary.correct,
     lifetimeRate: summary.rate,
-    currentStreak: currentCorrectStreak(records),
-    bestStreak: bestCorrectStreak(records),
+    currentStreak: currentCorrectStreak(inTimeOrder),
+    bestStreak: bestCorrectStreak(inTimeOrder),
     recentWindowSize,
     recentTotal: recent.total,
     recentCorrect: recent.correct,
@@ -124,6 +137,7 @@ export function buildStatsV2KpiModel(
       minLeakSample,
       leakRateThreshold,
       leakDimensions: options.leakDimensions,
+      leakProfileId: options.leakProfileId,
     }),
   };
 }
@@ -188,11 +202,14 @@ function averageResponseMs(records: readonly ResultRecordV2[]): number | null {
 function findLeakCandidates(
   records: readonly ResultRecordV2[],
   options: Required<Pick<StatsV2KpiOptions, "minLeakSample" | "leakRateThreshold">> &
-    Pick<StatsV2KpiOptions, "leakDimensions">,
+    Pick<StatsV2KpiOptions, "leakDimensions" | "leakProfileId">,
 ): StatsV2LeakCandidate[] {
   const dimensions = options.leakDimensions ?? ["context", "position", "bucket"];
+  const scoped = options.leakProfileId === undefined
+    ? records
+    : records.filter((record) => record.profileId === options.leakProfileId);
   const candidates = dimensions.flatMap((dim) => (
-    breakdownStatsV2(records, dim)
+    breakdownStatsV2(scoped, dim)
       .filter((group) => (
         group.total >= options.minLeakSample &&
         group.rate !== null &&

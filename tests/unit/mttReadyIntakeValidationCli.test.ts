@@ -13,9 +13,9 @@ describe("mtt:validate-ready-intake CLI", () => {
     expect(result.stdout).toContain("priority: all");
     expect(result.stdout).toContain("valid: true");
     expect(result.stdout).toContain("ready rows: 0");
-    expect(result.stdout).toContain("waiting rows: 64");
-    expect(result.stdout).toContain("missing normalized.json: 64");
-    expect(result.stdout).toContain("missing permission.json: 64");
+    expect(result.stdout).toContain("waiting rows: 60");
+    expect(result.stdout).toContain("missing normalized.json: 60");
+    expect(result.stdout).toContain("missing permission.json: 56");
     expect(result.stdout).toContain("valid rows: 0");
     expect(result.stdout).toContain("failed rows: 0");
     expect(result.stdout).toContain("next action: npm run mtt:next-action");
@@ -117,9 +117,9 @@ describe("mtt:validate-ready-intake CLI", () => {
       expect(parsed.priority).toBe("P1_PREFLOP_CHIP_EV");
       expect(parsed.counts).toMatchObject({
         readyRows: 0,
-        waitingRows: 8,
-        missingNormalized: 8,
-        missingPermission: 8,
+        waitingRows: 4,
+        missingNormalized: 4,
+        missingPermission: 0,
       });
       expect(parsed.rows).toEqual([]);
     } finally {

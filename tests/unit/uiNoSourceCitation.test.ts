@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { DEFAULT_TRAINING_PROFILE, profileWith } from "../../src/core/trainingProfile";
 import { renderPostflopView } from "../../src/ui/postflopView";
 import { renderProfileSelector } from "../../src/ui/profileSelector";
-import { renderRangeModalButton } from "../../src/ui/rangeModal";
+import { openPreflopRange } from "../../src/ui/trainer/preflopRange";
 import { renderHHView } from "../../src/ui/hhView";
 import { createStatsStore, type ResultRecord } from "../../src/persistence/statsStore";
 import { renderDashboard } from "../../src/ui/dashboard";
@@ -13,6 +13,33 @@ import type { PostflopStatsV2BridgeRecord } from "../../src/persistence/postflop
 import type { RangeStore } from "../../src/data/rangeStore";
 import type { Card, Spot, TableState } from "../../src/core/types";
 import { buildProductionPermissionManifestReport } from "../../src/data/ranges/productionPermissionManifest";
+
+// Od 4. 11. 2026 jen nové GUI (klasické smazáno): akce jsou tlačítka nové
+// obrazovky a spot se rozdává asynchronně, takže se na ně čeká.
+const POSTFLOP_ACTION = ".postflop-output .dx-trainer .dx-trainer__actions button";
+
+async function waitForPostflopActions(root: HTMLElement): Promise<void> {
+  await vi.waitFor(() => {
+    expect(root.querySelector(POSTFLOP_ACTION)).not.toBeNull();
+  }, { timeout: 20000 });
+}
+
+function clickPostflopAction(root: HTMLElement, action?: string): void {
+  const selector = action === undefined ? POSTFLOP_ACTION : `${POSTFLOP_ACTION}[data-action="${action}"]`;
+  const target = root.querySelector<HTMLButtonElement>(selector);
+  expect(target, selector).not.toBeNull();
+  target!.click();
+}
+
+/** Linka: CALL na flopu, pokračovat na turn, tam FOLD. */
+async function playCallThenFold(root: HTMLElement): Promise<void> {
+  root.querySelector<HTMLSelectElement>(".postflop-mode")!.value = "line";
+  root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+  await waitForPostflopActions(root);
+  clickPostflopAction(root, "CALL");
+  root.querySelector<HTMLButtonElement>(".postflop-output .dx-trainer__next")?.click();
+  clickPostflopAction(root, "FOLD");
+}
 
 const FORBIDDEN_SOURCE_TEXT = [
   "https://",
@@ -70,6 +97,7 @@ const heroCards: [Card, Card] = [
 const tableState: TableState = {
   heroPos: "BTN",
   pushFold: false,
+  effectiveStackBB: 100,
   limpsBefore: 0,
   callsBefore: 0,
   facing: "NONE",
@@ -135,6 +163,7 @@ const sourceHeavyResolver: PostflopStrategyResolver = (input) => ({
   explanation: `Release gate ${input.street.toLowerCase()} recommendation`,
   source: {
     kind: "STRATEGY_PACK",
+    provenance: "SOLVER_BACKED",
     packId: "mtt-full-ring-9-flop-production-private-v1",
     packVersion: "source-free-test-v1",
     packVerifiedAt: "2026-06-17",
@@ -216,6 +245,11 @@ const postflopRecord: PostflopStatsV2BridgeRecord = {
   confidence: "LOW",
 };
 
+afterEach(() => {
+  document.querySelector<HTMLButtonElement>(".range-modal__close")?.click();
+  document.body.innerHTML = "";
+});
+
 describe("UI source citation policy", () => {
   it("nezobrazuje URL ani provider citace v profile selectoru", () => {
     const root = document.createElement("div");
@@ -245,25 +279,31 @@ describe("UI source citation policy", () => {
   });
 
   it("nezobrazuje URL ani provider citace v range modal metadatech", () => {
-    const root = document.createElement("div");
+    openPreflopRange(document, spot, loadedStore);
 
-    renderRangeModalButton(spot, loadedStore, root);
-    root.querySelector<HTMLButtonElement>(".range-modal-open")?.click();
-
-    expectNoSourceCitation(document.querySelector<HTMLElement>(".range-modal")?.textContent ?? "");
-    document.querySelector<HTMLButtonElement>(".range-modal__close")?.click();
+    const modal = document.querySelector<HTMLElement>(".range-modal");
+    expect(modal).not.toBeNull();
+    expectNoSourceCitation(modal?.textContent ?? "");
   });
 
-  it("nezobrazuje URL ani provider citace v postflop vysvetleni", () => {
+  it("nezobrazuje URL ani provider citace v postflop vysvetleni", async () => {
     const root = document.createElement("div");
     renderPostflopView(root, { initialStreet: "RIVER", autoGenerate: true });
+    await waitForPostflopActions(root);
 
-    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+    clickPostflopAction(root);
 
-    expectNoSourceCitation(root.querySelector<HTMLElement>(".postflop-result")?.textContent ?? "");
+    const feedback = root.querySelector<HTMLElement>(".postflop-output .dx-trainer__feedback");
+    expect(feedback?.textContent ?? "").not.toBe("");
+    expectNoSourceCitation(feedback?.textContent ?? "");
+    // Matice range k desce je za tlačítkem v dialogu; ani ta citace nenese.
+    root.querySelector<HTMLButtonElement>(".postflop-output .dx-trainer__range")?.click();
+    const modal = document.querySelector<HTMLElement>(".range-modal");
+    expect(modal).not.toBeNull();
+    expectNoSourceCitation(modal?.textContent ?? "");
   });
 
-  it("nezobrazuje raw postflop enumy v konkretni otazce", () => {
+  it("nezobrazuje raw postflop enumy v konkretni otazce", async () => {
     const root = document.createElement("div");
     renderPostflopView(root, {
       initialSeed: 1788246284,
@@ -283,11 +323,11 @@ describe("UI source citation policy", () => {
       },
     });
 
+    await waitForPostflopActions(root);
+
     expectNoSourceCitation(root.textContent ?? "");
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.textContent)
-      .toContain("3bet pot");
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.textContent)
-      .toContain("LJ vs HJ (OOP)");
+    expect(root.querySelector<HTMLElement>(".postflop-output .dx-trainer__title")?.textContent)
+      .toBe("LJ vs HJ · 3bet pot");
   });
 
   it("nezobrazuje source/pack citace ve viditelnem dashboard textu", () => {
@@ -315,7 +355,7 @@ describe("UI source citation policy", () => {
     expectNoSourceCitation(root.textContent ?? "");
   });
 
-  it("nezobrazuje source/pack citace v postflop hand-line flow", () => {
+  it("nezobrazuje source/pack citace v postflop hand-line flow", async () => {
     const root = document.createElement("div");
     renderPostflopView(root, {
       initialSeed: 42,
@@ -323,14 +363,10 @@ describe("UI source citation policy", () => {
       initialActionNode: "FLOP_FACING_BET",
     });
 
-    root.querySelector<HTMLSelectElement>(".postflop-mode")!.value = "line";
-    root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
-    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CALL"]')?.click();
-    root.querySelector<HTMLButtonElement>(".postflop-line-next")?.click();
-    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="FOLD"]')?.click();
+    await playCallThenFold(root);
 
-    expect(root.querySelector<HTMLElement>(".postflop-line-complete")?.textContent)
-      .toBe("Hand line dokončena: 1/2 street.");
+    const done = root.querySelector<HTMLElement>(".postflop-output .dx-trainer__line-done");
+    expect(done?.dataset.total).toBe("2");
     expectNoSourceCitation(root.textContent ?? "");
   });
 
@@ -368,15 +404,15 @@ describe("UI source citation policy", () => {
     }, root);
 
     const text = root.querySelector<HTMLElement>(".permission-audit")?.textContent ?? "";
-    expect(text).toContain("Kontrola range");
-    expect(text).toContain("Vlastní solver export");
+    expect(text).toContain("Range audit");
+    expect(text).toContain("Owned solver export");
     expectNoSourceCitation(root.textContent ?? "");
     expect(text).not.toContain("mtt-full-ring-9-flop-production-private-v1");
     expect(text).not.toContain("Private Solver Owner");
     expect(text).not.toContain("Internal Review");
   });
 
-  it("release gate blokuje source/provider/pack id ve vsech hlavnich UI surfacech", () => {
+  it("release gate blokuje source/provider/pack id ve vsech hlavnich UI surfacech", async () => {
     const root = document.createElement("div");
     const store = createStatsStore(new MemoryStorage());
     expect(store.record(preflopRecord).ok).toBe(true);
@@ -386,13 +422,13 @@ describe("UI source citation policy", () => {
     const postflopRoot = root.appendChild(document.createElement("section"));
     const handLineRoot = root.appendChild(document.createElement("section"));
     const hhRoot = root.appendChild(document.createElement("section"));
-    const rangeRoot = root.appendChild(document.createElement("section"));
 
     const profileView = renderProfileSelector(profileRoot);
     profileView.setProfile(profileWith(DEFAULT_TRAINING_PROFILE, { tableFormat: "SIX_MAX" }));
     renderDashboard({ store, sessionCount: 1, postflopRecords: [postflopRecord] }, dashboardRoot);
     renderPostflopView(postflopRoot, { initialStreet: "FLOP", autoGenerate: true });
-    postflopRoot.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+    await waitForPostflopActions(postflopRoot);
+    clickPostflopAction(postflopRoot);
     renderPostflopView(handLineRoot, {
       initialSeed: 42,
       initialStreet: "FLOP",
@@ -400,12 +436,12 @@ describe("UI source citation policy", () => {
     });
     handLineRoot.querySelector<HTMLSelectElement>(".postflop-mode")!.value = "line";
     handLineRoot.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
-    handLineRoot.querySelector<HTMLButtonElement>('.postflop-action[data-action="FOLD"]')?.click();
+    await waitForPostflopActions(handLineRoot);
+    clickPostflopAction(handLineRoot, "FOLD");
     renderHHView(hhRoot, { postflopStrategyResolver: sourceHeavyResolver });
     hhRoot.querySelector<HTMLTextAreaElement>(".hh-input")!.value = hhRunout;
     hhRoot.querySelector<HTMLButtonElement>(".hh-analyze")?.click();
-    renderRangeModalButton(spot, loadedStore, rangeRoot);
-    rangeRoot.querySelector<HTMLButtonElement>(".range-modal-open")?.click();
+    openPreflopRange(document, spot, loadedStore);
 
     expectNoSourceCitation(root.textContent ?? "");
     expectNoSourceCitation(document.querySelector<HTMLElement>(".range-modal")?.textContent ?? "");

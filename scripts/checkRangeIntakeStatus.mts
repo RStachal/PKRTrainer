@@ -9,6 +9,7 @@ import {
   type MttPreflopImportSlot,
 } from "../src/data/ranges/mttPreflopImportSlots.ts";
 import { parseMttFilterArg } from "../src/data/ranges/mttCliFilterParsing.ts";
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 import type {
   MttCompletionReadinessFilters,
   MttCompletionReadinessStatus,
@@ -75,6 +76,7 @@ function usage(): string {
 
 try {
   const args = parseArgs(process.argv.slice(2));
+  await loadCompleteMttProductionRegistry();
   const report = buildIntakeStatusReport(args);
   if (args.outputPath !== null) {
     mkdirSync(dirname(args.outputPath), { recursive: true });
@@ -277,5 +279,3 @@ function matchesStatusFilter(
   if (filter === undefined || filter === "NON_PRODUCTION") return true;
   return status === filter;
 }
-import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
-await loadCompleteMttProductionRegistry();

@@ -1,0 +1,51 @@
+# DrillEV — 29. 9. 2026, odpovědi na rozhodnutí (otisk 39af959c)
+#
+# POZOR na původ, stejně jako 24. 9.: hlavička vráceného souboru uvádí „Návrh
+# odpovědí, vyplněno 29. 9. 2026 — Claude, v nejlepší víře z podkladů“, tedy
+# návrh, ne vlastníkův vlastní zápis. Vlastník ho přeposlal se slovy „zde
+# vyplnene drafty, analyzuj a pokracuj dale“, takže se zpracovává jako jeho
+# rozhodnutí — ale ten rozdíl má zůstat čitelný i za rok.
+#
+# Otázka 3 (RYE pro placené vydání) je odpovězena variantou a), tedy **beze
+# změny povolení**: zůstává vývoj a staging za heslem. Citace podmínek RYE
+# v odůvodnění jsem neověřoval z vlastního zdroje; pro zápis to ale nevadí,
+# protože a) nic nerozšiřuje. Kdyby někdy padlo b), musí se ty podmínky ověřit
+# znovu a samostatně.
+
+DRILLEV-DECISIONS-V1 39af959c 1b 2a 3a
+
+T1: b) Přesolvit těch 29 rodin celé, ne doporučené a). Důvod: čtyři noci daly
+    1 085 vrstev a 131 655 podher a změnily nula doporučení (291 buněk ze 4,72 M,
+    0,006 %, otisk ani jednoho ze 48 packů se nehnul). Noc dnes nestojí nic,
+    protože nevyrábí nic — tím padá jediná námitka proti b), „násobně víc nocí“,
+    a zůstane jeho výhoda: rodina zůstane vnitřně jednotná. Varianta a) by
+    vyrobila rodinu, která si sama odporuje (šest desek na červencových ranžích,
+    58 na dnešních) — přesně to, co vlastník odmítl 23. 9. rozhodnutím 3c.
+    A mtt:board-growth to už dnes odmítá zapsat, takže by se musel přebít vlastní
+    strážce.
+
+T2: a) Hodnotit jen squeeze/nesqueeze. Podloženo měřením z vlastního korpusu:
+    pět SQU mřížek barví 4,0–5,7 % kombinací a pro tytéž spoty existuje úplná
+    strategie v rodině MUL, takže se dá spočítat, co dnešní fillFolds zkazí.
+    Co MUL říká o rukách, o kterých SQU mlčí:
+
+        SB  40bb   fold 1 100   call  104   (8,5 %)
+        BTN 40bb   fold 1 056   call  168   (13,6 %)
+        HJ  40bb   fold 1 179   call   49   (3,9 %)
+        LJ  40bb   fold 1 221   call   33   (2,6 %)
+        BB  40bb   fold   740   call  468   (38,2 %)
+
+    Z toho plyne obojí: c) je vyloučené (fold→call by zkazil 740 až 1 221
+    kombinací), ale ani dnešní fold není neutrální — v BB je špatně u 468.
+    Žádná konstanta nesedí, protože chyba závisí na pozici. Zbývá a).
+    Druhý důkaz, že nejde o „ruce navíc“, ale o jinou otázku: ve všech pěti
+    mřížkách hraje AQo agresivněji než AQs (u 211, 214 a 216 dokonce AQo 100 %
+    proti AQs 0 %) — správně pro squeeze chart, ale jako produktový záznam
+    s fillFolds by hráč dostal „squeezuj AQo, skládej AQs“.
+
+T3: a) Zatím jen vývoj a staging za heslem; před placeným vydáním se zeptat
+    znovu. payment-model.md řadí oba packy do placených tierů (Pro, Pro Plus),
+    což je něco jiného než vývoj, a povolení z 24. 9. mluví o vývoji.
+    Zůstává úkol, který z toho plyne: držet provenienci (RYE / vlastní export)
+    u každého záznamu **v datech**, ne jen v hlavě, aby se dal obsah v případě
+    potřeby vypnout podle původu.

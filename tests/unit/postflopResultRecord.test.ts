@@ -262,4 +262,67 @@ describe("postflopResultRecord", () => {
       { key: "RIVER", total: 1, correct: river.correct ? 1 : 0, rate: river.correct ? 100 : 0 },
     ]);
   });
+
+  it("ulozi rovnocennou solver akci a jeji EV ztratu do result recordu i bridge", () => {
+    const generated = generatePostflopSpot({ seed: 20260716, street: "FLOP" });
+    const spot = postflopSpotToTrainingSpot({
+      ...generated,
+      recommendedAction: "CHECK",
+      actionEvs: {
+        source: "SOLVER",
+        unit: "BB",
+        equivalentThresholdBb: 0.01,
+        acceptableThresholdBb: 0.05,
+        values: [
+          { action: "CHECK", evBb: 0.2 },
+          { action: "BET_SMALL", evBb: 0.195 },
+          { action: "BET_BIG", evBb: 0.1 },
+        ],
+      },
+    });
+
+    const record = buildPostflopResultRecord(spot, "BET_SMALL", 1234);
+    const bridge = bridgePostflopResultRecordToStatsV2(record);
+
+    expect(record).toMatchObject({
+      correct: true,
+      actionEvOutcome: "EQUIVALENT",
+      chosenEvBb: 0.195,
+      bestEvBb: 0.2,
+      equivalentBestActions: ["CHECK", "BET_SMALL"],
+    });
+    expect(record.evLossBb).toBeCloseTo(0.005, 9);
+    expect(bridge).toMatchObject({
+      schemaVersion: POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION,
+      correct: true,
+      actionEvOutcome: "EQUIVALENT",
+      chosenEvBb: 0.195,
+      bestEvBb: 0.2,
+      equivalentBestActions: ["CHECK", "BET_SMALL"],
+    });
+    expect(bridge.evLossBb).toBeCloseTo(0.005, 9);
+    expect(isPostflopResultRecord(record)).toBe(true);
+    expect(isPostflopStatsV2BridgeRecord(bridge)).toBe(true);
+
+    const incompleteV5 = { ...bridge };
+    delete incompleteV5.chosenEvBb;
+    expect(isPostflopStatsV2BridgeRecord(incompleteV5)).toBe(false);
+
+    const legacyV4 = { ...bridge, schemaVersion: 4 };
+    delete legacyV4.chosenEvBb;
+    delete legacyV4.bestEvBb;
+    delete legacyV4.equivalentBestActions;
+    expect(isPostflopStatsV2BridgeRecord(legacyV4)).toBe(true);
+    expect(normalizePostflopStatsV2BridgeRecord(legacyV4)).toMatchObject({
+      schemaVersion: 4,
+      actionEvOutcome: "EQUIVALENT",
+    });
+
+    const unversionedLegacy = { ...legacyV4 } as Partial<typeof legacyV4>;
+    delete unversionedLegacy.schemaVersion;
+    expect(isPostflopStatsV2BridgeRecord(unversionedLegacy)).toBe(true);
+    expect(normalizePostflopStatsV2BridgeRecord(
+      unversionedLegacy as Parameters<typeof normalizePostflopStatsV2BridgeRecord>[0],
+    ).schemaVersion).toBe(4);
+  });
 });

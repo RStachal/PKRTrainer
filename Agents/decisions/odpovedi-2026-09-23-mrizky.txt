@@ -1,0 +1,4 @@
+# Verdikty k 48 mřížkám, vyčleněné z Agents/decisions/odpovedi-2026-09-23.txt,
+# ať parser nečte vedle tokenu i volný text u rozhodnutí.
+
+DRILLEV-REVIEW-V2 0o 1o 2o 3o 4x5 48o 116o 117o 118o 119o 120o 121o 122o 123o 124o 125o 126o 127o 128o 129o 130o 131o 132o 133o 134o 135o 136o 137o 138o 139o 140o 141o 142o 143o 144o 145o 146o 147o 148o 149o 158x3 159o 160o 161o 162o 163o 164o 165o

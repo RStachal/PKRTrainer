@@ -2,6 +2,7 @@ import type {
   PostflopStrategyInput,
   PostflopRecommendation,
 } from "../../core/postflopGenerator";
+import { highestEvAction } from "../../core/actionEv";
 import { createFlopProductionStrategyResolver } from "./flopProductionStrategyResolver";
 import type { FlopProductionStrategyPack } from "./flopProductionStrategyPack";
 import { createRiverProductionStrategyResolver } from "./riverProductionStrategyResolver";
@@ -78,8 +79,18 @@ function compareRecommendation(
   const prefix = `${pack.id}/${rule.id}`;
   if (recommendation === null) return [`${prefix}: runtime resolver returned no recommendation.`];
   const errors: string[] = [];
-  if (recommendation.action !== rule.recommendedAction) {
-    errors.push(`${prefix}: runtime action differs from imported rule.`);
+  // The runtime recommends the sampled hand's own action, not the rule-wide
+  // most-common action: a check-lane hand must be told to check even when the
+  // rule as a whole most often bets. Expect the highest-EV action when the hero
+  // bucket carries complete action EV, otherwise the hero bucket's own action.
+  const heroBucket = recommendation.source?.kind === "STRATEGY_PACK"
+    ? recommendation.source.heroRangeBucket
+    : undefined;
+  const expectedAction = recommendation.actionEvs
+    ? (highestEvAction(recommendation.actionEvs) ?? heroBucket?.action ?? rule.recommendedAction)
+    : (heroBucket?.action ?? rule.recommendedAction);
+  if (recommendation.action !== expectedAction) {
+    errors.push(`${prefix}: runtime action does not match the sampled hand's bucket action.`);
   }
   if (recommendation.explanation !== rule.explanation) {
     errors.push(`${prefix}: runtime explanation differs from imported rule.`);

@@ -10,6 +10,31 @@ import {
   requiredEntitlementsForMttPostflopPilotScopes,
 } from "./mttPostflopPilotCatalog";
 import { createMttPostflopPilotAwareResolver } from "./mttPostflopPilotRuntime";
+import { createTurnSolvedStrategyResolverChain } from "./turnSolvedStrategyPacks";
+import { runtimeSolvedTurnPacks } from "./turnSolvedRuntimeRegistry";
+import { createRiverSolvedStrategyResolverChain } from "./riverStrategyResolver";
+import { runtimeSolvedRiverPacks } from "./riverSolvedRuntimeRegistry";
+
+/** Jedno oprávnění na celý vyřešený turn; rodiny vznikly jedním během. */
+const SOLVED_TURN_ENTITLEMENT = "mtt.postflop.turn.solved.pilot" as const;
+/** Totéž pro river, ze stejného důvodu. */
+const SOLVED_RIVER_ENTITLEMENT = "mtt.postflop.river.solved.pilot" as const;
+
+/** Resolver nad vyřešenými riverovými rodinami, nebo nic, když žádná nedorazila. */
+function solvedRiverRuntimeResolver(): ReturnType<typeof createRiverSolvedStrategyResolverChain> | null {
+  return runtimeSolvedRiverPacks.length > 0 ? createRiverSolvedStrategyResolverChain() : null;
+}
+
+/**
+ * Resolver nad vyřešenými turn rodinami, nebo nic, když žádná nedorazila.
+ *
+ * Packy se stahují na pozadí, takže na začátku relace jich je málo a za chvíli
+ * všechny. Řetězec čte živý registr, takže se nemusí přestavovat; tahle funkce
+ * jen odpoví, jestli už je co servírovat.
+ */
+function solvedTurnRuntimeResolver(): ReturnType<typeof createTurnSolvedStrategyResolverChain> | null {
+  return runtimeSolvedTurnPacks.length > 0 ? createTurnSolvedStrategyResolverChain() : null;
+}
 import { trainingCapabilityForProfile } from "./trainingCapability";
 
 export type MttPostflopTrainingRuntimeMode =
@@ -73,6 +98,54 @@ export function buildMttPostflopTrainingRuntime(
       activeEntitlements: [],
       missingEntitlements: [],
     };
+  }
+
+  // Vyřešený turn obsah má vlastní placenou cestu, protože žádná jiná neexistuje.
+  //
+  // Jedenáct rodin a 3 082 vyřešených turnů se dodává jako lazy chunky, stahuje
+  // se na začátku relace - a runtime se jich nikdy na nic nezeptal. Produkční
+  // větev je nepustí, dokud není celý profil PRODUCTION, a pilotní katalog je
+  // flopový. Obsah byl dosažitelný jen měřicím skriptem, což zvenku vypadá úplně
+  // stejně, jako by neexistoval.
+  // Turn i river jdou stejnou cestou, jen s jiným registrem a jiným oprávněním.
+  // Napsat to dvakrát by znamenalo dvě místa, kde se opravuje jedna chyba -
+  // přesně tím trpí produkční packy pro turn a river, které vznikly každý zvlášť.
+  const solvedStreet = profile.street === "TURN"
+    ? { resolver: solvedTurnRuntimeResolver(), entitlement: SOLVED_TURN_ENTITLEMENT, label: "turn" }
+    : profile.street === "RIVER"
+      ? { resolver: solvedRiverRuntimeResolver(), entitlement: SOLVED_RIVER_ENTITLEMENT, label: "river" }
+      : null;
+
+  if (solvedStreet !== null) {
+    const solvedTurn = solvedStreet.resolver;
+    if (solvedTurn !== null) {
+      const access = evaluateEntitlementAccess({
+        required: [solvedStreet.entitlement],
+        grants,
+        now: options.now,
+        allowGrace: options.allowGrace,
+      });
+      if (access.active.includes(solvedStreet.entitlement)) {
+        return {
+          mode: "SCOPED_PILOT",
+          resolver: solvedTurn,
+          allowFallback: false,
+          reason: `Vyřešený ${solvedStreet.label} obsah je dostupný; není to plné produkční pokrytí a odpovídá jen na desky, které někdo vyřešil.`,
+          pilotScopes: [],
+          activeEntitlements: [solvedStreet.entitlement],
+          missingEntitlements: [],
+        };
+      }
+      return {
+        mode: "LOCKED_PILOT",
+        resolver: null,
+        allowFallback: false,
+        reason: `Vyřešený ${solvedStreet.label} obsah existuje, ale chybí k němu aktivní oprávnění.`,
+        pilotScopes: [],
+        activeEntitlements: [],
+        missingEntitlements: [solvedStreet.entitlement],
+      };
+    }
   }
 
   const pilots = readyMttPostflopPilotsForProfile(profile);

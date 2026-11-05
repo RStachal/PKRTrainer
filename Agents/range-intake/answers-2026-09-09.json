@@ -1,0 +1,591 @@
+{
+  "schemaVersion": "PKRTRAINER_RYE_ANSWERS_V1",
+  "draftCreatedAt": "2026-09-09",
+  "draftRecordCount": 114,
+  "answers": [
+    {
+      "sourceFile": "F3B-100BB-BB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-100BB-BB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-100BB-BB-vs-HJ.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-100BB-BB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-100BB-BB-vs-SB.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-100BB-BB-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-100BB-BB-vs-UTG2.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-100BB-BTN-vs-HJ.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-100BB-BTN-vs-MP.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-100BB-BTN-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-100BB-BTN-vs-UTG2.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-100BB-CO-vs-HJ.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-100BB-CO-vs-UTG2.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-100BB-HJ-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-100BB-HJ-vs-UTG2.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-100BB-MP-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-100BB-MP-vs-UTG2.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-100BB-UTG2-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-20BB-BB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-20BB-BB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-20BB-BB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-20BB-BB-vs-SB.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-20BB-BB-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-20BB-SB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-20BB-SB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-20BB-SB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-30BB-BB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-30BB-BB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-30BB-BB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-30BB-BTN-vs-MP.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-30BB-BTN-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-30BB-CO-vs-HJ.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-30BB-CO-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-30BB-MP-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-30BB-SB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-30BB-SB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-30BB-SB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-30BB-SB-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-30BB-UTG1-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-40BB-BB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-40BB-BB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-40BB-BB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-40BB-BB-vs-SB.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-40BB-BTN-vs-MP.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-40BB-BTN-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-40BB-CO-vs-MP.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-40BB-CO-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-40BB-HJ-vs-MP.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-40BB-HJ-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-40BB-SB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-40BB-SB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-40BB-SB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-40BB-SB-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-40BB-UTG1-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-50BB-BB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-50BB-BB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-50BB-BB-vs-HJ.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-50BB-BB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-50BB-BB-vs-UTG1.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-50BB-BTN-vs-CO.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-50BB-BTN-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-50BB-SB-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "F3B-50BB-UTG1-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM-btn35bb-co60bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM-btn35bb-hj45bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM-co60bb-hj45bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM-sb18bb-btn35bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM-sb18bb-co60bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM-sb18bb-hj45bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM10-hj25bb-bb13bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM10-hj25bb-btn55bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM10-hj25bb-co11bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM10-hj25bb-sb9bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM10-utg50bb-bb13bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM10-utg50bb-btn55bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM10-utg50bb-co11bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM10-utg50bb-hj25bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM10-utg50bb-sb9bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM11-bb13bb-sb9bb-r.html",
+      "verdict": "nesedí",
+      "flags": [
+        "moc těsné",
+        "špatné ruce",
+        "sloučení akcí vadí"
+      ],
+      "readWithoutActions": [
+        "All in"
+      ]
+    },
+    {
+      "sourceFile": "ICM11-sb9bb-btn55bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM11-sb9bb-hj25bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM11-sb9bb-utg50bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM14-utg20bb-btn8bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM14-utg20bb-co15bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM3-co60bb-hj45bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM3-sb18bb-btn75bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM3-sb18bb-co60bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM3-sb18bb-hj45bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM4-utg75bb-btn30bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM4-utg75bb-co60bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM4-utg75bb-hj45bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM5-btn30bb-co60bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM5-co60bb-utg75bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM5-hj45bb-utg75bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM5-sb18bb-btn30bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM5-sb18bb-co60bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM5-sb18bb-hj45bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM5-sb18bb-utg75bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM6-utg75bb-btn30bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM6-utg75bb-co60bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM6-utg75bb-hj45bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM7-bb7bb-hj45bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM7-bb7bb-utg75bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM7-btn30bb-co60bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM7-hj45bb-utg75bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM7-sb18bb-btn30bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM7-sb18bb-co60bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM7-sb18bb-hj45bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "ICM9-sb40bb-btn80bb.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "MUL-20BB-BB-vs-CO_BTN.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "MUL-20BB-BB-vs-MP_LP.html",
+      "verdict": "nesedí",
+      "flags": [
+        "moc těsné",
+        "špatné ruce",
+        "sloučení akcí vadí"
+      ],
+      "readWithoutActions": [
+        "All in"
+      ]
+    },
+    {
+      "sourceFile": "MUL-20BB-HJ-vs-EP_EP-MP.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "MUL-20BB-MP-vs-EP_EP-MP.html",
+      "verdict": "sedí",
+      "flags": []
+    },
+    {
+      "sourceFile": "MUL-20BB-SB-vs-CO_BTN.html",
+      "verdict": "sedí",
+      "flags": []
+    }
+  ]
+}

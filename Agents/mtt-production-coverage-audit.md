@@ -1,6 +1,10 @@
 # MTT Production Coverage Audit
 
-Updated: 2026-06-22
+Updated: 2026-07-10
+
+Active release priority and scope decisions live in
+`Agents/mtt-completion-priorities.md`. This audit continues to track the wider
+64-row Full MTT NLHE library as well as the current core release.
 
 ## Current production surface
 
@@ -10,11 +14,12 @@ Updated: 2026-06-22
 - EV models tracked: CHIP_EV and DOLAR_EV
 - Streets tracked: PREFLOP, FLOP, TURN and RIVER
 - Ante states tracked: ON and OFF
-- Current production-ready profiles: none until a canonical legal production import is present.
+- Current production-ready profiles: four full-ring CHIP_EV preflop profiles.
 - Current production baseline:
-  - 0 production RangePacks
+  - 4 canonical production RangePacks: regular/turbo x ante ON/OFF
+  - 4 source-free production permission manifests
   - 2 historical FULL_RING_9 / REGULAR / CHIP_EV packs remain available as preview-only data
-  - historical pack IDs are not canonical production import IDs and cannot start scoring
+  - 4 SIX_MAX CHIP_EV packs remain candidate-only with empty records
   - source citations are not shown in app UI
 
 ## Completion matrix
@@ -22,9 +27,9 @@ Updated: 2026-06-22
 `npm run mtt:completion -- --summary` currently fails the production completion gate and reports:
 
 - total MTT rows: 64
-- production-ready rows: 0
-- candidate/preview rows: 54
-- blocked/missing rows: 10
+- production-ready rows: 4
+- candidate/preview rows: 52
+- blocked/missing rows: 8
 
 Use `npm run mtt:completion -- --preview --json` for operator tooling that needs the full matrix while production data
 is still missing. Coverage is intentionally broader than the current production data. The matrix includes 6-max and
@@ -33,7 +38,7 @@ production data remain candidate or missing.
 
 ## Range intake state
 
-`npm run range:intake` currently tracks 64 import rows that are waiting for both files:
+`npm run range:intake` currently tracks 60 remaining import rows that are waiting for both files:
 
 - `normalized.json`
 - `permission.json`
@@ -100,12 +105,12 @@ shows exact blockers for release routing.
 `mtt:postflop-release` is the final postflop release gate. The final postflop release gate currently fails because
 all 48 FLOP/TURN/RIVER targets are waiting for legal production data and still resolve through fallback runtime.
 
-The preflop intake subset currently has 16 rows and 0 rows ready for validation. All 16 are waiting for both normalized data and permission manifests.
+The remaining preflop intake subset has 12 rows and 0 rows ready for validation.
+Four full-ring CHIP_EV rows have already left the queue after production promotion.
 
 ## Known blocked profiles
 
-- FULL_RING_9 / REGULAR / CHIP_EV / PREFLOP / ante ON and OFF have complete historical records and are playable as pre-production preview drills; they remain non-production until canonical legal imports and permission manifests are supplied.
-- FULL_RING_9 / TURBO / CHIP_EV / PREFLOP / ante ON and OFF are missing dedicated turbo records.
+- FULL_RING_9 / REGULAR and TURBO / CHIP_EV / PREFLOP / ante ON and OFF are production. Turbo uses an explicit reviewed `BLIND_SPEED` reuse policy.
 - FULL_RING_9 / REGULAR and TURBO / DOLAR_EV / PREFLOP / ante ON and OFF are missing dedicated DOLAR_EV records or an explicitly reviewed reuse policy.
 - SIX_MAX / REGULAR and TURBO / CHIP_EV / PREFLOP / ante ON and OFF are candidate metadata only; normalized hand-class records are not present.
 - SIX_MAX / REGULAR and TURBO / DOLAR_EV / PREFLOP / ante ON and OFF are missing dedicated DOLAR_EV records or an explicitly reviewed reuse policy.
@@ -115,9 +120,8 @@ The preflop intake subset currently has 16 rows and 0 rows ready for validation.
 
 `npm run verify:ranges` includes the MTT preflop regular-vs-turbo diff audit:
 
-- comparable rows: 0
-- blocked rows: 4
-- FULL_RING_9 ante ON/OFF are blocked because turbo RangePacks are missing.
+- comparable rows: 2 after the promoted turbo packs carry their explicit reviewed reuse policy.
+- blocked rows: 2, both SIX_MAX ante modes with empty candidate records.
 - SIX_MAX ante ON/OFF are blocked because regular and turbo candidate packs have no records to compare.
 - Turbo cannot become production by changing blind speed metadata only.
 

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { generatePostflopSpot } from "../../src/core/postflopGenerator";
+import { gradePostflopAction } from "../../src/core/postflopScoring";
+import { postflopSpotToTrainingSpot } from "../../src/core/postflopTrainingSpot";
 import {
   createTurnProductionStrategyResolver,
 } from "../../src/data/ranges/turnProductionStrategyResolver";
@@ -176,6 +178,111 @@ describe("turnProductionStrategyResolver", () => {
         { action: "CHECK", frequencyPct: 30, visibility: "EXACT" },
       ]);
     }
+  });
+
+  it("doporuci akci konkretniho hero bucketu, ne rule-wide akci, kdyz chybi action EV", () => {
+    // The same defect that was fixed on the flop resolver: the rule barrels
+    // BET_SMALL overall, but 72o sits in the CHECK lane and this pack carries no
+    // action EV. The player holding 72o must be told to CHECK, not graded against
+    // the rule-wide action. Turn content does not exist yet, so this locks the
+    // fix before any is added.
+    const resolver = createTurnProductionStrategyResolver(productionPack());
+
+    const checkHand = resolver({ ...input, heroHand: "72o" });
+    expect(checkHand?.action).toBe("CHECK");
+    expect(checkHand?.source?.kind).toBe("STRATEGY_PACK");
+    if (checkHand?.source?.kind === "STRATEGY_PACK") {
+      expect(checkHand.source.heroRangeBucket).toMatchObject({ lane: "CHECK", action: "CHECK", handClass: "72o" });
+    }
+
+    // A bluff hand in the same rule barrels; its bucket action still leads.
+    expect(resolver({ ...input, heroHand: "QJs" })?.action).toBe("BET_SMALL");
+
+    // A hand outside the range was never solved here, so the pack refuses rather
+    // than passing off a rule-wide average as a solver result.
+    expect(resolver({ ...input, heroHand: "K3o" })).toBeNull();
+
+    // Without a hero hand the caller asks about the rule itself, so the rule-wide
+    // action is the right answer.
+    expect(resolver({ ...input })?.action).toBe("BET_SMALL");
+  });
+
+  it("hodnoti hrace podle akce jeho ruky, ne podle rule-wide akce", () => {
+    // 72o is a check-lane air hand on this low-brick turn: checking must grade
+    // correct even though the rule's most-common action is BET_SMALL.
+    const spot = generatePostflopSpot({
+      seed: 11,
+      street: "TURN",
+      board: [
+        { rank: "A", suit: "s" },
+        { rank: "7", suit: "d" },
+        { rank: "2", suit: "c" },
+        { rank: "4", suit: "h" },
+      ],
+      heroCards: [
+        { rank: "7", suit: "h" },
+        { rank: "2", suit: "s" },
+      ],
+      potType: "SINGLE_RAISED",
+      potBB: 6,
+      effectiveStackBB: 40,
+      positionContext: {
+        heroPosition: "BTN",
+        villainPosition: "BB",
+        aggressorPosition: "BTN",
+        callerPosition: "BB",
+        inPosition: true,
+        callerType: "BIG_BLIND",
+        positionPattern: "BTN_VS_BB",
+      },
+      strategyResolver: createTurnProductionStrategyResolver(productionPack()),
+    });
+
+    expect(spot.recommendedAction).toBe("CHECK");
+    expect(gradePostflopAction(postflopSpotToTrainingSpot(spot), "CHECK").correct).toBe(true);
+    expect(gradePostflopAction(postflopSpotToTrainingSpot(spot), "BET_SMALL").correct).toBe(false);
+  });
+
+  it("rozdava hrdinu z range, kterou pack skutecne resil", () => {
+    const resolver = createTurnProductionStrategyResolver(productionPack());
+    const packHands = new Set(
+      productionPack().rules.flatMap((rule) => rule.rangeBuckets.flatMap((bucket) => bucket.handClasses)),
+    );
+
+    let withBucket = 0;
+    const spots = 60;
+    for (let seed = 1; seed <= spots; seed += 1) {
+      const spot = generatePostflopSpot({
+        seed,
+        street: "TURN",
+        potType: "SINGLE_RAISED",
+        potBB: 6,
+        effectiveStackBB: 40,
+        board: [
+          { rank: "A", suit: "s" },
+          { rank: "7", suit: "d" },
+          { rank: "2", suit: "c" },
+          { rank: "4", suit: "h" },
+        ],
+        positionContext: {
+          heroPosition: "BTN",
+          villainPosition: "BB",
+          aggressorPosition: "BTN",
+          callerPosition: "BB",
+          inPosition: true,
+          callerType: "BIG_BLIND",
+          positionPattern: "BTN_VS_BB",
+        },
+        strategyResolver: resolver,
+      });
+      // A freely dealt hand is almost never in the solved range, so without the
+      // re-deal these spots would grade against the rule-wide action instead.
+      if (spot.strategySource.kind === "STRATEGY_PACK" && spot.strategySource.heroRangeBucket) {
+        withBucket += 1;
+        expect(packHands.has(spot.strategySource.heroRangeBucket.handClass)).toBe(true);
+      }
+    }
+    expect(withBucket).toBe(spots);
   });
 
   it("vyzaduje shodu prior flop action a turn card class", () => {

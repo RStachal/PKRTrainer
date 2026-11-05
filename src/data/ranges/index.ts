@@ -57,13 +57,53 @@ const REQUIRED_ANTE_MODES: readonly AnteMode[] = ["ON", "OFF"];
  * Tvar `${ante}|${position}|${bucket}|${context}` je jednoznačný: žádná z dílčích
  * hodnot neobsahuje znak `|`, takže nemůže dojít ke kolizi z konkatenace.
  */
+export interface RangeRefinement {
+  /** Sedačka, která jednala před hrdinou. */
+  vsSeat?: Position;
+  /** Rozložení stacků u stolu, pro které záznam platí. */
+  stackSetupId?: string;
+  /**
+   * Kdo otevření dorovnal, zkratkami zdroje a v pořadí akce - osa dorovnávajícího
+   * (rozhodnutí 4a, 1. 10. 2026).
+   *
+   * Range proti otevření, které někdo dorovnal, je jiná než proti otevření
+   * samotnému, a liší se **i podle toho kdo**: změřeno na mřížkách zdroje, že
+   * BTN na 100 bb squeezuje 67 kombinací proti flatu z EP, 84 proti MP a 102
+   * proti CO; BB na 40 bb callne 506 proti EP/MP, 644 proti CO/BU a 751 proti SB.
+   *
+   * Seznam, ne jedno pole: čtrnáct záznamů korpusu má dorovnávající dva.
+   * Prázdný seznam se do klíče **nepřipojuje** - „otevření nikdo nedorovnal" je
+   * přesně to, co znamená `vsSeat` sám, a kdyby si na to vyrobil vlastní klíč,
+   * rozdělil by dnešní obsah na dvě poloviny bez důvodu.
+   */
+  flatCallers?: readonly string[];
+}
+
+/**
+ * Zpřesnění se do klíče připojuje **jen když je**.
+ *
+ * Klíč záznamu bez zpřesnění tím zůstává bajt po bajtu tentýž jako dřív, takže
+ * dnešní obsah, uložená historie ani Question_ID se nehnou. Přesnější záznam
+ * dostane vlastní klíč vedle něj, ne místo něj.
+ */
+function refinementSuffix(refinement?: RangeRefinement): string {
+  if (refinement === undefined) return "";
+  const vs = refinement.vsSeat ? `|vs${refinement.vsSeat}` : "";
+  const scenario = refinement.stackSetupId ? `|#${refinement.stackSetupId}` : "";
+  // Prázdný seznam nepřipojuje nic - viz `RangeRefinement.flatCallers`. Proto
+  // `?.length`, ne `!== undefined`: `[]` se musí chovat jako „bez osy".
+  const flat = refinement.flatCallers?.length ? `|@${refinement.flatCallers.join("+")}` : "";
+  return `${vs}${scenario}${flat}`;
+}
+
 export function rangeIndexKey(
   ante: AnteMode,
   position: Position,
   bucket: StackBucket,
   context: ActionContext,
+  refinement?: RangeRefinement,
 ): string {
-  return `${ante}|${position}|${bucket}|${context}`;
+  return `${ante}|${position}|${bucket}|${context}${refinementSuffix(refinement)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -108,11 +148,19 @@ function aggregate(variants: readonly RangeFile[]): AggregationResult {
 
       // Naplnění agregovaného indexu; kolize klíče je integritní chyba.
       for (const record of file.entries) {
+        // Zpřesněný záznam dostane vlastní klíč **vedle** obecného, ne místo
+        // něj: obecná odpověď musí zůstat dosažitelná pro spoty, kde se
+        // otvírající sedačka nezná.
         const key = rangeIndexKey(
           file.ante,
           record.position,
           record.bucket,
           record.context,
+          {
+            vsSeat: record.vsSeat,
+            stackSetupId: record.stackSetupId,
+            flatCallers: record.flatCallers,
+          },
         );
         if (index.has(key)) {
           errors.push(`duplicate index key during aggregation: ${key}.`);
@@ -194,6 +242,70 @@ const LAZY_RANGE_INDEX: ReadonlyMap<string, RangeRecord> = {
 export const RANGE_INDEX: ReadonlyMap<string, RangeRecord> = LAZY_RANGE_INDEX;
 
 /**
+ * Pořadí, ve kterém se zpřesnění zahazují - od nejpřesnějšího klíče k obecnému.
+ *
+ * **Exportuje se proto, že tenhle řetěz existoval dvakrát.** `getRangeRecord`
+ * (agregovaný index, produkční cesta) a `createRangeStoreFromRangePack` (store
+ * nad jedním packem, používají ho měřicí skripty) si ho každý skládal sám, a už
+ * se rozešly: packová cesta zkoušela `{scénář}` bez sedačky, indexová ne, a od
+ * 7. 10. 2026 znala osu dorovnávajícího jen indexová. Dvě kopie téhož výpočtu se
+ * rozejdou tiše a každá strana pak o téže buňce tvrdí něco jiného - projekt to
+ * zná z ceny desky i z dodávky packů.
+ *
+ * Změřeno 7. 10. 2026, že ten rozchod dnes nemá dopad: záznam se scénářem **a bez
+ * sedačky** není ani v jednom ze čtyř produkčních packů, ani v kandidátu. Krok,
+ * o který se cesty lišily, byl mrtvý.
+ *
+ * Pořadí zahazování je úsudek o obsahu:
+ *
+ * 1. **rozložení stacků** padá první - bez něj je odpověď o téže situaci, jen
+ *    o něco méně přesná (tak to platí od 16. 9. 2026);
+ * 2. **dorovnávající** padá druhý - je to pořád táž otázka („čelím otevření
+ *    z UTG"), jen bez toho, kdo ho dorovnal;
+ * 3. **sedačka** padá poslední: bez ní je odpověď o **jiné situaci**.
+ *
+ * Když se nenajde nic přesnějšího, vrátí se obecný záznam - nezpřesněná odpověď
+ * je pořád odpověď. Je to tentýž postup, jakým vybírá vyřešený postflop.
+ */
+export function refinementFallbackChain(input?: RangeRefinement): RangeRefinement[] {
+  const attempts: RangeRefinement[] = [];
+  const hasFlat = (input?.flatCallers?.length ?? 0) > 0;
+  /*
+   * Prázdný seznam dorovnávajících se z pokusu **vypustí**, ne jen ignoruje.
+   *
+   * Na klíč vliv nemá (prázdný seznam nepřipojuje suffix), ale nechat ho v řetězu
+   * by znamenalo dva různé tvary téhož pokusu - a tvar řetězu se porovnává
+   * v testech i mezi dvěma cestami, které ho teď sdílejí.
+   */
+  const refinement: RangeRefinement | undefined = input === undefined ? undefined : {
+    ...(input.vsSeat === undefined ? {} : { vsSeat: input.vsSeat }),
+    ...(input.stackSetupId === undefined ? {} : { stackSetupId: input.stackSetupId }),
+    ...(hasFlat ? { flatCallers: input.flatCallers } : {}),
+  };
+  if (refinement !== undefined
+    && (refinement.vsSeat !== undefined || refinement.stackSetupId !== undefined || hasFlat)) {
+    attempts.push(refinement);
+    if (hasFlat && refinement.stackSetupId !== undefined) {
+      attempts.push({
+        ...(refinement.vsSeat === undefined ? {} : { vsSeat: refinement.vsSeat }),
+        flatCallers: refinement.flatCallers,
+      });
+    }
+    if (hasFlat && refinement.vsSeat !== undefined) {
+      attempts.push({
+        vsSeat: refinement.vsSeat,
+        ...(refinement.stackSetupId === undefined ? {} : { stackSetupId: refinement.stackSetupId }),
+      });
+    }
+    if (refinement.stackSetupId !== undefined && refinement.vsSeat !== undefined) {
+      attempts.push({ vsSeat: refinement.vsSeat });
+    }
+  }
+  attempts.push({});
+  return attempts;
+}
+
+/**
  * Vrátí `RangeRecord` pro kombinaci
  * `Ante × Pozice × Hloubkový_koš × akční kontext`, nebo `undefined`, pokud pro
  * danou kombinaci žádný záznam neexistuje (Req 4.8 — chybějící kombinace).
@@ -203,8 +315,16 @@ export function getRangeRecord(
   position: Position,
   bucket: StackBucket,
   context: ActionContext,
+  refinement?: RangeRefinement,
 ): RangeRecord | undefined {
-  return RANGE_INDEX.get(rangeIndexKey(ante, position, bucket, context));
+  const attempts = refinementFallbackChain(refinement);
+  for (const attempt of attempts) {
+    const found = RANGE_INDEX.get(
+      rangeIndexKey(ante, position, bucket, context, attempt),
+    );
+    if (found !== undefined) return found;
+  }
+  return undefined;
 }
 
 /**

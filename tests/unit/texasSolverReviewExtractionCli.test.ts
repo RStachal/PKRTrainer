@@ -181,6 +181,84 @@ describe("mtt:texas-solver-review CLI", () => {
     }
   });
 
+  it("oddeli memory-safe boardy jako read-only evidence bez review zapisu", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-texas-review-only-"));
+    const rawDir = join(directory, "raw");
+    const outputDir = join(directory, "review");
+    const reportPath = join(directory, "evidence.json");
+    mkdirSync(rawDir, { recursive: true });
+    const raw = {
+      node_type: "action_node",
+      player: 1,
+      actions: ["CHECK", "BET 25.000000"],
+      strategy: {
+        actions: ["CHECK", "BET 25.000000"],
+        strategy: { AcJc: [0.25, 0.75] },
+      },
+      childrens: {},
+    };
+    writeFileSync(join(rawDir, "pkrtrainer_TEST_FAMILY_AKQtt.json"), JSON.stringify(raw), "utf8");
+    writeFileSync(join(rawDir, "pkrtrainer_TEST_FAMILY_OLD_FULL_TREE.json"), JSON.stringify(raw), "utf8");
+
+    try {
+      const result = runReview(
+        "--family=TEST_FAMILY",
+        `--raw-dir=${rawDir}`,
+        `--solver-output-dir=${outputDir}`,
+        "--boards=AKQtt",
+        "--review-only-tree-profile=MEMORY_SAFE_REVIEW_ONLY",
+        `--output=${reportPath}`,
+        "--json",
+      );
+      expect(result.status).toBe(0);
+      const report = parseJsonStdout(result.stdout) as {
+        valid: boolean;
+        status: string;
+        productionReady: boolean;
+        reviewOnlyTreeProfile: string;
+        requestedBoards: string[];
+        counts: { requestedBoards: number; missingBoards: number; rawFiles: number; plannedWrites: number };
+        files: Array<{ boardId: string }>;
+        reviewNotes: { status: string; usableForProduction: string };
+      };
+      expect(report).toMatchObject({
+        valid: true,
+        status: "REVIEW_ONLY_EVIDENCE",
+        productionReady: false,
+        reviewOnlyTreeProfile: "MEMORY_SAFE_REVIEW_ONLY",
+        requestedBoards: ["AKQtt"],
+        counts: { requestedBoards: 1, missingBoards: 0, rawFiles: 1, plannedWrites: 0 },
+        reviewNotes: { status: "NOT_APPLICABLE", usableForProduction: "NO" },
+      });
+      expect(report.files.map((file) => file.boardId)).toEqual(["AKQtt"]);
+      expect(existsSync(reportPath)).toBe(true);
+      expect(existsSync(join(outputDir, "strategy-export.review.json"))).toBe(false);
+
+      const missing = runReview(
+        "--family=TEST_FAMILY",
+        `--raw-dir=${rawDir}`,
+        `--solver-output-dir=${outputDir}`,
+        "--boards=AKQtt,K72r",
+        "--review-only-tree-profile=MEMORY_SAFE_REVIEW_ONLY",
+        "--json",
+      );
+      expect(missing.status).toBe(1);
+      expect(missing.stdout).toContain("Requested board K72r is missing");
+
+      const forbiddenWrite = runReview(
+        "--family=TEST_FAMILY",
+        `--raw-dir=${rawDir}`,
+        "--boards=AKQtt",
+        "--review-only-tree-profile=MEMORY_SAFE_REVIEW_ONLY",
+        "--write",
+      );
+      expect(forbiddenWrite.status).toBe(1);
+      expect(forbiddenWrite.stderr).toContain("--write is forbidden for review-only tree evidence");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it("zablokuje malformed raw export bez generovani reviewed souboru", () => {
     const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-texas-review-invalid-"));
     const rawDir = join(directory, "raw");

@@ -70,13 +70,18 @@ describe("training capability matrix", () => {
       }
     }
     expect(statuses).toEqual(new Set([
+      "PRODUCTION",
       "PREVIEW",
       "BLOCKED",
       "UNSUPPORTED",
     ]));
     expect(trainingCapabilityForProfile(DEFAULT_TRAINING_PROFILE)).toMatchObject({
-      status: "PREVIEW",
+      status: "PRODUCTION",
       canStartTraining: true,
+      mttReadiness: {
+        packId: "mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1",
+        productionReady: true,
+      },
     });
   });
 

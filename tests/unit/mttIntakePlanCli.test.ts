@@ -10,19 +10,19 @@ describe("mtt:intake-plan CLI", () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("MTT intake priority plan");
-    expect(result.stdout).toContain("queue rows: 64");
+    expect(result.stdout).toContain("queue rows: 60");
     expect(result.stdout).toContain("shown rows: 12");
     expect(result.stdout).toContain("ready for validation: 0");
     expect(result.stdout).toContain(
-      "priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=8, P2_PREFLOP_DOLAR_EV=8, P3_FLOP_PRODUCTION=16, P4_TURN_PRODUCTION=16, P5_RIVER_PRODUCTION=16",
+      "priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=4, P2_PREFLOP_DOLAR_EV=8, P3_FLOP_PRODUCTION=16, P4_TURN_PRODUCTION=16, P5_RIVER_PRODUCTION=16",
     );
     expect(result.stdout).toContain("showing first 12 rows; use --all to show the full queue");
     expect(result.stdout).toContain(
-      "1. P1_PREFLOP_CHIP_EV | FULL_RING_9|TURBO|CHIP_EV|PREFLOP|OFF | MISSING | WAITING",
+      "1. P1_PREFLOP_CHIP_EV | SIX_MAX|REGULAR|CHIP_EV|PREFLOP|OFF | CANDIDATE | WAITING",
     );
     expect(result.stdout).toContain("--kind=mtt-preflop");
     expect(result.stdout).toContain("build dry-run: npm run build:range-module -- --kind=mtt-preflop --dry-run");
-    expect(result.stdout).toContain("mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1");
+    expect(result.stdout).toContain("mtt-six-max-regular-preflop-chip-ev-ante-off-production-v1");
     expect(result.stdout).not.toContain("https://");
   });
 
@@ -117,11 +117,11 @@ describe("mtt:intake-plan CLI", () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("MTT intake priority plan");
-    expect(result.stdout).toContain("queue rows: 64");
+    expect(result.stdout).toContain("queue rows: 60");
     expect(result.stdout).toContain("detail rows available: 12");
     expect(result.stdout).not.toContain("shown rows: 12");
     expect(result.stdout).toContain("ready for validation: 0");
-    expect(result.stdout).toContain("priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=8");
+    expect(result.stdout).toContain("priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=4");
     expect(result.stdout).not.toContain("1. P1_PREFLOP_CHIP_EV");
     expect(result.stdout).not.toContain("build dry-run:");
   });
@@ -130,11 +130,11 @@ describe("mtt:intake-plan CLI", () => {
     const result = runPlan("--priority=P1_PREFLOP_CHIP_EV", "--all");
 
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("queue rows: 8");
-    expect(result.stdout).toContain("shown rows: 8");
-    expect(result.stdout).toContain("priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=8");
+    expect(result.stdout).toContain("queue rows: 4");
+    expect(result.stdout).toContain("shown rows: 4");
+    expect(result.stdout).toContain("priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=4");
     expect(result.stdout).toContain("1. P1_PREFLOP_CHIP_EV");
-    expect(result.stdout).toContain("8. P1_PREFLOP_CHIP_EV");
+    expect(result.stdout).toContain("4. P1_PREFLOP_CHIP_EV");
     expect(result.stdout).not.toContain("P2_PREFLOP_DOLAR_EV |");
   });
 
@@ -201,9 +201,9 @@ describe("mtt:intake-plan CLI", () => {
       const parsed = JSON.parse(readFileSync(outputPath, "utf8")) as {
         counts: { totalQueueRows: number; missingNormalized: number; missingPermission: number };
       };
-      expect(parsed.counts.totalQueueRows).toBe(64);
-      expect(parsed.counts.missingNormalized).toBe(64);
-      expect(parsed.counts.missingPermission).toBe(64);
+      expect(parsed.counts.totalQueueRows).toBe(60);
+      expect(parsed.counts.missingNormalized).toBe(60);
+      expect(parsed.counts.missingPermission).toBe(56);
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
@@ -228,9 +228,9 @@ describe("mtt:intake-plan CLI", () => {
       const p2 = readFileSync(join(directory, "P2_PREFLOP_DOLAR_EV.md"), "utf8");
       const p5 = readFileSync(join(directory, "P5_RIVER_PRODUCTION.md"), "utf8");
 
-      expect(summary.counts.totalQueueRows).toBe(64);
-      expect(summary.counts.byPriority.P1_PREFLOP_CHIP_EV).toBe(8);
-      expect(p1).toContain("mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1");
+      expect(summary.counts.totalQueueRows).toBe(60);
+      expect(summary.counts.byPriority.P1_PREFLOP_CHIP_EV).toBe(4);
+      expect(p1).toContain("mtt-six-max-turbo-preflop-chip-ev-ante-off-production-v1");
       expect(p1).toContain("Turbo slots require dedicated turbo recommendations");
       expect(p2).toContain("$EV slots must not silently reuse chipEV data");
       expect(p5).toContain("Postflop slots require granular node");

@@ -8,6 +8,7 @@ import type {
 import type { PostflopAction, PostflopStreet } from "../core/postflopGenerator";
 import { postflopSpotToTrainingSpot } from "../core/postflopTrainingSpot";
 import type { TrainingProfile } from "../core/trainingProfile";
+import { postflopTablePlayers, villainFields, type PlayerSettings } from "../core/villain/tableCast";
 import {
   bridgePostflopResultRecordToStatsV2,
   buildPostflopResultRecord,
@@ -50,6 +51,8 @@ export interface PostflopLineResultOptions {
   chosenByStreet?: Partial<Record<PostflopStreet, PostflopAction>>;
   startedAt?: number;
   completedAt?: number;
+  /** Režim a soupeř ve hře; bez nich se linka zapíše jako GTO. */
+  players?: PlayerSettings;
 }
 
 export function buildPostflopLineResultRecord(
@@ -61,7 +64,13 @@ export function buildPostflopLineResultRecord(
   const streetResults = line.streets.map((street, index) => {
     const trainingSpot = postflopSpotToTrainingSpot(street.spot);
     const chosen = options.chosenByStreet?.[street.street] ?? trainingSpot.recommendedAction;
-    const result = buildPostflopResultRecord(trainingSpot, chosen, completedAt);
+    const result = buildPostflopResultRecord(
+      trainingSpot,
+      chosen,
+      completedAt,
+      undefined,
+      options.players === undefined ? {} : villainFields(postflopTablePlayers(trainingSpot, options.players)),
+    );
     const bridge = bridgePostflopResultRecordToStatsV2(result, {
       profile: {
         ...options.profile,

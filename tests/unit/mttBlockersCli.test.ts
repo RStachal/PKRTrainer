@@ -11,14 +11,14 @@ describe("mtt:blockers CLI", () => {
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("MTT production blockers");
     expect(result.stdout).toContain("total rows in filter: 64");
-    expect(result.stdout).toContain("blocker rows: 64");
-    expect(result.stdout).toContain("candidate blocker rows: 54");
-    expect(result.stdout).toContain("missing blocker rows: 10");
+    expect(result.stdout).toContain("blocker rows: 60");
+    expect(result.stdout).toContain("candidate blocker rows: 55");
+    expect(result.stdout).toContain("missing blocker rows: 5");
     expect(result.stdout).toContain("ready for validation: 0");
-    expect(result.stdout).toContain("missing normalized.json: 64");
-    expect(result.stdout).toContain("missing permission.json: 64");
+    expect(result.stdout).toContain("missing normalized.json: 60");
+    expect(result.stdout).toContain("missing permission.json: 56");
     expect(result.stdout).toContain(
-      "priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=8, P2_PREFLOP_DOLAR_EV=8, P3_FLOP_PRODUCTION=16, P4_TURN_PRODUCTION=16, P5_RIVER_PRODUCTION=16",
+      "priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=4, P2_PREFLOP_DOLAR_EV=8, P3_FLOP_PRODUCTION=16, P4_TURN_PRODUCTION=16, P5_RIVER_PRODUCTION=16",
     );
     expect(result.stdout).toContain("SIX_MAX|TURBO|DOLAR_EV|RIVER|OFF");
     expect(result.stdout).toContain("P5_RIVER_PRODUCTION");
@@ -132,9 +132,9 @@ describe("mtt:blockers CLI", () => {
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("MTT production blockers");
     expect(result.stdout).toContain("total rows in filter: 64");
-    expect(result.stdout).toContain("blocker rows: 64");
-    expect(result.stdout).toContain("missing permission.json: 64");
-    expect(result.stdout).toContain("priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=8");
+    expect(result.stdout).toContain("blocker rows: 60");
+    expect(result.stdout).toContain("missing permission.json: 56");
+    expect(result.stdout).toContain("priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=4");
     expect(result.stdout).not.toContain("SIX_MAX|TURBO|DOLAR_EV|RIVER|OFF");
     expect(result.stdout).not.toContain("blocker:");
   });
@@ -150,9 +150,9 @@ describe("mtt:blockers CLI", () => {
       const parsed = JSON.parse(readFileSync(outputPath, "utf8")) as {
         counts: { blockerRows: number; missingNormalized: number; missingPermission: number };
       };
-      expect(parsed.counts.blockerRows).toBe(64);
-      expect(parsed.counts.missingNormalized).toBe(64);
-      expect(parsed.counts.missingPermission).toBe(64);
+      expect(parsed.counts.blockerRows).toBe(60);
+      expect(parsed.counts.missingNormalized).toBe(60);
+      expect(parsed.counts.missingPermission).toBe(56);
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

@@ -48,6 +48,7 @@ import {
 import type { MttPreflopRangePackImportInput } from "../../src/data/ranges/mttPreflopRangePackImport";
 import type { ProductionPermissionManifest } from "../../src/data/ranges/productionPermissionManifest";
 import type { ProductionCardRemovalSample } from "../../src/data/ranges/postflopStrategyPack";
+import { CLI_SPAWN_TIMEOUT_MS } from "../cliSpawnBudget";
 
 const ACTION_CONTEXTS: readonly ActionContext[] = [
   "RFI",
@@ -704,7 +705,7 @@ function runImportCli(
     {
       cwd: process.cwd(),
       encoding: "utf8",
-      timeout: 60000,
+      timeout: CLI_SPAWN_TIMEOUT_MS,
     },
   );
 }

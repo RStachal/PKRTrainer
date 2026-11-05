@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
-import { isLazyMttProductionAsset } from "../src/pwa/precacheManifestBuild";
+import { isDeferredAsset, isLazyMttProductionAsset } from "../src/pwa/precacheManifestBuild";
 
 const workerPath = "dist/sw.js";
 const distPath = resolve("dist");
@@ -26,7 +26,10 @@ function listPrecacheFiles(directory: string): string[] {
 const worker = readFileSync(workerPath, "utf8");
 const precacheFiles = listPrecacheFiles(distPath);
 const lazyMttProductionFiles = precacheFiles.filter(isLazyMttProductionAsset);
-const requiredPrecacheFiles = precacheFiles.filter((name) => !isLazyMttProductionAsset(name));
+// Everything the app fetches on demand, which is the MTT packs plus the equity
+// table. The rule is the same for both: present in dist, absent from install.
+const deferredFiles = precacheFiles.filter(isDeferredAsset);
+const requiredPrecacheFiles = precacheFiles.filter((name) => !isDeferredAsset(name));
 const mainChunks = precacheFiles.filter((name) => /^assets\/main-[a-zA-Z0-9_-]+\.js$/.test(name));
 const errors: string[] = [];
 if (mainChunks.length !== 1) errors.push(`Expected one main JS chunk, found ${mainChunks.length}.`);
@@ -35,9 +38,9 @@ for (const file of requiredPrecacheFiles) {
     errors.push(`Service worker precache is missing ${file}.`);
   }
 }
-for (const file of lazyMttProductionFiles) {
+for (const file of deferredFiles) {
   if (worker.includes(`./${file}`)) {
-    errors.push(`Lazy MTT production chunk must not be install-precached: ${file}.`);
+    errors.push(`Deferred chunk must not be install-precached: ${file}.`);
   }
 }
 if (worker.includes("__PKR_PRECACHE_")) errors.push("Service worker contains build placeholders.");

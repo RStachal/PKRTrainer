@@ -11,7 +11,7 @@ describe("mtt preflop CSV scaffold CLI", () => {
       const output = join(dir, "scaffold.csv");
       const packId = "mtt-six-max-turbo-preflop-chip-ev-ante-off-production-v1";
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/buildMttPreflopCsvScaffold.mts",
         "--pack-id",
         packId,
@@ -33,7 +33,9 @@ describe("mtt preflop CSV scaffold CLI", () => {
 
       const lines = readFileSync(output, "utf8").trim().split(/\r?\n/);
       expect(lines).toHaveLength(4);
-      expect(lines[0]).toContain("strictActions,lenientActions");
+      expect(lines[0]).toContain(
+        "strictActions,lenientActions,actionEvsBb,equivalentThresholdBb,acceptableThresholdBb",
+      );
       expect(lines[1]).toContain(packId);
       expect(lines[1]).toContain("SIX_MAX,TURBO,OFF,CHIP_EV");
       expect(lines[1]).toContain("review-source-a,QA,2026-07-08");
@@ -41,6 +43,9 @@ describe("mtt preflop CSV scaffold CLI", () => {
       const firstCells = lines[1].split(",");
       expect(firstCells[11]).toBe("");
       expect(firstCells[12]).toBe("");
+      expect(firstCells[13]).toBe("");
+      expect(firstCells[14]).toBe("");
+      expect(firstCells[15]).toBe("");
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

@@ -10,6 +10,7 @@ import {
   type TrainingStreet,
 } from "../../src/core/trainingProfile";
 import type { AnteMode } from "../../src/core/types";
+import { CS } from "../../src/ui/cs";
 import { renderProfileSelector } from "../../src/ui/profileSelector";
 
 afterEach(() => {
@@ -24,9 +25,9 @@ describe("profileSelector", () => {
 
     expect(root.querySelector(".profile-selector")).not.toBeNull();
     expect(view.getProfile()).toEqual(DEFAULT_TRAINING_PROFILE);
-    expect(note?.dataset.status).toBe("preview");
+    expect(note?.dataset.status).toBe("production");
+    expect(note?.textContent).toContain("MTT ChipEV Core");
     expect(note?.textContent).toContain("MTT 9-max regular preflop chipEV");
-    expect(note?.textContent).toContain("Náhled");
   });
 
   it("umi zmenit profil a zavola onChange", () => {
@@ -74,15 +75,35 @@ describe("profileSelector", () => {
     format!.dispatchEvent(new Event("change"));
 
     const note = root.querySelector<HTMLElement>(".profile-selector__note");
-    expect(note?.dataset.status).toBe("blocked");
+    // Preview, not blocked. Six-max regular carries ranges derived from the
+    // nine-handed pack, so there is something to drill - and the note still says
+    // candidate, because derived is not measured.
+    expect(note?.dataset.status).toBe("preview");
     expect(note?.textContent).toContain("MTT 6-max regular preflop chipEV");
-    expect(note?.textContent).toContain("Kandidátní náhled");
-    expect(note?.textContent).toContain("kontroly pokrytí hand");
+    // The note has to say where these ranges came from. The generic preview
+    // wording describes historical data, which is true of nine-handed and not
+    // of this - these are nine-handed records re-labelled by seats-behind, and
+    // a player should be told they will run tight before they drill them.
+    expect(note?.textContent).toContain(CS.profile.mttSixMaxDerivedPreview);
+    // Asserted through the catalog because the suite runs in English while the
+    // app ships in Czech; a literal would pin the language instead of the fact.
+    // What the fact has to be is checked here.
+    expect(CS.profile.mttSixMaxDerivedPreview).toMatch(/9-max/);
+    // Wider, not tighter. The note said tighter until the derived widths were
+    // checked against published six-max frequencies and came out 2 to 6 points
+    // above them - so a player reading "conservative" would have widened a range
+    // that was already too wide. sixMaxDerivedWidth.test.ts holds the numbers.
+    // No single direction claimed. Two public references disagree - by more
+    // than 20 points at the small blind - so the note reports where the ranges
+    // sit rather than calling them conservative or loose, which are opposite
+    // instructions to give a player.
+    expect(CS.profile.mttSixMaxDerivedPreview).toMatch(/band|pásem|references|referencím/);
+    expect(CS.profile.mttSixMaxDerivedPreview).toMatch(/20/);
     expect(note?.textContent).not.toContain("RangePack");
     expect(note?.textContent).not.toContain("mtt-");
   });
 
-  it("oznaci MTT 9-max turbo preflop jako missing readiness stav", () => {
+  it("oznaci MTT 9-max turbo preflop jako MTT ChipEV Core production", () => {
     const root = document.createElement("div");
     renderProfileSelector(root);
 
@@ -93,9 +114,9 @@ describe("profileSelector", () => {
     speed!.dispatchEvent(new Event("change"));
 
     const note = root.querySelector<HTMLElement>(".profile-selector__note");
-    expect(note?.dataset.status).toBe("blocked");
+    expect(note?.dataset.status).toBe("production");
+    expect(note?.textContent).toContain("MTT ChipEV Core");
     expect(note?.textContent).toContain("MTT 9-max turbo preflop chipEV");
-    expect(note?.textContent).toContain("Chybí produkční range");
     expect(note?.textContent).not.toContain("RangePack");
     expect(note?.textContent).not.toContain("mtt-");
   });
@@ -112,7 +133,7 @@ describe("profileSelector", () => {
 
       const note = root.querySelector<HTMLElement>(".profile-selector__note");
       expect(note?.dataset.status).toBe("preview");
-      expect(note?.textContent).toContain(`MTT 9-max regular ${value.toLowerCase()} chipEV ante zapnuto`);
+      expect(note?.textContent).toContain(`MTT 9-max regular ${value.toLowerCase()} chipEV ante on`);
       expect(note?.textContent).toContain("postflop tréninku");
       expect(note?.textContent).toContain("konkrétní spot");
       expect(note?.textContent).not.toContain("preflop chipEV");
@@ -131,7 +152,7 @@ describe("profileSelector", () => {
 
     const note = root.querySelector<HTMLElement>(".profile-selector__note");
     expect(note?.dataset.status).toBe("preview");
-    expect(note?.textContent).toContain("Dostupné scoped solver piloty: 6");
+    expect(note?.textContent).toContain("Dostupné scoped solver piloty: 7");
     expect(note?.textContent).toContain("Nejde o plnou produkční coverage");
     expect(note?.textContent).not.toContain("mtt.postflop");
     expect(note?.textContent).not.toContain("RangePack");
@@ -149,7 +170,7 @@ describe("profileSelector", () => {
 
     let note = root.querySelector<HTMLElement>(".profile-selector__note");
     expect(note?.dataset.status).toBe("preview");
-    expect(note?.textContent).toContain("SNG chipEV náhled");
+    expect(note?.textContent).toContain("SNG chipEV preview");
     expect(note?.textContent).not.toContain("https://");
     expect(note?.textContent).not.toContain("RangePack");
 
@@ -158,7 +179,7 @@ describe("profileSelector", () => {
 
     note = root.querySelector<HTMLElement>(".profile-selector__note");
     expect(note?.dataset.status).toBe("preview");
-    expect(note?.textContent).toContain("SNG ICM náhled");
+    expect(note?.textContent).toContain("SNG ICM preview");
     expect(note?.textContent).not.toContain("https://");
     expect(note?.textContent).not.toContain("payout");
     expect(note?.textContent).not.toContain("RangePack");
@@ -184,9 +205,15 @@ describe("profileSelector", () => {
 
     const note = root.querySelector<HTMLElement>(".profile-selector__note");
     expect(view.getProfile().evModel).toBe("DOLAR_EV");
-    expect(note?.dataset.status).toBe("blocked");
+    // Devítistolový regular $EV má odvozené bublinové range, takže je hratelné
+    // preview. Podstatné zůstává, že chipEV produkce se tím nespouští - to drží
+    // řádky pod tímhle.
+    expect(note?.dataset.status).toBe("preview");
     expect(note?.textContent).toContain("MTT 9-max regular preflop $EV");
-    expect(note?.textContent).toContain("Chybí produkční range");
+    // Hláška musí říct, co ten náhled je: odvozené range pro jednu bublinovou
+    // situaci, ne měřená data a ne ICM obecně.
+    expect(note?.textContent).toContain("peněžní bublina");
+    expect(note?.textContent).toContain("Nejsou měřené");
     expect(note?.textContent).not.toContain("CHIP_EV");
     expect(note?.textContent).not.toContain("DOLAR_EV");
     expect(note?.textContent).not.toContain("RangePack");
@@ -208,7 +235,7 @@ describe("profileSelector", () => {
     expect(optionLabels(".profile-speed")).toEqual(["Regular", "Turbo"]);
     expect(optionLabels(".profile-street")).toEqual(["Preflop", "Flop", "Turn", "River"]);
     expect(optionLabels(".profile-ev-model")).toEqual(["chipEV", "$EV", "ICM"]);
-    expect(optionLabels(".profile-ante")).toEqual(["Ante zapnuto", "Bez ante"]);
+    expect(optionLabels(".profile-ante")).toEqual(["Ante on", "Ante off"]);
 
     for (const tableFormat of tableFormats) {
       for (const blindSpeed of blindSpeeds) {
@@ -235,7 +262,7 @@ describe("profileSelector", () => {
               expect(note?.textContent).toContain(blindSpeed === "REGULAR" ? "regular" : "turbo");
               expect(note?.textContent).toContain(street.toLowerCase());
               expect(note?.textContent).toContain(evModel === "CHIP_EV" ? "chipEV" : "$EV");
-              expect(note?.textContent).toContain(ante === "ON" ? "ante zapnuto" : "bez ante");
+              expect(note?.textContent).toContain(ante === "ON" ? "ante on" : "ante off");
               expect(note?.textContent).not.toMatch(/\b(?:FULL_RING_9|SIX_MAX|REGULAR|TURBO|PREFLOP|FLOP|TURN|RIVER|CHIP_EV|DOLAR_EV)\b/);
               expect(note?.textContent).not.toMatch(/\b(?:RangePack|StrategyPack)\b/);
               expect(note?.textContent).not.toMatch(/\bmtt-[a-z0-9-]+/i);
@@ -267,10 +294,10 @@ describe("profileSelector", () => {
     expect(Array.from(rakeMode?.options ?? []).map((option) => option.textContent)).toEqual([
       "N/A",
       "Rake",
-      "Bez rake",
+      "No rake",
     ]);
     expect(note?.dataset.status).toBe("preview");
-    expect(note?.textContent).toContain("Cash rake náhled");
+    expect(note?.textContent).toContain("Cash rake preview");
     expect(note?.textContent).not.toContain("https://");
     expect(note?.textContent?.toLowerCase()).not.toContain("zdroj");
     expect(note?.textContent).not.toContain("RangePack");
@@ -280,7 +307,7 @@ describe("profileSelector", () => {
 
     note = root.querySelector<HTMLElement>(".profile-selector__note");
     expect(note?.dataset.status).toBe("preview");
-    expect(note?.textContent).toContain("Cash bez rake náhled");
+    expect(note?.textContent).toContain("Cash no rake preview");
     expect(note?.textContent).not.toContain("https://");
     expect(note?.textContent?.toLowerCase()).not.toContain("zdroj");
     expect(note?.textContent).not.toContain("RangePack");
@@ -293,7 +320,7 @@ describe("profileSelector", () => {
     const root = document.createElement("div");
     renderProfileSelector(root);
 
-    expect(root.textContent).toContain("Tréninkový profil");
+    expect(root.textContent).toContain("Training profile");
     expect(root.textContent).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
     expect(fetchSpy).not.toHaveBeenCalled();
   });

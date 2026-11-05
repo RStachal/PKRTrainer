@@ -6,10 +6,17 @@ import type {
   PostflopStrategyResolver,
 } from "../../core/postflopGenerator";
 import {
+  cloneActionEvSet,
+  highestEvAction,
+  isActionEvSetComplete,
+} from "../../core/actionEv";
+import { assessSprFidelity } from "../../core/postflopSprFidelity";
+import {
   type TurnProductionStrategyPack,
   type TurnProductionStrategyRule,
   validateTurnProductionStrategyPack,
 } from "./turnProductionStrategyPack";
+import { solvedSprForRuleId } from "./postflopSolvedSpr";
 import { runtimeMttTurnStrategyPacks } from "./mttProductionRuntimeRegistry";
 
 export const turnProductionStrategyPacks: readonly TurnProductionStrategyPack[] =
@@ -26,12 +33,33 @@ export function createTurnProductionStrategyResolver(
 
     const rule = selectBestTurnProductionRule(matchingTurnProductionRules(pack, input), input);
     if (!rule) return null;
+    const matchedHeroBucket = heroRangeBucket(rule, input);
+    // A hand outside this rule's range was never solved here. Returning a
+    // rule-wide average for it would present an answer the solver never gave,
+    // and label it solver-backed; let the chain fall through to the honestly
+    // labelled heuristic model instead.
+    if (input.heroHand !== undefined && matchedHeroBucket === undefined) return null;
+    const actionEvs = isActionEvSetComplete(matchedHeroBucket?.actionEvs, rule.actions)
+      ? cloneActionEvSet(matchedHeroBucket.actionEvs)
+      : undefined;
+    // Recommend the hero hand's own action, not the rule-wide most-common one;
+    // fall back to the rule action only for a hand outside this rule's range.
+    const action = actionEvs
+      ? highestEvAction(actionEvs) ?? matchedHeroBucket?.action ?? rule.recommendedAction
+      : matchedHeroBucket?.action ?? rule.recommendedAction;
+
+    const solvedSpr = solvedSprForRuleId(rule.id);
+    const sprFidelity = solvedSpr === undefined
+      ? undefined
+      : assessSprFidelity(roundedSpr(input.effectiveStackBB, input.potBB), solvedSpr);
 
     return {
-      action: rule.recommendedAction,
+      action,
+      ...(actionEvs ? { actionEvs } : {}),
       explanation: rule.explanation,
       source: {
         kind: "STRATEGY_PACK",
+        provenance: "SOLVER_BACKED",
         packId: pack.id,
         packVersion: pack.version,
         packVerifiedAt: pack.verifiedAt,
@@ -46,7 +74,8 @@ export function createTurnProductionStrategyResolver(
         selectionScore: ruleScore(rule, input),
         tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
         rangeBuckets: rangeBuckets(rule),
-        heroRangeBucket: heroRangeBucket(rule, input),
+        heroRangeBucket: matchedHeroBucket,
+        ...(sprFidelity ? { sprFidelity } : {}),
         ...(rule.opponentPolicy
           ? { opponentPolicy: { ...rule.opponentPolicy } }
           : {}),
@@ -155,6 +184,7 @@ function heroRangeBucket(
     handClass: input.heroHand,
     features: [...bucket.features],
     actionMix: bucket.actionMix?.map((item) => ({ ...item })),
+    ...(bucket.actionEvs ? { actionEvs: cloneActionEvSet(bucket.actionEvs) } : {}),
   };
 }
 
@@ -166,6 +196,7 @@ function rangeBuckets(rule: TurnProductionStrategyRule): PostflopRangeBucket[] {
     handClasses: [...bucket.handClasses],
     features: [...bucket.features],
     actionMix: bucket.actionMix?.map((item) => ({ ...item })),
+    ...(bucket.actionEvs ? { actionEvs: cloneActionEvSet(bucket.actionEvs) } : {}),
   }));
 }
 

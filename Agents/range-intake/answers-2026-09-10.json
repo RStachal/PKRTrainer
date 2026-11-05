@@ -1,0 +1,421 @@
+{
+  "schemaVersion": "PKRTRAINER_RYE_ANSWERS_V1",
+  "draftCreatedAt": "2026-09-09",
+  "draftRecordCount": 112,
+  "answers": [
+    {
+      "sourceFile": "F3B-100BB-BB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "a431ce90-577"
+    },
+    {
+      "sourceFile": "F3B-100BB-BB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "ce9fcbc9-514"
+    },
+    {
+      "sourceFile": "F3B-100BB-BB-vs-HJ.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "5c68103c-4de"
+    },
+    {
+      "sourceFile": "F3B-100BB-BB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "622c6e7d-48d"
+    },
+    {
+      "sourceFile": "F3B-100BB-BB-vs-SB.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "3b98cf64-56e"
+    },
+    {
+      "sourceFile": "F3B-100BB-BB-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "72acc57e-3c6"
+    },
+    {
+      "sourceFile": "F3B-100BB-BB-vs-UTG2.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "1cb4984d-460"
+    },
+    {
+      "sourceFile": "F3B-100BB-BTN-vs-HJ.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "5f8ce726-3e1"
+    },
+    {
+      "sourceFile": "F3B-100BB-BTN-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "3ab278df-3ae"
+    },
+    {
+      "sourceFile": "F3B-100BB-BTN-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "c4fdefd5-39a"
+    },
+    {
+      "sourceFile": "F3B-100BB-BTN-vs-UTG2.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "f19b63cd-2fa"
+    },
+    {
+      "sourceFile": "F3B-100BB-CO-vs-HJ.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "5724e96c-2fb"
+    },
+    {
+      "sourceFile": "F3B-100BB-CO-vs-UTG2.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "d1102ed2-2bc"
+    },
+    {
+      "sourceFile": "F3B-100BB-HJ-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "2de1b341-23e"
+    },
+    {
+      "sourceFile": "F3B-100BB-HJ-vs-UTG2.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "5d4f3e0d-2ee"
+    },
+    {
+      "sourceFile": "F3B-100BB-MP-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "93f353b4-183"
+    },
+    {
+      "sourceFile": "F3B-100BB-MP-vs-UTG2.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "9efac5a7-233"
+    },
+    {
+      "sourceFile": "F3B-100BB-UTG2-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "6bd830ea-131"
+    },
+    {
+      "sourceFile": "F3B-20BB-BB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "195f2381-519"
+    },
+    {
+      "sourceFile": "F3B-20BB-BB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "c504d8d7-50b"
+    },
+    {
+      "sourceFile": "F3B-20BB-BB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "57978bc8-4cf"
+    },
+    {
+      "sourceFile": "F3B-20BB-BB-vs-SB.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "4aea593b-5cf"
+    },
+    {
+      "sourceFile": "F3B-20BB-BB-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "cf83629a-479"
+    },
+    {
+      "sourceFile": "F3B-20BB-SB-vs-BTN.html",
+      "verdict": "nesedí",
+      "flags": [
+        "moc těsné"
+      ],
+      "contentHash": "4a07c86b-1ba"
+    },
+    {
+      "sourceFile": "F3B-20BB-SB-vs-CO.html",
+      "verdict": "nesedí",
+      "flags": [
+        "moc těsné"
+      ],
+      "contentHash": "3d59a792-16a"
+    },
+    {
+      "sourceFile": "F3B-20BB-SB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "a1f460f1-1bb"
+    },
+    {
+      "sourceFile": "F3B-30BB-BB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "9b43cb34-539"
+    },
+    {
+      "sourceFile": "F3B-30BB-BB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "70392080-51b"
+    },
+    {
+      "sourceFile": "F3B-30BB-BB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "619eae37-4ea"
+    },
+    {
+      "sourceFile": "F3B-30BB-BTN-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "e32a6adb-22b"
+    },
+    {
+      "sourceFile": "F3B-30BB-BTN-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "b5446c24-270"
+    },
+    {
+      "sourceFile": "F3B-30BB-CO-vs-HJ.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "a2431d94-196"
+    },
+    {
+      "sourceFile": "F3B-30BB-CO-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "56041832-189"
+    },
+    {
+      "sourceFile": "F3B-30BB-MP-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "72792bf3-be"
+    },
+    {
+      "sourceFile": "F3B-30BB-SB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "3d04ea95-291"
+    },
+    {
+      "sourceFile": "F3B-30BB-SB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "66fd8481-21c"
+    },
+    {
+      "sourceFile": "F3B-30BB-SB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "12033ca6-216"
+    },
+    {
+      "sourceFile": "F3B-30BB-SB-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "8ec4f9c7-26e"
+    },
+    {
+      "sourceFile": "F3B-30BB-UTG1-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "a95325e9-b9"
+    },
+    {
+      "sourceFile": "F3B-40BB-BB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "9b43cb34-539"
+    },
+    {
+      "sourceFile": "F3B-40BB-BB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "f0803979-577"
+    },
+    {
+      "sourceFile": "F3B-40BB-BB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "96427e7a-5ec"
+    },
+    {
+      "sourceFile": "F3B-40BB-BB-vs-SB.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "5a714fd9-5e3"
+    },
+    {
+      "sourceFile": "F3B-40BB-BTN-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "23bb0b02-283"
+    },
+    {
+      "sourceFile": "F3B-40BB-BTN-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "ccf488c1-2c2"
+    },
+    {
+      "sourceFile": "F3B-40BB-CO-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "243bedce-25f"
+    },
+    {
+      "sourceFile": "F3B-40BB-CO-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "a9a2e9c8-20d"
+    },
+    {
+      "sourceFile": "F3B-40BB-HJ-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "a1ea121e-1c7"
+    },
+    {
+      "sourceFile": "F3B-40BB-HJ-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "f1f44e50-1db"
+    },
+    {
+      "sourceFile": "F3B-40BB-SB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "8c0d6847-23f"
+    },
+    {
+      "sourceFile": "F3B-40BB-SB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "d9a47ab1-279"
+    },
+    {
+      "sourceFile": "F3B-40BB-SB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "43c3866b-20e"
+    },
+    {
+      "sourceFile": "F3B-40BB-SB-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "9e29ec0b-22c"
+    },
+    {
+      "sourceFile": "F3B-40BB-UTG1-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "3a167f25-166"
+    },
+    {
+      "sourceFile": "F3B-50BB-BB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "f2fb076f-646"
+    },
+    {
+      "sourceFile": "F3B-50BB-BB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "17f4d5dd-610"
+    },
+    {
+      "sourceFile": "F3B-50BB-BB-vs-HJ.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "13c6456f-66a"
+    },
+    {
+      "sourceFile": "F3B-50BB-BB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "5f4a5d2f-589"
+    },
+    {
+      "sourceFile": "F3B-50BB-BB-vs-UTG1.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "68f325dd-62b"
+    },
+    {
+      "sourceFile": "F3B-50BB-BTN-vs-CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "712c57cf-303"
+    },
+    {
+      "sourceFile": "F3B-50BB-BTN-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "5072edae-303"
+    },
+    {
+      "sourceFile": "F3B-50BB-SB-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "20de3307-232"
+    },
+    {
+      "sourceFile": "F3B-50BB-UTG1-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "7b25b97a-1c1"
+    },
+    {
+      "sourceFile": "MUL-20BB-BB-vs-CO_BTN.html",
+      "verdict": "nesedí",
+      "flags": [
+        "moc těsné"
+      ],
+      "contentHash": "08db95c8-1b2"
+    },
+    {
+      "sourceFile": "MUL-20BB-HJ-vs-EP_EP-MP.html",
+      "verdict": "nesedí",
+      "flags": [
+        "moc těsné"
+      ],
+      "contentHash": "f70358fc-69"
+    },
+    {
+      "sourceFile": "MUL-20BB-MP-vs-EP_EP-MP.html",
+      "verdict": "nesedí",
+      "flags": [
+        "moc těsné"
+      ],
+      "contentHash": "1e7cf228-59"
+    },
+    {
+      "sourceFile": "MUL-20BB-SB-vs-CO_BTN.html",
+      "verdict": "nesedí",
+      "flags": [
+        "moc těsné"
+      ],
+      "contentHash": "08db95c8-1b2"
+    }
+  ]
+}

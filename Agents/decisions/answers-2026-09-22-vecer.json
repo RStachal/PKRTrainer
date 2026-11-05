@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "PKRTRAINER_OWNER_DECISIONS_V1",
+  "questionsHash": "d9f000d2",
+  "answers": [
+    {
+      "id": 1,
+      "title": "ICM: devět mřížek učí jam přes 3bet, produkt ho nenabízí",
+      "code": "a",
+      "label": "Nabídnout jam i proti 3betu, kde ho range učí",
+      "recommended": true
+    },
+    {
+      "id": 2,
+      "title": "ICM: povolení pro nový pack v balíku produktu",
+      "code": "a",
+      "label": "Ano, totéž povolení platí i pro tenhle profil",
+      "recommended": true
+    },
+    {
+      "id": 3,
+      "title": "6a rejam: mapa hloubek místo range - co s ní",
+      "code": "c",
+      "label": "Přeskočit rejam a jít na BB proti limpu a squeeze",
+      "recommended": true
+    },
+    {
+      "id": 4,
+      "title": "Šest pilotů mlčí - co má vidět platící hráč",
+      "code": "a",
+      "label": "Nechat mlčet a napsat to v UI",
+      "recommended": true
+    }
+  ]
+}

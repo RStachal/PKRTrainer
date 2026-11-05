@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
 
 import { ALL_HAND_CLASSES } from "../../src/core/poker";
+import { REFINEMENT_AXES } from "../../src/data/ranges/rangePack";
 import {
   STACK_BUCKETS,
   type ActionContext,
@@ -22,6 +23,7 @@ import {
   buildRangeModule,
   renderRangeModuleBuildReport,
 } from "../../src/data/ranges/rangeModuleBuilder";
+import { CLI_SPAWN_TIMEOUT_MS } from "../cliSpawnBudget";
 
 const ACTION_CONTEXTS: readonly ActionContext[] = [
   "RFI",
@@ -466,7 +468,7 @@ function runBuilderCli(
   return spawnSync(command, args, {
     cwd: process.cwd(),
     encoding: "utf8",
-    timeout: 60000,
+    timeout: CLI_SPAWN_TIMEOUT_MS,
   });
 }
 
@@ -487,9 +489,14 @@ describe("rangeModuleBuilder", () => {
       slotId: "FULL_RING_9|TURBO|CHIP_EV|PREFLOP|ON",
       packId: "mtt-full-ring-9-turbo-preflop-chip-ev-ante-on-production-v1",
     });
-    expect(result.moduleText).toContain("satisfies RangePack");
+    expect(result.moduleText).toContain("as RangePack");
     expect(result.moduleText).toContain("export const builderFixtureRangePack");
-    expect(result.moduleText).toContain('"records"');
+    expect(result.moduleText).toContain("const encodedActions");
+    expect(result.moduleText).toContain("const encodedHandMaps");
+    expect(result.moduleText).toContain("const encodedRecords");
+    expect(result.moduleText).toContain('"AA"');
+    expect(result.moduleText).not.toContain('"22":["FOLD"]');
+    expect(result.moduleText?.length).toBeLessThan(20_000);
     expect(result.moduleText).toMatch(
       /^\/\/ provenance-fingerprint: sha256:[a-f0-9]{64}$/m,
     );
@@ -500,6 +507,112 @@ describe("rangeModuleBuilder", () => {
       permissionManifest: permissionManifest(input.id),
       exportName: "builderFixtureRangePack",
     }).moduleText).toBe(result.moduleText);
+  });
+
+  it("zaznam z jineho zdroje blokuje promotion, dokud ho manifest neuzna", () => {
+    // 16. 9. 2026: schválené mřížky z koupených chartů vlastníka vedle
+    // vlastního exportu. Pack má jeden licenseKind; záznam z jiného zdroje ho
+    // jmenuje sám (`provenance`) a manifest ho musí uznat zvlášť - jinak by
+    // povolení tvrdilo o původu části packu něco, co pro ni neplatí.
+    const base = validMttImport();
+    const general = base.records.find((record) => record.context === "VS_OPEN")!;
+    const input = {
+      ...base,
+      records: [...base.records, {
+        ...general,
+        vsSeat: "BTN" as const,
+        provenance: "RYE Rangeviewer 2021 (koupené charty vlastníka), F3B-20BB-BB-vs-BTN.html, schváleno 2026-09-15",
+      }],
+    };
+    const blocked = buildRangeModule({
+      kind: "mtt-preflop", input, permissionManifest: permissionManifest(input.id), exportName: "fixture",
+    });
+    expect(blocked.writeReady).toBe(false);
+    expect(blocked.blockers.join("\n")).toContain('acknowledge record-level source "RYE Rangeviewer 2021 (koupené charty vlastníka)"');
+
+    const acknowledged = buildRangeModule({
+      kind: "mtt-preflop", input, exportName: "fixture",
+      permissionManifest: {
+        ...permissionManifest(input.id),
+        additionalSources: [{
+          source: "RYE Rangeviewer 2021 (koupené charty vlastníka)",
+          reviewedAt: "2026-09-16", reviewer: "PKRTrainer owner (user-confirmed)",
+          rationale: "Koupený produkt vlastníka; přenášejí se seznamy akcí po třídách rukou.",
+        }],
+      },
+    });
+    expect(acknowledged.blockers).toEqual([]);
+    expect(acknowledged.writeReady).toBe(true);
+    // Zpřesnění i původ přežijí kompaktní zápis modulu.
+    expect(acknowledged.moduleText).toContain('"vsSeat":"BTN"');
+    expect(acknowledged.moduleText).toContain('"provenance":"RYE Rangeviewer 2021');
+    expect(acknowledged.moduleText).toContain("...(refinement ?? {})");
+  });
+
+  it("kompaktní zápis nesmí zahodit žádnou osu zpřesnění", () => {
+    /*
+     * Tenhle test existuje, protože se to stalo **dvakrát**.
+     *
+     * 16. 9. 2026 tahle cesta tiše zahodila osu otvírače (bod 234) a doplnila se
+     * vyjmenováním. 9. 10. 2026 pak zahodila osu dorovnávajícího: kandidát packu
+     * nesl 70 záznamů s `flatCallers`, dodávané packy **nula**, a nespadlo nic -
+     * záznam v packu zůstal, jen bez osy, takže se z něj stala druhá obecná
+     * odpověď. Drill si ji nevyžádá, protože klíč, který skládá, osu nese.
+     *
+     * Test proto nekontroluje jmenovitě jednu osu, ale **projde `REFINEMENT_AXES`**
+     * a u každé čeká, že se v modulu objeví. Příští osa se tím chytí sama, dokud
+     * ji někdo nepřidá do kódování - a to je to, co minule chybělo.
+     */
+    const base = validMttImport();
+    const general = base.records.find((record) => record.context === "SQUEEZE")
+      ?? base.records.find((record) => record.context === "VS_OPEN")!;
+    /*
+     * Osy se do fixtury dávají **po jedné nad `vsBTN`**, ne všechny do jednoho
+     * záznamu. Důvod je v řetězu pádu: každé zpřesnění musí mít sourozence bez
+     * té své osy, jinak je nedosažitelné a `refinementReachability` to řekne
+     * (ověřeno - fixtura s nimi namíchanými zčervenala dvěma chybami).
+     *
+     * Pyramida je tedy: `general` (v base) ← `vsBTN` ← `vsBTN|#F3B` i `vsBTN|@CO`.
+     */
+    const input = {
+      ...base,
+      stackSetups: {
+        ...(base.stackSetups ?? {}),
+        F3B: { label: "UTG 40 / BTN 40 / BB 40 bb", stacksBB: { UTG: 40, BTN: 40, BB: 40 } },
+      },
+      records: [
+        ...base.records,
+        { ...general, vsSeat: "BTN" as const },
+        { ...general, vsSeat: "BTN" as const, stackSetupId: "F3B" },
+        { ...general, vsSeat: "BTN" as const, flatCallers: ["CO"] },
+      ],
+    };
+    const built = buildRangeModule({
+      kind: "mtt-preflop", input, permissionManifest: permissionManifest(input.id), exportName: "fixture",
+    });
+
+    expect(built.blockers, "fixtura musí projít, jinak test neměří kódování").toEqual([]);
+    for (const axis of REFINEMENT_AXES) {
+      expect(
+        built.moduleText ?? "",
+        `osa ${axis} se v kompaktním zápisu modulu neobjevila - zahodila by se cestou k hráči`,
+      ).toContain(`"${axis}":`);
+    }
+    // A hodnota, ne jen jméno: osa s prázdným obsahem je totéž jako chybějící.
+    expect(built.moduleText).toContain('"flatCallers":["CO"]');
+  });
+
+  it("prázdný seznam dorovnávajících se nezapisuje", () => {
+    // `flatCallers: []` znamená „nikdo nedorovnal", a to je týž klíč jako bez osy.
+    // Zapsat ho by znamenalo dva zápisy pro jednu odpověď.
+    const base = validMttImport();
+    const general = base.records.find((record) => record.context === "VS_OPEN")!;
+    const input = { ...base, records: [...base.records, { ...general, vsSeat: "CO" as const, flatCallers: [] }] };
+    const built = buildRangeModule({
+      kind: "mtt-preflop", input, permissionManifest: permissionManifest(input.id), exportName: "fixture",
+    });
+    expect(built.moduleText).toContain('"vsSeat":"CO"');
+    expect(built.moduleText).not.toContain('"flatCallers":[]');
   });
 
   it("blokuje promotion bez ceskeho contentLanguage deklarovaneho pro hracske texty", () => {

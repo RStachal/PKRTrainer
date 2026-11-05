@@ -18,6 +18,9 @@ interface CoverageManifest {
   generatedAt: string;
   parameterDir: string;
   outputBase: string;
+  executionProfile?: {
+    treeProfile?: string;
+  };
   scenarios: CoverageScenario[];
   files: CoverageFile[];
 }
@@ -52,6 +55,10 @@ interface CoverageFamilyRow {
   latestRawWrite: string | null;
   staged: {
     strategyExport: boolean;
+    review: boolean;
+    reviewKind: "ROOT" | "CHECK";
+    // Kept for older report consumers. For root-decision families it mirrors
+    // the root review rather than falsely reporting missing CHECK evidence.
     checkReview: boolean;
     reviewNotes: boolean;
   };
@@ -74,6 +81,7 @@ interface CoverageStatusReport {
   generatedAt: string;
   parameterDir: string;
   outputBase: string;
+  reviewOnlyTreeProfile: string | null;
   counts: {
     families: number;
     parameterFiles: number;
@@ -171,7 +179,10 @@ function buildReport(args: CliArgs): CoverageStatusReport {
   if (!existsSync(args.manifestPath)) throw new Error(`Missing coverage manifest: ${args.manifestPath}`);
   const manifest = JSON.parse(readFileSync(args.manifestPath, "utf8")) as CoverageManifest;
   const outputBase = resolve(manifest.outputBase);
-  const rows = manifest.scenarios.map((scenario) => buildRow(manifest, outputBase, scenario));
+  const reviewOnlyTreeProfile = manifest.executionProfile?.treeProfile === "MEMORY_SAFE_REVIEW_ONLY"
+    ? "MEMORY_SAFE_REVIEW_ONLY"
+    : null;
+  const rows = manifest.scenarios.map((scenario) => buildRow(manifest, outputBase, scenario, reviewOnlyTreeProfile));
   const solvedBoardCount = rows.reduce((sum, row) => sum + row.solvedBoards.length, 0);
   const missingBoardCount = rows.reduce((sum, row) => sum + row.missingBoards.length, 0);
 
@@ -183,6 +194,7 @@ function buildReport(args: CliArgs): CoverageStatusReport {
     generatedAt: manifest.generatedAt,
     parameterDir: resolve(manifest.parameterDir),
     outputBase,
+    reviewOnlyTreeProfile,
     counts: {
       families: rows.length,
       parameterFiles: manifest.files.length,
@@ -194,7 +206,7 @@ function buildReport(args: CliArgs): CoverageStatusReport {
       missingBoards: missingBoardCount,
     },
     rows,
-    nextCommands: nextCommandsForReport(rows),
+    nextCommands: nextCommandsForReport(rows, reviewOnlyTreeProfile),
   };
 }
 
@@ -202,6 +214,7 @@ function buildRow(
   manifest: CoverageManifest,
   outputBase: string,
   scenario: CoverageScenario,
+  reviewOnlyTreeProfile: string | null,
 ): CoverageFamilyRow {
   const expectedBoards = manifest.files
     .filter((file) => file.familyId === scenario.familyId)
@@ -217,19 +230,32 @@ function buildRow(
         ? "RAW_PARTIAL"
         : "WAITING_FOR_RAW";
   const familyDir = join(outputBase, scenario.familyId);
+  const rootDecision = isRootDecisionFamily(scenario.familyId);
+  // Literální typ, ne `string`. Bez toho se ternární výraz odvodí jako `string`
+  // a nedá se přiřadit do pole, které chce `"ROOT" | "CHECK"`.
+  const reviewKind: "ROOT" | "CHECK" = rootDecision ? "ROOT" : "CHECK";
+  const exposeDownstreamArtifacts = reviewOnlyTreeProfile === null;
+  const review = exposeDownstreamArtifacts && existsSync(join(
+    familyDir,
+    rootDecision ? "strategy-export.review.json" : "strategy-export.CHECK.review.json",
+  ));
   const staged = {
-    strategyExport: existsSync(join(familyDir, "strategy-export.json")),
-    checkReview: existsSync(join(familyDir, "strategy-export.CHECK.review.json")),
-    reviewNotes: existsSync(join(familyDir, "review-notes.md")),
+    strategyExport: exposeDownstreamArtifacts && existsSync(join(familyDir, "strategy-export.json")),
+    review,
+    reviewKind,
+    checkReview: review,
+    reviewNotes: exposeDownstreamArtifacts && existsSync(join(familyDir, "review-notes.md")),
   };
-  const normalizedDraft = existsSync(join(
+  const normalizedDraft = exposeDownstreamArtifacts && existsSync(join(
     "artifacts",
     "texas-solver-review-integration",
     "normalized-drafts",
-    `${scenario.familyId}-CHECK`,
+    `${scenario.familyId}-${rootDecision ? "ROOT" : "CHECK"}`,
     "normalized.candidate.json",
   ));
-  const facingBetBest = bestFacingBetCandidate(scenario.familyId);
+  const facingBetBest = reviewOnlyTreeProfile === null
+    ? bestFacingBetCandidate(scenario.familyId)
+    : { present: false, aliasDir: null, nodeHistory: null, betAction: null, gateValid: null };
 
   return {
     familyId: scenario.familyId,
@@ -245,7 +271,9 @@ function buildRow(
     staged,
     normalizedDraft,
     facingBetBest,
-    nextCommands: nextCommandsForFamily(scenario.familyId, status, staged, normalizedDraft),
+    nextCommands: reviewOnlyTreeProfile === null
+      ? nextCommandsForFamily(scenario.familyId, status, staged, normalizedDraft)
+      : [],
   };
 }
 
@@ -299,8 +327,10 @@ function nextCommandsForFamily(
   if (!staged.strategyExport || !staged.reviewNotes) {
     commands.push(`npm run mtt:stage-texas-solver -- --family=${familyId} --write --review-template --summary`);
   }
-  if (!staged.checkReview) {
-    commands.push(`npm run mtt:texas-solver-review -- --family=${familyId} --node-history=CHECK --write --summary`);
+  if (!staged.review) {
+    commands.push(isRootDecisionFamily(familyId)
+      ? `npm run mtt:texas-solver-review -- --family=${familyId} --write --summary`
+      : `npm run mtt:texas-solver-review -- --family=${familyId} --node-history=CHECK --write --summary`);
   }
   if (familyId.includes("_3BP_FACING_")) {
     const sprRange = sprRangeForFacingBetFamily(familyId);
@@ -308,13 +338,15 @@ function nextCommandsForFamily(
       `npm run mtt:texas-solver-facing-bet-candidates -- --family=${familyId} --spr-min=${sprRange.min} --spr-max=${sprRange.max} --write --summary`,
     );
   } else if (familyId.includes("LOWSPR") && !normalizedDraft) {
+    const rootDecision = isRootDecisionFamily(familyId);
     commands.push(
-      `npm run mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export.CHECK.review.json --output-dir .\\artifacts\\texas-solver-review-integration\\normalized-drafts\\${familyId}-CHECK --spr-min=0 --spr-max=3 --write`,
+      `npm run mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export${rootDecision ? "" : ".CHECK"}.review.json --output-dir .\\artifacts\\texas-solver-review-integration\\normalized-drafts\\${familyId}-${rootDecision ? "ROOT" : "CHECK"} --spr-min=0 --spr-max=3 --write`,
     );
   }
   if (familyId.includes("HIGHSPR") && !normalizedDraft) {
+    const rootDecision = isRootDecisionFamily(familyId);
     commands.push(
-      `npm run mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export.CHECK.review.json --output-dir .\\artifacts\\texas-solver-review-integration\\normalized-drafts\\${familyId}-CHECK --spr-min=8 --spr-max=20 --write`,
+      `npm run mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export${rootDecision ? "" : ".CHECK"}.review.json --output-dir .\\artifacts\\texas-solver-review-integration\\normalized-drafts\\${familyId}-${rootDecision ? "ROOT" : "CHECK"} --spr-min=8 --spr-max=20 --write`,
     );
   }
   return commands;
@@ -326,11 +358,32 @@ function sprRangeForFacingBetFamily(familyId: string): { min: number; max: numbe
   return { min: 3, max: 8 };
 }
 
-function nextCommandsForReport(rows: readonly CoverageFamilyRow[]): string[] {
+function isRootDecisionFamily(familyId: string): boolean {
+  return familyId.includes("_SB_BB_SRP_OOP_CBET_");
+}
+
+function nextCommandsForReport(
+  rows: readonly CoverageFamilyRow[],
+  reviewOnlyTreeProfile: string | null,
+): string[] {
+  if (reviewOnlyTreeProfile !== null) {
+    const complete = rows.length > 0 && rows.every((row) => row.status === "RAW_COMPLETE");
+    return [complete
+      ? `${reviewOnlyTreeProfile} coverage is complete. Automatic staging and normalization remain disabled; keep outputs review-only until an explicit human assessment approves any separate full-tree solve.`
+      : `Continue the TexasSolver background batch for this manifest. ${reviewOnlyTreeProfile} outputs cannot be staged or normalized automatically.`
+    ];
+  }
   const commands = rows.flatMap((row) => row.nextCommands);
   const highSprReady = rows.some((row) => row.familyId.includes("HIGHSPR") && row.status === "RAW_COMPLETE");
   const highSprDraftReady = rows.some((row) => row.familyId.includes("HIGHSPR") && row.normalizedDraft);
-  if (highSprReady && highSprDraftReady) {
+  const btnBbPilotMerged = existsSync(join(
+    "artifacts",
+    "texas-solver-review-integration",
+    "normalized-drafts",
+    "BTN_BB_SRP_FLOP_CBET_PILOT-CHECK",
+    "normalized.candidate.json",
+  ));
+  if (highSprReady && highSprDraftReady && !btnBbPilotMerged) {
     commands.push("npm run mtt:texas-solver-merge-pilot-drafts -- --input-dir .\\artifacts\\texas-solver-review-integration\\normalized-drafts\\MTT9_20BB_BTN_BB_SRP_LOWSPR-CHECK --input-dir .\\artifacts\\texas-solver-review-integration\\normalized-drafts\\MTT9_50BB_BTN_BB_SRP-CHECK --input-dir .\\artifacts\\texas-solver-review-integration\\normalized-drafts\\MTT9_80BB_BTN_BB_SRP_HIGHSPR-CHECK --write --summary");
   }
   if (commands.length === 0) {
@@ -344,6 +397,7 @@ function renderReport(report: CoverageStatusReport, summaryOnly: boolean): strin
     "TexasSolver coverage manifest status",
     `valid: ${report.valid}`,
     `complete: ${report.complete}`,
+    `review-only tree profile: ${report.reviewOnlyTreeProfile ?? "none"}`,
     `families: ${report.counts.families}`,
     `raw complete: ${report.counts.rawComplete}`,
     `raw partial: ${report.counts.rawPartial}`,

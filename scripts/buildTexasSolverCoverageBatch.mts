@@ -1,6 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 
+import { texasSolverBoardForId } from "../src/core/texasSolverBoardCatalog.ts";
+
 const DEFAULT_SOURCE_DIR = "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_safe_flops_v1";
 const DEFAULT_OUTPUT_DIR = "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2";
 const DEFAULT_MANIFEST = "Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-v2-manifest.json";
@@ -29,22 +31,6 @@ interface GeneratedFile {
   boardId: string;
   written: boolean;
 }
-
-const BOARD_TO_TEXAS_SOLVER: Record<string, string> = {
-  A72r: "As,7d,2c",
-  K83r: "Ks,8d,3c",
-  QJ2tt: "Qs,Jh,2h",
-  JT9tt: "Js,Th,9h",
-  "883r": "8s,8d,3c",
-  "765tt": "7s,6s,5d",
-  AT4mono: "As,Ts,4s",
-  Q76mono: "Qs,7s,6s",
-  T84r: "Ts,8d,4c",
-  Q72r: "Qs,7d,2c",
-  KQ5r: "Ks,Qd,5c",
-  "986tt": "9s,8s,6d",
-  "742r": "7s,4d,2c",
-};
 
 const SCENARIOS: readonly Scenario[] = [
   {
@@ -243,8 +229,7 @@ function writeCoverageBatch(args: CliArgs, report: ReturnType<typeof buildCovera
 }
 
 function renderParameterFile(template: string, scenario: Scenario, boardId: string): string {
-  const board = BOARD_TO_TEXAS_SOLVER[boardId];
-  if (board === undefined) throw new Error(`No TexasSolver board mapping for ${boardId}`);
+  const board = texasSolverBoardForId(boardId);
   const dumpName = `pkrtrainer_${scenario.familyId}_${boardId}.json`;
   return template
     .replace(/^set_pot\s+\d+$/m, `set_pot ${scenario.pot}`)

@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import type { ActionContext, ActionKey, HandLabel, Position, StackBucket } from "../src/core/types.ts";
+import type { ActionEvSet } from "../src/core/actionEv.ts";
 import type { BlindSpeed, EvModel, TableFormat } from "../src/core/trainingProfile.ts";
 import {
   buildMttPreflopImportReadinessReport,
@@ -429,6 +430,7 @@ function rowsToRecords(
     context: ActionContext;
     strict: Record<HandLabel, ActionKey[]>;
     lenient: Record<HandLabel, ActionKey[]>;
+    actionEvs: Partial<Record<HandLabel, ActionEvSet<ActionKey>>>;
     hands: Set<string>;
   }>();
 
@@ -447,6 +449,13 @@ function rowsToRecords(
     const handClass = cell(row, "handClass");
     const strict = parseActions(cell(row, "strictActions"), `${tag}.strictActions`, errors);
     const lenient = parseActions(cell(row, "lenientActions"), `${tag}.lenientActions`, errors);
+    const actionEvs = parseActionEvs(
+      cell(row, "actionEvsBb"),
+      cell(row, "equivalentThresholdBb"),
+      cell(row, "acceptableThresholdBb"),
+      tag,
+      errors,
+    );
 
     if (handClass.length === 0) errors.push(`${tag}.handClass is required.`);
     if (position === null || sourceStackBB === null || bucket === null || context === null || handClass.length === 0) return;
@@ -464,6 +473,7 @@ function rowsToRecords(
       context,
       strict: {},
       lenient: {},
+      actionEvs: {},
       hands: new Set<string>(),
     };
     if (group.sourceStackBB !== sourceStackBB) {
@@ -475,6 +485,7 @@ function rowsToRecords(
     group.hands.add(handClass);
     group.strict[handClass] = strict;
     group.lenient[handClass] = lenient;
+    if (actionEvs) group.actionEvs[handClass] = actionEvs;
     groups.set(key, group);
   });
 
@@ -485,6 +496,7 @@ function rowsToRecords(
     context: group.context,
     strict: group.strict,
     lenient: group.lenient,
+    ...(Object.keys(group.actionEvs).length > 0 ? { actionEvs: group.actionEvs } : {}),
   }));
 }
 
@@ -757,6 +769,69 @@ function parseActions(value: string, tag: string, errors: string[]): ActionKey[]
     if (!ACTION_KEYS.has(action as ActionKey)) errors.push(`${tag} contains unsupported action ${action}.`);
   }
   return actions.filter((action) => ACTION_KEYS.has(action as ActionKey)) as ActionKey[];
+}
+
+function parseActionEvs(
+  valuesText: string,
+  equivalentText: string,
+  acceptableText: string,
+  tag: string,
+  errors: string[],
+): ActionEvSet<ActionKey> | null {
+  const hasAnyValue = [valuesText, equivalentText, acceptableText].some((value) => value.length > 0);
+  if (!hasAnyValue) return null;
+  if (valuesText.length === 0) errors.push(`${tag}.actionEvsBb is required when EV thresholds are present.`);
+  if (equivalentText.length === 0) errors.push(`${tag}.equivalentThresholdBb is required with action EV.`);
+  if (acceptableText.length === 0) errors.push(`${tag}.acceptableThresholdBb is required with action EV.`);
+
+  const equivalentThresholdBb = Number(equivalentText);
+  const acceptableThresholdBb = Number(acceptableText);
+  if (!Number.isFinite(equivalentThresholdBb) || equivalentThresholdBb < 0) {
+    errors.push(`${tag}.equivalentThresholdBb must be a non-negative finite number.`);
+  }
+  if (!Number.isFinite(acceptableThresholdBb) || acceptableThresholdBb < 0) {
+    errors.push(`${tag}.acceptableThresholdBb must be a non-negative finite number.`);
+  }
+  if (
+    Number.isFinite(equivalentThresholdBb) &&
+    Number.isFinite(acceptableThresholdBb) &&
+    acceptableThresholdBb < equivalentThresholdBb
+  ) {
+    errors.push(`${tag}.acceptableThresholdBb must be at least equivalentThresholdBb.`);
+  }
+
+  const values: Array<{ action: ActionKey; evBb: number }> = [];
+  const seen = new Set<ActionKey>();
+  for (const pair of valuesText.split("|").map((item) => item.trim()).filter(Boolean)) {
+    const separator = pair.indexOf("=");
+    const actionText = separator >= 0 ? pair.slice(0, separator).trim() : "";
+    const evText = separator >= 0 ? pair.slice(separator + 1).trim() : "";
+    if (!ACTION_KEYS.has(actionText as ActionKey)) {
+      errors.push(`${tag}.actionEvsBb contains unsupported action ${actionText || pair}.`);
+      continue;
+    }
+    const action = actionText as ActionKey;
+    const evBb = Number(evText);
+    if (!Number.isFinite(evBb)) {
+      errors.push(`${tag}.actionEvsBb ${action} must have a finite EV.`);
+      continue;
+    }
+    if (seen.has(action)) {
+      errors.push(`${tag}.actionEvsBb duplicates ${action}.`);
+      continue;
+    }
+    seen.add(action);
+    values.push({ action, evBb });
+  }
+  if (values.length === 0) errors.push(`${tag}.actionEvsBb needs at least one ACTION=EV pair.`);
+
+  return {
+    source: "SOLVER",
+    unit: "BB",
+    values,
+    equivalentThresholdBb,
+    acceptableThresholdBb,
+  };
 }
 
 function parseConfidence(value: string): Confidence {

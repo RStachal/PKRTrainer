@@ -171,14 +171,16 @@ describe("drillEngine - generateSpot properties", () => {
     );
   });
 
-  // Feature: mtt-preflop-trainer, Property 7: Blind-vs-blind stavi hrdinu mezi SB a BB
+  // Feature: mtt-preflop-trainer, Property 7: Blind-vs-blind stavi hrdinu do SB
   // Validates: Requirements 3.11
-  it("Property 7: BVB generuje pouze SB nebo BB", () => {
+  it("Property 7: BVB generuje pouze SB - obrana BB proti SB je VS_OPEN z SB", () => {
+    // Od 17. 9. 2026 (bod 254): jedna situace, jedna otázka. BB proti otevření
+    // SB se ptá jako `VS_OPEN|BB|vsSB` se zpřesněným záznamem, ne jako BvB.
     fc.assert(
       fc.property(arbSeed, arbAnte, (seed, ante) => {
         const spot = expectGeneratedSpot(seed, "BVB", 15, ante);
 
-        expect(["SB", "BB"]).toContain(spot.heroPos);
+        expect(spot.heroPos).toBe("SB");
         expect(spot.tableState.isBvB).toBe(true);
       }),
       { numRuns: 100 },
@@ -215,6 +217,39 @@ describe("drillEngine - generateSpot properties", () => {
         expect(spot.explanation.length).toBeGreaterThan(0);
       }),
       { numRuns: 100 },
+    );
+  });
+
+  // Feature: mtt-preflop-trainer, Property 9b: Doporuceni je vzdy mezi nabizenymi odpovedmi
+  // Validates: Requirements 3.5, 4.4, 7.2
+  it("Property 9b: strictCorrect je vždy mezi nabízenými odpověďmi, ve všech koších", () => {
+    // The guard that was missing. Ranges and the offered-action set are built by
+    // two separate paths, and nothing checked they agreed - so when the re-jam
+    // ranges started recommending JAM against an open, the drill went on offering
+    // only fold, call and three-bet. A player would have been marked wrong for
+    // every answer available to them, and every existing test still passed.
+    //
+    // Sweeps every bucket rather than the first valid one, because the disagreement
+    // only existed between 15 and 30BB.
+    fc.assert(
+      fc.property(arbSeed, arbContext, arbAnte, (seed, context, ante) => {
+        for (const bucket of validBucketsFor(context)) {
+          const spot = genSpot(
+            seed,
+            context,
+            makeFilters({ buckets: [bucket], contexts: [context], ante }),
+          );
+          if (spot === null) continue;
+          const offered = new Set(spot.answers.map((answer) => answer.key));
+          for (const key of spot.strictCorrect) {
+            expect(
+              offered.has(key),
+              `${context} ${spot.heroPos} ${bucket}BB ${spot.hand}: recommends ${key}, offers ${[...offered].join("/")}`,
+            ).toBe(true);
+          }
+        }
+      }),
+      { numRuns: 60 },
     );
   });
 

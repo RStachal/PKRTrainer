@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { solvedFamilyCountsByProfile } from "./lib/solvedFamilyCounts.mts";
 import {
   buildMttCompletionReadinessReport,
   filterMttCompletionReadinessReport,
@@ -8,6 +9,7 @@ import {
   type MttCompletionReadinessRow,
 } from "../src/data/ranges/mttProductionReadiness.ts";
 import { parseMttFilterArg } from "../src/data/ranges/mttCliFilterParsing.ts";
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 import {
   emptyMttIntakePriorityCounts,
   MTT_INTAKE_PRIORITY_KEYS,
@@ -76,6 +78,7 @@ function usage(): string {
 
 try {
   const args = parseArgs(process.argv.slice(2));
+  await loadCompleteMttProductionRegistry();
   const report = buildMttBlockerReport(args);
   if (args.outputPath !== null) {
     mkdirSync(dirname(args.outputPath), { recursive: true });
@@ -120,7 +123,9 @@ function parseArgs(argv: readonly string[]): CliArgs {
 
 function buildMttBlockerReport(args: CliArgs): MttBlockerReport {
   const filtered = filterMttCompletionReadinessReport(
-    buildMttCompletionReadinessReport(),
+    // Počet vyřešených rodin **musí** jít dovnitř, jinak report tvrdí, že
+    // postflop jede na heuristice - viz `solvedFamilyCounts`.
+    buildMttCompletionReadinessReport({ solvedFamilyCounts: solvedFamilyCountsByProfile() }),
     args.filters,
   );
   const rows = filtered.rows
@@ -215,5 +220,3 @@ function renderMttBlockerReport(report: MttBlockerReport, summaryOnly = false): 
 
   return lines.join("\n");
 }
-import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
-await loadCompleteMttProductionRegistry();

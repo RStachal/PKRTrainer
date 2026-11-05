@@ -30,6 +30,7 @@ import {
   validateRangeImportCommand,
 } from "../src/data/ranges/rangeImportCommands.ts";
 import { refreshMttProductionRegistry } from "./mttProductionRegistryFile.mts";
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 
 const WRITE_CONFIRMATION = "WRITE_READY_MTT_MODULES";
 
@@ -88,6 +89,7 @@ interface PromotionReport {
 
 try {
   const args = parseArgs(process.argv.slice(2));
+  await loadCompleteMttProductionRegistry();
   const report = buildPromotionReport(args);
   if (args.outputPath !== null) {
     mkdirSync(dirname(args.outputPath), { recursive: true });
@@ -379,5 +381,3 @@ function renderPromotionReport(report: PromotionReport): string {
 
   return lines.join("\n");
 }
-import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
-await loadCompleteMttProductionRegistry();

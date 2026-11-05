@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "PKRTRAINER_OWNER_DECISIONS_V1",
+  "questionsHash": "5c44fbf7",
+  "answers": [
+    {
+      "id": 1,
+      "title": "Squeeze: stránka platí „od 40 bb výš“, záznam vzniká na 40",
+      "code": "c",
+      "label": "Rozšířit jen po 75 bb",
+      "recommended": false,
+      "text": "Volím c), ne doporučené a). (1) Fan-out se netýká osmi stránek, ale sedmi: osmá squeeze mřížka draftu (SQU-40BBMais-90BB-CO-vs-UTG-OPEN-Mais-Fish-Call-HJ) má sourceStackBB 90, leží už v koši 100 a poznámku \"40 bb a víc\" nenese - a) je tedy 42 buněk, c) 21, ne 48 a 24. (2) RYE nad 100 bb nemluví nikde: nejhlubší číslo v názvech všech 720 stránek db je 100 (jednou 90), nabídka zdroje končí na \"100BB\" u Openraisingu i \"100bb\" u Flatting & 3Betting, a draft se 161 mřížkami obsazuje koše 10-100 - v 125 a 150 nemá jediný záznam v žádném kontextu. a) by udělala ze squeeze jediné místo, kde se RYE dovolává hloubek, o kterých celý korpus mlčí. (3) Jediná hluboká squeeze stránka zdroje hraje jinou hru: 90BB má tři akce (squeeze/call 50 %, squeeze for value but fold 37,1 %, bluff squeezes 12,9 %; 124 kombinací, 9,4 % rukou), kdežto všech sedm stránek \"40bb+\" má jen squeeze/call a squeeze/fold a 4,0-8,8 % rukou - blafovou část range na 40 bb zdroj nekreslí vůbec. Ta stránka je zároveň exploit proti fishi, takže to není čistý pokus; je to ale jediné, co zdroj o hloubce u squeeze říká, a neříká \"stejná range na 40 i na 150\". Precedens máš vlastní: RE_JAM_MAX končí na 40 s odůvodněním \"Na 50 BB RYE přímý jam nekreslí, takže tam hranice končí\", a preflopDepthStrata.mts existuje přesně proti tomu, aby hráč na 100 bb dostal range postavenou pro mnohem kratší stack (\"doplnit chybějící vrstvy znamená mít pro ně změřená data, ne je odvodit\"). Koše 100, 125 a 150 tedy zůstávají na vlastním exportu, který pro ně vznikl; 40 až 75 přebírá RYE podle pravidla 1a. Kdyby se později našel kurz nebo solver pro 100+, je to 14 buněk a přepneme na a)."
+    },
+    {
+      "id": 2,
+      "title": "BB proti limpu: polovina rodiny není range",
+      "code": "a",
+      "label": "Přeložit ty dvě a rodinu zavřít",
+      "recommended": true,
+      "text": "Volím a), ale s opravenou výměrou: rodina se zavře až po pěti stránkách, ne po dvou. Přeměřeno ze 14 souborů BBSTR-*: 3 jsou rozcestníky (BBSTR-menu-*), 5 jsou plné ranže (vs-SB-Limp 15-20, 20-25, 30-40, 40-50, 50BB+), 4 říkají \"Defend (Create your own Ranges / 3B Range)\" (2.5x a 3x u vs-EP-multiway a vs-MP-BU-CO) a mapy hloubek jsou jen 2, ne 8 (obě stránky vs 2x, pásma Jam < 20/25/30/35bb - a i ty nesou obyčejný Call na 75-79 % range). Těch pět stránek dává čtyři různé ranže: 20-25 a 30-40 jsou identické (820/252/203/51 kombinací), 15-20 má navíc all-in (19 %, 250 kombinací), 40-50 přidává \"3.5x + 4B < 100bb\" a \"3.5x + small 4bet vs SB 3bet\", a 50BB+ mění velikost z 3.5x na 4x. To je skutečný obsah závislý na hloubce od 15 do 50+ bb - tedy přesně to, co ti kouč vytkl (\"přidej iso-raise vs SB limpy\") a co jsi v T6 ze 17. 9. sám zařadil před squeeze. Náklad navíc je skoro nulový: práce je nový kontext VS_LIMP (contextFromFileName dnes větev pro BBSTR- nemá vůbec, v draftu není jediný záznam z BBSTR a slovník podle komentáře u ryeActionMapping.mts VS_LIMP nezná) plus slovník pro check behind / 3.5x bluff / 3.5x + call reraise / 4x+ call 3b; jakmile to existuje, pět stránek stojí totéž co dvě. Ty čtyři \"create your own\" zapiš jako trvale mimo překlad (pokyn, ne obsah), ať se k nim nikdo nevrací, a dvě mapy hloubek nech čekat na rejam podle 3c. Proti c): rejam jsi odložil dnes odpoledne a překryv je 2 stránky, ne 8, takže \"jedno pravidlo pro obě rodiny\" tady tu váhu neunese."
+    }
+  ]
+}

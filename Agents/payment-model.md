@@ -1,7 +1,7 @@
 # PKRTrainer payment and entitlement model
 
 Status: working design draft  
-Updated: 2026-07-07
+Updated: 2026-07-10
 
 ## Product goal
 
@@ -19,13 +19,14 @@ PKRTrainer should be usable as a professional poker training app with clear prod
 ### Pro
 
 - Core preflop trainer.
-- MTT 9-max regular chipEV modules that are production-ready.
+- Production MTT 9-max regular chipEV modules, ante ON/OFF.
 - Personal statistics, spaced repetition, offline cache for licensed packs.
 - Suitable as the first paid tier.
 
 ### Pro Plus / Solver Lab
 
-- Postflop pilot packs and advanced MTT modules after validation.
+- Production MTT 9-max turbo chipEV modules, ante ON/OFF.
+- Seven entitlement-gated scoped FLOP solver pilots. These are not full postflop production coverage.
 - Solver-backed drills, range matrix review, external cross-check reports.
 - More scenarios, deeper analytics, future ICM/PKO/final-table packs.
 
@@ -45,8 +46,10 @@ Entitlement examples:
 - `mtt.preflop.9max.regular.chip_ev`
 - `mtt.preflop.9max.turbo.chip_ev`
 - `mtt.postflop.flop.srp_btn_bb.cbet.pilot`
+- `mtt.postflop.flop.srp_utg_bb.cbet.pilot`
+- `mtt.postflop.flop.srp_co_bb.cbet.pilot`
 - `mtt.postflop.flop.srp_btn_bb.facing_bet.pilot`
-- `mtt.postflop.flop.srp_sb_bb_oop.cbet.pilot` — reserved / WAITING until complete LOW/MID/HIGH solver coverage is reviewed
+- `mtt.postflop.flop.srp_sb_bb_oop.cbet.pilot`
 - `mtt.postflop.flop.3bp_btn_co.cbet.pilot`
 - `mtt.postflop.flop.3bp_btn_co.facing_bet.pilot`
 - `analytics.advanced`
@@ -57,6 +60,14 @@ Production packs should declare required entitlements in metadata. Runtime shoul
 
 1. pack is technically valid and registered;
 2. current user/device has the required entitlement.
+
+Current `MTT ChipEV Core` content readiness is separate from payment delivery:
+
+- all four declared preflop packs are production-ready;
+- all seven scoped FLOP pilots are `READY` and mapped to distinct entitlements;
+- `permission.json` records owner review and distribution provenance for a content pack;
+- `permission.json` never grants a customer access and must not be read as a subscription or license;
+- checkout, server-issued grants and cryptographically signed production licenses remain payment-backend work.
 
 ## Payment provider boundary
 

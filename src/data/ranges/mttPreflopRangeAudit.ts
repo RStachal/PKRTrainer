@@ -59,6 +59,21 @@ export interface MttPreflopRangeAuditCoverage {
   missingPositions: Position[];
   missingStackBuckets: StackBucket[];
   missingContexts: ActionContext[];
+  /**
+   * Kolik záznamů je zpřesněných na otvírající sedačku nebo rozložení stacků.
+   *
+   * **Druhé číslo, ne druhá podmínka.** Úplnost se počítá dál z obecných
+   * záznamů, protože pack, který má jen zpřesněné, na obecnou otázku
+   * neodpoví - a prohlásit ho za pokrytý by tvrdilo odpověď, kterou hráč
+   * nedostane.
+   *
+   * Kdyby se zpřesnění stalo požadavkem, mřížka by se u six-max zvětšila z 702
+   * buněk na 1 287 a **každý slot by se od produkce vzdálil**. To je past, do
+   * které ten rozměr umí spadnout, a tohle je místo, kde se jí vyhýbá.
+   */
+  refinedRecords: number;
+  /** Kolik buněk má vedle obecné odpovědi i aspoň jednu zpřesněnou. */
+  refinedCells: number;
 }
 
 export interface MttPreflopSpeedDiffReport {
@@ -104,17 +119,24 @@ const REQUIRED_CONTEXTS: readonly ActionContext[] = [
 const REPRESENTATIVE_ACTIONS: Record<ActionContext, readonly ActionKey[]> = {
   RFI: ["OPEN_2X", "OPEN_25X"],
   VS_LIMP: ["ISO_25X", "OVERLIMP", "LIMP"],
-  VS_OPEN: ["3BET", "CALL"],
+  // JAM belongs here now: between 15 and 30BB the owner's charts make re-jamming
+  // over an open a real branch, and listing it means the audit notices if that
+  // data ever silently stops reaching the packs.
+  VS_OPEN: ["3BET", "CALL", "JAM"],
   VS_3BET: ["4BET", "CALL"],
   VS_4BET: ["JAM", "CALL"],
   SQUEEZE: ["SQUEEZE", "CALL"],
-  BVB: ["OPEN_2X", "OPEN_25X", "3BET", "CALL"],
+  // Od 17. 9. 2026 jen SB (otevření); obrana BB proti SB je `VS_OPEN` z SB
+  // se zpřesněným záznamem (bod 254), takže 3BET a CALL patří tam.
+  BVB: ["OPEN_2X", "OPEN_25X"],
   PUSH_FOLD: ["JAM"],
   VS_ALLIN: ["CALL_JAM"],
 };
 
 const HAND_CLASS_SET: ReadonlySet<HandLabel> = new Set(ALL_HAND_CLASSES);
-const EXPECTED_RECORD_COUNT = 487;
+// 487 before the calling-rejam sheets added VS_ALLIN at 15, 20, 25 and 30BB for
+// the five seats they cover.
+const EXPECTED_RECORD_COUNT = 507;
 const EXPECTED_NORMALIZED_CELL_COUNT = EXPECTED_RECORD_COUNT * ALL_HAND_CLASSES.length;
 
 export function auditCurrentMttPreflopProductionPacks(): MttPreflopRangeAuditReport[] {
@@ -442,16 +464,34 @@ function mttProfile(
 
 function coverageForPack(pack: RangePack): MttPreflopRangeAuditCoverage {
   const requiredPositions = requiredPositionsForFormat(pack.dimensions.tableFormat);
+  // Úplnost se měří **jen z obecných záznamů**.
+  //
+  // Zpřesněný záznam odpovídá na užší otázku („co na BTN proti otevření z UTG"),
+  // takže obecnou („co na BTN proti otevření") nezodpoví. Kdyby se do pokrytí
+  // počítal, mohl by pack vypadat úplný a hráč by přesto dostal prázdno.
+  const general = pack.records.filter(
+    (record) => record.vsSeat === undefined && record.stackSetupId === undefined,
+  );
+  const refined = pack.records.length - general.length;
+  const generalCells = new Set(
+    general.map((record) => `${record.position}|${record.bucket}|${record.context}`),
+  );
+  const refinedCells = new Set(
+    pack.records
+      .filter((record) => record.vsSeat !== undefined || record.stackSetupId !== undefined)
+      .map((record) => `${record.position}|${record.bucket}|${record.context}`)
+      .filter((cell) => generalCells.has(cell)),
+  );
   const positions = uniqueInOrder(
-    pack.records.map((record) => record.position),
+    general.map((record) => record.position),
     requiredPositions,
   );
   const stackBuckets = uniqueInOrder(
-    pack.records.map((record) => record.bucket),
+    general.map((record) => record.bucket),
     STACK_BUCKETS,
   );
   const contexts = uniqueInOrder(
-    pack.records.map((record) => record.context),
+    general.map((record) => record.context),
     REQUIRED_CONTEXTS,
   );
 
@@ -462,6 +502,8 @@ function coverageForPack(pack: RangePack): MttPreflopRangeAuditCoverage {
     missingPositions: requiredPositions.filter((position) => !positions.includes(position)),
     missingStackBuckets: STACK_BUCKETS.filter((bucket) => !stackBuckets.includes(bucket)),
     missingContexts: REQUIRED_CONTEXTS.filter((context) => !contexts.includes(context)),
+    refinedRecords: refined,
+    refinedCells: refinedCells.size,
   };
 }
 
@@ -473,7 +515,12 @@ function duplicateKeys(pack: RangePack): string[] {
   const seen = new Set<string>();
   const duplicates = new Set<string>();
   for (const record of pack.records) {
-    const key = `${record.position}|${record.bucket}|${record.context}`;
+    // Zpřesnění patří do klíče: záznam pro BTN proti otevření z UTG a záznam
+    // pro BTN proti otevření z CO jsou dvě různé odpovědi, ne jedna zapsaná
+    // dvakrát. Bez toho by je audit odmítl jako duplicitu.
+    const key = `${record.position}|${record.bucket}|${record.context}`
+      + `${record.vsSeat ? `|vs${record.vsSeat}` : ""}`
+      + `${record.stackSetupId ? `|#${record.stackSetupId}` : ""}`;
     if (seen.has(key)) duplicates.add(key);
     seen.add(key);
   }

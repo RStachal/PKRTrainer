@@ -1,16 +1,31 @@
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { afterEach, describe, expect, it } from "vitest";
 
 const TMP_ROOT = join(process.cwd(), "artifacts", "test-texas-solver-ingest");
+// Povel ke sloučení draftů CLI plánuje, jen když drafty na disku leží, a ty
+// leží v `artifacts/` (mimo git), ne v dočasném kořeni testu. Na stroji bez nich
+// - CI, a od ztráty stroje 30. 10. 2026 i tenhle (deník 328) - test chybějící
+// vstup hlásil jako „o povel míň" (3 místo 4). Podmínka je táž jako v CLI
+// (`defaultMergeInputDirs` a `draftFilesExist` v
+// `ingestTexasSolverCompletedCoverage.mts`); existence adresáře nestačí, 3. 11.
+// 2026 tu ležel prázdný.
+const SB_OOP_CBET_DRAFTS = [
+  "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR-ROOT",
+  "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR-ROOT",
+  "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR-ROOT",
+].map((name) => join("artifacts/texas-solver-review-integration/normalized-drafts", name));
+const itWithMergeDrafts = SB_OOP_CBET_DRAFTS.some((dir) => (
+  existsSync(join(dir, "normalized.candidate.json")) && existsSync(join(dir, "permission.candidate.json"))
+)) ? it : it.skip;
 
 afterEach(() => {
   rmSync(TMP_ROOT, { recursive: true, force: true });
 });
 
 describe("mtt:texas-solver-ingest-completed CLI", () => {
-  it("reviewuje SB vs BB OOP c-bet root node misto CHECK vetve", () => {
+  itWithMergeDrafts("reviewuje SB vs BB OOP c-bet root node misto CHECK vetve", () => {
     const familyId = "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR";
     const outputBase = join(TMP_ROOT, "output", "texas-solver");
     const rawDir = join(outputBase, familyId, "raw");
@@ -63,7 +78,7 @@ describe("mtt:texas-solver-ingest-completed CLI", () => {
   });
 
   it("u nove review-only family bez mappingu nehlasi falesne already normalized", () => {
-    const familyId = "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR";
+    const familyId = "MTT9_30BB_CO_BB_SRP_CBET_REVIEW_ONLY";
     const outputBase = join(TMP_ROOT, "output", "texas-solver");
     const familyDir = join(outputBase, familyId);
     const rawDir = join(outputBase, familyId, "raw");
@@ -111,6 +126,33 @@ describe("mtt:texas-solver-ingest-completed CLI", () => {
     expect(report.rows[0].commands).toEqual([]);
     expect(report.rows[0].skippedReason).toContain("No supported normalization mapping");
     expect(report.rows[0].skippedReason).not.toContain("Already staged");
+  });
+
+  it("u memory-safe tree profilu zakaze automaticky staging a pilot merge", () => {
+    const familyId = "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR";
+    const outputBase = join(TMP_ROOT, "memory-safe", "texas-solver");
+    const rawDir = join(outputBase, familyId, "raw");
+    mkdirSync(rawDir, { recursive: true });
+    writeFileSync(join(rawDir, `pkrtrainer_${familyId}_A72r.json`), JSON.stringify({ node: "root" }), "utf8");
+    const manifestPath = join(TMP_ROOT, "memory-safe-manifest.json");
+    const reportPath = join(TMP_ROOT, "memory-safe-report.json");
+    writeFileSync(manifestPath, `${JSON.stringify({
+      outputBase,
+      executionProfile: { treeProfile: "MEMORY_SAFE_REVIEW_ONLY" },
+      scenarios: [{ familyId, boards: ["A72r"], coverageTags: ["SINGLE_RAISED_POT_CBET", "SRP_SB_VS_BB", "OOP_AGGRESSOR"] }],
+    }, null, 2)}\n`, "utf8");
+
+    const result = runIngest("--dry-run", `--manifest=${manifestPath}`, `--output=${reportPath}`);
+    expect(result.status).toBe(0);
+    const report = JSON.parse(readFileSync(reportPath, "utf8")) as {
+      reviewOnlyTreeProfile: string | null;
+      mergePilotCommands: string[];
+      rows: Array<{ commands: string[]; skippedReason: string | null }>;
+    };
+    expect(report.reviewOnlyTreeProfile).toBe("MEMORY_SAFE_REVIEW_ONLY");
+    expect(report.mergePilotCommands).toEqual([]);
+    expect(report.rows[0].commands).toEqual([]);
+    expect(report.rows[0].skippedReason).toContain("automatic staging and normalization are disabled");
   });
 });
 

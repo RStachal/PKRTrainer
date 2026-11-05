@@ -2,9 +2,11 @@ import {
   generatePostflopSpot,
   type PostflopAction,
   type PostflopConfig,
+  type PostflopRecommendationSource,
   type PostflopSpot,
   type PostflopStreet,
 } from "./postflopGenerator";
+import { MODEL_BET_RATIO, solvedBetSizing, type SolvedBetSizing } from "../data/ranges/solvedBetSizing";
 import type { PostflopActionNode } from "./postflopTrainingSpot";
 import type { Card } from "./types";
 
@@ -127,6 +129,15 @@ export interface PostflopLineTransitionInput {
   action: PostflopLineAction;
   priorFlopAction?: PostflopAction;
   priorTurnAction?: PostflopAction;
+  /**
+   * Jestli hrdina drží iniciativu, tedy jestli byl posledním, kdo zvedal.
+   *
+   * Bez toho nešlo odlišit pokračování v sázení od vedení bez iniciativy a
+   * simulátor vyráběl `TURN_BARREL` pro obojí. Změřeno: 281 z 300 linek
+   * postavených na vyřešeném turnu minulo, protože vyřešený uzel byl
+   * `TURN_OOP_LEAD` a linka nabídla barrel - správný obsah, špatná otázka.
+   */
+  heroHasInitiative?: boolean;
 }
 
 export interface PostflopLineTransition {
@@ -218,6 +229,9 @@ export function generatePostflopLine(config: PostflopLineConfig): PostflopLine {
       action,
       priorFlopAction,
       priorTurnAction,
+      // Iniciativu drží ten, kdo naposledy zvedal. Spot ji zná v sedačkách:
+      // hrdina ji má, právě když je sám agresorem.
+      heroHasInitiative: spot.heroPosition === spot.aggressorPosition,
     });
     state = transition.state;
     priorFlopAction = transition.priorFlopAction;
@@ -271,7 +285,11 @@ export function transitionPostflopLineState(
   return {
     nextStreet,
     nextActionNode: nextStreet
-      ? actionNodeForLineStreet(nextStreet, input.action.action)
+      ? actionNodeForLineStreet(
+        nextStreet,
+        input.action.action,
+        input.heroHasInitiative ?? true,
+      )
       : undefined,
     potBB: state.potBB,
     effectiveStackBB: effectiveStack(state),
@@ -371,6 +389,7 @@ function resolveLineAction(
       "HERO",
       decision.action,
       lastFullRaiseBB,
+      spot.strategySource,
     );
     stateAfter = heroInitial.state;
     lastFullRaiseBB = heroInitial.lastFullRaiseBB;
@@ -495,7 +514,7 @@ function continueAgainstAggression(
       sequence,
     )
     : chooseHeroResponse(heroResponsePolicy, spot, next, legal, sequence);
-  const applied = applyPlannedAction(next, respondingActor, response, lastRaise);
+  const applied = applyPlannedAction(next, respondingActor, response, lastRaise, spot.strategySource);
   next = applied.state;
   lastRaise = applied.lastFullRaiseBB;
   sequence.push(applied.action);
@@ -542,7 +561,7 @@ function continueAgainstAggression(
       finalLegal,
       sequence,
     );
-  const finalApplied = applyPlannedAction(next, finalActor, finalResponse, lastRaise);
+  const finalApplied = applyPlannedAction(next, finalActor, finalResponse, lastRaise, spot.strategySource);
   next = finalApplied.state;
   lastRaise = finalApplied.lastFullRaiseBB;
   sequence.push(finalApplied.action);
@@ -608,6 +627,9 @@ function applyPlannedAction(
   actor: PostflopLineActor,
   action: PostflopPolicyAction,
   lastFullRaiseBB: number,
+  // Zdroj pravidla spotu: z něj se bere velikost hrdinovy sázky. Soupeřovy
+  // sázky jdou dál modelem - tabulka velikostí popisuje tlačítka hrdiny.
+  source?: PostflopRecommendationSource,
 ): {
   state: PostflopStreetState;
   action: PostflopAtomicAction;
@@ -631,7 +653,12 @@ function applyPlannedAction(
     case "BET_SMALL":
     case "BET_BIG":
       targetContributionBB = roundTenths(
-        actorContribution + betSizeBB(action, livePotBB(state), actorStack(state, actor)),
+        actorContribution + betSizeBB(
+          action,
+          livePotBB(state),
+          actorStack(state, actor),
+          actor === "HERO" ? solvedBetSizing(source, action) : undefined,
+        ),
       );
       break;
     case "RAISE":
@@ -824,12 +851,32 @@ function isAggressivePolicyAction(
     action === "ALL_IN";
 }
 
+/**
+ * Který uzel čeká na hrdinu na další ulici.
+ *
+ * Tři různá rozhodnutí, ne dvě. Kdo dorovnal sázku, čelí na další ulici další;
+ * kdo drží iniciativu a nikdo nesázel, pokračuje; a kdo iniciativu nemá a hraje
+ * první, vede bez ní - to je uzel, který dostal jméno teprve nedávno a tahle
+ * funkce o něm nevěděla. Vyráběla `TURN_BARREL` i pro hráče, který na flopu jen
+ * dorovnal, takže mu nabízela pokračování v sázení, které nikdy nezačal.
+ */
 function actionNodeForLineStreet(
   street: PostflopStreet,
   previousAction: PostflopAction,
+  heroHasInitiative: boolean,
 ): PostflopActionNode {
   if (previousAction === "CALL") {
+    // Dorovnání znamená, že iniciativu má někdo jiný. Na další ulici se buď
+    // čelí další sázce, nebo se hraje první bez iniciativy; co z toho, rozhodne
+    // až soupeř, a spot se generuje dřív. Bere se ta možnost, kterou hrdina
+    // ovlivní: hraje první.
+    if (!heroHasInitiative) {
+      return street === "TURN" ? "TURN_OOP_LEAD" : "RIVER_OOP_LEAD";
+    }
     return street === "TURN" ? "TURN_FACING_BET" : "RIVER_FACING_BET";
+  }
+  if (!heroHasInitiative) {
+    return street === "TURN" ? "TURN_OOP_LEAD" : "RIVER_OOP_LEAD";
   }
   return street === "TURN" ? "TURN_BARREL" : "RIVER_PRESSURE";
 }
@@ -914,12 +961,23 @@ function isFacingBetNode(node: PostflopActionNode | undefined): boolean {
     node === "RIVER_FACING_BET";
 }
 
+/**
+ * Kolik hráč vsadí - **velikostí, kterou hrál solver**, když ji známe.
+ *
+ * Do 15. 10. 2026 tu byl jen model 0,33 / 0,75 potu natvrdo, a „Bank po akci"
+ * se tím rozcházel s tlačítkem, které velikost ze stromu bralo: `BET_BIG` u 63
+ * z 63 rodin (ve stromě 0,50), `BET_SMALL` u 17 z 20. Velikosti ve stromech
+ * jsou čtyři (0,25, 0,33, 0,5, 0,75) a vlastník rozhodl nechat všechny - model
+ * zůstává jen jako záloha pro spot bez vyřešené velikosti.
+ */
 function betSizeBB(
   action: Extract<PostflopAction, "BET_SMALL" | "BET_BIG">,
   potBB: number,
   stackBB: number,
+  solved?: SolvedBetSizing,
 ): number {
-  const ratio = action === "BET_SMALL" ? 0.33 : 0.75;
+  if (solved?.allIn === true) return stackBB;
+  const ratio = solved?.ratio ?? MODEL_BET_RATIO[action];
   return Math.min(stackBB, roundTenths(potBB * ratio));
 }
 

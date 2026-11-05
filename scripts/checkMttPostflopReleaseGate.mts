@@ -6,6 +6,7 @@ import {
   type MttCompletionReadinessRow,
 } from "../src/data/ranges/mttProductionReadiness.ts";
 import { findPlaceholderStringPaths } from "../src/data/ranges/placeholderText.ts";
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 
 interface CliArgs {
   json: boolean;
@@ -59,6 +60,7 @@ function usage(): string {
 
 try {
   const args = parseArgs(process.argv.slice(2));
+  await loadCompleteMttProductionRegistry();
   const report = buildMttPostflopReleaseGateReport();
   if (args.outputPath !== null) {
     mkdirSync(dirname(args.outputPath), { recursive: true });
@@ -236,5 +238,3 @@ function renderMttPostflopReleaseGateReport(
 
   return lines.join("\n");
 }
-import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
-await loadCompleteMttProductionRegistry();

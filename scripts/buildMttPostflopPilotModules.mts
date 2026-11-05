@@ -14,8 +14,16 @@ import {
 } from "../src/data/ranges/mttPostflopPilotCatalog.ts";
 import { buildMttPostflopPilotGateReport } from "../src/data/ranges/mttPostflopPilotGate.ts";
 import type { ProductionPermissionManifest } from "../src/data/ranges/productionPermissionManifest.ts";
+import { mergeActionEvIntoPilotPack } from "../src/data/ranges/mttPostflopActionEvMerge.ts";
+import {
+  flopPilotContentHash,
+  type TurnReviewVerdictFile,
+  type TurnReviewVerdictRecord,
+} from "../src/data/ranges/turnReviewVerdict.ts";
 
 const GENERATED_INDEX = "src/data/ranges/mttPostflopPilotPacks.generated.ts";
+const VERDICTS_PATH = "Agents/turn-review/verdicts.json";
+const ACTION_EV_INTAKE_DIR = "artifacts/mtt-action-ev-intake";
 
 interface PilotModuleSource {
   catalogId: string;
@@ -63,6 +71,15 @@ const PILOT_MODULE_SOURCES: readonly PilotModuleSource[] = [
     exportName: "sbBbSrpOopFlopCbetPilotPack",
   },
   {
+    catalogId: "co-bb-srp-flop-cbet-low-mid-high",
+    normalizedPath:
+      "artifacts/texas-solver-review-integration/normalized-drafts/CO_BB_SRP_FLOP_CBET_PILOT-CHECK/normalized.candidate.json",
+    permissionPath:
+      "artifacts/texas-solver-review-integration/normalized-drafts/CO_BB_SRP_FLOP_CBET_PILOT-CHECK/permission.candidate.json",
+    modulePath: "src/data/ranges/pilots/coBbSrpFlopCbetPilot.generated.ts",
+    exportName: "coBbSrpFlopCbetPilotPack",
+  },
+  {
     catalogId: "btn-co-3bp-flop-facing-bet-low-mid-high",
     normalizedPath:
       "artifacts/texas-solver-review-integration/normalized-drafts/BTN_CO_3BP_FLOP_FACING_BET_PILOT/normalized.candidate.json",
@@ -93,6 +110,8 @@ interface BuiltPilotModule {
   pack: FlopProductionStrategyPack;
   fingerprint: string;
   moduleText: string;
+  actionEvBuckets: number;
+  totalBuckets: number;
 }
 
 try {
@@ -108,8 +127,11 @@ try {
       exportName: item.source.exportName,
       rules: item.pack.rules.length,
       rangeBuckets: item.pack.rules.reduce((sum, rule) => sum + rule.rangeBuckets.length, 0),
+      actionEvBuckets: item.actionEvBuckets,
       fingerprint: item.fingerprint,
     })),
+    actionEvBuckets: built.reduce((sum, item) => sum + item.actionEvBuckets, 0),
+    totalBuckets: built.reduce((sum, item) => sum + item.totalBuckets, 0),
     indexPath: GENERATED_INDEX,
   };
   if (args.write) writePilotModules(built);
@@ -159,7 +181,18 @@ function buildPilotModules(): BuiltPilotModule[] {
     if (catalog === undefined) throw new Error(`Missing pilot catalog entry: ${source.catalogId}`);
     if (!existsSync(source.normalizedPath)) throw new Error(`Missing normalized pilot draft: ${source.normalizedPath}`);
     if (!existsSync(source.permissionPath)) throw new Error(`Missing pilot permission draft: ${source.permissionPath}`);
-    const pack = readJson<FlopProductionStrategyPack>(source.normalizedPath);
+    const normalizedPack = readJson<FlopProductionStrategyPack>(source.normalizedPath);
+    // Action EV, when it exists, is overlaid onto the strategy pack so the trainer
+    // can show EV next to the buttons. It ships on a later clock than strategy, so
+    // the candidate is optional; but if it is present it must line up exactly, or
+    // the build fails rather than quietly shipping a pilot without the EV a
+    // reviewer already produced.
+    const pack = overlayActionEv(source, normalizedPack);
+    const actionEvBuckets = pack.rules.reduce(
+      (sum, rule) => sum + rule.rangeBuckets.filter((bucket) => bucket.actionEvs !== undefined).length,
+      0,
+    );
+    const totalBuckets = pack.rules.reduce((sum, rule) => sum + rule.rangeBuckets.length, 0);
     const permission = readJson<ProductionPermissionManifest>(source.permissionPath);
     const gate = buildMttPostflopPilotGateReport(pack, permission, catalog.scope);
     if (!gate.valid) throw new Error(`${source.catalogId}: pilot gate failed:\n${gate.errors.join("\n")}`);
@@ -172,17 +205,72 @@ function buildPilotModules(): BuiltPilotModule[] {
         `(catalog ${catalog.rules}/${catalog.rangeBuckets}, gate ${gate.counts.rules}/${gate.counts.rangeBuckets}).`,
       );
     }
-    const fingerprint = pilotFingerprint(pack, permission, catalog);
+    // Verdikt čtenáře až po bráně: brána ověřuje tvar kandidáta (MEDIUM), vydaný
+    // modul říká, co o obsahu ví člověk. Šest pilotů čtenář 14. 9. 2026 odmítl
+    // (bod 248) a modul přesto tvrdil MEDIUM - hráč viděl „spolehlivost: střední"
+    // u obsahu, který čtení neprošlo. Vlastník 22. 9. 2026 (rozhodnutí 9a):
+    // přeznačit na LOW, dokud se rodiny nepřesolví a nepřečtou znovu.
+    const rejected = rejectingVerdict(source.catalogId, pack);
+    const labelled: FlopProductionStrategyPack = rejected === undefined ? pack : {
+      ...pack,
+      confidence: "LOW",
+      assumptions: [
+        ...pack.assumptions,
+        `Čtení hráčem ${rejected.reviewedAt} (${rejected.reviewer}): neprošlo - ${rejected.notes ?? "bez poznámky"}. `
+          + "Spolehlivost LOW, dokud se rodina nepřesolví s produkční range a nepřečte znovu (rozhodnutí vlastníka 22. 9. 2026, 9a).",
+      ],
+    };
+    const fingerprint = pilotFingerprint(labelled, permission, catalog);
     built.push({
       source,
       catalog,
-      pack,
+      pack: labelled,
       fingerprint,
-      moduleText: renderPilotModule(pack, source.exportName, catalog, fingerprint),
+      moduleText: renderPilotModule(labelled, source.exportName, catalog, fingerprint),
+      actionEvBuckets,
+      totalBuckets,
     });
   }
 
   return built;
+}
+
+/**
+ * Poslední lidský verdikt „neprošlo" nad přesně tímhle obsahem, nebo nic.
+ *
+ * Váže se na otisk obsahu: přesolvený pilot má jiný otisk a verdikt na něj
+ * nesedí - je nepřečtený, ne odmítnutý, a čtecí stránka si o čtení řekne.
+ */
+function rejectingVerdict(catalogId: string, pack: FlopProductionStrategyPack): TurnReviewVerdictRecord | undefined {
+  if (!existsSync(VERDICTS_PATH)) return undefined;
+  const file = readJson<TurnReviewVerdictFile>(VERDICTS_PATH);
+  const hash = flopPilotContentHash(pack.rules);
+  return [...file.verdicts]
+    .filter((row) => row.street === "FLOP" && row.familyId === catalogId && row.basis === "PLAYER_READ"
+      && row.outcome === "NEEDS_WORK" && row.contentHash === hash)
+    .sort((left, right) => right.reviewedAt.localeCompare(left.reviewedAt))[0];
+}
+
+function actionEvCandidatePath(catalogId: string): string {
+  return `${ACTION_EV_INTAKE_DIR}/${catalogId}/normalized.action-ev.candidate.json`;
+}
+
+function overlayActionEv(
+  source: PilotModuleSource,
+  normalizedPack: FlopProductionStrategyPack,
+): FlopProductionStrategyPack {
+  const candidatePath = actionEvCandidatePath(source.catalogId);
+  if (!existsSync(candidatePath)) return normalizedPack;
+
+  const candidate = readJson<FlopProductionStrategyPack>(candidatePath);
+  const merged = mergeActionEvIntoPilotPack(normalizedPack, candidate);
+  if (merged.errors.length > 0) {
+    throw new Error(
+      `${source.catalogId}: action-EV candidate at ${candidatePath} does not line up with the strategy pilot:\n` +
+      merged.errors.join("\n"),
+    );
+  }
+  return merged.pack;
 }
 
 function writePilotModules(built: readonly BuiltPilotModule[]): void {
@@ -299,8 +387,11 @@ function renderReport(report: {
     exportName: string;
     rules: number;
     rangeBuckets: number;
+    actionEvBuckets: number;
     fingerprint: string;
   }[];
+  actionEvBuckets: number;
+  totalBuckets: number;
   indexPath: string;
 }): string {
   const lines = [
@@ -308,12 +399,13 @@ function renderReport(report: {
     `valid: ${report.valid}`,
     `write: ${report.write}`,
     `modules: ${report.modules.length}`,
+    `action-EV buckets: ${report.actionEvBuckets}/${report.totalBuckets}`,
     `index: ${report.indexPath}`,
   ];
   for (const module of report.modules) {
     lines.push(
       `${module.catalogId}: ${module.scope} rules=${module.rules} buckets=${module.rangeBuckets} ` +
-      `module=${module.modulePath}`,
+      `ev=${module.actionEvBuckets}/${module.rangeBuckets} module=${module.modulePath}`,
     );
   }
   return lines.join("\n");

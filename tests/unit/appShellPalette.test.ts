@@ -1,0 +1,58 @@
+// @vitest-environment jsdom
+import { describe, expect, it } from "vitest";
+
+import { stylesheet } from "../stylesheets";
+
+/**
+ * The shell reads as a poker client, and the action colours stay the loudest.
+ *
+ * The owner asked for a game client rather than a form with a poker table in it.
+ * The table already had felt; the page around it was neutral navy, so the felt
+ * stopped at the table's edge and everything else looked like a settings screen.
+ *
+ * The constraint that shapes this: colour in this app carries meaning. Action
+ * buttons wear their category's colour and the range matrix repeats it, so
+ * pressing amber and finding amber is how a player reads the grid. A background
+ * that competes with that would cost more than it gains, which is why the felt
+ * is low-saturation and the accents are not.
+ */
+
+describe("app shell palette", () => {
+  it("keeps the action colours distinct from each other", async () => {
+    // The property the background must not break. Asserted against the palette
+    // the matrix and the buttons share, not against the background itself.
+    const { colorForActionKey } = await import("../../src/ui/rangeMatrixView");
+    const keys = ["FOLD", "CALL", "OPEN_2X", "3BET", "JAM"] as const;
+    const colours = keys.map((key) => colorForActionKey(key as never));
+    expect(new Set(colours).size).toBe(keys.length);
+  });
+
+  it("states the verdict in colour before any text is read", () => {
+    // The moment a player is here for. Since the classic GUI went (4. 11. 2026)
+    // the verdict is the coloured chip that opens the feedback (`outcomeChip.ts`);
+    // the text after it is confirmation rather than discovery.
+    const components = stylesheet("components.css");
+    expect(components).toMatch(/\.dx-chip--correct\s*\{[^}]*background:\s*var\(--dx-outcome-best\)/);
+    expect(components).toMatch(/\.dx-chip--mistake\s*\{[^}]*background:\s*var\(--dx-outcome-mistake\)/);
+    // Distinct hues, not two shades of the same idea.
+    const tokens = stylesheet("tokens.css");
+    expect(tokens).toContain("--dx-outcome-best: #34d399;");
+    expect(tokens).toContain("--dx-outcome-mistake: #e5484d;");
+  });
+
+  it("respects a player who asked for less motion", () => {
+    const sheet = stylesheet("legacy/app-shell.css");
+    // Every animation added here has an escape, because a trainer is used for
+    // hours and motion someone did not ask for is a reason to stop.
+    expect(sheet).toContain("prefers-reduced-motion");
+  });
+
+  it("paints the page in felt, not navy", () => {
+    const sheet = stylesheet("legacy/app-shell.css");
+    const body = /body\{[^}]*\}/.exec(sheet)?.[0] ?? "";
+    expect(body, "no body rule found").not.toBe("");
+    // Green in the page background, which is what makes it read as a table
+    // rather than a settings screen.
+    expect(body).toMatch(/rgba\(34,150,96/);
+  });
+});

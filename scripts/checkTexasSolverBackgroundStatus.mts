@@ -26,6 +26,9 @@ interface SolverProcess {
   name: string;
   startedAt: string | null;
   commandLine: string | null;
+  inputPath: string | null;
+  cpuSeconds: number | null;
+  workingSetBytes: number | null;
 }
 
 interface FamilyStatus {
@@ -41,6 +44,11 @@ interface BackgroundStatusReport {
   manifestPath: string;
   outputBase: string | null;
   processes: readonly SolverProcess[];
+  systemMemory: {
+    totalBytes: number | null;
+    freeBytes: number | null;
+    freePercent: number | null;
+  };
   coverage: {
     families: number;
     rawComplete: number;
@@ -138,7 +146,11 @@ function buildReport(args: CliArgs): BackgroundStatusReport {
   const manifest = readManifest(args.manifestPath, errors);
   const rows = manifest === null ? [] : familyRows(manifest);
   const processes = runningSolverProcesses(warnings);
+  const systemMemory = currentSystemMemory(warnings);
   if (processes.length === 0) warnings.push("No TexasSolver console process is currently visible from this Windows session.");
+  if (systemMemory.freePercent !== null && systemMemory.freePercent < 10) {
+    warnings.push(`Low physical memory: ${formatGigabytes(systemMemory.freeBytes)} free (${systemMemory.freePercent.toFixed(1)}%). Do not start another solver process or batch while the current solver is active.`);
+  }
   const logs = latestLogs(args.logDir);
   if (logs.length === 0) warnings.push(`No background log files found in ${args.logDir}.`);
 
@@ -147,6 +159,7 @@ function buildReport(args: CliArgs): BackgroundStatusReport {
     manifestPath: args.manifestPath,
     outputBase: manifest === null ? null : resolve(manifest.outputBase),
     processes,
+    systemMemory,
     coverage: {
       families: rows.length,
       rawComplete: rows.filter((row) => row.status === "RAW_COMPLETE").length,
@@ -199,7 +212,7 @@ function runningSolverProcesses(warnings: string[]): SolverProcess[] {
     const output = execFileSync("powershell.exe", [
       "-NoProfile",
       "-Command",
-      "Get-CimInstance Win32_Process | Where-Object { $_.Name -match 'console_solver|TexasSolver' } | Select-Object ProcessId,Name,@{Name='StartedAt';Expression={$_.CreationDate.ToString('o')}},CommandLine | ConvertTo-Json -Compress",
+      "Get-CimInstance Win32_Process | Where-Object { $_.Name -match 'console_solver|TexasSolver' } | Select-Object ProcessId,Name,@{Name='StartedAt';Expression={$_.CreationDate.ToString('o')}},CommandLine,KernelModeTime,UserModeTime,WorkingSetSize | ConvertTo-Json -Compress",
     ], {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],
@@ -224,7 +237,56 @@ function processFromCimRow(row: unknown): SolverProcess[] {
     name: String(record.Name ?? ""),
     startedAt: typeof record.StartedAt === "string" ? record.StartedAt : null,
     commandLine: typeof record.CommandLine === "string" ? record.CommandLine : null,
+    inputPath: typeof record.CommandLine === "string" ? inputPathFromCommandLine(record.CommandLine) : null,
+    cpuSeconds: cpuSecondsFromCim(record),
+    workingSetBytes: finiteNumber(record.WorkingSetSize),
   }];
+}
+
+function inputPathFromCommandLine(commandLine: string): string | null {
+  const match = /(?:^|\s)-i\s+(?:"([^"]+)"|(\S+))/i.exec(commandLine);
+  return match?.[1] ?? match?.[2] ?? null;
+}
+
+function currentSystemMemory(warnings: string[]): BackgroundStatusReport["systemMemory"] {
+  const unknown = { totalBytes: null, freeBytes: null, freePercent: null };
+  if (process.platform !== "win32") return unknown;
+  try {
+    const output = execFileSync("powershell.exe", [
+      "-NoProfile",
+      "-Command",
+      "$os = Get-CimInstance Win32_OperatingSystem; $computer = Get-CimInstance Win32_ComputerSystem; [pscustomobject]@{ TotalBytes = $computer.TotalPhysicalMemory; FreeBytes = ([Int64]$os.FreePhysicalMemory * 1KB) } | ConvertTo-Json -Compress",
+    ], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim();
+    const parsed = JSON.parse(output) as Record<string, unknown>;
+    const totalBytes = finiteNumber(parsed.TotalBytes);
+    const freeBytes = finiteNumber(parsed.FreeBytes);
+    const freePercent = totalBytes === null || freeBytes === null || totalBytes <= 0
+      ? null
+      : Math.round((freeBytes / totalBytes) * 1000) / 10;
+    return { totalBytes, freeBytes, freePercent };
+  } catch (error) {
+    warnings.push(`Could not query Windows physical memory: ${error instanceof Error ? error.message : String(error)}`);
+    return unknown;
+  }
+}
+
+function cpuSecondsFromCim(record: Record<string, unknown>): number | null {
+  const kernel = finiteNumber(record.KernelModeTime);
+  const user = finiteNumber(record.UserModeTime);
+  if (kernel === null || user === null) return null;
+  return Math.round(((kernel + user) / 10_000_000) * 10) / 10;
+}
+
+function finiteNumber(value: unknown): number | null {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function formatGigabytes(value: number | null): string {
+  return value === null ? "unknown" : `${(value / 1024 ** 3).toFixed(2)}GB`;
 }
 
 function latestLogs(logDir: string): BackgroundStatusReport["logs"] {
@@ -263,9 +325,13 @@ function renderReport(report: BackgroundStatusReport, summaryOnly: boolean): str
     `raw partial: ${report.coverage.rawPartial}`,
     `waiting for raw: ${report.coverage.waitingForRaw}`,
     `boards solved: ${report.coverage.boardsSolved}/${report.coverage.boardsExpected}`,
+    `physical memory: free=${formatGigabytes(report.systemMemory.freeBytes)} total=${formatGigabytes(report.systemMemory.totalBytes)}${report.systemMemory.freePercent === null ? "" : ` (${report.systemMemory.freePercent.toFixed(1)}%)`}`,
   ];
   for (const process of report.processes) {
-    lines.push(`process ${process.pid}: ${process.name} started=${process.startedAt ?? "unknown"}`);
+    const input = process.inputPath === null ? "" : ` input=${basename(process.inputPath)}`;
+    const cpu = process.cpuSeconds === null ? "" : ` cpu=${process.cpuSeconds}s`;
+    const memory = process.workingSetBytes === null ? "" : ` memory=${formatGigabytes(process.workingSetBytes)}`;
+    lines.push(`process ${process.pid}: ${process.name} started=${process.startedAt ?? "unknown"}${cpu}${memory}${input}`);
   }
   for (const row of report.coverage.rows) {
     const missing = row.missingBoards.length > 0 ? ` missing=${row.missingBoards.join(",")}` : "";

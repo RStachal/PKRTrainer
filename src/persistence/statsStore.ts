@@ -37,6 +37,8 @@ import type {
   StackBucket,
 } from "../core/types";
 import { POSITION_ORDER, STACK_BUCKETS } from "../core/types";
+import type { ActionEvOutcome } from "../core/actionEv";
+import { hasValidVillainFields, type VillainFields } from "../core/villain/archetypes";
 import type {
   BlindSpeed,
   EvModel,
@@ -75,7 +77,7 @@ export interface PreflopResultIdentity {
   scoringMode: ScoringMode;
 }
 
-export interface ResultRecord {
+export interface ResultRecord extends VillainFields {
   qid: string;
   chosen: ActionKey;
   correct: boolean;
@@ -84,6 +86,11 @@ export interface ResultRecord {
   bucket: StackBucket;
   ts: number;
   responseMs?: number;
+  actionEvOutcome?: ActionEvOutcome;
+  chosenEvBb?: number;
+  bestEvBb?: number;
+  evLossBb?: number;
+  equivalentBestActions?: readonly ActionKey[];
   /** Přímá profilová a strategická identita nových preflop odpovědí. */
   identity?: PreflopResultIdentity;
 }
@@ -274,7 +281,33 @@ export function isValidResultRecord(x: unknown): x is ResultRecord {
     typeof r.ts === "number" &&
     Number.isFinite(r.ts) &&
     isOptionalNonNegativeFiniteNumber(r.responseMs) &&
-    isOptionalPreflopResultIdentity(r.identity)
+    isOptionalActionEvOutcome(r.actionEvOutcome) &&
+    isOptionalFiniteNumber(r.chosenEvBb) &&
+    isOptionalFiniteNumber(r.bestEvBb) &&
+    isOptionalNonNegativeFiniteNumber(r.evLossBb) &&
+    isOptionalActionKeys(r.equivalentBestActions) &&
+    isOptionalPreflopResultIdentity(r.identity) &&
+    hasValidVillainFields(r)
+  );
+}
+
+function isOptionalActionEvOutcome(value: unknown): value is ActionEvOutcome | undefined {
+  return value === undefined ||
+    value === "BEST" ||
+    value === "EQUIVALENT" ||
+    value === "ACCEPTABLE" ||
+    value === "MISTAKE";
+}
+
+function isOptionalFiniteNumber(value: unknown): boolean {
+  return value === undefined || (typeof value === "number" && Number.isFinite(value));
+}
+
+function isOptionalActionKeys(value: unknown): value is readonly ActionKey[] | undefined {
+  return value === undefined || (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.every((item) => typeof item === "string" && (ACTION_KEYS as readonly string[]).includes(item))
   );
 }
 

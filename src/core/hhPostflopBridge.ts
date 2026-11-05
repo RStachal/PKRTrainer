@@ -2,6 +2,7 @@ import { hashStr } from "./rng";
 import type { HHResult } from "./hhParser";
 import {
   generatePostflopSpot,
+  postflopDefenderContextsForFormat,
   postflopPositionContextsForFormat,
   type PostflopAction,
   type PostflopPotType,
@@ -11,9 +12,10 @@ import {
 } from "./postflopGenerator";
 import {
   postflopSpotToTrainingSpot,
+  type PostflopExplanationLanguage,
   type PostflopTrainingSpot,
 } from "./postflopTrainingSpot";
-import type { Card, Spot } from "./types";
+import type { Card, Position, Spot } from "./types";
 import type { TableFormat } from "./trainingProfile";
 
 export function buildImportedFlopTrainingSpot(
@@ -26,6 +28,7 @@ export function buildImportedFlopTrainingSpot(
 
 export interface ImportedPostflopStrategyOptions {
   allowFallback?: boolean;
+  language?: PostflopExplanationLanguage;
 }
 
 export function buildImportedPostflopTrainingSpots(
@@ -35,13 +38,19 @@ export function buildImportedPostflopTrainingSpots(
 ): readonly PostflopTrainingSpot[] {
   if (!result.ok || !result.spot) return [];
   if (!result.fields.flop || !result.fields.heroCards) return [];
-  if (!isSupportedPreflopAggressor(result.spot, result.fields.actions)) return [];
+  const bigBlindDefence = isSupportedBigBlindDefence(result.spot, result);
+  if (!bigBlindDefence && !isSupportedPreflopAggressor(result.spot, result.fields.actions)) {
+    return [];
+  }
 
-  const potType = importedPotType(result.spot);
+  // Hrdina jen dorovnal, takze pot zustal single-raised bez ohledu na to, jaky
+  // preflopovy kontext trenazer te ruce priradil.
+  const potType = bigBlindDefence ? "SINGLE_RAISED" : importedPotType(result.spot);
   const positionContext = positionContextFromPreflopSpot(
     result.spot,
     result.fields.tableFormat ?? "FULL_RING_9",
     potType,
+    result.fields.preflopAggressorPosition,
   );
   if (!positionContext) return [];
 
@@ -55,6 +64,7 @@ export function buildImportedPostflopTrainingSpots(
     board: result.fields.flop,
     strategyResolver,
     allowFallback: options.allowFallback,
+    language: options.language,
   }));
 
   if (result.fields.turn) {
@@ -67,6 +77,7 @@ export function buildImportedPostflopTrainingSpots(
       board: result.fields.turn,
       strategyResolver,
       allowFallback: options.allowFallback,
+      language: options.language,
     }));
   }
 
@@ -80,6 +91,7 @@ export function buildImportedPostflopTrainingSpots(
       board: result.fields.river,
       strategyResolver,
       allowFallback: options.allowFallback,
+      language: options.language,
     }));
   }
 
@@ -95,6 +107,7 @@ function buildImportedPostflopTrainingSpot(input: {
   positionContext: PostflopPositionContext;
   strategyResolver?: PostflopStrategyResolver;
   allowFallback?: boolean;
+  language?: PostflopExplanationLanguage;
 }): PostflopTrainingSpot {
   const {
     result,
@@ -105,6 +118,7 @@ function buildImportedPostflopTrainingSpot(input: {
     positionContext,
     strategyResolver,
     allowFallback,
+    language,
   } = input;
   const history = historyForStreet(result, street);
   const financial = financialStateForStreet(result, street);
@@ -121,7 +135,7 @@ function buildImportedPostflopTrainingSpot(input: {
       result.spot?.effStack ??
       40,
     positionContext,
-    actionNode: actionNodeForStreet(street, history),
+    actionNode: actionNodeForStreet(street, history, positionContext, potType),
     priorFlopAction: street === "TURN" ? postflopActionFromRaw(
       result.fields.postflopActions?.flop?.heroActions[0],
     ) : undefined,
@@ -130,7 +144,7 @@ function buildImportedPostflopTrainingSpot(input: {
     ) : undefined,
     strategyResolver,
     allowFallback,
-  }));
+  }), language);
 }
 
 function financialStateForStreet(result: HHResult, street: PostflopStreet) {
@@ -167,6 +181,43 @@ function isSupportedPreflopAggressor(
     spot.context === "SQUEEZE";
 }
 
+/**
+ * Obrana velkeho blindu dorovnanim - nejcastejsi postflopovy spot v turnajich.
+ *
+ * Rozbor dosud bral jen ruce, kde hrdina sam zvedal, takze tenhle spot v nem
+ * nebyl vubec. Prochazi jen ciste provedeni: hrdina je BB, jeho jedina
+ * preflopova akce je call, nekdo jiny naposledy zvedal a k flopu doslo ve dvou.
+ * Cokoli slozitejsiho - re-raise po dorovnani, tri hraci na flopu - zustava
+ * venku, protoze postflopovy model je stavany na dva hrace a domyslet zbytek by
+ * znamenalo ukazovat strategii ke stolu, ktery u toho nesedel.
+ */
+function isSupportedBigBlindDefence(
+  spot: Spot,
+  result: HHResult,
+): boolean {
+  if (spot.heroPos !== "BB") return false;
+
+  const heroActions = result.fields.actions ?? [];
+  if (heroActions.length !== 1) return false;
+  if (!heroActions[0].toLowerCase().startsWith("call")) return false;
+
+  const aggressor = result.fields.preflopAggressorPosition;
+  if (aggressor === undefined || aggressor === "BB") return false;
+
+  return headsUpToTheFlop(result);
+}
+
+/** Kolik hracu doslo k flopu, podle posledni preflopove akce kazdeho z nich. */
+function headsUpToTheFlop(result: HHResult): boolean {
+  const details = result.fields.preflopActionDetails;
+  if (details === undefined || details.length === 0) return false;
+  const lastByActor = new Map<string, string>();
+  for (const action of details) lastByActor.set(action.actor, action.kind);
+  let live = 0;
+  for (const kind of lastByActor.values()) if (kind !== "FOLD") live += 1;
+  return live === 2;
+}
+
 function importedPotType(
   spot: Spot,
 ): Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT"> {
@@ -175,12 +226,27 @@ function importedPotType(
     : "SINGLE_RAISED";
 }
 
+/**
+ * Posadí hrdinu tam, kde v ruce skutečně seděl.
+ *
+ * Obrana velkého blindu se sem dřív vůbec nedostala: kontexty jsou psané ze
+ * strany raisera, takže pro hráče, který jen dorovnal, žádná židle neexistovala
+ * a rozbor takovou ruku tiše přeskočil. Teď se z historie čte, kdo naposledy
+ * zvedal, a když je to někdo jiný než hrdina, sestaví se kontext obránce.
+ */
 function positionContextFromPreflopSpot(
   spot: Spot,
   tableFormat: TableFormat,
   potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">,
+  preflopAggressorPosition?: Position,
 ): PostflopPositionContext | undefined {
-  if (spot.heroPos === "BB") return undefined;
+  if (spot.heroPos === "BB") {
+    if (potType !== "SINGLE_RAISED") return undefined;
+    if (preflopAggressorPosition === undefined) return undefined;
+    if (preflopAggressorPosition === "BB") return undefined;
+    return postflopDefenderContextsForFormat(tableFormat)
+      .find((context) => context.villainPosition === preflopAggressorPosition);
+  }
   return postflopPositionContextsForFormat(tableFormat, potType)
     .find((context) => (
       context.heroPosition === spot.heroPos &&
@@ -204,18 +270,40 @@ function historyForStreet(result: HHResult, street: PostflopStreet) {
   }
 }
 
+/**
+ * Which decision the hand actually presented, from the history and the seats.
+ *
+ * Nobody having bet yet is two different decisions, not one. If hero took the
+ * betting lead before the flop, acting first is a continuation; if hero called
+ * the last raise, it is a lead into the player who has it. Collapsing both into
+ * the barrel told a defender they held initiative they never had, and matched
+ * their hand against the aggressor's strategy.
+ *
+ * Only the turn is split today, because that is the street with content for the
+ * distinction. The flop and river keep the aggressor's naming until they have
+ * the same, rather than gaining a node with nothing behind it.
+ */
 function actionNodeForStreet(
   street: PostflopStreet,
   history: ReturnType<typeof historyForStreet>,
+  positionContext: PostflopPositionContext,
+  potType: PostflopPotType,
 ) {
   const facingBet = history?.actionsBeforeHero.some(isPressureAction) ?? false;
+  const heroHasInitiative = positionContext.heroPosition === positionContext.aggressorPosition;
   switch (street) {
     case "FLOP":
-      return facingBet ? "FLOP_FACING_BET" : "SINGLE_RAISED_POT_CBET";
+      if (facingBet) return "FLOP_FACING_BET";
+      if (heroHasInitiative) {
+        return potType === "THREE_BET_POT" ? "THREE_BET_POT_CBET" : "SINGLE_RAISED_POT_CBET";
+      }
+      return "FLOP_OOP_LEAD";
     case "TURN":
-      return facingBet ? "TURN_FACING_BET" : "TURN_BARREL";
+      if (facingBet) return "TURN_FACING_BET";
+      return heroHasInitiative ? "TURN_BARREL" : "TURN_OOP_LEAD";
     case "RIVER":
-      return facingBet ? "RIVER_FACING_BET" : "RIVER_PRESSURE";
+      if (facingBet) return "RIVER_FACING_BET";
+      return heroHasInitiative ? "RIVER_PRESSURE" : "RIVER_OOP_LEAD";
   }
 }
 

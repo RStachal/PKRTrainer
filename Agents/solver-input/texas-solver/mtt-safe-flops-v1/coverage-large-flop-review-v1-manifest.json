@@ -1,0 +1,774 @@
+{
+  "packId": "pkrtrainer-mtt-texas-solver-large-flop-review-v1",
+  "generatedAt": "2026-07-10",
+  "parameterDir": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1",
+  "outputBase": "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver",
+  "scenarios": [
+    {
+      "familyId": "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+      "templatePath": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/01_MTT9_20BB_BTN_BB_SRP_LOWSPR_A72r.txt",
+      "boards": [
+        "A95r",
+        "KQ5r",
+        "Q84r",
+        "J73r",
+        "976tt",
+        "A85mono"
+      ],
+      "purpose": "BTN vs BB SRP c-bet LOW-SPR board expansion for review depth.",
+      "coverageTags": [
+        "LOW_SPR",
+        "SINGLE_RAISED",
+        "SRP_BTN_VS_BB",
+        "SINGLE_RAISED_POT_CBET",
+        "LARGE_FLOP_REVIEW"
+      ]
+    },
+    {
+      "familyId": "MTT9_50BB_BTN_BB_SRP",
+      "templatePath": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_safe_flops_v1/01_MTT9_50BB_BTN_BB_SRP_A72r.txt",
+      "boards": [
+        "A95r",
+        "KQ5r",
+        "Q84r",
+        "J73r",
+        "976tt",
+        "A85mono"
+      ],
+      "purpose": "BTN vs BB SRP c-bet MID-SPR board expansion for review depth.",
+      "coverageTags": [
+        "MID_SPR",
+        "SINGLE_RAISED",
+        "SRP_BTN_VS_BB",
+        "SINGLE_RAISED_POT_CBET",
+        "LARGE_FLOP_REVIEW"
+      ]
+    },
+    {
+      "familyId": "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+      "templatePath": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/21_MTT9_80BB_BTN_BB_SRP_HIGHSPR_A72r.txt",
+      "boards": [
+        "A95r",
+        "KQ5r",
+        "Q84r",
+        "J73r",
+        "976tt",
+        "A85mono"
+      ],
+      "purpose": "BTN vs BB SRP c-bet HIGH-SPR board expansion for review depth.",
+      "coverageTags": [
+        "HIGH_SPR",
+        "SINGLE_RAISED",
+        "SRP_BTN_VS_BB",
+        "SINGLE_RAISED_POT_CBET",
+        "LARGE_FLOP_REVIEW"
+      ]
+    },
+    {
+      "familyId": "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR",
+      "templatePath": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_co_bb_cbet_v1/01_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_A72r.txt",
+      "boards": [
+        "A95r",
+        "KQ5r",
+        "Q84r",
+        "J73r",
+        "976tt",
+        "A85mono"
+      ],
+      "purpose": "CO vs BB SRP c-bet LOW-SPR board expansion for review depth.",
+      "coverageTags": [
+        "LOW_SPR",
+        "SINGLE_RAISED",
+        "SRP_CO_VS_BB",
+        "SINGLE_RAISED_POT_CBET",
+        "IP_AGGRESSOR",
+        "LARGE_FLOP_REVIEW"
+      ]
+    },
+    {
+      "familyId": "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR",
+      "templatePath": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_co_bb_cbet_v1/21_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_A72r.txt",
+      "boards": [
+        "A95r",
+        "KQ5r",
+        "Q84r",
+        "J73r",
+        "976tt",
+        "A85mono"
+      ],
+      "purpose": "CO vs BB SRP c-bet MID-SPR board expansion for review depth.",
+      "coverageTags": [
+        "MID_SPR",
+        "SINGLE_RAISED",
+        "SRP_CO_VS_BB",
+        "SINGLE_RAISED_POT_CBET",
+        "IP_AGGRESSOR",
+        "LARGE_FLOP_REVIEW"
+      ]
+    },
+    {
+      "familyId": "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
+      "templatePath": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_co_bb_cbet_v1/41_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_K98tt.txt",
+      "boards": [
+        "A95r",
+        "KQ5r",
+        "Q84r",
+        "J73r",
+        "976tt",
+        "A85mono"
+      ],
+      "purpose": "CO vs BB SRP c-bet HIGH-SPR board expansion for review depth.",
+      "coverageTags": [
+        "HIGH_SPR",
+        "SINGLE_RAISED",
+        "SRP_CO_VS_BB",
+        "SINGLE_RAISED_POT_CBET",
+        "IP_AGGRESSOR",
+        "LARGE_FLOP_REVIEW"
+      ]
+    },
+    {
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "templatePath": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1/01_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_A72r.txt",
+      "boards": [
+        "A95r",
+        "KQ5r",
+        "Q84r",
+        "J73r",
+        "976tt",
+        "A85mono"
+      ],
+      "purpose": "SB vs BB SRP OOP c-bet LOW-SPR board expansion for review depth.",
+      "coverageTags": [
+        "LOW_SPR",
+        "SINGLE_RAISED",
+        "SRP_SB_VS_BB",
+        "SINGLE_RAISED_POT_CBET",
+        "OOP_AGGRESSOR",
+        "LARGE_FLOP_REVIEW"
+      ]
+    },
+    {
+      "familyId": "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
+      "templatePath": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1/21_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_A72r.txt",
+      "boards": [
+        "A95r",
+        "KQ5r",
+        "Q84r",
+        "J73r",
+        "976tt",
+        "A85mono"
+      ],
+      "purpose": "SB vs BB SRP OOP c-bet MID-SPR board expansion for review depth.",
+      "coverageTags": [
+        "MID_SPR",
+        "SINGLE_RAISED",
+        "SRP_SB_VS_BB",
+        "SINGLE_RAISED_POT_CBET",
+        "OOP_AGGRESSOR",
+        "LARGE_FLOP_REVIEW"
+      ]
+    },
+    {
+      "familyId": "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
+      "templatePath": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1/41_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_K98tt.txt",
+      "boards": [
+        "A95r",
+        "KQ5r",
+        "Q84r",
+        "J73r",
+        "976tt",
+        "A85mono"
+      ],
+      "purpose": "SB vs BB SRP OOP c-bet HIGH-SPR board expansion for review depth.",
+      "coverageTags": [
+        "HIGH_SPR",
+        "SINGLE_RAISED",
+        "SRP_SB_VS_BB",
+        "SINGLE_RAISED_POT_CBET",
+        "OOP_AGGRESSOR",
+        "LARGE_FLOP_REVIEW"
+      ]
+    },
+    {
+      "familyId": "MTT9_35BB_CO_BTN_3BP_REPAIR",
+      "templatePath": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_repair_v1/01_MTT9_35BB_CO_BTN_3BP_REPAIR_A72r.txt",
+      "boards": [
+        "AK5r",
+        "KJ4tt",
+        "J73r",
+        "997r",
+        "875tt",
+        "A85mono"
+      ],
+      "purpose": "BTN vs CO 3bet-pot c-bet LOW-SPR board expansion for review depth.",
+      "coverageTags": [
+        "LOW_SPR",
+        "THREE_BET_POT",
+        "3BP_BTN_VS_CO",
+        "THREE_BET_POT_CBET",
+        "LARGE_FLOP_REVIEW"
+      ]
+    },
+    {
+      "familyId": "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+      "templatePath": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_expansion_v1/01_MTT9_80BB_CO_BTN_3BP_MIDSPR_A72r.txt",
+      "boards": [
+        "AK5r",
+        "KJ4tt",
+        "J73r",
+        "997r",
+        "875tt",
+        "A85mono"
+      ],
+      "purpose": "BTN vs CO 3bet-pot c-bet MID-SPR board expansion for review depth.",
+      "coverageTags": [
+        "MID_SPR",
+        "THREE_BET_POT",
+        "3BP_BTN_VS_CO",
+        "THREE_BET_POT_CBET",
+        "LARGE_FLOP_REVIEW"
+      ]
+    },
+    {
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "templatePath": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_expansion_v1/21_MTT9_150BB_CO_BTN_3BP_HIGHSPR_A72r.txt",
+      "boards": [
+        "AK5r",
+        "KJ4tt",
+        "J73r",
+        "997r",
+        "875tt",
+        "A85mono"
+      ],
+      "purpose": "BTN vs CO 3bet-pot c-bet HIGH-SPR board expansion for review depth.",
+      "coverageTags": [
+        "HIGH_SPR",
+        "THREE_BET_POT",
+        "3BP_BTN_VS_CO",
+        "THREE_BET_POT_CBET",
+        "LARGE_FLOP_REVIEW"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "fileName": "001_MTT9_20BB_BTN_BB_SRP_LOWSPR_A95r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/001_MTT9_20BB_BTN_BB_SRP_LOWSPR_A95r.txt",
+      "familyId": "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+      "boardId": "A95r",
+      "written": true
+    },
+    {
+      "fileName": "002_MTT9_20BB_BTN_BB_SRP_LOWSPR_KQ5r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/002_MTT9_20BB_BTN_BB_SRP_LOWSPR_KQ5r.txt",
+      "familyId": "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+      "boardId": "KQ5r",
+      "written": true
+    },
+    {
+      "fileName": "003_MTT9_20BB_BTN_BB_SRP_LOWSPR_Q84r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/003_MTT9_20BB_BTN_BB_SRP_LOWSPR_Q84r.txt",
+      "familyId": "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+      "boardId": "Q84r",
+      "written": true
+    },
+    {
+      "fileName": "004_MTT9_20BB_BTN_BB_SRP_LOWSPR_J73r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/004_MTT9_20BB_BTN_BB_SRP_LOWSPR_J73r.txt",
+      "familyId": "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+      "boardId": "J73r",
+      "written": true
+    },
+    {
+      "fileName": "005_MTT9_20BB_BTN_BB_SRP_LOWSPR_976tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/005_MTT9_20BB_BTN_BB_SRP_LOWSPR_976tt.txt",
+      "familyId": "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+      "boardId": "976tt",
+      "written": true
+    },
+    {
+      "fileName": "006_MTT9_20BB_BTN_BB_SRP_LOWSPR_A85mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/006_MTT9_20BB_BTN_BB_SRP_LOWSPR_A85mono.txt",
+      "familyId": "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+      "boardId": "A85mono",
+      "written": true
+    },
+    {
+      "fileName": "101_MTT9_50BB_BTN_BB_SRP_A95r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/101_MTT9_50BB_BTN_BB_SRP_A95r.txt",
+      "familyId": "MTT9_50BB_BTN_BB_SRP",
+      "boardId": "A95r",
+      "written": true
+    },
+    {
+      "fileName": "102_MTT9_50BB_BTN_BB_SRP_KQ5r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/102_MTT9_50BB_BTN_BB_SRP_KQ5r.txt",
+      "familyId": "MTT9_50BB_BTN_BB_SRP",
+      "boardId": "KQ5r",
+      "written": true
+    },
+    {
+      "fileName": "103_MTT9_50BB_BTN_BB_SRP_Q84r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/103_MTT9_50BB_BTN_BB_SRP_Q84r.txt",
+      "familyId": "MTT9_50BB_BTN_BB_SRP",
+      "boardId": "Q84r",
+      "written": true
+    },
+    {
+      "fileName": "104_MTT9_50BB_BTN_BB_SRP_J73r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/104_MTT9_50BB_BTN_BB_SRP_J73r.txt",
+      "familyId": "MTT9_50BB_BTN_BB_SRP",
+      "boardId": "J73r",
+      "written": true
+    },
+    {
+      "fileName": "105_MTT9_50BB_BTN_BB_SRP_976tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/105_MTT9_50BB_BTN_BB_SRP_976tt.txt",
+      "familyId": "MTT9_50BB_BTN_BB_SRP",
+      "boardId": "976tt",
+      "written": true
+    },
+    {
+      "fileName": "106_MTT9_50BB_BTN_BB_SRP_A85mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/106_MTT9_50BB_BTN_BB_SRP_A85mono.txt",
+      "familyId": "MTT9_50BB_BTN_BB_SRP",
+      "boardId": "A85mono",
+      "written": true
+    },
+    {
+      "fileName": "201_MTT9_80BB_BTN_BB_SRP_HIGHSPR_A95r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/201_MTT9_80BB_BTN_BB_SRP_HIGHSPR_A95r.txt",
+      "familyId": "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+      "boardId": "A95r",
+      "written": true
+    },
+    {
+      "fileName": "202_MTT9_80BB_BTN_BB_SRP_HIGHSPR_KQ5r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/202_MTT9_80BB_BTN_BB_SRP_HIGHSPR_KQ5r.txt",
+      "familyId": "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+      "boardId": "KQ5r",
+      "written": true
+    },
+    {
+      "fileName": "203_MTT9_80BB_BTN_BB_SRP_HIGHSPR_Q84r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/203_MTT9_80BB_BTN_BB_SRP_HIGHSPR_Q84r.txt",
+      "familyId": "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+      "boardId": "Q84r",
+      "written": true
+    },
+    {
+      "fileName": "204_MTT9_80BB_BTN_BB_SRP_HIGHSPR_J73r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/204_MTT9_80BB_BTN_BB_SRP_HIGHSPR_J73r.txt",
+      "familyId": "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+      "boardId": "J73r",
+      "written": true
+    },
+    {
+      "fileName": "205_MTT9_80BB_BTN_BB_SRP_HIGHSPR_976tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/205_MTT9_80BB_BTN_BB_SRP_HIGHSPR_976tt.txt",
+      "familyId": "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+      "boardId": "976tt",
+      "written": true
+    },
+    {
+      "fileName": "206_MTT9_80BB_BTN_BB_SRP_HIGHSPR_A85mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/206_MTT9_80BB_BTN_BB_SRP_HIGHSPR_A85mono.txt",
+      "familyId": "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+      "boardId": "A85mono",
+      "written": true
+    },
+    {
+      "fileName": "301_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_A95r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/301_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_A95r.txt",
+      "familyId": "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR",
+      "boardId": "A95r",
+      "written": true
+    },
+    {
+      "fileName": "302_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_KQ5r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/302_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_KQ5r.txt",
+      "familyId": "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR",
+      "boardId": "KQ5r",
+      "written": true
+    },
+    {
+      "fileName": "303_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_Q84r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/303_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_Q84r.txt",
+      "familyId": "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR",
+      "boardId": "Q84r",
+      "written": true
+    },
+    {
+      "fileName": "304_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_J73r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/304_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_J73r.txt",
+      "familyId": "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR",
+      "boardId": "J73r",
+      "written": true
+    },
+    {
+      "fileName": "305_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_976tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/305_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_976tt.txt",
+      "familyId": "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR",
+      "boardId": "976tt",
+      "written": true
+    },
+    {
+      "fileName": "306_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_A85mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/306_MTT9_25BB_CO_BB_SRP_CBET_LOWSPR_A85mono.txt",
+      "familyId": "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR",
+      "boardId": "A85mono",
+      "written": true
+    },
+    {
+      "fileName": "401_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_A95r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/401_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_A95r.txt",
+      "familyId": "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR",
+      "boardId": "A95r",
+      "written": true
+    },
+    {
+      "fileName": "402_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_KQ5r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/402_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_KQ5r.txt",
+      "familyId": "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR",
+      "boardId": "KQ5r",
+      "written": true
+    },
+    {
+      "fileName": "403_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_Q84r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/403_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_Q84r.txt",
+      "familyId": "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR",
+      "boardId": "Q84r",
+      "written": true
+    },
+    {
+      "fileName": "404_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_J73r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/404_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_J73r.txt",
+      "familyId": "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR",
+      "boardId": "J73r",
+      "written": true
+    },
+    {
+      "fileName": "405_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_976tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/405_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_976tt.txt",
+      "familyId": "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR",
+      "boardId": "976tt",
+      "written": true
+    },
+    {
+      "fileName": "406_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_A85mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/406_MTT9_50BB_CO_BB_SRP_CBET_MIDSPR_A85mono.txt",
+      "familyId": "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR",
+      "boardId": "A85mono",
+      "written": true
+    },
+    {
+      "fileName": "501_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_A95r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/501_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_A95r.txt",
+      "familyId": "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
+      "boardId": "A95r",
+      "written": true
+    },
+    {
+      "fileName": "502_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_KQ5r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/502_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_KQ5r.txt",
+      "familyId": "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
+      "boardId": "KQ5r",
+      "written": true
+    },
+    {
+      "fileName": "503_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_Q84r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/503_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_Q84r.txt",
+      "familyId": "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
+      "boardId": "Q84r",
+      "written": true
+    },
+    {
+      "fileName": "504_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_J73r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/504_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_J73r.txt",
+      "familyId": "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
+      "boardId": "J73r",
+      "written": true
+    },
+    {
+      "fileName": "505_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_976tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/505_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_976tt.txt",
+      "familyId": "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
+      "boardId": "976tt",
+      "written": true
+    },
+    {
+      "fileName": "506_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_A85mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/506_MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR_A85mono.txt",
+      "familyId": "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
+      "boardId": "A85mono",
+      "written": true
+    },
+    {
+      "fileName": "601_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_A95r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/601_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_A95r.txt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "boardId": "A95r",
+      "written": true
+    },
+    {
+      "fileName": "602_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_KQ5r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/602_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_KQ5r.txt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "boardId": "KQ5r",
+      "written": true
+    },
+    {
+      "fileName": "603_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_Q84r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/603_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_Q84r.txt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "boardId": "Q84r",
+      "written": true
+    },
+    {
+      "fileName": "604_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_J73r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/604_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_J73r.txt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "boardId": "J73r",
+      "written": true
+    },
+    {
+      "fileName": "605_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_976tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/605_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_976tt.txt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "boardId": "976tt",
+      "written": true
+    },
+    {
+      "fileName": "606_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_A85mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/606_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_A85mono.txt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "boardId": "A85mono",
+      "written": true
+    },
+    {
+      "fileName": "701_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_A95r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/701_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_A95r.txt",
+      "familyId": "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
+      "boardId": "A95r",
+      "written": true
+    },
+    {
+      "fileName": "702_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_KQ5r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/702_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_KQ5r.txt",
+      "familyId": "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
+      "boardId": "KQ5r",
+      "written": true
+    },
+    {
+      "fileName": "703_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_Q84r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/703_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_Q84r.txt",
+      "familyId": "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
+      "boardId": "Q84r",
+      "written": true
+    },
+    {
+      "fileName": "704_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_J73r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/704_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_J73r.txt",
+      "familyId": "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
+      "boardId": "J73r",
+      "written": true
+    },
+    {
+      "fileName": "705_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_976tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/705_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_976tt.txt",
+      "familyId": "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
+      "boardId": "976tt",
+      "written": true
+    },
+    {
+      "fileName": "706_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_A85mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/706_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_A85mono.txt",
+      "familyId": "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
+      "boardId": "A85mono",
+      "written": true
+    },
+    {
+      "fileName": "801_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_A95r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/801_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_A95r.txt",
+      "familyId": "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
+      "boardId": "A95r",
+      "written": true
+    },
+    {
+      "fileName": "802_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_KQ5r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/802_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_KQ5r.txt",
+      "familyId": "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
+      "boardId": "KQ5r",
+      "written": true
+    },
+    {
+      "fileName": "803_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_Q84r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/803_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_Q84r.txt",
+      "familyId": "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
+      "boardId": "Q84r",
+      "written": true
+    },
+    {
+      "fileName": "804_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_J73r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/804_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_J73r.txt",
+      "familyId": "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
+      "boardId": "J73r",
+      "written": true
+    },
+    {
+      "fileName": "805_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_976tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/805_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_976tt.txt",
+      "familyId": "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
+      "boardId": "976tt",
+      "written": true
+    },
+    {
+      "fileName": "806_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_A85mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/806_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_A85mono.txt",
+      "familyId": "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
+      "boardId": "A85mono",
+      "written": true
+    },
+    {
+      "fileName": "901_MTT9_35BB_CO_BTN_3BP_REPAIR_AK5r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/901_MTT9_35BB_CO_BTN_3BP_REPAIR_AK5r.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP_REPAIR",
+      "boardId": "AK5r",
+      "written": true
+    },
+    {
+      "fileName": "902_MTT9_35BB_CO_BTN_3BP_REPAIR_KJ4tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/902_MTT9_35BB_CO_BTN_3BP_REPAIR_KJ4tt.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP_REPAIR",
+      "boardId": "KJ4tt",
+      "written": true
+    },
+    {
+      "fileName": "903_MTT9_35BB_CO_BTN_3BP_REPAIR_J73r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/903_MTT9_35BB_CO_BTN_3BP_REPAIR_J73r.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP_REPAIR",
+      "boardId": "J73r",
+      "written": true
+    },
+    {
+      "fileName": "904_MTT9_35BB_CO_BTN_3BP_REPAIR_997r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/904_MTT9_35BB_CO_BTN_3BP_REPAIR_997r.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP_REPAIR",
+      "boardId": "997r",
+      "written": true
+    },
+    {
+      "fileName": "905_MTT9_35BB_CO_BTN_3BP_REPAIR_875tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/905_MTT9_35BB_CO_BTN_3BP_REPAIR_875tt.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP_REPAIR",
+      "boardId": "875tt",
+      "written": true
+    },
+    {
+      "fileName": "906_MTT9_35BB_CO_BTN_3BP_REPAIR_A85mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/906_MTT9_35BB_CO_BTN_3BP_REPAIR_A85mono.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP_REPAIR",
+      "boardId": "A85mono",
+      "written": true
+    },
+    {
+      "fileName": "1001_MTT9_80BB_CO_BTN_3BP_MIDSPR_AK5r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/1001_MTT9_80BB_CO_BTN_3BP_MIDSPR_AK5r.txt",
+      "familyId": "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+      "boardId": "AK5r",
+      "written": true
+    },
+    {
+      "fileName": "1002_MTT9_80BB_CO_BTN_3BP_MIDSPR_KJ4tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/1002_MTT9_80BB_CO_BTN_3BP_MIDSPR_KJ4tt.txt",
+      "familyId": "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+      "boardId": "KJ4tt",
+      "written": true
+    },
+    {
+      "fileName": "1003_MTT9_80BB_CO_BTN_3BP_MIDSPR_J73r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/1003_MTT9_80BB_CO_BTN_3BP_MIDSPR_J73r.txt",
+      "familyId": "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+      "boardId": "J73r",
+      "written": true
+    },
+    {
+      "fileName": "1004_MTT9_80BB_CO_BTN_3BP_MIDSPR_997r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/1004_MTT9_80BB_CO_BTN_3BP_MIDSPR_997r.txt",
+      "familyId": "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+      "boardId": "997r",
+      "written": true
+    },
+    {
+      "fileName": "1005_MTT9_80BB_CO_BTN_3BP_MIDSPR_875tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/1005_MTT9_80BB_CO_BTN_3BP_MIDSPR_875tt.txt",
+      "familyId": "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+      "boardId": "875tt",
+      "written": true
+    },
+    {
+      "fileName": "1006_MTT9_80BB_CO_BTN_3BP_MIDSPR_A85mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/1006_MTT9_80BB_CO_BTN_3BP_MIDSPR_A85mono.txt",
+      "familyId": "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+      "boardId": "A85mono",
+      "written": true
+    },
+    {
+      "fileName": "1101_MTT9_150BB_CO_BTN_3BP_HIGHSPR_AK5r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/1101_MTT9_150BB_CO_BTN_3BP_HIGHSPR_AK5r.txt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "boardId": "AK5r",
+      "written": true
+    },
+    {
+      "fileName": "1102_MTT9_150BB_CO_BTN_3BP_HIGHSPR_KJ4tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/1102_MTT9_150BB_CO_BTN_3BP_HIGHSPR_KJ4tt.txt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "boardId": "KJ4tt",
+      "written": true
+    },
+    {
+      "fileName": "1103_MTT9_150BB_CO_BTN_3BP_HIGHSPR_J73r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/1103_MTT9_150BB_CO_BTN_3BP_HIGHSPR_J73r.txt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "boardId": "J73r",
+      "written": true
+    },
+    {
+      "fileName": "1104_MTT9_150BB_CO_BTN_3BP_HIGHSPR_997r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/1104_MTT9_150BB_CO_BTN_3BP_HIGHSPR_997r.txt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "boardId": "997r",
+      "written": true
+    },
+    {
+      "fileName": "1105_MTT9_150BB_CO_BTN_3BP_HIGHSPR_875tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/1105_MTT9_150BB_CO_BTN_3BP_HIGHSPR_875tt.txt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "boardId": "875tt",
+      "written": true
+    },
+    {
+      "fileName": "1106_MTT9_150BB_CO_BTN_3BP_HIGHSPR_A85mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1/1106_MTT9_150BB_CO_BTN_3BP_HIGHSPR_A85mono.txt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "boardId": "A85mono",
+      "written": true
+    }
+  ],
+  "notes": [
+    "Large review-only TexasSolver flop expansion batch across existing validated pilot families.",
+    "This batch intentionally deepens board-texture evidence without inventing new position/range identities.",
+    "It is not full MTT production coverage and must not be promoted without source-free review, normalization and gate validation.",
+    "MTT_CORE_V1 preflop scope is complete; this batch is non-blocking P4 evidence expansion."
+  ],
+  "commands": [
+    "npm run mtt:texas-solver-large-flop-batch -- --write",
+    "npm run mtt:texas-solver-scenario-audit -- --manifest \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\coverage-large-flop-review-v1-manifest.json\" --summary",
+    ".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\run-console-selected.ps1 -ParameterRoot \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\parameters\\pkrtrainer_mtt_large_flop_review_v1\" -Limit 999 -ListOnly",
+    "npm run mtt:texas-solver-autostart-install",
+    "npm run mtt:texas-solver-autostart-status",
+    "npm run mtt:texas-solver-background-status -- --manifest \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\coverage-large-flop-review-v1-manifest.json\" --summary"
+  ]
+}

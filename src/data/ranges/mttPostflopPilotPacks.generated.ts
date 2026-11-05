@@ -6,6 +6,7 @@ import { btnBbSrpFlopCbetPilotPack } from "./pilots/btnBbSrpFlopCbetPilot.genera
 import { utgBbSrpFlopCbetPilotPack } from "./pilots/utgBbSrpFlopCbetPilot.generated";
 import { btnCo3bpFlopCbetPilotPack } from "./pilots/btnCo3bpFlopCbetPilot.generated";
 import { sbBbSrpOopFlopCbetPilotPack } from "./pilots/sbBbSrpOopFlopCbetPilot.generated";
+import { coBbSrpFlopCbetPilotPack } from "./pilots/coBbSrpFlopCbetPilot.generated";
 import { btnCo3bpFlopFacingBetPilotPack } from "./pilots/btnCo3bpFlopFacingBetPilot.generated";
 import { btnBbSrpFlopFacingBetPilotPack } from "./pilots/btnBbSrpFlopFacingBetPilot.generated";
 
@@ -35,6 +36,11 @@ export const generatedMttPostflopPilotPacks: readonly GeneratedMttPostflopPilotP
     catalogId: "sb-bb-srp-oop-flop-cbet-low-mid-high",
     scope: "SB_vs_BB_SRP_OOP_FLOP_CBET",
     pack: sbBbSrpOopFlopCbetPilotPack,
+  },
+  {
+    catalogId: "co-bb-srp-flop-cbet-low-mid-high",
+    scope: "CO_vs_BB_SRP_FLOP_CBET",
+    pack: coBbSrpFlopCbetPilotPack,
   },
   {
     catalogId: "btn-co-3bp-flop-facing-bet-low-mid-high",

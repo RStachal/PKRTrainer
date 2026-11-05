@@ -65,6 +65,16 @@ const postflopRecord: PostflopStatsV2BridgeRecord = {
   confidence: "LOW",
 };
 
+const postflopEvRecord: PostflopStatsV2BridgeRecord = {
+  ...postflopRecord,
+  schemaVersion: 5,
+  actionEvOutcome: "EQUIVALENT",
+  chosenEvBb: 0.195,
+  bestEvBb: 0.2,
+  evLossBb: 0.005,
+  equivalentBestActions: ["CHECK", "BET_SMALL"],
+};
+
 describe("postflopStatsStore", () => {
   it("ulozi postflop event log a nacte jej po reloadu store", () => {
     const storage = new MemoryStorage();
@@ -88,7 +98,18 @@ describe("postflopStatsStore", () => {
 
     const reader = createPostflopStatsStore(storage);
 
-    expect(reader.events()).toEqual([postflopRecord]);
+    expect(reader.events()).toEqual([{
+      ...postflopRecord,
+      schemaVersion: 5,
+    }]);
+  });
+
+  it("zachova kompletni action EV payload po ulozeni a reloadu", () => {
+    const storage = new MemoryStorage();
+    const writer = createPostflopStatsStore(storage);
+
+    expect(writer.record(postflopEvRecord).ok).toBe(true);
+    expect(createPostflopStatsStore(storage).events()).toEqual([postflopEvRecord]);
   });
 
   it("odmitne neplatny postflop zaznam pri replaceAll", () => {

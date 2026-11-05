@@ -16,6 +16,10 @@ pozice, stacky, pot, karty hráče a aktivní soupeře.
 
 ## Preflop
 
+`MTT ChipEV Core` pokrývá produkční 9-max chipEV preflop trénink pro regular
+i turbo blindy, s ante i bez ante. Ostatní formáty stolu a EV modely zůstávají
+jasně označené jako náhled nebo nedostupné.
+
 Preflop otázky se zaměřují na pozici, efektivní stack, ante a kontext akce:
 
 - RFI / open,
@@ -33,6 +37,9 @@ s doporučenou větví a sledujte, které handy patří do value, bluff, call/ch
 nebo fold části strategie.
 
 ## Postflop
+
+Aktuální solverový postflop obsah tvoří sedm scoped FLOP pilotů. Nejde o plné
+postflop pokrytí a pozdější streety zůstávají pouze v náhledovém režimu.
 
 Postflop otázka vychází z vybraného profilu a zobrazuje konkrétní stůl.
 Nejdříve zkontrolujte:

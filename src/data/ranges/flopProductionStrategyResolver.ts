@@ -7,10 +7,22 @@ import type {
   PostflopStrategyResolver,
 } from "../../core/postflopGenerator";
 import {
+  cloneActionEvSet,
+  highestEvAction,
+  isActionEvSetComplete,
+} from "../../core/actionEv";
+import { assessSprFidelity } from "../../core/postflopSprFidelity";
+import { treeIntegrityForRuleId } from "./postflopTreeIntegrity";
+import {
+  ALL_BOARD_TEXTURES,
+  postflopPositionPatternMatches,
+} from "../../core/postflopGenerator";
+import {
   type FlopProductionStrategyPack,
   type FlopProductionStrategyRule,
   validateFlopProductionStrategyPack,
 } from "./flopProductionStrategyPack";
+import { solvedSprForRuleId } from "./postflopSolvedSpr";
 import { runtimeMttFlopStrategyPacks } from "./mttProductionRuntimeRegistry";
 
 export const flopProductionStrategyPacks: readonly FlopProductionStrategyPack[] =
@@ -26,12 +38,47 @@ export function createFlopProductionStrategyResolver(
 
     const rule = selectBestFlopProductionRule(matchingFlopProductionRules(pack, input), input);
     if (!rule) return null;
+    const matchedHeroBucket = heroRangeBucket(rule, input);
+    // A hand outside this rule's range was never solved here. Returning a
+    // rule-wide average for it would present an answer the solver never gave,
+    // and label it solver-backed; let the chain fall through to the honestly
+    // labelled heuristic model instead.
+    if (input.heroHand !== undefined && matchedHeroBucket === undefined) return null;
+    const actionEvs = isActionEvSetComplete(matchedHeroBucket?.actionEvs, rule.actions)
+      ? cloneActionEvSet(matchedHeroBucket.actionEvs)
+      : undefined;
+    // Recommend the action for the hero's own hand, not the rule-wide most-common
+    // action. Each hand class sits in a lane with its own dominant action, so a
+    // check-lane air hand must be told to check even when the rule as a whole
+    // most often bets. Prefer exact per-hand EV when present, then the matched
+    // bucket's action, and only fall back to the rule action for a hand that is
+    // outside this rule's range and therefore has no bucket.
+    const action = actionEvs
+      ? highestEvAction(actionEvs) ?? matchedHeroBucket?.action ?? rule.recommendedAction
+      : matchedHeroBucket?.action ?? rule.recommendedAction;
+
+    const solvedSpr = solvedSprForRuleId(rule.id);
+    const sprFidelity = solvedSpr === undefined
+      ? undefined
+      : assessSprFidelity(roundedSpr(input.effectiveStackBB, input.potBB), solvedSpr);
+    // A rule whose family holds boards from two different trees is an aggregate
+    // over two different games. The gate has said so to operators since it was
+    // found; this is what says it to the player training the spot.
+    const treeIntegrity = treeIntegrityForRuleId(rule.id);
+    // A rule that declares the whole taxonomy applies to every board, so the
+    // textures it "matched" are only a description of the board that was dealt.
+    const textureCoverage = {
+      covered: ALL_BOARD_TEXTURES.filter((texture) => rule.boardTextures.includes(texture)).length,
+      total: ALL_BOARD_TEXTURES.length,
+    };
 
     return {
-      action: rule.recommendedAction,
+      action,
+      ...(actionEvs ? { actionEvs } : {}),
       explanation: rule.explanation,
       source: {
         kind: "STRATEGY_PACK",
+        provenance: "SOLVER_BACKED",
         packId: pack.id,
         packVersion: pack.version,
         packVerifiedAt: pack.verifiedAt,
@@ -46,7 +93,10 @@ export function createFlopProductionStrategyResolver(
         selectionScore: ruleScore(rule, input),
         tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
         rangeBuckets: rangeBuckets(rule),
-        heroRangeBucket: heroRangeBucket(rule, input),
+        heroRangeBucket: matchedHeroBucket,
+        ...(sprFidelity ? { sprFidelity } : {}),
+        ...(treeIntegrity === "MIXED_TREES" ? { treeIntegrity } : {}),
+        textureCoverage,
         ...(rule.opponentPolicy
           ? { opponentPolicy: { ...rule.opponentPolicy } }
           : {}),
@@ -68,6 +118,18 @@ export function createFlopProductionStrategyResolverChain(
   };
 }
 
+/**
+ * Sedí pravidlo na dotaz, i když každý používá jiný zápis téže dvojice?
+ *
+ * Překlad sám bydlí v `postflopGenerator` vedle seznamu legacy jmen, protože
+ * tahle znalost tu do 2. 9. 2026 existovala ve třech rozcházejících se kopiích
+ * a vyřešená knihovna, kde je všechen obsah, neměla ani jednu. Důvod, proč se
+ * překládá místo přejmenování, je popsaný tam.
+ */
+function positionPatternMatches(rule: FlopProductionStrategyRule, pattern: string): boolean {
+  return postflopPositionPatternMatches(rule.positionPattern, pattern);
+}
+
 export function matchingFlopProductionRules(
   pack: FlopProductionStrategyPack,
   input: PostflopStrategyInput,
@@ -76,7 +138,7 @@ export function matchingFlopProductionRules(
   return pack.rules.filter((rule) => (
     rule.potType === input.potType &&
     actionNodeMatchesInput(rule, input) &&
-    rule.positionPattern === input.positionPattern &&
+    positionPatternMatches(rule, input.positionPattern) &&
     rule.boardTextures.some((texture) => input.textures.includes(texture))
   ));
 }
@@ -111,7 +173,10 @@ function ruleMatchesInput(
   return (
     rule.potType === input.potType &&
     actionNodeMatchesInput(rule, input) &&
-    rule.positionPattern === input.positionPattern &&
+    // Same canonicalisation as the filter above. Fixing only one of the two
+    // left the legacy names still unmatched: the filter let them through and
+    // this rejected them again, which is why the first attempt changed nothing.
+    positionPatternMatches(rule, input.positionPattern) &&
     spr >= rule.sprMin &&
     spr <= rule.sprMax &&
     rule.boardTextures.some((texture) => input.textures.includes(texture))
@@ -126,6 +191,14 @@ function actionNodeMatchesInput(
   return rule.actionNode !== "FLOP_FACING_BET";
 }
 
+/**
+ * Note on the texture term below: with the shipped library it is inert. Every
+ * rule declares the same thirteen textures, so `matchedTextureCount` and
+ * `boardTextures.length` are identical across candidates and the term cancels,
+ * leaving SPR width and pack order to decide. It is kept because it is correct
+ * for a genuinely texture-specific rule, which is what a later, finer pilot would
+ * ship - but nothing today depends on it, and a test pins that it does not.
+ */
 function ruleScore(rule: FlopProductionStrategyRule, input: PostflopStrategyInput): number {
   const matchedTextureCount = matchedTextures(rule, input).length;
   const textureSpecificity = matchedTextureCount * 100 - rule.boardTextures.length;
@@ -154,6 +227,8 @@ function heroRangeBucket(
     handClass: input.heroHand,
     features: [...bucket.features],
     actionMix: bucket.actionMix?.map((item) => ({ ...item })),
+    ...(bucket.weightPct === undefined ? {} : { weightPct: bucket.weightPct }),
+    ...(bucket.actionEvs ? { actionEvs: cloneActionEvSet(bucket.actionEvs) } : {}),
   };
 }
 
@@ -165,6 +240,7 @@ function rangeBuckets(rule: FlopProductionStrategyRule): PostflopRangeBucket[] {
     handClasses: [...bucket.handClasses],
     features: [...bucket.features],
     actionMix: bucket.actionMix?.map((item) => ({ ...item })),
+    ...(bucket.actionEvs ? { actionEvs: cloneActionEvSet(bucket.actionEvs) } : {}),
   }));
 }
 

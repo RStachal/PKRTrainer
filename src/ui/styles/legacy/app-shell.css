@@ -1,0 +1,117 @@
+/*
+ * Styly kostry aplikace z src/main.ts (appStyles), přesunuté 22. 10. 2026
+ * z řetězce v TypeScriptu (fáze 0b, Agents/ui-redesign-plan.md): hlavička,
+ * záložky, profil, filtry a cena rozhodnutí. Pravidla klasické obrazovky
+ * tréninku zmizela s ní 4. 11. 2026; nové prvky sem nepatří, ty jsou
+ * v ../tokens.css a ../components.css.
+ */
+:root{color-scheme:dark;}
+/* The felt reads through the whole page rather than stopping at the table.
+   A trainer that looks like a form with a poker table in it is a form; the
+   green is what tells a player at a glance which app they are in. Kept low in
+   saturation so the action colours, which carry meaning, stay the brightest
+   thing on screen. */
+/* min-height: pozadí se dlaždicuje podle výšky body, takže stránka kratší než
+   okno by ho začala znovu a uprostřed obrazovky by zůstal šev. */
+body{margin:0;min-height:100vh;background:
+  radial-gradient(ellipse at 50% -12%,rgba(34,150,96,.20),rgba(34,150,96,0) 42%),
+  radial-gradient(circle at 12% 8%,rgba(43,213,118,.10),rgba(43,213,118,0) 30%),
+  radial-gradient(circle at 90% 2%,rgba(123,211,255,.09),rgba(123,211,255,0) 32%),
+  linear-gradient(180deg,#08110d,#060c10 46%,#05080e);
+  color:#e8ecf7;font-family:Inter,ui-sans-serif,system-ui,Arial,sans-serif;}
+.app{width:min(100% - 32px,1120px);margin:0 auto;padding:28px 0 56px;}
+.app__header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+  margin-bottom:18px;padding:4px 0 2px;}
+.app__header-copy{min-width:0;}
+/* Solid, not a gradient. A gradient title needs color:transparent with
+   background-clip, which makes the computed colour transparent - the Chrome
+   accessibility pass measured the h1 at 1:1 against a required 3:1, and any
+   browser without background-clip support would render nothing at all. The
+   felt behind it already carries the colour; the title only has to be read. */
+.app__title{margin:0;font-size:28px;font-weight:950;letter-spacing:0;color:#f8fbff;
+  text-shadow:0 10px 30px rgba(0,0,0,.35);}
+.app__subtitle{margin:6px 0 0;font-size:14px;color:#a8b7d5;}
+.language-switch{display:grid;grid-template-columns:repeat(2,40px);flex:0 0 auto;
+  border:1px solid rgba(148,163,184,.28);border-radius:7px;background:#111827;padding:2px;}
+.language-switch__option{appearance:none;border:0;border-radius:5px;background:transparent;color:#a8b7d5;
+  min-height:30px;padding:4px 7px;font-size:12px;font-weight:900;cursor:pointer;}
+.language-switch__option:hover{color:#f8fbff;background:rgba(255,255,255,.06);}
+.language-switch__option--active{background:#2bd576;color:#082817;}
+.app__notice{margin:10px 0;padding:10px 12px;border-radius:10px;
+  background:rgba(255,209,91,.14);border:1px solid rgba(255,209,91,.45);
+  color:#ffd15b;font-size:13px;}
+.app__notice-line+.app__notice-line{margin-top:6px;}
+.app__tabs{display:flex;gap:8px;border-bottom:1px solid rgba(148,163,184,.16);
+  margin-bottom:18px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:#7bd3ff transparent;}
+.app__tab{appearance:none;border:1px solid transparent;background:transparent;color:#9fb0cf;
+  font-size:14px;font-weight:850;padding:11px 18px;cursor:pointer;border-radius:10px 10px 0 0;
+  border-bottom:3px solid transparent;white-space:nowrap;}
+.app__tab:hover{color:#e8ecf7;background:rgba(255,255,255,.035);}
+.app__tab--active{color:#f8fbff;border-color:rgba(148,163,184,.16);
+  border-bottom-color:#2bd576;background:linear-gradient(180deg,rgba(24,44,36,.92),rgba(13,24,20,.72));
+  box-shadow:0 10px 24px rgba(0,0,0,.22),inset 0 1px 0 rgba(140,240,190,.12);}
+.app__panel{outline:none;}
+.training__filters{background:linear-gradient(180deg,rgba(18,25,38,.98),rgba(10,15,24,.98));
+  border:1px solid rgba(148,163,184,.16);border-radius:16px;padding:18px 20px;margin-bottom:18px;
+  box-shadow:0 24px 70px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.05);}
+.profile-selector{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));
+  gap:12px 14px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid
+  rgba(148,163,184,.14);}
+.profile-selector__title{grid-column:1/-1;font-size:14px;font-weight:950;color:#f8fbff;}
+.profile-selector__field{display:grid;gap:6px;font-size:12px;color:#a8b7d5;font-weight:750;}
+.profile-selector__field select,.filter-scoring,.filter-seed{box-sizing:border-box;min-width:0;background:#151f31;color:#f8fbff;
+  border:1px solid rgba(148,163,184,.24);border-radius:10px;padding:9px 11px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);}
+.profile-selector__field select:focus,.filter-scoring:focus,.filter-seed:focus{outline:2px solid rgba(43,213,118,.42);
+  outline-offset:1px;border-color:#2bd576;}
+.profile-selector__note{grid-column:1/-1;font-size:12px;color:#b5c3df;line-height:1.4;
+  overflow-wrap:anywhere;border-radius:10px;padding:9px 11px;background:rgba(123,211,255,.06);
+  border:1px solid rgba(123,211,255,.14);}
+.profile-selector__note--production{background:rgba(43,213,118,.08);border-color:rgba(43,213,118,.2);}
+.profile-selector__note--candidate{background:rgba(255,209,91,.08);border-color:rgba(255,209,91,.2);}
+.profile-selector__note--missing{background:rgba(226,59,59,.08);border-color:rgba(226,59,59,.28);}
+.filter-section-title{color:#f8fbff;}
+.filter-bulk{display:inline-flex;gap:5px;margin-left:0!important;flex-wrap:wrap;}
+.filter-bulk-all,.filter-bulk-none{appearance:none;border:1px solid rgba(148,163,184,.22);
+  border-radius:8px;background:linear-gradient(180deg,#2a3448,#182235);color:#e8ecf7;
+  font-size:12px;font-weight:850;padding:5px 9px;cursor:pointer;}
+.filter-bulk-all:hover,.filter-bulk-none:hover{border-color:#2bd576;}
+.filter-group{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;}
+.filter-position-item,.filter-bucket-item,.filter-context-item,.filter-ante-item,
+.filter-scoring-item,.filter-seed-item{border-radius:999px;background:rgba(255,255,255,.035);
+  border:1px solid rgba(148,163,184,.13);padding:5px 8px;margin-right:0!important;
+  color:#edf3ff;}
+.filter-group--config .filter-scoring-item,.filter-group--config .filter-seed-item{border-radius:10px;}
+.filter-position,.filter-bucket,.filter-context,.filter-ante{accent-color:#2bd576;}
+.training__game{display:flex;flex-direction:column;gap:16px;}
+.decision-price{margin:10px 0 2px;padding:9px 11px;border-radius:10px;
+  background:linear-gradient(180deg,rgba(123,211,255,.09),rgba(123,211,255,.03));
+  border:1px solid rgba(123,211,255,.22);}
+.decision-price__headline{font-size:13px;font-weight:850;color:#e8f4ff;}
+.decision-price__verdict{margin-top:5px;font-size:12px;font-weight:850;color:#ffd15b;}
+.decision-price__verdict--good{color:#8ef0b4;}
+.decision-price__basis{margin-top:5px;font-size:11px;font-weight:750;color:#93a5c4;}
+.fatal{background:rgba(226,59,59,.12);border:1px solid rgba(226,59,59,.5);
+  border-radius:12px;padding:16px 18px;}
+.fatal__title{font-size:16px;font-weight:900;margin-bottom:6px;color:#ffb4b4;}
+.fatal__message{font-size:13px;color:#e8ecf7;line-height:1.5;}
+@media (max-width:720px){
+  .app{width:min(100% - 20px,1120px);padding:18px 0 40px;}
+  .app__header{align-items:center;gap:10px;}
+  .app__title{font-size:25px;}
+  .app__subtitle{font-size:13px;}
+  .app__tabs{gap:4px;margin-left:-2px;margin-right:-2px;}
+  .app__tab{padding:10px 13px;font-size:13px;}
+  .training__filters{padding:14px 12px;border-radius:14px;}
+  .profile-selector{grid-template-columns:1fr;gap:10px;}
+  .filter-group{gap:7px;}
+  .filter-position-item,.filter-bucket-item,.filter-context-item{min-height:32px;}
+  .filter-group--config{align-items:stretch!important;gap:10px!important;}
+  .filter-ante-item,.filter-scoring-item,.filter-seed-item{width:100%;box-sizing:border-box;
+    justify-content:space-between;}
+  .filter-scoring,.filter-seed{width:min(56%,220px);}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;
+    animation-duration:.01ms!important;animation-iteration-count:1!important;}
+}

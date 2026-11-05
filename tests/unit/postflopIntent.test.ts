@@ -27,7 +27,7 @@ describe("postflopIntent", () => {
       callerPosition: "LJ",
       inPosition: false,
       callerType: "OUT_OF_POSITION_CALLER",
-      positionPattern: "OOP_CALLER_VS_IP_3BETTOR",
+      positionPattern: "3BP_HJ_VS_LJ",
     });
   });
 
@@ -44,7 +44,7 @@ describe("postflopIntent", () => {
       positionContext: {
         heroPosition: "LJ",
         villainPosition: "HJ",
-        positionPattern: "OOP_CALLER_VS_IP_3BETTOR",
+        positionPattern: "3BP_HJ_VS_LJ",
       },
     });
   });
@@ -65,5 +65,45 @@ describe("postflopIntent", () => {
 
   it("bez pozic nevnucuje generatoru zadny kontext", () => {
     expect(postflopPositionContextFromFilters(baseFilters)).toBeNull();
+  });
+
+  it("otvírač proti dorovnávajícímu SB dostane svou situaci, ne cokoli", () => {
+    // Do 14. 10. 2026 tenhle výběr spadl na `null` a pohled pak rozdal libovolnou
+    // situaci z celého katalogu - hráč chtěl CO proti SB a dostal něco jiného,
+    // beze slova. Tak propadalo 7 ze 45 výběrů pozic.
+    const context = postflopPositionContextFromFilters({
+      ...baseFilters,
+      positions: ["CO", "SB"],
+      contexts: ["RFI"],
+    });
+    expect(context).toMatchObject({
+      heroPosition: "CO",
+      villainPosition: "SB",
+      aggressorPosition: "CO",
+      callerPosition: "SB",
+      inPosition: true,
+      positionPattern: "SRP_CO_VS_SB",
+    });
+  });
+
+  it("platí to pro všechny otvírače, i ty s plusem ve jméně", () => {
+    for (const opener of ["UTG", "UTG+1", "UTG+2", "LJ", "HJ", "CO", "BTN"] as const) {
+      const pattern = postflopPositionContextFromFilters({
+        ...baseFilters,
+        positions: [opener, "SB"],
+        contexts: ["RFI"],
+      })?.positionPattern;
+      expect(pattern).toBe(`SRP_${opener.replace("+", "_")}_VS_SB`);
+    }
+  });
+
+  it("SB s BB zůstává blind proti blindu - nová větev ho nepřebije", () => {
+    // Pořadí větví je tady celá věc: kdyby „otvírač + SB" stála před SB+BB,
+    // spadl by blind proti blindu pod ni a ztratil vzor, na který spoléhá pilot.
+    expect(postflopPositionContextFromFilters({
+      ...baseFilters,
+      positions: ["SB", "BB"],
+      contexts: ["BVB"],
+    })?.positionPattern).toBe("SB_VS_BB");
   });
 });

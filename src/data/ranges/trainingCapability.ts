@@ -8,6 +8,11 @@ import {
   mttCompletionReadinessRowForTrainingProfile,
   type MttCompletionReadinessRow,
 } from "./mttProductionReadiness";
+import {
+  mttProductionImportSlotId,
+  mttProductionImportSlotKind,
+} from "./mttImportSlotNaming";
+import { generatedMttProductionManifest } from "./mttProductionRegistry.generated";
 
 export interface TrainingCapability {
   status: TrainingCapabilityStatus;
@@ -39,7 +44,9 @@ export function trainingCapabilityForProfile(
     };
   }
 
-  const readiness = mttCompletionReadinessRowForTrainingProfile(profile);
+  const readiness = bundledProductionReadiness(
+    mttCompletionReadinessRowForTrainingProfile(profile),
+  );
   if (readiness?.productionReady === true) {
     return {
       status: "PRODUCTION",
@@ -81,13 +88,64 @@ export function trainingCapabilityForProfile(
   };
 }
 
+function bundledProductionReadiness(
+  readiness: MttCompletionReadinessRow | null,
+): MttCompletionReadinessRow | null {
+  if (readiness === null || readiness.productionReady) return readiness;
+
+  const kind = mttProductionImportSlotKind(readiness.street);
+  const profileKey = mttProductionImportSlotId(readiness);
+  const entry = generatedMttProductionManifest.find((candidate) => (
+    candidate.kind === kind && candidate.profileKey === profileKey
+  ));
+  if (entry === undefined) return readiness;
+
+  return {
+    ...readiness,
+    status: "PRODUCTION",
+    productionReady: true,
+    coverageKind: entry.kind === "mtt-preflop"
+      ? "PREFLOP_RANGE_PACK"
+      : "POSTFLOP_PRODUCTION_PACK",
+    packId: entry.packId,
+    importSlot: null,
+    missingReasons: [],
+  };
+}
+
+/**
+ * Six-max joins nine-handed here, and it is worth being explicit about what it
+ * allows: drilling ranges that are derived rather than measured.
+ *
+ * The six-max packs are nine-handed records re-labelled by how many opponents
+ * are still to act. They carry LOW confidence, name the seat each came from, and
+ * will run tight, because a six-max field is looser at equal seats-behind.
+ *
+ * The alternative was what shipped - six-max in the picker teaching nothing,
+ * because the derivation was written and never wired in. Preview only:
+ * `startableMttPreflopRangePack` still demands records, and the production gate
+ * still refuses inferred chart values, which stands until measured six-max
+ * charts arrive.
+ */
+/**
+ * Preflopové profily, které smí běžet jako hratelné preview.
+ *
+ * `DOLAR_EV` sem patří od chvíle, kdy odvození přestalo hádat sílu ruky. Utažení
+ * dorovnávací range jen odebírá ruce z měřených dat, ale rozšíření agresivní
+ * range ruce přidává - a dokud se vybíraly podle toho, v kolika rangích se ruka
+ * objevuje, byl to odhad právě tam, kde na něm záleží. Teď se berou podle equity
+ * proti balíčku, spočítané předem do `preflopStrengthOrder.generated`.
+ *
+ * Pack zůstává odvozený, LOW a platný pro jeden pojmenovaný scénář. Produkční
+ * brána ho dál nepustí; preview znamená hratelné, ne ověřené.
+ */
 export function isPlayableMttPreflopPreview(profile: TrainingProfile): boolean {
   return (
     profile.gameVariant === "MTT" &&
-    profile.tableFormat === "FULL_RING_9" &&
+    (profile.tableFormat === "FULL_RING_9" || profile.tableFormat === "SIX_MAX") &&
     profile.blindSpeed === "REGULAR" &&
     profile.street === "PREFLOP" &&
-    profile.evModel === "CHIP_EV" &&
+    (profile.evModel === "CHIP_EV" || profile.evModel === "DOLAR_EV") &&
     profile.rakeMode === "NONE"
   );
 }

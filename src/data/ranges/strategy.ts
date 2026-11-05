@@ -32,6 +32,12 @@ import {
   openKeys,
   type RangeSegment,
 } from "./rangeBuilders";
+import { REJAM_CALIBRATION_OPENER, REJAM_RANGES } from "./rejamRanges.generated";
+import { CALL_REJAM_CALIBRATION_SHOVER, CALL_REJAM_RANGES } from "./callRejamRanges.generated";
+import { BB_VS_SB_LIMP } from "./limpDefenceRanges.generated";
+import { OPEN_JAM_RANGES } from "./openJamRanges.generated";
+import { PUSH_FOLD_CHART } from "./pushFoldChart.generated";
+import { expandTokens } from "./handExpand";
 
 // ---------------------------------------------------------------------------
 // Rozdělení košů (Req 2.3: ≤ 12 BB = push/fold)
@@ -39,6 +45,9 @@ import {
 
 /** Koše v režimu Push/Fold (≤ 12 BB) z definované sady: 5 a 10 BB. */
 const PUSH_FOLD_BUCKETS: StackBucket[] = [5, 10];
+
+/** Depths the owner's re-jam and calling-rejam sheets draw. */
+const CALL_REJAM_BUCKETS: StackBucket[] = [15, 20, 25, 30];
 
 /** Koše mimo push/fold (> 12 BB): plný akční strom. */
 const DEEP_BUCKETS: StackBucket[] = [15, 20, 25, 30, 40, 50, 60, 75, 100, 125, 150];
@@ -90,18 +99,116 @@ interface CoreExtra {
   extra: string;
 }
 
+/**
+ * Opening ranges by stack depth, replacing the flat table from a given depth up.
+ *
+ * The flat table gave each seat one range from 15BB to 150BB. Checked against the
+ * owner's purchased charts on 2026-07-30, every seat there widens with depth and
+ * none of ours did: the button runs 40.3 to 46.9 percent between 25BB and 100BB,
+ * the cutoff 30.3 to 32.4, the lojack 16.4 to 18.9, the hijack 22.6 to 25.5. One
+ * number for both ends is wrong at both ends.
+ *
+ * The bands are the chart pack's own - it is organised 10-20BB, 20-40BB, 40-100BB
+ * - rather than points interpolated between measurements, which would be
+ * inventing data the source does not contain. Below 25BB the flat table stands,
+ * and it was verified against the 10-20BB chart to a single hand class.
+ *
+ * These are the ante-off ranges, by the owner's decision: the depth curve is
+ * taken as ante-off and the ante widening sits above it, which is why `extra`
+ * still comes from the flat table. Ante is a property of the dead money, not of
+ * the stack, so the same addition applies at every depth.
+ */
+interface DepthBand {
+  /** Applies from this bucket upward, until a deeper band takes over. */
+  fromBucket: number;
+  core: string;
+}
+
+const DEPTH_OPEN_RANGES: Record<string, readonly DepthBand[]> = {
+  UTG: [
+    { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, AKs, AQs, AJs, ATs, A9s, A8s, KQs, KJs, KTs, QJs, QTs, JTs, T9s, AKo, AQo, AJo, KQo" },
+    // Two hands were missing at this depth that the same seat opens at 25BB:
+    // KQo and A8s. Under the gun was the only early seat to lose anything as
+    // stacks deepened - UTG+1 and UTG+2 both keep KQo at 50 - and a seat that
+    // opens tighter deep than shallow is wrong whatever the right width is,
+    // because position and depth both argue the other way.
+    //
+    // A8s is here because the first reading of this band was wrong. It looked
+    // like A9s and A8s had been traded for the wheel aces, which is a real
+    // solver pattern and would have been left alone. But A9s is still here: only
+    // A8s went, against four hands added. One out and four in is an omission,
+    // not a strategy.
+    //
+    // Restored as transcription fixes, not as a re-reading of the chart. The
+    // width question this seat still has - 13.6% here against roughly 17.6% in
+    // two independent sources - is not answered by either hand and is documented
+    // in Agents/reference-ranges/btn-rfi-mtt-regular.md.
+    { fromBucket: 50, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, AKs, AQs, AJs, ATs, A9s, A8s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, QJs, QTs, JTs, T9s, 98s, AKo, AQo, AJo, KQo" },
+  ],
+  "UTG+1": [
+    { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, AKs, AQs, AJs, ATs, A9s, A8s, A5s, KQs, KJs, KTs, QJs, QTs, JTs, T9s, AKo, AQo, AJo, KQo" },
+    { fromBucket: 50, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, AKs, AQs, AJs, ATs, A9s, A8s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, QJs, QTs, JTs, T9s, 98s, 87s, AKo, AQo, AJo, KQo" },
+  ],
+  "UTG+2": [
+    { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, QJs, QTs, JTs, T9s, 98s, AKo, AQo, AJo, ATo, KQo" },
+    { fromBucket: 50, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, QJs, QTs, JTs, T9s, 98s, 87s, AKo, AQo, AJo, ATo, KQo, KJo" },
+  ],
+  // The cutoff's offsuit wheel aces are gone. The range held A5o, A4o, A3o and
+  // A2o while folding A7o and A6o - a shape no chart draws, because a range that
+  // plays A5o and folds the hand that dominates it is not a range, it is a
+  // misreading. The same signature as the A8s omission under the gun, and found
+  // the same way: by looking at what the range says about itself.
+  //
+  // Removed rather than completed by adding A7o and A6o, because two independent
+  // published sets put the cutoff near 26 percent and this seat was at 32.4.
+  // Both repairs fix the inconsistency; only one moves toward the evidence.
+  // 32.4 to 28.8 percent, and 30.3 to 26.7 at the shallower band.
+  CO: [
+    { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, K7s, K6s, QJs, QTs, Q9s, Q8s, JTs, J9s, J8s, T9s, T8s, 98s, 97s, 87s, 76s, 65s, AKo, AQo, AJo, ATo, A9o, A8o, KQo, KJo, KTo, QJo, QTo, JTo" },
+    { fromBucket: 50, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, K7s, K6s, K5s, QJs, QTs, Q9s, Q8s, Q7s, JTs, J9s, J8s, J7s, T9s, T8s, T7s, 98s, 97s, 87s, 86s, 76s, 75s, 65s, 54s, AKo, AQo, AJo, ATo, A9o, A8o, KQo, KJo, KTo, QJo, QTo, JTo" },
+  ],
+  BTN: [
+    { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, K7s, K6s, K5s, K4s, K3s, K2s, QJs, QTs, Q9s, Q8s, Q7s, Q6s, Q5s, JTs, J9s, J8s, J7s, T9s, T8s, T7s, 98s, 97s, 96s, 87s, 86s, 85s, 76s, 75s, 65s, 64s, 54s, AKo, AQo, AJo, ATo, A9o, A8o, A7o, A6o, A5o, A4o, A3o, A2o, KQo, KJo, KTo, K9o, QJo, QTo, Q9o, JTo, J9o, T9o" },
+    { fromBucket: 50, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, K7s, K6s, K5s, K4s, K3s, K2s, QJs, QTs, Q9s, Q8s, Q7s, Q6s, Q5s, Q4s, Q3s, Q2s, JTs, J9s, J8s, J7s, J6s, J5s, J4s, J3s, J2s, T9s, T8s, T7s, T6s, T5s, T4s, 98s, 97s, 96s, 95s, 94s, 87s, 86s, 85s, 84s, 76s, 75s, 74s, 73s, 65s, 64s, 63s, 54s, 53s, 43s, AKo, AQo, AJo, ATo, A9o, A8o, A7o, A6o, A5o, A4o, A3o, A2o, KQo, KJo, KTo, K9o, K8o, QJo, QTo, Q9o, JTo, J9o, T9o" },
+  ],
+  LJ: [
+    { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, QJs, QTs, Q9s, JTs, J9s, T9s, 98s, AKo, AQo, AJo, ATo, KQo, KJo" },
+    { fromBucket: 50, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, QJs, QTs, Q9s, JTs, J9s, T9s, 98s, 87s, 76s, AKo, AQo, AJo, ATo, KQo, KJo" },
+  ],
+  HJ: [
+    { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, QJs, QTs, Q9s, Q8s, JTs, J9s, J8s, T9s, T8s, 98s, 97s, 87s, 76s, AKo, AQo, AJo, ATo, A9o, KQo, KJo, KTo, QJo, QTo" },
+    { fromBucket: 50, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, QJs, QTs, Q9s, Q8s, JTs, J9s, J8s, T9s, T8s, 98s, 97s, 87s, 76s, 65s, 54s, AKo, AQo, AJo, ATo, A9o, KQo, KJo, KTo, QJo, QTo, JTo" },
+  ],
+};
+
 const OPEN_RANGES: Record<string, CoreExtra> = {
   UTG: {
     core: "22+, A4s+, KTs+, QTs+, JTs, T9s, 98s, AJo+, KQo",
-    extra: "A2s+, 87s, ATo",
+    // 87s dropped. With ante on, under the gun opened it while UTG+1, UTG+2 and
+    // the lojack all folded it at 25 to 40BB - a hand cannot be playable from the
+    // earliest seat and unplayable from three seats later, where there are fewer
+    // players left to act. Removed rather than added to the later seats because
+    // those already run wide against published sets while under the gun is the
+    // closest to them.
+    extra: "A2s+, ATo",
   },
   "UTG+1": {
     core: "22+, A4s+, KTs+, QTs+, JTs, T9s, 98s, 87s, AJo+, KQo",
-    extra: "A2s+, 76s, ATo",
+    // 76s dropped for the same reason: UTG+1 opened it with ante on while UTG+2
+    // and the lojack folded it, in UTG+2's case at every depth from 25 to 150.
+    extra: "A2s+, ATo",
   },
   "UTG+2": {
     core: "22+, A2s+, K9s+, QTs+, JTs, T9s, 98s, 87s, 76s, ATo+, KJo+",
-    extra: "K8s, Q9s, J9s, KTo",
+    // KJo added ahead of KTo. The 25BB band folds KJo while the ante widening
+    // adds KTo, so with ante on the seat opened the weaker of the two and folded
+    // the hand that dominates it. The 50BB band already has KJo, which is what
+    // made this visible: the same seat, one band deeper, gets it right.
+    // K8s dropped: the seat folds K9s, so an ante widening adding K8s adds the
+    // weaker of the pair. Removed rather than completed because the published
+    // gradient - UTG 11.4, UTG+1 13.2, LJ 15.7 - puts this seat near 14.5 and it
+    // sits at 20.1.
+    extra: "Q9s, J9s, KJo, KTo",
   },
   LJ: {
     core: "22+, A2s+, K9s+, Q9s+, J9s+, T9s, 98s, 87s, 76s, 65s, ATo+, KJo+, QJo",
@@ -113,15 +220,38 @@ const OPEN_RANGES: Record<string, CoreExtra> = {
   },
   CO: {
     core: "22+, A2s+, K6s+, Q8s+, J8s+, T8s+, 97s+, 87s, 76s, 65s, 54s, A8o+, KTo+, QTo+, JTo",
-    extra: "K4s, Q6s, J7s, 86s, A5o, K9o",
+    // A5o dropped: the cutoff folds A7o and A6o, so an ante widening that adds
+    // the hand both of those dominate is adding the wrong one. Same signature as
+    // the offsuit wheel aces removed from the core band above, and found by the
+    // same scan - a range that plays a weaker kicker while folding a stronger one
+    // is describing a misreading, not a strategy.
+    // K4s and Q6s dropped with A5o for the same reason and in the same direction:
+    // each is the weaker half of a pair whose stronger half this seat folds, and
+    // two published sets put the cutoff near 26 percent against our 32.4.
+    extra: "J7s, 86s, K9o",
   },
   BTN: {
     core: "22+, A2s+, K2s+, Q5s+, J7s+, T7s+, 96s+, 86s+, 75s+, 65s, 54s, A2o+, K9o+, Q9o+, J9o+, T9o",
-    extra: "Q3s, J6s, T6s, 64s, K7o, Q8o, J8o, 98o",
+    // K8o added rather than K7o removed. The button is the one seat two published
+    // sets agree we open *too tight* - 50.5 percent against 54.8 - so where the
+    // repair can go either way, here it goes wider.
+    // Q4s added beside Q3s, as K8o was beside K7o. The button is the only seat
+    // the published sets say we open too tight, so where a pair can be completed
+    // either way it is completed upward.
+    extra: "Q4s, Q3s, J6s, T6s, 64s, K8o, K7o, Q8o, J8o, 98o",
   },
   SB: {
     core: "22+, A2s+, K2s+, Q4s+, J6s+, T6s+, 96s+, 86s+, 76s, 65s, 54s, A2o+, K8o+, Q9o+, J9o+, T9o, 98o",
-    extra: "Q2s, J4s, T5s, 95s, 75s, K5o, Q7o, J8o, T8o, 87o",
+    // K7o, K6o and Q8o added. The small blind opened K5o while folding both
+    // hands that dominate it, and Q7o while folding Q8o. Completed rather than
+    // trimmed because this seat has no depth bands at all and is the least
+    // measured in the table - see depthBandCoverage.test.ts - so removing hands
+    // here would be pruning a range nobody has checked.
+    // Q3s and J5s added beside Q2s and J4s. Completed rather than trimmed for the
+    // same reason as the offsuit repairs at this seat: it has no depth bands at
+    // all, so it is the least measured range in the table and pruning it would be
+    // guessing at the one seat nobody has checked.
+    extra: "Q3s, Q2s, J5s, J4s, T5s, 95s, 75s, K7o, K6o, K5o, Q8o, Q7o, J8o, T8o, 87o",
   },
 };
 
@@ -135,6 +265,39 @@ interface DefendDef {
   call: string; // call (flat)
   callExtra: string; // ante-on rozšíření callu
 }
+
+/**
+ * Big-blind defence by stack depth, from the owner's charts.
+ *
+ * The flat table defended 21.6 percent at every depth against every opener. The
+ * charts defend 35.1 percent at 12-20BB, 52.0 at 25-35 and 66.5 at 40-50, so at
+ * fifty big blinds against a normal button open this was short by more than forty
+ * points - in the spot that reaches more flops than any other. Folding two thirds
+ * of a range that should defend two thirds gives up the pot odds the blind exists
+ * to use.
+ *
+ * Calibrated to the sheets' 45 percent opener column. The sheets also vary
+ * defence by how wide the opener was - 6 to 13 points across their 40, 45 and 50
+ * percent columns - and this model has no such dimension. Adding one is a model
+ * change, and being forty points out matters more than being six, so the width is
+ * corrected first and that axis can follow.
+ *
+ * Below 15BB the flat table stands; the sheets begin at 12-20BB.
+ */
+interface DepthDefendBand {
+  fromBucket: number;
+  value: string;
+  bluff: string;
+  call: string;
+}
+
+const DEPTH_DEFEND_RANGES: Record<string, readonly DepthDefendBand[]> = {
+  BB: [
+    { fromBucket: 15, value: "AA, KK, QQ, AKs", bluff: "A5s, A4s, A3s, A2s", call: "JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AQs, AJs, ATs, A9s, A8s, A7s, A6s, KQs, KJs, KTs, K9s, K8s, K7s, K6s, K5s, K4s, K3s, K2s, QJs, QTs, Q9s, Q8s, Q7s, Q6s, Q5s, Q4s, Q3s, JTs, J9s, J8s, J7s, J6s, J5s, T9s, T8s, T7s, T6s, 98s, 97s, 96s, 95s, 87s, 86s, 85s, 84s, 76s, 75s, 74s, 73s, 65s, 64s, 63s, 62s, 54s, 53s, 52s, 43s, 42s, 32s, AKo, AQo, AJo, ATo, A9o, KQo, KJo, KTo, QJo, QTo, JTo" },
+    { fromBucket: 25, value: "AA, KK, QQ, JJ, TT, AKs, AQs, KQs, AKo, AQo", bluff: "85s, 75s, 74s, 65s, 64s, 63s, 54s, 53s, 43s", call: "99, 88, 77, 66, 55, 44, 33, 22, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KJs, KTs, K9s, K8s, K7s, K6s, K5s, K4s, K3s, K2s, QJs, QTs, Q9s, Q8s, Q7s, Q6s, Q5s, Q4s, Q3s, Q2s, JTs, J9s, J8s, J7s, J6s, J5s, J4s, J3s, J2s, T9s, T8s, T7s, T6s, T5s, T4s, T3s, T2s, 98s, 97s, 96s, 95s, 94s, 93s, 92s, 87s, 86s, 84s, 83s, 82s, 76s, 73s, 72s, 62s, 52s, 42s, 32s, AJo, ATo, A9o, A8o, A7o, A6o, A5o, A4o, A3o, KQo, KJo, KTo, K9o, QJo, QTo, Q9o, JTo, J9o, T9o, T8o, 98o, 87o, 76o" },
+    { fromBucket: 40, value: "AA, KK, QQ, JJ, TT, 99, AKs, AQs, AJs, KQs, KJs, AKo, AQo, AJo, KQo", bluff: "85s, 84s, 75s, 74s, 64s, 63s, 54s, 53s, 43s", call: "88, 77, 66, 55, 44, 33, 22, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KTs, K9s, K8s, K7s, K6s, K5s, K4s, K3s, K2s, QJs, QTs, Q9s, Q8s, Q7s, Q6s, Q5s, Q4s, Q3s, Q2s, JTs, J9s, J8s, J7s, J6s, J5s, J4s, J3s, J2s, T9s, T8s, T7s, T6s, T5s, T4s, T3s, T2s, 98s, 97s, 96s, 95s, 94s, 93s, 92s, 87s, 86s, 83s, 82s, 76s, 73s, 72s, 65s, 62s, 52s, 42s, 32s, ATo, A9o, A8o, A7o, A6o, A5o, A4o, A3o, A2o, KJo, KTo, K9o, K8o, K7o, K6o, K5o, K4o, QJo, QTo, Q9o, Q8o, Q7o, JTo, J9o, J8o, T9o, T8o, T7o, 98o, 97o, 87o, 86o, 76o, 75o, 65o, 64o, 54o" },
+  ],
+};
 
 const DEFEND_RANGES: Record<string, DefendDef> = {
   LJ: {
@@ -278,6 +441,36 @@ const JAM_5: Record<PosGroup, CoreExtra> = {
   bb: { core: "22+, A2s+, A4o+, K6s+, K9o+, Q8s+, QTo+, J8s+, JTo, T8s+, 98s, 87s, 76s", extra: "A2o, K5s, K8o, Q7s, J9o, T9o, 65s" },
 };
 
+/**
+ * Ten-big-blind jam ranges per seat, from the owner's pushing sheets.
+ *
+ * The grouped table below put the cutoff and the button in one "late" bucket at
+ * 22.2 percent. The sheets have the cutoff at 40.0 and the button at 53.8 - a
+ * fourteen point spread inside a single group, so the grouping was baking in an
+ * error whichever way it was set. Every seat measured is roughly double what the
+ * group gave it, and the small blind is more than double.
+ *
+ * These are the LOWER bound. The sheets draw blue, white and a cream, carry no
+ * legend, and the cream sits within a luminance point of the white - so it cannot
+ * be told from a fold by shade. Only the blue is unambiguously a jam, so only the
+ * blue is taken. If the cream turns out to be a jam too these are still short by
+ * up to nineteen points, and if it is a fold they are exact; what they cannot be
+ * is too wide. The small blind's grid has no cream at all, so its 74.7 percent is
+ * not a bound but the figure.
+ *
+ * Early position keeps the grouped table: its sheet names three seats and the
+ * detector finds two grids on it, so which grid is which seat is not established,
+ * and attributing a range to the wrong seat is worse than leaving a known-narrow
+ * one in place.
+ */
+const JAM_10_BY_SEAT: Readonly<Record<string, string>> = {
+  BTN: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, K7s, K6s, K5s, K4s, K3s, K2s, QJs, QTs, Q9s, Q8s, Q7s, Q6s, Q5s, Q4s, Q3s, Q2s, JTs, J9s, J8s, J7s, J6s, J5s, J4s, J3s, J2s, T9s, T8s, T7s, T6s, 98s, 97s, 96s, 95s, 87s, 86s, 85s, 84s, 76s, 75s, 74s, 65s, 64s, 63s, 54s, 53s, 43s, AKo, AQo, AJo, ATo, A9o, A8o, A7o, A6o, A5o, A4o, A3o, A2o, KQo, KJo, KTo, K9o, K8o, K7o, K6o, K5o, QJo, QTo, Q9o, Q8o, JTo, J9o, J8o, T9o, T8o, 98o, 97o, 87o",
+  SB: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, K7s, K6s, K5s, K4s, K3s, K2s, QJs, QTs, Q9s, Q8s, Q7s, Q6s, Q5s, Q4s, Q3s, Q2s, JTs, J9s, J8s, J7s, J6s, J5s, J4s, J3s, J2s, T9s, T8s, T7s, T6s, T5s, T4s, T3s, T2s, 98s, 97s, 96s, 95s, 94s, 93s, 92s, 87s, 86s, 85s, 84s, 83s, 82s, 76s, 75s, 74s, 73s, 72s, 65s, 64s, 63s, 62s, 54s, 53s, 52s, 43s, 42s, 32s, AKo, AQo, AJo, ATo, A9o, A8o, A7o, A6o, A5o, A4o, A3o, A2o, KQo, KJo, KTo, K9o, K8o, K7o, K6o, K5o, K4o, K3o, K2o, QJo, QTo, Q9o, Q8o, Q7o, Q6o, Q5o, Q4o, Q3o, Q2o, JTo, J9o, J8o, J7o, J6o, T9o, T8o, T7o, T6o, 98o, 97o, 96o, 87o, 86o, 76o, 75o, 65o",
+  LJ: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, K7s, QJs, QTs, Q9s, Q8s, JTs, J9s, J8s, T9s, T8s, T7s, 98s, 97s, 87s, 76s, 65s, AKo, AQo, AJo, ATo, A9o, A8o, A7o, KQo, KJo, KTo, QJo, QTo, JTo",
+  HJ: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, K7s, K6s, K5s, QJs, QTs, Q9s, Q8s, Q7s, JTs, J9s, J8s, J7s, T9s, T8s, T7s, 98s, 97s, 87s, 86s, 76s, 75s, 65s, 54s, AKo, AQo, AJo, ATo, A9o, A8o, A7o, A6o, A5o, A4o, A3o, A2o, KQo, KJo, KTo, QJo, QTo, JTo",
+  CO: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, K7s, K6s, K5s, K4s, K3s, K2s, QJs, QTs, Q9s, Q8s, Q7s, Q6s, JTs, J9s, J8s, J7s, T9s, T8s, T7s, T6s, 98s, 97s, 96s, 87s, 86s, 76s, 75s, 65s, 64s, 54s, AKo, AQo, AJo, ATo, A9o, A8o, A7o, A6o, A5o, A4o, A3o, A2o, KQo, KJo, KTo, K9o, QJo, QTo, Q9o, JTo, J9o, T9o",
+};
+
 /** JAM range při 10 BB (užší než 5 BB). */
 const JAM_10: Record<PosGroup, CoreExtra> = {
   early: { core: "66+, A8s+, ATo+, KTs+, KQo, QJs", extra: "55, A7s, A9o, K9s, KJo, QTs, JTs" },
@@ -327,10 +520,122 @@ function widenSpec(base: string, extra: string, wide: boolean): string {
 // Sestavení segmentů pro jednotlivé kontexty
 // ---------------------------------------------------------------------------
 
+/**
+ * Hands that shove rather than open at this depth, from the 10-20BB sheets.
+ *
+ * Each hand carries the stack below which it goes in, so a hand jams when the
+ * bucket sits under its threshold. At our bucket spacing that bites only at
+ * 15BB, and only where a sheet drew a 20BB threshold - the button's small pairs
+ * and the cutoff's - because the sheets' other thresholds, 12 and 15, fall at or
+ * below buckets we do not hold. The full measurement is kept in
+ * OPEN_JAM_RANGES so a finer bucket would need no re-reading.
+ */
+function openJamAt(pos: Position, bucket: StackBucket): string[] {
+  const row = OPEN_JAM_RANGES.find((item) => item.seat === pos);
+  if (row === undefined) return [];
+  return Object.entries(row.thresholds)
+    .filter(([, threshold]) => threshold > bucket)
+    .map(([hand]) => hand)
+    .sort();
+}
+
 function rfiSegments(pos: Position, bucket: StackBucket, wide: boolean): RangeSegment[] {
-  const ce = OPEN_RANGES[pos];
+  // The deepest band whose threshold this bucket has reached, else the flat
+  // table. Below 25BB that table stands: a single opening range stops being the
+  // model there at all, and the charts confirm it - the button has an openraise
+  // range and three jam thresholds, not one range.
+  const band = (DEPTH_OPEN_RANGES[pos] ?? [])
+    .filter((item) => bucket >= item.fromBucket)
+    .sort((left, right) => right.fromBucket - left.fromBucket)[0];
+  const flat = OPEN_RANGES[pos];
+  const ce = band === undefined ? flat : { core: band.core, extra: flat.extra };
   const k = openKeys(bucket);
-  return [{ spec: widen(ce, wide), strict: k.strict, lenient: k.lenient }];
+  const open: RangeSegment = { spec: widen(ce, wide), strict: k.strict, lenient: k.lenient };
+
+  // Listed *before* the open, because the first segment to name a hand wins and
+  // these hands are inside the opening range - the sheet moves them from raising
+  // to shoving rather than adding them. Putting it second silently did nothing.
+  const jam = openJamAt(pos, bucket);
+  return jam.length > 0
+    ? [{ spec: jam.join(", "), strict: ["JAM"] }, open]
+    : [open];
+}
+
+/**
+ * Why the early seats step down at the 20 to 25BB seam, and why that stands.
+ *
+ * The measured bands start above twenty big blinds and are narrower than the
+ * flat table they replace: under the gun 14.9 percent at 20BB and 11.2 at 25,
+ * the lojack 20.1 and 16.4, with the same shape at UTG+1 and UTG+2. What they
+ * drop is mostly the small pairs.
+ *
+ * That looked backwards - a small pair is a set-mining hand, implied odds
+ * improve with depth, and the table opened them only while stacks were short -
+ * so a rule was added carrying every pair and suited hand up from the shallower
+ * range. It has been removed again, because it fixed the wrong end.
+ *
+ * Two independent published references put nine-handed UTG at about 11.4 percent
+ * (one MTT chart set at 75BB with antes, one full-ring cash guide at 11.5). Our
+ * measured deep bands were 11.2 to 12.7 - within a point of both. The carry rule
+ * pushed them to 15.5 ante off and 16.7 ante on, four to five points above two
+ * sources that agree with each other.
+ *
+ * So the outlier is the flat 20BB table, not the bands. And the set-mining
+ * argument reverses on inspection: at twenty big blinds a small pair from under
+ * the gun has no implied odds to mine for - the stacks are too shallow to get
+ * paid - while at a hundred they do. Opening them shallow and folding them deep
+ * is wrong in the direction the flat table is wrong, and propagating it upward
+ * made four seats wrong instead of one.
+ *
+ * The corroboration that persuaded me was also weaker than it looked: the 40BB
+ * UTG postflop solves were built at about 15 percent, and I read landing within
+ * two tenths of that as confirmation. Those solves take their hero range from
+ * the same lineage as the flat table, and the consistency test in this repo
+ * already warns in as many words that a pack agreeing with a solve proves
+ * nothing about either.
+ *
+ * Left as it is until the 20BB end can be re-measured. The seam is real and
+ * documented in Agents/reference-ranges/btn-rfi-mtt-regular.md; closing it by
+ * widening the end that matches the evidence was the wrong repair.
+ */
+
+/**
+ * Re-jam over an open, for the depths the owner's sheets cover.
+ *
+ * Between roughly twelve and thirty big blinds the shove is the main answer to an
+ * open, and the model had no way to say so: PUSH_FOLD stops at 12BB and VS_OPEN
+ * above it offered only CALL and 3BET, so a player at twenty big blinds was being
+ * taught deep-stack shapes. The sheets give each hand the deepest stack at which
+ * it jams, so the range at a bucket is every hand whose threshold reaches it -
+ * which is why these get narrower as stacks get deeper, not wider.
+ *
+ * Calibrated to one opener per hero, listed in REJAM_CALIBRATION_OPENER, because
+ * VS_OPEN has no opener axis. That axis matters here more than anywhere else -
+ * the big blind re-jams 33 percent over a button open at 15BB and 9.8 percent
+ * over an early one - so the measured ranges for every opener are kept in
+ * REJAM_RANGES and only collapsed at this one point.
+ */
+function rejamSegments(pos: Position, bucket: StackBucket): RangeSegment[] {
+  const opener = REJAM_CALIBRATION_OPENER[pos];
+  if (opener === undefined) return [];
+  const row = REJAM_RANGES.find((item) => item.hero === pos && item.opener === opener);
+  if (row === undefined) return [];
+
+  // Above the deepest threshold the sheets draw, there is no jam to make. Left as
+  // "no segment" rather than an empty range so the flat defence is untouched at
+  // the depths the charts say nothing about.
+  const jam = Object.entries(row.thresholds)
+    .filter(([, threshold]) => threshold >= bucket)
+    .map(([hand]) => hand);
+  if (jam.length === 0) return [];
+
+  return [
+    { spec: jam.join(", "), strict: ["JAM"] },
+    // The sheets' salmon band three-bets and calls the four-bet rather than
+    // jamming, at every depth they cover. It reaches the same stack in the middle
+    // but keeps worse hands in, so it is kept as its own action.
+    { spec: row.threeBetCall.join(", "), strict: ["3BET"] },
+  ];
 }
 
 function defendSegments(def: DefendDef, wide: boolean): RangeSegment[] {
@@ -363,10 +668,41 @@ function squeezeSegments(def: DefendDef, wide: boolean): RangeSegment[] {
   ];
 }
 
+/**
+ * The big blind against a small-blind limp, from the owner's chart.
+ *
+ * The flat table raised one range at every depth. The sheet's raise width barely
+ * moves - 37.0, 34.5, 38.5 percent - but what it is made of changes completely:
+ * at 15-20BB more than half of it is a shove, and by 30BB there is no shove at
+ * all. So the width was never the error; teaching a raise where the chart shoves
+ * was, and one range per seat cannot express the difference.
+ *
+ * Only the big blind has a sheet, and only against the small blind. The other
+ * seats keep the flat table rather than borrowing this curve.
+ */
+function bbLimpSegments(bucket: StackBucket, wide: boolean): RangeSegment[] | null {
+  const band = BB_VS_SB_LIMP
+    .filter((item) => bucket >= item.fromBucket)
+    .sort((left, right) => right.fromBucket - left.fromBucket)[0];
+  if (band === undefined) return null;
+
+  const k = isoKeys(bucket);
+  const segments: RangeSegment[] = [];
+  if (band.jam.length > 0) segments.push({ spec: band.jam.join(", "), strict: ["JAM"] });
+  segments.push({ spec: band.iso.join(", "), strict: k.strict, lenient: k.lenient });
+  // Checking the option is the rest of the grid, so the sheet leaves no folds -
+  // which is right, since nobody folds a big blind that is already in for free.
+  segments.push({ spec: band.check.join(", "), strict: ["LIMP"] });
+  void wide; // the sheet is one measurement; it does not vary with ante.
+  return segments;
+}
+
 function isoSegments(pos: Position, bucket: StackBucket, wide: boolean): RangeSegment[] {
   const k = isoKeys(bucket);
   const isoVal = widenSpec(ISO_VALUE, ISO_VALUE_EXTRA, wide);
   if (pos === "BB") {
+    const measured = bbLimpSegments(bucket, wide);
+    if (measured !== null) return measured;
     // BB čelící limpu(ům): iso value → ISO, ostatní hratelné → LIMP (check).
     return [
       { spec: isoVal, strict: k.strict, lenient: k.lenient },
@@ -388,16 +724,77 @@ function bvbSegments(pos: Position, bucket: StackBucket, wide: boolean): RangeSe
   return defendSegments(BVB_BB_DEFEND, wide);
 }
 
+/**
+ * Jam ranges from the owner's push/fold chart, which is the owner's own baseline.
+ *
+ * The Kompendium settles what were three disagreeing sources: section 4.2 says
+ * "Chart jako baseline. Chart upravuj podle ICM..." and embeds this chart as its
+ * appendix. So where the chart speaks, it wins - including over the RYE pushing
+ * sheets, which had the button eleven points wider at 10BB than the chart and
+ * seven points wider than the RYE opening sheet's own thresholds. A reading that
+ * exceeds both of the other sources is not the lower bound it was taken for.
+ *
+ * The chart states 10 percent antes, so it is an ante-on source. That also makes
+ * it a ceiling for ante-off: a smaller pot cannot justify a wider shove, so the
+ * ante-off range is the narrower of what we held and what the chart gives.
+ */
+function chartJam(pos: Position, bucket: StackBucket, wide: boolean, fallback: string): string {
+  const row = PUSH_FOLD_CHART.find((item) => item.bb === bucket && item.seat === pos);
+  if (row === undefined) return fallback;
+  if (wide) return row.hands.join(", ");
+  // Ante-off: keep whichever is narrower, hand class by hand class. The held spec
+  // is written in range shorthand ("22+, A2s+"), so it has to be expanded before
+  // it can be intersected - comparing the shorthand directly matched almost
+  // nothing and collapsed the 5BB ante-off ranges to about one percent.
+  const chart = new Set(row.hands);
+  const narrower = expandTokens(fallback).filter((hand) => chart.has(hand));
+  return narrower.length > 0 ? narrower.join(", ") : row.hands.join(", ");
+}
+
 function jamSegments(pos: Position, bucket: StackBucket, wide: boolean): RangeSegment[] {
+  // A per-seat 10BB range wins over the group where the sheets establish one.
+  // The ante widening still comes from the group, because ante is a property of
+  // the dead money rather than of the seat.
   const table = bucket === 5 ? JAM_5 : JAM_10;
   const ce = table[posGroup(pos)];
-  return [{ spec: widen(ce, wide), strict: ["JAM"], lenient: ["JAM"] }];
+  const measured = bucket === 10 ? JAM_10_BY_SEAT[pos] : undefined;
+  const held = measured === undefined
+    ? widen(ce, wide)
+    : widenSpec(measured, ce.extra, wide);
+  return [{ spec: chartJam(pos, bucket, wide, held), strict: ["JAM"], lenient: ["JAM"] }];
 }
 
 function callJamSegments(pos: Position, bucket: StackBucket, wide: boolean): RangeSegment[] {
   const table = bucket === 5 ? CALLJAM_5 : CALLJAM_10;
   const ce = table[posGroup(pos)];
   return [{ spec: widen(ce, wide), strict: ["CALL_JAM"], lenient: ["CALL_JAM"] }];
+}
+
+/**
+ * Calling a re-jam between 15 and 30BB, from the owner's charts.
+ *
+ * The other half of rejamSegments. Teaching a player to shove over an open at
+ * twenty big blinds without telling the opener what to call with would leave the
+ * spot half described, and VS_ALLIN held nothing above 10BB - so an opener facing
+ * a shove at those depths had no answer at all.
+ *
+ * Calibrated to the big blind shoving, for every hero: it is the widest re-jammer
+ * by a distance, the only seat present on all the sheets, and it is the range we
+ * now teach the big blind to shove, so both sides of the spot agree.
+ *
+ * Seats the sheets do not cover keep having nothing here rather than borrowing a
+ * neighbour's range.
+ */
+function callRejamSegments(pos: Position, bucket: StackBucket): RangeSegment[] {
+  const row = CALL_REJAM_RANGES.find(
+    (item) => item.hero === pos && item.shover === CALL_REJAM_CALIBRATION_SHOVER,
+  );
+  if (row === undefined) return [];
+  const call = Object.entries(row.thresholds)
+    .filter(([, threshold]) => threshold >= bucket)
+    .map(([hand]) => hand);
+  if (call.length === 0) return [];
+  return [{ spec: call.join(", "), strict: ["CALL_JAM"], lenient: ["CALL_JAM"] }];
 }
 
 // ---------------------------------------------------------------------------
@@ -427,9 +824,24 @@ export function buildAnteRangeFile(ante: AnteMode, version: string): RangeFile {
 
   // VS_OPEN obrana (Req 3.5).
   for (const pos of DEFEND_POSITIONS) {
-    const def = DEFEND_RANGES[pos];
     for (const bucket of DEEP_BUCKETS) {
-      entries.push(makeRecord(pos, bucket, "VS_OPEN", defendSegments(def, wide)));
+      // The deepest charted band this bucket has reached, else the flat table.
+      // The ante-on call extension stays with the flat table: ante is a property
+      // of the dead money, not of the stack.
+      const flat = DEFEND_RANGES[pos];
+      const band = (DEPTH_DEFEND_RANGES[pos] ?? [])
+        .filter((item) => bucket >= item.fromBucket)
+        .sort((left, right) => right.fromBucket - left.fromBucket)[0];
+      const def: DefendDef = band === undefined
+        ? flat
+        : { value: band.value, bluff: band.bluff, call: band.call, callExtra: flat.callExtra };
+      // The re-jam goes in front of the flat defence, not instead of it: the
+      // sheets it comes from describe only the shoving branch, and the pack keeps
+      // flatting and three-betting on separate sheets of its own.
+      entries.push(makeRecord(pos, bucket, "VS_OPEN", [
+        ...rejamSegments(pos, bucket),
+        ...defendSegments(def, wide),
+      ]));
     }
   }
 
@@ -464,11 +876,12 @@ export function buildAnteRangeFile(ante: AnteMode, version: string): RangeFile {
     }
   }
 
-  // BVB (Req 3.11) — SB open / BB obrana.
-  for (const pos of ["SB", "BB"] as Position[]) {
-    for (const bucket of DEEP_BUCKETS) {
-      entries.push(makeRecord(pos, bucket, "BVB", bvbSegments(pos, bucket, wide)));
-    }
+  // BVB (Req 3.11) — SB open. Obrana BB proti otevření SB je od 17. 9. 2026
+  // `VS_OPEN` z SB (zpřesněný záznam s `vsSeat`), ne vlastní kontext: tak to
+  // čte RYE i parser historie a drill se ptá jen tak (bod 254).
+  for (const bucket of DEEP_BUCKETS) {
+    entries.push(makeRecord("SB", bucket, "BVB", bvbSegments("SB", bucket, wide)));
+    entries.push({ ...makeRecord("BB", bucket, "VS_OPEN", bvbSegments("BB", bucket, wide)), vsSeat: "SB" });
   }
 
   // PUSH_FOLD (Req 3.9) — všechny pozice × krátké koše.
@@ -482,6 +895,11 @@ export function buildAnteRangeFile(ante: AnteMode, version: string): RangeFile {
   for (const pos of POSITIONS_ALL) {
     for (const bucket of PUSH_FOLD_BUCKETS) {
       entries.push(makeRecord(pos, bucket, "VS_ALLIN", callJamSegments(pos, bucket, wide)));
+    }
+    // And the charted depths above them, where the answer used to be nothing.
+    for (const bucket of CALL_REJAM_BUCKETS) {
+      const segments = callRejamSegments(pos, bucket);
+      if (segments.length > 0) entries.push(makeRecord(pos, bucket, "VS_ALLIN", segments));
     }
   }
 

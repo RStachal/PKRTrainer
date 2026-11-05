@@ -6,8 +6,8 @@ import { postflopSpotToTrainingSpot } from "../src/core/postflopTrainingSpot.ts"
 import type { Card, Spot, TableState } from "../src/core/types.ts";
 import type { RangeStore } from "../src/data/rangeStore.ts";
 import { renderMatrix } from "../src/ui/rangeMatrixView.ts";
-import { renderPostflopRangeMatrix } from "../src/ui/postflopRangeMatrixView.ts";
 import { renderTable } from "../src/ui/tableRenderer.ts";
+import { postflopRangeContent } from "../src/ui/trainer/postflopRange.ts";
 
 const ITERATIONS = numberFromEnv("RENDER_PROFILE_ITERATIONS", 40);
 const WARN_AVG_MS = numberFromEnv("RENDER_PROFILE_WARN_AVG_MS", 35);
@@ -23,6 +23,11 @@ const heroCards: [Card, Card] = [
 const tableState: TableState = {
   heroPos: "BTN",
   pushFold: false,
+  // Povinné pole, které tu chybělo. `TableState` ho zavedl místo dřívějšího
+  // `shortStack: boolean`, protože jediný příznak sléval tři různé hloubky, ve
+  // kterých shove končí. Profiler bez něj stavěl neplatný stav a jen díky
+  // nekontrolovanému `scripts/` to nikdo neviděl.
+  effectiveStackBB: 100,
   limpsBefore: 0,
   callsBefore: 1,
   facing: "OPEN",
@@ -96,9 +101,10 @@ profile("preflop table", () => {
   renderTable(spot, "ON", root);
 });
 
-profile("postflop Flopzilla matrix 13x13", () => {
+// Od 4. 11. 2026 matice nového GUI (klasická Flopzilla smazána s klasikou).
+profile("postflop range matrix 13x13", () => {
   const root = document.createElement("div");
-  renderPostflopRangeMatrix(postflopSpot, root);
+  root.appendChild(postflopRangeContent(document, postflopSpot));
 });
 
 function profile(name: string, run: () => void): void {

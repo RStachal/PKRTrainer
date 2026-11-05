@@ -13,6 +13,9 @@ import {
   renderMttPreflopSpeedDiffReport,
 } from "../src/data/ranges/mttPreflopRangeAudit.ts";
 import { validateRangeFile } from "../src/data/ranges/schema.ts";
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
+
+await loadCompleteMttProductionRegistry();
 
 let hasHardFailure = false;
 
@@ -87,5 +90,3 @@ for (const pack of flopProductionStrategyPacks) {
 if (hasHardFailure) {
   process.exitCode = 1;
 }
-import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
-await loadCompleteMttProductionRegistry();

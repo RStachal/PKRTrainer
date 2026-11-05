@@ -4,6 +4,11 @@ Updated: 2026-06-24
 
 This checklist defines when the MTT part of PKRTrainer is complete for the first production release.
 
+Scope note (2026-07-10): this document is the `Full MTT NLHE` 64-row library
+checklist. The active, shorter `MTT_CORE_V1` release contract is defined in
+`Agents/mtt-completion-priorities.md`. The core gate must not claim that this
+full-library checklist is complete.
+
 ## Production Matrix
 
 - `npm run mtt:completion -- --summary` returns `valid: true`.

@@ -26,8 +26,11 @@ describe("MTT preflop production de-fallback guard", () => {
 
     expect(preflopRows).toHaveLength(16);
     expect(preflopRows.filter((row) => row.productionReady)).toHaveLength(0);
-    expect(preflopRows.filter((row) => row.status === "CANDIDATE")).toHaveLength(6);
-    expect(preflopRows.filter((row) => row.status === "MISSING")).toHaveLength(10);
+    // Devět kandidátů: šest chipEV a šestistolových, dva odvozené ICM a od
+    // 22. 9. 2026 ICM preview vrstva z mřížek RYE. Řádek nad tímhle je ten, na
+    // kterém záleží - produkčních zůstává nula.
+    expect(preflopRows.filter((row) => row.status === "CANDIDATE")).toHaveLength(9);
+    expect(preflopRows.filter((row) => row.status === "MISSING")).toHaveLength(7);
 
     for (const tableFormat of tableFormats) {
       for (const blindSpeed of blindSpeeds) {

@@ -3,6 +3,7 @@ import type {
   PostflopStrategyInput,
   PostflopStrategyResolver,
 } from "../../core/postflopGenerator";
+import { canonicalPostflopPositionPattern } from "../../core/postflopGenerator";
 import {
   evaluateEntitlementAccess,
   type EntitlementGrant,
@@ -55,6 +56,22 @@ export function findMttPostflopPilotRuntimeEntry(
 ): MttPostflopPilotRuntimeEntry | null {
   return mttPostflopPilotRuntimeEntries(packEntries)
     .find((entry) => entry.catalog.scope === scope) ?? null;
+}
+
+/**
+ * Piloty, které mlčí, protože je čtenář odmítl a čekají na přesolvení.
+ *
+ * Rozhodnutí vlastníka 9a (22. 9. 2026) jim dalo `LOW` a resolver na `LOW`
+ * neodpovídá; odpověď 4a z téhož dne pak říká, že se to má napsat hráči.
+ * Bez tohohle seznamu by UI mohlo jen hádat, jestli spot chybí kvůli přesolvu,
+ * nebo proto, že pro tu situaci nikdy obsah nebyl - a to jsou dvě různé věty.
+ */
+export function resolvingMttPostflopPilotScopes(
+  packEntries: readonly GeneratedMttPostflopPilotPackEntry[] = generatedMttPostflopPilotPacks,
+): readonly MttPostflopPilotScope[] {
+  return mttPostflopPilotRuntimeEntries(packEntries)
+    .filter((entry) => entry.packEntry.pack.confidence === "LOW")
+    .map((entry) => entry.catalog.scope);
 }
 
 export function createMttPostflopPilotResolver(
@@ -117,6 +134,13 @@ export function mttPostflopPilotScopeForInput(
   }
   if (
     input.potType === "SINGLE_RAISED" &&
+    positionPattern === "SRP_CO_VS_BB" &&
+    input.actionNode === "SINGLE_RAISED_POT_CBET"
+  ) {
+    return "CO_vs_BB_SRP_FLOP_CBET";
+  }
+  if (
+    input.potType === "SINGLE_RAISED" &&
     positionPattern === "SRP_SB_VS_BB" &&
     input.actionNode === "SINGLE_RAISED_POT_CBET"
   ) {
@@ -151,9 +175,10 @@ export function normalizePilotPositionPattern(
   potType: PostflopStrategyInput["potType"],
 ): PostflopPositionPattern {
   if (potType !== "SINGLE_RAISED") return positionPattern;
-  if (positionPattern === "BTN_VS_BB") return "SRP_BTN_VS_BB";
-  if (positionPattern === "SB_VS_BB") return "SRP_SB_VS_BB";
-  return positionPattern;
+  // Sdílený překlad, ne vlastní seznam. Tenhle uměl `BTN_VS_BB` a
+  // `SB_VS_BB`, ale `EP_VS_BB` mu chybělo, ačkoli UTG pilot existuje -
+  // takže půlka spotů, pro které byl odsolvený, propadla na heuristiku.
+  return canonicalPostflopPositionPattern(positionPattern) as PostflopPositionPattern;
 }
 
 export function normalizePilotStrategyInput(

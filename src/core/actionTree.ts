@@ -27,7 +27,16 @@
  * _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10, 3.11, 3.13_
  */
 
-import type { ActionKind, FacingAction, TableState } from "./types";
+import {
+  LIMP_SHOVE_MAX,
+  OPEN_SHOVE_MAX,
+  OPEN_SHOVE_TAUGHT_MAX,
+  RE_JAM_MAX,
+  RE_JAM_SHEET_MAX,
+  type ActionKind,
+  type FacingAction,
+  type TableState,
+} from "./types";
 
 /** Dolní hranice (včetně) počtu limperů, kdy je v hře iso/over-limp/BB check (Req 3.3, 3.4, 3.13). */
 const MIN_LIMPS = 1;
@@ -48,6 +57,18 @@ const MAX_SQUEEZE_CALLS = 7;
  * @param state Stav stolu před rozhodnutím hrdiny.
  * @returns Pole nabízených druhů akcí bez duplicit.
  */
+/**
+ * Kreslí range spotu aspoň jednu ruku jako shove? Rozhoduje o nabídce jamu
+ * nad listy vlastníka (`TableState.jamTaught`); bydlí tady, protože to čte
+ * drill i přehrání historie a strom je jediné místo bez závislostí.
+ */
+export function rangeTeachesJam(
+  entry: { strict: Record<string, readonly string[]> } | undefined,
+): boolean {
+  if (entry === undefined) return false;
+  return Object.values(entry.strict).some((keys) => keys.includes("JAM"));
+}
+
 export function offeredActions(state: TableState): ActionKind[] {
   const { facing, pushFold, heroPos, limpsBefore, callsBefore } = state;
 
@@ -65,7 +86,7 @@ export function offeredActions(state: TableState): ActionKind[] {
 
   switch (facing) {
     case "NONE":
-      return offeredWhenUnopened(heroIsBB, limpsBefore);
+      return offeredWhenUnopened(heroIsBB, limpsBefore, state.effectiveStackBB, state.jamTaught === true);
 
     case "OPEN": {
       // Req 3.5 — vs-open: Fold / Call / 3bet.
@@ -74,12 +95,35 @@ export function offeredActions(state: TableState): ActionKind[] {
       if (callsBefore >= MIN_SQUEEZE_CALLS && callsBefore <= MAX_SQUEEZE_CALLS) {
         actions.push("SQUEEZE");
       }
+      // Req 3.5 — a shove, while the stack is short enough for one. Between 12
+      // and 30BB the owner's charts make re-jamming the main answer to an open,
+      // and the ranges now say so; without offering it here the recommendation
+      // would not be among the options a player can pick. Listed last, as the
+      // action that ends the hand. Above the sheets (31-40BB) only where the
+      // range this spot teaches draws a shove - RYE does at 40BB for the big
+      // blind against the button (decision 8a, 2026-09-22).
+      if (
+        state.effectiveStackBB <= RE_JAM_SHEET_MAX
+        || (state.effectiveStackBB <= RE_JAM_MAX && state.jamTaught === true)
+      ) actions.push("JAM");
       return actions;
     }
 
-    case "3BET":
+    case "3BET": {
       // Req 3.7 — vs-3bet: Fold / Call / 4bet.
-      return ["FOLD", "CALL", "4BET"];
+      const actions: ActionKind[] = ["FOLD", "CALL", "4BET"];
+      // A shove, where the range this spot teaches draws one (decision 1a,
+      // 2026-09-22). Same construction as facing an open: the button appears
+      // only where the grid itself shows a jam, never as a depth rule of our
+      // own. It matters most in the ICM spots the owner approved, where the
+      // 3-bettor is often shorter than the hero - UTG with 50BB against a
+      // small blind holding 9BB is playing for 9, and "4bet" there is a shove
+      // in everything but name. Measured before the change: of 822 VS_3BET
+      // records in the registry, zero drew a jam, so nothing that ships today
+      // gains a button; the nine ICM grids that teach one stop being refused.
+      if (state.jamTaught === true) actions.push("JAM");
+      return actions;
+    }
 
     case "4BET":
       // Req 3.8 — vs-4bet: Fold / Call / Jam.
@@ -97,14 +141,22 @@ export function offeredActions(state: TableState): ActionKind[] {
  * @param heroIsBB Je hrdina na pozici BB?
  * @param limpsBefore Počet limperů před hrdinou (0..8).
  */
-function offeredWhenUnopened(heroIsBB: boolean, limpsBefore: number): ActionKind[] {
+function offeredWhenUnopened(
+  heroIsBB: boolean,
+  limpsBefore: number,
+  effectiveStackBB: number,
+  jamTaught: boolean,
+): ActionKind[] {
   const hasLimps = limpsBefore >= MIN_LIMPS && limpsBefore <= MAX_LIMPS;
 
   if (hasLimps) {
     if (heroIsBB) {
       // Req 3.3 — BB čelící limpu(ům): Limp (check) a Iso-raise.
       // BB již vložil big blind, může zdarma dorovnat (check) → fold se nenabízí.
-      return ["LIMP", "ISO"];
+      // Req 3.3 — plus a shove while the stack is short enough. The chart shoves
+      // 20.5 percent over a limp at 15-20BB and 9.0 at 20-25, and draws none from
+      // 30BB up, so the option appears exactly where a range exists to fill it.
+      return effectiveStackBB <= LIMP_SHOVE_MAX ? ["LIMP", "ISO", "JAM"] : ["LIMP", "ISO"];
     }
     // Req 3.4 — Iso-raise; Req 3.13 — Over-limp (jen mimo BB); plus Fold.
     return ["ISO", "OVERLIMP", "FOLD"];
@@ -113,7 +165,15 @@ function offeredWhenUnopened(heroIsBB: boolean, limpsBefore: number): ActionKind
   // 0 limperů.
   if (!heroIsBB) {
     // Req 3.1 — RFI/Open; Req 3.2 — open-limp; plus Fold.
-    return ["OPEN", "LIMP", "FOLD"];
+    // Req 3.1 — plus the open shove while the stack is short. Between ten and
+    // twenty big blinds the owner's sheets do not draw one opening range: they
+    // draw a raising band and shove thresholds, and the small pairs are past
+    // theirs at fifteen big blinds.
+    // Above the sheets (16-20BB) only where the range this spot teaches draws
+    // an open shove - RYE does at 20BB for a few hands per seat (decision 6a).
+    return effectiveStackBB <= OPEN_SHOVE_MAX || (effectiveStackBB <= OPEN_SHOVE_TAUGHT_MAX && jamTaught)
+      ? ["OPEN", "LIMP", "JAM", "FOLD"]
+      : ["OPEN", "LIMP", "FOLD"];
   }
 
   // Hrdina na BB, facing = NONE, 0 limperů: tento stav v praxi nenastává

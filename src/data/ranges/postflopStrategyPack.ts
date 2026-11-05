@@ -1,3 +1,4 @@
+import { ALL_BOARD_TEXTURES } from "../../core/postflopGenerator";
 import type {
   BoardTexture,
   PostflopAction,
@@ -229,6 +230,35 @@ export const flopSingleRaisedPrototypeStrategyPack: PostflopStrategyPack = {
         "Monotone flop zveda riziko silnych flush kombinaci a check-raise; bez presne range volime check.",
     },
     {
+      id: "flop-srp-oop-lead-default-check",
+      actionNode: "FLOP_OOP_LEAD",
+      // Checking to the raiser is the default the whole spot turns on, and the
+      // flop is where it is strongest: the opener has bet almost their whole
+      // range on many textures and the defender has not yet learned anything.
+      boardTextures: ALL_BOARD_TEXTURES,
+      sprMin: 0,
+      sprMax: 60,
+      positionPattern: "OOP_CALLER_VS_IP_RAISER",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "CHECK",
+      explanation:
+        "Po dorovnani preflopu a mimo pozici je check zaklad: agresor sazi na flopu velkou cast range a vedeni do nej z capovane range zve raise, na ktery nemame odpoved.",
+    },
+    {
+      id: "flop-srp-oop-lead-low-connected-small",
+      actionNode: "FLOP_OOP_LEAD",
+      // The one shape where the defender's range is genuinely ahead: a wholly
+      // low board that the opener's high cards missed.
+      boardTextures: ["low"],
+      sprMin: 0,
+      sprMax: 60,
+      positionPattern: "OOP_CALLER_VS_IP_RAISER",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "BET_SMALL",
+      explanation:
+        "Cely nizky flop mine vetsinu otviraci range a sedne obrane blindu. Male vedeni je proto obhajitelne - velke ne, protoze nase range nema dost nejsilnejsich kombinaci.",
+    },
+    {
       id: "flop-srp-low-spr-range-advantage-small-cbet",
       actionNode: "SINGLE_RAISED_POT_CBET",
       boardTextures: ["dry", "rainbow", "paired"],
@@ -295,6 +325,12 @@ export const turnSingleRaisedPrototypeStrategyPack: PostflopStrategyPack = {
     "Public heuristic turn StrategyPack only; no paid chart values or exact solver frequencies are copied.",
     "Applies only to single-raised pots after a flop c-bet decision; multiway and 3bet-pot turns stay future work.",
     "Rules are texture-level training prompts, not production equilibrium strategy.",
+    // The lead rules are the one part of this pack that the cited material does
+    // not speak to directly - it is written about the aggressor's turn, not the
+    // caller's. They are a conservative default from range-advantage reasoning:
+    // check unless the turn card moved the advantage. Solved content exists for
+    // this node and outranks these rules wherever it reaches.
+    "Out-of-position lead rules are a conservative default from range-advantage reasoning, not from the cited sources, which discuss the aggressor's turn decision.",
   ],
   rules: [
     {
@@ -332,6 +368,79 @@ export const turnSingleRaisedPrototypeStrategyPack: PostflopStrategyPack = {
       preferredAction: "CHECK",
       explanation:
         "Dynamicky turn meni equity a zvysuje check-raise riziko; bez licencovaneho solver packu volime disciplinovany check.",
+    },
+
+    // The caller's turn, out of position, with no bet in front of them.
+    //
+    // The default is checking, and it is a strong default: the player who raised
+    // before the flop and bet the flop holds the stronger range, and leading into
+    // them with a capped range invites a raise the caller cannot answer. Betting
+    // into the aggressor is the exception, and these rules are written so the
+    // exception has to be earned by the turn card.
+    {
+      id: "turn-srp-oop-lead-aggressor-card-check",
+      actionNode: "TURN_OOP_LEAD",
+      // High and disconnected cards belong to the range that raised before the
+      // flop. Leading them is betting into the player they helped.
+      boardTextures: ["dry", "disconnected", "ace-high", "broadway-high"],
+      sprMin: 1,
+      sprMax: 20,
+      positionPattern: "OOP_CALLER_VS_IP_RAISER",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "CHECK",
+      explanation:
+        "Vysoka nebo nespojena karta na turnu sedi range agresora, ne nasi. Bez iniciativy a mimo pozici je check disciplinovana volba; vedeni sem zve raise, na ktery nemame cim odpovedet.",
+    },
+    {
+      id: "turn-srp-oop-lead-paired-check",
+      actionNode: "TURN_OOP_LEAD",
+      // A paired turn keeps the aggressor's range advantage intact and gives the
+      // caller's trips more value from checking than from announcing them.
+      boardTextures: ["paired"],
+      sprMin: 1,
+      sprMax: 20,
+      positionPattern: "OOP_CALLER_VS_IP_RAISER",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "CHECK",
+      explanation:
+        "Sparovany turn nemeni pomer sil ve prospech callera a nase silne kombinace vydelaji vic z checku nez z okamziteho vedeni.",
+    },
+    {
+      id: "turn-srp-oop-lead-connecting-card-small",
+      actionNode: "TURN_OOP_LEAD",
+      // Low connecting and draw-completing cards are the ones the caller holds
+      // more of: they defended with suited and connected hands the opener folds.
+      // Small, because a lead from a capped range cannot profitably face a raise.
+      // Only a wholly low board, which is the clearest signal the turn belongs
+      // to the defender's range rather than the opener's. Widening this to every
+      // connected or straight-possible board put the lead at half of all turns,
+      // and leading half the time out of position without the initiative is the
+      // classic leak this rule is meant to teach against.
+      boardTextures: ["low"],
+      sprMin: 1,
+      sprMax: 20,
+      positionPattern: "OOP_CALLER_VS_IP_RAISER",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "BET_SMALL",
+      explanation:
+        "Nizka spojujici karta trefuje obranu velkeho blindu casteji nez otviraci range. Male vedeni proto dava smysl - velke ne, protoze proti raisu ma nase range strop.",
+    },
+    {
+      id: "turn-srp-oop-lead-default-check",
+      actionNode: "TURN_OOP_LEAD",
+      // Every texture, which is what makes this the last rule standing: the
+      // resolver scores a rule by how specifically it matched, so a rule naming
+      // the whole taxonomy is outranked by any rule that named a texture. It
+      // exists so a board outside the three shapes above still gets the answer
+      // this spot defaults to, instead of the bare fallback.
+      boardTextures: ALL_BOARD_TEXTURES,
+      sprMin: 0,
+      sprMax: 60,
+      positionPattern: "OOP_CALLER_VS_IP_RAISER",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "CHECK",
+      explanation:
+        "Bez iniciativy a mimo pozici je check vychozi volba. Vedeni do hrace, ktery zvedal pred flopem a sazel na flopu, je vyjimka, kterou musi ospravedlnit karta na turnu.",
     },
   ],
 };
@@ -425,6 +534,20 @@ export const riverSingleRaisedPrototypeStrategyPack: PostflopStrategyPack = {
       preferredAction: "CHECK",
       explanation:
         "Na riveru s dokoncenymi draw bez presnych blockeru a value/bluff pomeru zustava check nejbezpecnejsi vyukova heuristika.",
+    },
+    {
+      id: "river-srp-oop-lead-default-check",
+      actionNode: "RIVER_OOP_LEAD",
+      // On the river the defender's range is at its most capped, and a lead
+      // gets called by everything better and folded to by everything worse.
+      boardTextures: ALL_BOARD_TEXTURES,
+      sprMin: 0,
+      sprMax: 60,
+      positionPattern: "OOP_CALLER_VS_IP_RAISER",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "CHECK",
+      explanation:
+        "Na riveru je nase range nejvic capovana. Vedeni bez iniciativy dostane call od vseho lepsiho a fold od vseho horsiho; check nechava agresorovi prostor blafovat.",
     },
   ],
 };
@@ -521,6 +644,11 @@ export function positionPatternMatches(
       return spotPattern === "EP_VS_BB" || spotPattern === "BTN_VS_BB" || isSrpIpRaiserVsBigBlind(spotPattern);
     case "EP_VS_BLINDS_OR_STRONG_RANGE_ADVANTAGE":
       return spotPattern === "EP_VS_BB" || isSrpNonBlindRaiserVsBigBlind(spotPattern);
+    case "OOP_CALLER_VS_IP_RAISER":
+      // The caller is out of position: any single-raised pot the big blind
+      // defended against a seat that acts after them, plus the three-bet pot
+      // where the caller is out of position against the three-bettor.
+      return isSrpIpRaiserVsBigBlind(spotPattern) || isThreeBetIpAggressorVsOopCaller(spotPattern);
     case "OOP_OR_DYNAMIC_BOARD":
       return (
         spotPattern === "SB_VS_BB" ||

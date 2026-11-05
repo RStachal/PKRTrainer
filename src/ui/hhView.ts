@@ -55,6 +55,7 @@ import {
 import type { PostflopTrainingSpot } from "../core/postflopTrainingSpot";
 import { positionsForFormat } from "../core/trainingProfile";
 import { grade } from "../core/scoring";
+import { buildPreflopExplanationForSpot } from "../core/preflopExplanation";
 import { rangeStore } from "../data/rangeStore";
 import type { RangeStore } from "../data/rangeStore";
 import { createDefaultPostflopStrategyResolver } from "../data/ranges/postflopStrategyRegistry";
@@ -65,7 +66,7 @@ import {
 } from "../persistence/hhReviewStore";
 import { renderMatrix } from "./rangeMatrixView";
 import { renderTable } from "./tableRenderer";
-import { CS } from "./cs";
+import { CS, getAppLanguage, localizedText } from "./cs";
 
 const POSTFLOP_STRATEGY_RESOLVER = createDefaultPostflopStrategyResolver();
 
@@ -304,7 +305,10 @@ function renderAnalysis(
     [
       CS.hh.facts.stack,
       result.fields.effStackBB !== undefined
-        ? `${result.fields.effStackBB} BB → nejbližší úroveň ${spot.effStack} BB`
+        ? localizedText(
+            `${result.fields.effStackBB} BB -> nearest bucket ${spot.effStack} BB`,
+            `${result.fields.effStackBB} BB -> nejbližší úroveň ${spot.effStack} BB`,
+          )
         : `${spot.effStack} BB`,
     ],
     [CS.hh.facts.node, spot.context],
@@ -331,7 +335,7 @@ function renderAnalysis(
   container.appendChild(facts);
 
   const explanation = el(doc, "p", "hh-analysis__explanation");
-  explanation.textContent = spot.explanation;
+  explanation.textContent = buildPreflopExplanationForSpot(spot, getAppLanguage());
   container.appendChild(explanation);
 
   const matrix = el(doc, "div", "hh-analysis__matrix");
@@ -345,6 +349,7 @@ function renderAnalysis(
     try {
       const postflopSpots = buildImportedPostflopTrainingSpots(result, strategyResolver, {
         allowFallback,
+        language: getAppLanguage(),
       });
       for (const postflopSpot of postflopSpots) {
         container.appendChild(renderImportedPostflopAnalysis(doc, postflopSpot));
@@ -391,7 +396,7 @@ function renderImportedPostflopAnalysis(doc: Document, spot: PostflopTrainingSpo
   section.dataset.board = spot.board.map(cardLabel).join("-");
 
   const title = el(doc, "h3", "hh-postflop-analysis__title");
-  title.textContent = `${streetLabel(spot.street)} – rozbor`;
+  title.textContent = `${streetLabel(spot.street)} review`;
   section.appendChild(title);
 
   const facts = el(doc, "div", "hh-postflop-analysis__facts");
@@ -453,7 +458,11 @@ function applyResult(
   callbacks?: HHViewCallbacks,
   parseOptions?: HHParseOptions,
 ): void {
-  renderErrors(doc, regions.errors, result.errors);
+  renderErrors(
+    doc,
+    regions.errors,
+    result.errors,
+  );
   renderUnreadable(doc, regions.unreadable, result.unreadableFields);
   renderIncompatible(regions.incompatible, result.incompatible === true);
 
@@ -492,88 +501,6 @@ function applyResult(
 }
 
 // ---------------------------------------------------------------------------
-// Minimální vložené styly (soběstačnost bez externího CSS)
-// ---------------------------------------------------------------------------
-
-function viewStyles(doc: Document): HTMLStyleElement {
-  const style = doc.createElement("style");
-  style.textContent = `
-.hh-view{font-family:Inter,ui-sans-serif,system-ui,Arial,sans-serif;color:#e8ecf7;max-width:960px;margin:0 auto;
-  background:linear-gradient(180deg,rgba(18,25,38,.98),rgba(10,15,24,.98));
-  border:1px solid rgba(148,163,184,.16);border-radius:16px;padding:16px 18px;
-  box-shadow:0 24px 70px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.05);}
-.hh-view__title{font-weight:950;font-size:20px;margin:0 0 6px;color:#f8fbff;}
-.hh-view__hint{font-size:13px;color:#a8b7d5;margin:0 0 12px;line-height:1.45;}
-.hh-view .hh-input{width:100%;min-height:180px;box-sizing:border-box;resize:vertical;
-  font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.4;
-  padding:11px;border-radius:12px;border:1px solid rgba(148,163,184,.24);
-  background:#101827;color:#e8ecf7;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);}
-.hh-view .hh-input:focus{outline:2px solid rgba(43,213,118,.42);outline-offset:1px;border-color:#2bd576;}
-.hh-view .hh-analyze{margin-top:11px;padding:10px 18px;border-radius:12px;border:0;
-  font-weight:950;font-size:14px;cursor:pointer;background:linear-gradient(180deg,#45e58c,#20bd65);
-  color:#082817;box-shadow:0 14px 28px rgba(43,213,118,.22),inset 0 1px 0 rgba(255,255,255,.35);}
-.hh-view .hh-analyze:hover{filter:brightness(1.05);transform:translateY(-1px);}
-.hh-view .hh-errors{margin-top:12px;padding:10px 12px;border-radius:10px;
-  background:rgba(226,59,59,.12);border:1px solid rgba(226,59,59,.4);}
-.hh-view .hh-error{margin:0 0 6px;font-size:13px;color:#ffb4b4;}
-.hh-view .hh-error:last-child{margin-bottom:0;}
-.hh-view .hh-unreadable{margin-top:10px;padding:10px 12px;border-radius:10px;
-  background:rgba(255,209,91,.12);border:1px solid rgba(255,209,91,.4);font-size:13px;}
-.hh-view .hh-unreadable__title{font-weight:700;margin-bottom:4px;}
-.hh-view .hh-unreadable__list{margin:0;padding-left:18px;}
-.hh-view .hh-incompatible{margin-top:10px;padding:10px 12px;border-radius:10px;
-  background:rgba(155,108,240,.14);border:1px solid rgba(155,108,240,.45);
-  font-size:13px;color:#d8c7ff;}
-.hh-view .hh-table{margin-top:16px;min-height:40px;}
-.hh-view .hh-table__placeholder{color:#a8b7d5;}
-.hh-view .hh-analysis{margin-top:16px;display:grid;gap:10px;}
-.hh-view .hh-analysis__title{margin:0;font-size:16px;font-weight:900;color:#e8ecf7;}
-.hh-view .hh-analysis__facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));
-  gap:8px;}
-.hh-view .hh-analysis__fact{display:grid;gap:2px;padding:9px;border-radius:10px;
-  background:rgba(255,255,255,.045);border:1px solid rgba(148,163,184,.14);}
-.hh-view .hh-analysis__fact-name{font-size:11px;text-transform:uppercase;color:#9aa6c2;
-  font-weight:900;}
-.hh-view .hh-analysis__fact-value{font-size:13px;color:#e8ecf7;font-weight:800;
-  overflow-wrap:anywhere;}
-.hh-view .hh-analysis__explanation{margin:0;font-size:13px;line-height:1.4;color:#d5deef;
-  overflow-wrap:anywhere;}
-.hh-view .hh-analysis__matrix{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px;
-  border:1px solid rgba(148,163,184,.14);background:rgba(6,12,22,.34);padding:8px;}
-.hh-view .hh-analysis__matrix .matrix{min-width:560px;}
-.hh-view .hh-postflop-analysis{display:grid;gap:10px;padding:11px;border-radius:12px;
-  border:1px solid rgba(123,211,255,.18);background:rgba(123,211,255,.06);}
-.hh-view .hh-postflop-analysis__title{margin:0;font-size:15px;font-weight:900;color:#e8ecf7;}
-.hh-view .hh-postflop-analysis__facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));
-  gap:8px;}
-.hh-view .hh-postflop-analysis__fact{display:grid;gap:2px;padding:8px;border-radius:9px;
-  background:rgba(255,255,255,.04);border:1px solid rgba(148,163,184,.12);}
-.hh-view .hh-postflop-analysis__fact-name{font-size:11px;text-transform:uppercase;color:#9aa6c2;
-  font-weight:900;}
-.hh-view .hh-postflop-analysis__fact-value{font-size:13px;color:#e8ecf7;font-weight:800;
-  overflow-wrap:anywhere;}
-.hh-view .hh-postflop-analysis__explanation{margin:0;font-size:13px;line-height:1.4;color:#d5deef;
-  overflow-wrap:anywhere;}
-@media (max-width:640px){
-  .hh-view{max-width:100%;padding:13px 12px;border-radius:14px;}
-  .hh-view__title{font-size:18px;}
-  .hh-view .hh-input{min-height:220px;}
-  .hh-view .hh-analyze{width:100%;min-height:44px;}
-  .hh-view .hh-analysis__facts{grid-template-columns:1fr;}
-  .hh-view .hh-postflop-analysis__facts{grid-template-columns:1fr;}
-  .hh-view .hh-analysis__matrix{margin-left:-2px;margin-right:-2px;}
-}
-@media (prefers-reduced-motion:reduce){
-  .hh-view *,.hh-view *::before,.hh-view *::after{
-    transition-duration:.01ms!important;animation-duration:.01ms!important;
-    animation-iteration-count:1!important;scroll-behavior:auto!important;}
-  .hh-view .hh-analyze:hover{filter:none;transform:none;}
-}
-`;
-  return style;
-}
-
-// ---------------------------------------------------------------------------
 // Hlavní vykreslení (Req 11.2, 11.4)
 // ---------------------------------------------------------------------------
 
@@ -599,7 +526,6 @@ export function renderHHView(root: HTMLElement, callbacks?: HHViewCallbacks): vo
   root.innerHTML = "";
 
   const wrap = el(doc, "div", "hh-view");
-  wrap.appendChild(viewStyles(doc));
 
   // Nadpis a nápověda.
   const title = el(doc, "h2", "hh-view__title");
@@ -660,10 +586,11 @@ export function renderHHView(root: HTMLElement, callbacks?: HHViewCallbacks): vo
   // Obsluha kliknutí — totální parser + ochrana proti pádu při vykreslování.
   const analyze = (): void => {
     try {
-      const parseOptions = callbacks?.parseOptions?.();
-      const result = parseOptions
-        ? parseHandHistory(textarea.value, parseOptions)
-        : parseHandHistory(textarea.value);
+      const parseOptions: HHParseOptions = {
+        ...(callbacks?.parseOptions?.() ?? {}),
+        language: getAppLanguage(),
+      };
+      const result = parseHandHistory(textarea.value, parseOptions);
       applyResult(doc, result, regions, callbacks, parseOptions);
       if (result.ok && result.spot) {
         analysis.focus();
@@ -677,7 +604,7 @@ export function renderHHView(root: HTMLElement, callbacks?: HHViewCallbacks): vo
       // nesmí shodit view (Req 11.2 — bez pádu aplikace).
       const msg = err instanceof Error ? err.message : String(err);
       renderErrors(doc, regions.errors, [
-        `Neočekávaná chyba při zpracování hand history: ${msg}`,
+        CS.hh.unexpectedError(msg),
       ]);
       renderUnreadable(doc, regions.unreadable, []);
       renderIncompatible(regions.incompatible, false);

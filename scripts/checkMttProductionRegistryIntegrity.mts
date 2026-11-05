@@ -11,9 +11,15 @@ import { riverProductionStrategyPacks } from "../src/data/ranges/riverProduction
 import { validateProductionStrategySemantics } from "../src/data/ranges/productionStrategySemanticValidation.ts";
 import { buildProductionStrategyRuntimeSmokeReport } from "../src/data/ranges/productionStrategyRuntimeSmoke.ts";
 import {
-  buildMttCompletionReadinessReport,
   type MttCompletionImportSlotHint,
 } from "../src/data/ranges/mttProductionReadiness.ts";
+import {
+  mttProductionImportPackId,
+  mttProductionImportSlotId,
+  mttProductionImportSlotKind,
+  mttProductionImportSlotPaths,
+} from "../src/data/ranges/mttImportSlotNaming.ts";
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 
 interface CliArgs {
   json: boolean;
@@ -51,6 +57,7 @@ interface RegistryIntegrityReport {
 
 try {
   const args = parseArgs(process.argv.slice(2));
+  await loadCompleteMttProductionRegistry();
   const report = buildRegistryIntegrityReport(args.rangeDir);
   console.log(args.json ? JSON.stringify(report, null, 2) : renderRegistryIntegrityReport(report));
   process.exitCode = report.valid ? 0 : 1;
@@ -89,14 +96,9 @@ function parseArgs(argv: readonly string[]): CliArgs {
 }
 
 function buildRegistryIntegrityReport(rangeDir: string): RegistryIntegrityReport {
-  const completionRows = buildMttCompletionReadinessReport().rows
-    .filter((row) => row.importSlot !== null);
-  const legalSlots = completionRows.map((row) => row.importSlot as MttCompletionImportSlotHint);
+  const legalSlots = legalImportSlots();
   const legalPackIds = new Map(legalSlots.map((slot) => [slot.packId, slot]));
-  const legalProfileKeys = new Map(completionRows.map((row) => [
-    (row.importSlot as MttCompletionImportSlotHint).packId,
-    profileKey(row.tableFormat, row.blindSpeed, row.evModel, row.street, row.ante),
-  ]));
+  const legalProfileKeys = new Map(legalSlots.map((slot) => [slot.packId, slot.slotId]));
   const registeredPacks = registeredRuntimePacks();
   const registeredPackIds = new Set(registeredPacks.map((pack) => pack.packId));
   const generatedModules = generatedProductionModules(rangeDir);
@@ -197,6 +199,36 @@ function registeredRuntimePacks(): RegisteredRuntimePack[] {
   ];
 }
 
+function legalImportSlots(): MttCompletionImportSlotHint[] {
+  const tableFormats = ["FULL_RING_9", "SIX_MAX"] as const;
+  const blindSpeeds = ["REGULAR", "TURBO"] as const;
+  const evModels = ["CHIP_EV", "DOLAR_EV"] as const;
+  const streets = ["PREFLOP", "FLOP", "TURN", "RIVER"] as const;
+  const antes = ["ON", "OFF"] as const;
+
+  return tableFormats.flatMap((tableFormat) => (
+    blindSpeeds.flatMap((blindSpeed) => (
+      evModels.flatMap((evModel) => (
+        streets.flatMap((street) => (
+          antes.map((ante) => {
+            const identity = { tableFormat, blindSpeed, evModel, street, ante };
+            const packId = mttProductionImportPackId(identity);
+            const paths = mttProductionImportSlotPaths(packId);
+            return {
+              slotId: mttProductionImportSlotId(identity),
+              packId,
+              kind: mttProductionImportSlotKind(street),
+              rawInputFolder: paths.rawInputFolder,
+              normalizedInputPath: paths.normalizedInputPath,
+              permissionManifestPath: paths.permissionManifestPath,
+            };
+          })
+        ))
+      ))
+    ))
+  ));
+}
+
 function generatedProductionModules(
   rangeDir: string,
 ): Array<{ packId: string; path: string; provenanceFingerprint: string | null }> {
@@ -263,7 +295,7 @@ function duplicateRegisteredProfileErrors(
   registeredPacks: readonly RegisteredRuntimePack[],
 ): string[] {
   const packIdsByProfile = new Map<string, Set<string>>();
-  for (const pack of registeredPacks) {
+  for (const pack of registeredPacks.filter((item) => item.packId.includes("-production-"))) {
     for (const key of pack.profileKeys) {
       const packIds = packIdsByProfile.get(key) ?? new Set<string>();
       packIds.add(pack.packId);
@@ -406,5 +438,3 @@ function renderRegistryIntegrityReport(report: RegistryIntegrityReport): string 
 
   return lines.join("\n");
 }
-import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
-await loadCompleteMttProductionRegistry();
