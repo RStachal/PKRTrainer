@@ -56,6 +56,12 @@ rozkladu nerozloží):
 Start-Process cmd.exe -ArgumentList '/c cd /d C:\Work\DrillEV && npm run mtt:after-night -- --write --streets=flop --family=<RODINA> > artifacts\after-night-manual.log 2>&1' -WindowStyle Hidden
 ```
 
+Tabulka velikostí sázek: první checkpoint nové rodiny ji zastará, i když rodina
+ještě není hotová, a první brána dne pak zčervená na `postflopBetSizing.test.ts`
+(5. 11. 2026: tři rodiny). Cyklus ji obnovuje, ale sám běží jen v sobotu, takže
+ve všední den po noci s novou rodinou: `npm run mtt:postflop-bet-sizing -- --write`
+a commit s daty noci. Packy na ní nezávisí.
+
 Čti log; běží minuty až hodiny. Před 3. 11. 2026 cyklus nesměl běžet vůbec:
 tabulka velikostí sázek by po ztrátě checkpointů přišla o dodávané rodiny
 (oprava v `buildPostflopBetSizing.mts`, `shippedFamilies`) a generátory turnu

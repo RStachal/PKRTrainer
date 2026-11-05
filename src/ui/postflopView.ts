@@ -43,7 +43,7 @@ import {
   createPostflopTrainerView,
   type PostflopTrainerView,
 } from "./trainer/postflopTrainerView";
-import { GTO_PLAYERS, type PlayerSettings } from "./trainer/tablePlayers";
+import { GTO_PLAYERS, type PlayerSettings } from "../core/villain/tableCast";
 import { gradePostflopAction } from "../core/postflopScoring";
 
 const SEED_MAX = 0xffffffff;

@@ -27,12 +27,13 @@ import type { ResultRecord } from "./statsStore";
 import { PREFLOP_RESULT_IDENTITY_SCHEMA } from "./statsStore";
 import type { RangePack } from "../data/ranges/rangePack";
 import { evaluateActionEv, type ActionEvOutcome } from "../core/actionEv";
+import { copyVillainFields, hasValidVillainFields, type VillainFields } from "../core/villain/archetypes";
 
 export const RESULT_RECORD_V2_SCHEMA = "result_record_v2";
 export const LEGACY_UNKNOWN_PROFILE_ID = "LEGACY_UNKNOWN_PROFILE";
 export type ResultProfileStatus = "KNOWN" | "LEGACY_UNKNOWN";
 
-export interface ResultRecordV2 {
+export interface ResultRecordV2 extends VillainFields {
   schema: typeof RESULT_RECORD_V2_SCHEMA;
   qid: string;
   chosen: ActionKey;
@@ -97,6 +98,7 @@ export function upgradeResultRecordToV2(
       scoringMode: record.identity.scoringMode,
       ...(isValidResponseMs(record.responseMs) ? { responseMs: record.responseMs } : {}),
       ...actionEvFields(record),
+      ...copyVillainFields(record),
     };
   }
 
@@ -136,6 +138,7 @@ export function upgradeResultRecordToV2(
     scoringMode: "UNKNOWN",
     ...(isValidResponseMs(record.responseMs) ? { responseMs: record.responseMs } : {}),
     ...actionEvFields(record),
+    ...copyVillainFields(record),
   };
 }
 
@@ -148,6 +151,8 @@ export interface BuildPreflopResultRecordOptions {
   scoringMode: ScoringMode;
   ts: number;
   responseMs?: number;
+  /** Soupeř ze stolu, který hráč viděl; v GTO nic. */
+  villain?: VillainFields;
 }
 
 export function buildProfileAwarePreflopResultRecord(
@@ -174,6 +179,7 @@ export function buildProfileAwarePreflopResultRecord(
           equivalentBestActions: [...actionEv.bestActions],
         }
       : {}),
+    ...(options.villain === undefined ? {} : copyVillainFields(options.villain)),
     identity: {
       schema: PREFLOP_RESULT_IDENTITY_SCHEMA,
       scenarioId: preflopScenarioId(options.profile, options.spot),
@@ -307,7 +313,8 @@ export function isResultRecordV2(value: unknown): value is ResultRecordV2 {
     isOptionalFiniteNumber(record.chosenEvBb) &&
     isOptionalFiniteNumber(record.bestEvBb) &&
     isOptionalNonNegativeFiniteNumber(record.evLossBb) &&
-    isOptionalActionKeys(record.equivalentBestActions)
+    isOptionalActionKeys(record.equivalentBestActions) &&
+    hasValidVillainFields(record)
   );
 }
 

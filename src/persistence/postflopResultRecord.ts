@@ -25,13 +25,14 @@ import {
   type TrainingProfile,
 } from "../core/trainingProfile";
 import type { AnteMode, Position } from "../core/types";
+import { copyVillainFields, hasValidVillainFields, type VillainFields } from "../core/villain/archetypes";
 
 export const POSTFLOP_RESULT_RECORD_SCHEMA = "postflop_result_record_v1";
 export const POSTFLOP_STATS_V2_BRIDGE_SCHEMA = "postflop_stats_v2_bridge_v1";
 export const POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION = 5;
 export const POSTFLOP_SCENARIO_ID_VERSION = "postflop_scenario_v1";
 
-export interface PostflopResultRecord {
+export interface PostflopResultRecord extends VillainFields {
   schema: typeof POSTFLOP_RESULT_RECORD_SCHEMA;
   qid: string;
   chosen: PostflopAction;
@@ -74,7 +75,7 @@ export interface PostflopResultRecord {
   unsolved?: true;
 }
 
-export interface PostflopStatsV2BridgeRecord {
+export interface PostflopStatsV2BridgeRecord extends VillainFields {
   schema: typeof POSTFLOP_STATS_V2_BRIDGE_SCHEMA;
   schemaVersion: number;
   qid: string;
@@ -164,6 +165,8 @@ export function buildPostflopResultRecord(
   chosen: PostflopAction,
   ts = Date.now(),
   responseMs?: number,
+  /** Soupeř ze stolu, který hráč viděl; v GTO nic. */
+  villain: VillainFields = {},
 ): PostflopResultRecord {
   const source = spot.explanation.source;
   const grade = gradePostflopAction(spot, chosen);
@@ -200,6 +203,7 @@ export function buildPostflopResultRecord(
         }
       : {}),
     ...(grade.unsolved ? { unsolved: true as const } : {}),
+    ...copyVillainFields(villain),
   };
 }
 
@@ -246,6 +250,7 @@ export function bridgePostflopResultRecordToStatsV2(
     ...(isValidResponseMs(record.responseMs) ? { responseMs: record.responseMs } : {}),
     ...(actionEv ?? {}),
     ...(record.unsolved ? { unsolved: true as const } : {}),
+    ...copyVillainFields(record),
   };
 }
 
@@ -282,7 +287,8 @@ export function isPostflopResultRecord(value: unknown): value is PostflopResultR
     Number.isFinite(record.ts) &&
     isOptionalResponseMs(record.responseMs) &&
     isOptionalActionEvResult(record) &&
-    (record.unsolved === undefined || record.unsolved === true)
+    (record.unsolved === undefined || record.unsolved === true) &&
+    hasValidVillainFields(record)
   );
 }
 
@@ -326,7 +332,8 @@ export function isPostflopStatsV2BridgeRecord(
       record.confidence === null) &&
     isOptionalResponseMs(record.responseMs) &&
     isOptionalBridgeActionEvResult(record) &&
-    (record.unsolved === undefined || record.unsolved === true)
+    (record.unsolved === undefined || record.unsolved === true) &&
+    hasValidVillainFields(record)
   );
 }
 

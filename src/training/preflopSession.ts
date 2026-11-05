@@ -8,6 +8,7 @@ import {
 } from "../core/sessionScore";
 import type { TrainingProfile } from "../core/trainingProfile";
 import type { ActionKey, Filters, Spot, StackBucket } from "../core/types";
+import type { VillainFields } from "../core/villain/archetypes";
 import { createRangeStoreFromRangePack, type RangeStore } from "../data/rangeStore";
 import type { RangePack } from "../data/ranges/rangePack";
 import { buildProfileAwarePreflopResultRecord } from "../persistence/statsRecordV2";
@@ -76,8 +77,11 @@ export interface PreflopSession {
    * prázdná nebo nedostupná nechá běžící relaci beze změny.
    */
   start(filters: Filters, seed: number | null, profile: TrainingProfile, pack: RangePack): PreflopSessionStart;
-  /** Vyhodnotí odpověď na aktuální spot; druhá odpověď na tentýž spot vrátí null. */
-  answer(chosen: ActionKey): PreflopAnswer | null;
+  /**
+   * Vyhodnotí odpověď na aktuální spot; druhá odpověď na tentýž spot vrátí null.
+   * `villain` je soupeř ze stolu, který hráč viděl; jde do záznamu.
+   */
+  answer(chosen: ActionKey, villain?: VillainFields): PreflopAnswer | null;
   /** Posune relaci na další spot; null, když relace neběží. */
   next(): Spot | null;
   /** Ukončí relaci, například když hráč mění situaci. */
@@ -133,7 +137,7 @@ export function createPreflopSession(
       return { kind: "STARTED", seed: resolvedSeed, spot: first.value };
     },
 
-    answer(chosen) {
+    answer(chosen, villain) {
       if (!active || active.answered) return null;
       active.answered = true;
       const { spot, filters, profile, pack } = active;
@@ -147,6 +151,7 @@ export function createPreflopSession(
         scoringMode: filters.scoringMode,
         ts: clock.wallMs(),
         responseMs: responseMs(active),
+        villain,
       }));
       const hit = isHit(result.correct, result.actionEv?.outcome);
       score = recordAnswer(score, hit);

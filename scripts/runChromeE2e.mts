@@ -84,6 +84,7 @@ const POSTFLOP_ACTION = `${POSTFLOP_SCREEN} .dx-trainer__actions button`;
 const POSTFLOP_FEEDBACK = `${POSTFLOP_SCREEN} .dx-trainer__feedback:not([hidden])`;
 const POSTFLOP_NEXT = `${POSTFLOP_SCREEN} .dx-trainer__next`;
 const POSTFLOP_CHANGE = `${POSTFLOP_SCREEN} .dx-trainer__change`;
+const FOCUS_SEAT = '.dx-table__seat[data-focus="true"]';
 
 const chromePath = findChromePath();
 const profileDirectory = mkdtempSync(join(tmpdir(), "pkrtrainer-chrome-e2e-"));
@@ -670,6 +671,7 @@ try {
       nextUiResults.push(await runNextUiScenario(cdp, viewport, browserErrors, contrastAudits));
     }
     nextUiPostflopResults.push(await runNextUiPostflopScenario(cdp, viewport, browserErrors, contrastAudits));
+    await runNextUiPostflopRealScenario(cdp, viewport, browserErrors);
   }
   // Zbytek běhu: odolnost a Service Worker.
   await navigate(cdp, targetUrl);
@@ -1200,6 +1202,12 @@ async function runNextUiScenario(
   assert(answered.outcome !== "", `${viewport.name} next UI: verdict chip missing`);
   assert(answered.locked, `${viewport.name} next UI: actions still enabled after an answer`);
   assert(answered.nextFocused, `${viewport.name} next UI: focus did not move to the next spot`);
+  await assertStoredVillain(
+    client,
+    "mtt_preflop_events_v1",
+    `.training__game ${FOCUS_SEAT}`,
+    `${viewport.name} next UI REAL`,
+  );
   contrastAudits.push({
     viewport: viewport.name,
     surface: "next-ui-feedback",
@@ -1226,6 +1234,108 @@ async function runNextUiScenario(
   await waitForSelector(client, ".dx-trainer__feedback:not([hidden])");
   assert(browserErrors.length === 0, `${viewport.name} next UI: ${browserErrors.join(" | ")}`);
   return { viewport: viewport.name, feedbackMs: Math.round(feedbackMs * 10) / 10, rangeCellPx };
+}
+
+/**
+ * Režim REAL ve statistikách: poslední záznam nese režim a typ soupeře, kterého
+ * hráč viděl u stolu. Bez soupeře ve hře (první vstup do potu) typ chybí.
+ */
+async function assertStoredVillain(
+  client: CdpClient,
+  storageKey: string,
+  focusSeat: string,
+  label: string,
+): Promise<void> {
+  const stored = await evaluate<{ mode: string | null; archetype: string | null; focus: string | null }>(
+    client,
+    `(() => {
+      const events = JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)}) ?? "[]");
+      const last = events[events.length - 1];
+      return {
+        mode: last?.trainingMode ?? null,
+        archetype: last?.villainArchetype ?? null,
+        focus: document.querySelector(${JSON.stringify(focusSeat)})?.getAttribute("data-player") ?? null
+      };
+    })()`,
+  );
+  assert(stored.mode === "REAL", `${label}: stored answer has training mode ${stored.mode}`);
+  assert(
+    stored.archetype === stored.focus,
+    `${label}: stored villain ${stored.archetype}, table showed ${stored.focus}`,
+  );
+}
+
+/**
+ * Postflop v režimu REAL: stejný stůl jako GTO, ale s typy hráčů a delšími
+ * jmenovkami, tedy na překryvy horší případ, a soupeř z něj jde do statistik.
+ * Celý tok (range, linka) jede v GTO ve scénáři výše.
+ */
+async function runNextUiPostflopRealScenario(
+  client: CdpClient,
+  viewport: Viewport,
+  browserErrors: string[],
+): Promise<void> {
+  const input = viewport.mobile ? "touch" : "keyboard";
+  const scope = ".postflop-output .dx-trainer";
+  const label = `${viewport.name} next UI postflop REAL`;
+  browserErrors.length = 0;
+  await navigate(client, targetUrl);
+  await waitForSelector(client, ".filter-start");
+  await evaluate(client, `(() => {
+    const select = document.querySelector(".profile-street");
+    if (!(select instanceof HTMLSelectElement)) throw new Error("Missing street selector");
+    select.value = "FLOP";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    const mode = document.querySelector(".filter-mode");
+    if (!(mode instanceof HTMLSelectElement)) throw new Error("Missing training mode");
+    mode.value = "REAL";
+    mode.dispatchEvent(new Event("change", { bubbles: true }));
+    const seed = document.querySelector(".filter-seed");
+    if (!(seed instanceof HTMLInputElement)) throw new Error("Missing seed input");
+    seed.value = ${JSON.stringify(postflopSeed)};
+    seed.dispatchEvent(new Event("input", { bubbles: true }));
+  })()`);
+  await activate(client, ".filter-start", input);
+  await waitForSelector(client, `${scope} .dx-trainer__actions button`);
+
+  const table = await evaluate<{ kinds: Array<string | null>; focus: string | null; overlaps: string[] }>(
+    client,
+    `(() => {
+      const scope = document.querySelector(${JSON.stringify(scope)});
+      const seats = [...scope.querySelectorAll(".dx-table__seat")];
+      const boxes = seats.map((seat) => ({ name: seat.dataset.position, box: seat.getBoundingClientRect() }));
+      const center = scope.querySelector(".dx-table__center");
+      if (center) boxes.push({ name: "deska", box: center.getBoundingClientRect() });
+      const overlaps = [];
+      for (let i = 0; i < boxes.length; i += 1) {
+        for (let j = i + 1; j < boxes.length; j += 1) {
+          const a = boxes[i].box;
+          const b = boxes[j].box;
+          if (a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) {
+            overlaps.push(boxes[i].name + "/" + boxes[j].name);
+          }
+        }
+      }
+      return {
+        kinds: seats.map((seat) => seat.dataset.player ?? null),
+        focus: scope.querySelector(${JSON.stringify(FOCUS_SEAT)})?.getAttribute("data-player") ?? null,
+        overlaps
+      };
+    })()`,
+  );
+  assert(table.kinds.length === 9, `${label}: ${table.kinds.length} seats`);
+  assert(
+    table.kinds.filter((kind) => kind === "HERO").length === 1
+      && table.kinds.filter((kind) => kind !== "HERO" && kind !== "GTO" && kind !== null).length === 8,
+    `${label}: seats ${table.kinds.join(", ")}`,
+  );
+  assert(table.focus !== null && table.focus !== "HERO", `${label}: villain seat shows ${table.focus}`);
+  assert(table.overlaps.length === 0, `${label}: overlapping ${table.overlaps.join(", ")}`);
+
+  await activate(client, `${scope} .dx-trainer__actions button`, input);
+  await waitForSelector(client, `${scope} .dx-trainer__feedback:not([hidden])`);
+  await assertStoredVillain(client, "mtt_preflop_postflop_events_v1", `${scope} ${FOCUS_SEAT}`, label);
+  assert(browserErrors.length === 0, `${label}: ${browserErrors.join(" | ")}`);
 }
 
 /**

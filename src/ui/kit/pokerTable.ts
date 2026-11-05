@@ -5,8 +5,7 @@ import {
 } from "../../core/postflopTrainingSpot";
 import type { AnteMode, Card, Position, Spot } from "../../core/types";
 import { POSITION_ORDER } from "../../core/types";
-import type { TrainingMode } from "../../core/villain/archetypes";
-import type { TableCast } from "../../core/villain/tableCast";
+import type { TablePlayers } from "../../core/villain/tableCast";
 import { localizedText } from "../cs";
 import { colorForActionKey, colorForPostflopAction } from "../rangeMatrixView";
 import { BADGE_LABEL, deriveSeats, seatSlot, type TableSeat } from "../tableModel";
@@ -52,18 +51,6 @@ interface SeatView {
   /** Stack aktivního sedadla. Složené sedadlo ho neukazuje. */
   stackBb: number;
   badge: SeatBadge | null;
-}
-
-/**
- * Kdo sedí u stolu (Agents/plan-gto-real-2026-11.md, 3.1). V režimu GTO má
- * každé sedadlo žeton s pozicí, v REAL kresbu typu hráče z obsazení.
- */
-export interface TablePlayers {
-  mode: TrainingMode;
-  /** Typ hráče na sedadle; v GTO se nečte. */
-  cast: TableCast;
-  /** Soupeř ve hře, proti kterému se hráč rozhoduje - dostane bílý lem. */
-  focusSeat?: Position;
 }
 
 interface TableView {

@@ -63,6 +63,7 @@ import {
 import { isFlowAllowed } from "./core/trainingCapability";
 import { resolveSeed } from "./core/drillEngine";
 import { postflopIntentFromFilters } from "./core/postflopIntent";
+import { playerSettings, postflopTablePlayers, villainFields } from "./core/villain/tableCast";
 import type { PostflopPotType, PostflopStreet } from "./core/postflopGenerator";
 import {
   isPostflopSprCovered,
@@ -499,12 +500,10 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       isPostflopStreet(resolvedProfile.street) &&
       options.filters
     ) ? resolvedProfile : null;
+    // Režim a soupeř ve hře ze startu tréninku (plán GTO/REAL, 3.1).
+    const players = playerSettings(options.filters);
     renderPostflopView(shell.postflopPanel, {
-      // Režim a soupeř ve hře ze startu tréninku (plán GTO/REAL, 3.1).
-      players: {
-        mode: options.filters?.trainingMode ?? "GTO",
-        ...(options.filters?.villainFocus === undefined ? {} : { focus: options.filters.villainFocus }),
-      },
+      players,
       initialStreet: options.initialStreet ?? "FLOP",
       initialSeed: options.initialSeed,
       initialPositionContext: postflopIntent?.positionContext,
@@ -554,7 +553,13 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
         }
       },
       onAnswered: (spot, chosen, responseMs) => {
-        const record = buildPostflopResultRecord(spot, chosen, Date.now(), responseMs);
+        const record = buildPostflopResultRecord(
+          spot,
+          chosen,
+          Date.now(),
+          responseMs,
+          villainFields(postflopTablePlayers(spot, players)),
+        );
         const save = postflopStatsStore.record(bridgePostflopResultRecordToStatsV2(record, {
           profile: currentPostflopProfile,
         }));
@@ -573,6 +578,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
           chosenByStreet,
           startedAt,
           completedAt,
+          players,
         });
         const save = postflopLineStatsStore.record(record);
         if (!save.ok) {

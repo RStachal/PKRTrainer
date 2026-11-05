@@ -19,7 +19,7 @@ import { colorForPostflopAction } from "../rangeMatrixView";
 import { POSITION_ORDER } from "../../core/types";
 import { actionText, facingBetBb } from "./postflopActionText";
 import { openPostflopRange } from "./postflopRange";
-import { GTO_PLAYERS, postflopTablePlayers, type PlayerSettings } from "./tablePlayers";
+import { GTO_PLAYERS, postflopTablePlayers, type PlayerSettings } from "../../core/villain/tableCast";
 import { actionButton, button, createTrainerFrame, el, nextSpotRow } from "./trainerFrame";
 
 /**

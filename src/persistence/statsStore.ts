@@ -38,6 +38,7 @@ import type {
 } from "../core/types";
 import { POSITION_ORDER, STACK_BUCKETS } from "../core/types";
 import type { ActionEvOutcome } from "../core/actionEv";
+import { hasValidVillainFields, type VillainFields } from "../core/villain/archetypes";
 import type {
   BlindSpeed,
   EvModel,
@@ -76,7 +77,7 @@ export interface PreflopResultIdentity {
   scoringMode: ScoringMode;
 }
 
-export interface ResultRecord {
+export interface ResultRecord extends VillainFields {
   qid: string;
   chosen: ActionKey;
   correct: boolean;
@@ -285,7 +286,8 @@ export function isValidResultRecord(x: unknown): x is ResultRecord {
     isOptionalFiniteNumber(r.bestEvBb) &&
     isOptionalNonNegativeFiniteNumber(r.evLossBb) &&
     isOptionalActionKeys(r.equivalentBestActions) &&
-    isOptionalPreflopResultIdentity(r.identity)
+    isOptionalPreflopResultIdentity(r.identity) &&
+    hasValidVillainFields(r)
   );
 }
 

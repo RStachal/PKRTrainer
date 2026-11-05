@@ -3,6 +3,8 @@ import {
   preflopActionPlanForSpot,
 } from "../../core/preflopExplanation";
 import type { ActionKey, Spot } from "../../core/types";
+import type { VillainFields } from "../../core/villain/archetypes";
+import { playerSettings, villainFields } from "../../core/villain/tableCast";
 import type { PreflopAnswer, PreflopSession } from "../../training/preflopSession";
 import { getAppLanguage, localizedText } from "../cs";
 import { renderDecisionPrice } from "../decisionPricePanel";
@@ -65,6 +67,8 @@ export function createPreflopTrainerView(
   options: PreflopTrainerViewOptions,
 ): PreflopTrainerView {
   const { session } = options;
+  /** Soupeř ze stolu, který hráč vidí; jde s odpovědí do statistik. */
+  let villain: VillainFields = {};
   const frame = createTrainerFrame(doc, {
     street: "Preflop",
     onChangeSituation: () => options.onChangeSituation(),
@@ -184,7 +188,7 @@ export function createPreflopTrainerView(
   }
 
   function submit(key: ActionKey): void {
-    const result = session.answer(key);
+    const result = session.answer(key, villain);
     if (!result) return;
     options.onAnswered();
     frame.markActions(result.chosen, result.grade.recommended);
@@ -207,10 +211,8 @@ export function createPreflopTrainerView(
     const ante = filters?.ante ?? spot.ante;
     frame.meta.textContent = `${spot.effStack} BB · ${ante === "ON" ? "ante" : localizedText("no ante", "bez ante")}`;
     // Režim a soupeř ve hře z nastavení relace: GTO žetony, REAL typy hráčů.
-    const players = preflopTablePlayers(spot, {
-      mode: filters?.trainingMode ?? "GTO",
-      ...(filters?.villainFocus === undefined ? {} : { focus: filters.villainFocus }),
-    });
+    const players = preflopTablePlayers(spot, playerSettings(filters));
+    villain = villainFields(players);
     frame.table.replaceChildren(pokerTable(doc, spot, ante, POSITION_ORDER, players));
     frame.prompt.replaceChildren(
       `${localizedText("How do you play", "Jak zahraješ")} `,

@@ -125,6 +125,32 @@ export function isVillainArchetype(value: unknown): value is VillainArchetype {
 }
 
 /**
+ * Co se o soupeři zapíše k odpovědi do statistik.
+ *
+ * V GTO nic: záznam vypadá jako před režimy a chybějící pole znamená GTO, takže
+ * staré záznamy nic nepřepisují. V REAL režim a typ soupeře ve hře; typ chybí,
+ * když hráč jedná první a soupeře ve hře nemá.
+ */
+export interface VillainFields {
+  trainingMode?: "REAL";
+  villainArchetype?: VillainArchetype;
+}
+
+/** Obstojí pole o soupeři v načteném záznamu? Obě jsou nepovinná. */
+export function hasValidVillainFields(record: { trainingMode?: unknown; villainArchetype?: unknown }): boolean {
+  return (record.trainingMode === undefined || record.trainingMode === "REAL")
+    && (record.villainArchetype === undefined || isVillainArchetype(record.villainArchetype));
+}
+
+/** Jen pole o soupeři, a jen ta, která záznam má: pro přenos mezi tvary záznamu. */
+export function copyVillainFields(record: VillainFields): VillainFields {
+  return {
+    ...(record.trainingMode === undefined ? {} : { trainingMode: record.trainingMode }),
+    ...(record.villainArchetype === undefined ? {} : { villainArchetype: record.villainArchetype }),
+  };
+}
+
+/**
  * Styl, podle kterého preflopové EV počítá fold proti shove.
  *
  * GTO a živý stůl bez zvoleného soupeře styl nemají: hodnotí se proti
