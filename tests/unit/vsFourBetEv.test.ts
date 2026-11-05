@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { generateSpot } from "../../src/core/drillEngine";
+import { agreesWithChart, computeActionEvs } from "../../src/core/preflop/preflopEv";
 import { loadPreflopEquity } from "../../src/core/preflopEquity";
 import { mulberry32 } from "../../src/core/rng";
 import type { ActionKey, Filters } from "../../src/core/types";
@@ -35,19 +36,29 @@ describe("EV pětibetového jamu proti čtyřbetu", () => {
     await loadPreflopEquity();
   });
 
-  it("ocení každý nabídnutý jam", () => {
+  it("ocení každý nabídnutý jam, kromě těch, kde odhad jde proti chartu", () => {
     const active = store();
     let jams = 0;
     let priced = 0;
+    let againstChart = 0;
     for (let seed = 1; seed <= 1500; seed += 1) {
       const spot = generateSpot(mulberry32(seed), "VS_4BET", filters, active);
       if (spot === null) continue;
       if (!spot.answers.some((answer) => answer.key === ("JAM" as ActionKey))) continue;
       jams += 1;
-      if (spot.actionEvs !== undefined) priced += 1;
+      if (spot.actionEvs !== undefined) {
+        priced += 1;
+        continue;
+      }
+      const estimate = computeActionEvs(
+        spot.context, spot.heroPos, spot.hand, spot.effStack, spot.ante, spot.startingPot!,
+        spot.answers.map((answer) => answer.key), active, spot.tableState.callsBefore, spot.tableState.vsSeat,
+      );
+      if (estimate !== undefined && !agreesWithChart(estimate, spot.strictCorrect)) againstChart += 1;
     }
     expect(jams).toBeGreaterThan(100);
-    expect(priced).toBe(jams);
+    expect(priced + againstChart).toBe(jams);
+    expect(priced).toBeGreaterThan(jams / 2);
   });
 
   it("nedává jamu cenu, která by nemohla nastat", () => {

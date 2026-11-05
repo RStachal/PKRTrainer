@@ -242,13 +242,30 @@ export interface TableState {
 // ---------------------------------------------------------------------------
 
 import type { ActionEvSet } from "./actionEv";
-import type { OpponentStyleId } from "./opponentStyle";
 import type { TrainingMode, VillainArchetype } from "./villain/archetypes";
 
 /** Jedna nabízená odpověď: 1 Akční_klíč + popisek. */
 export interface Answer {
   key: ActionKey;
   label: string; // český text
+}
+
+/** Hodnota podle soupeře u stolu a podle chartu, ke srovnání. */
+export interface RealVersusGto {
+  real: number;
+  gto: number;
+}
+
+/** Spot oceněný proti typům hráčů (`core/preflop/realPricing.ts`). */
+export interface SpotRealPricing {
+  /** Soupeř ve hře; při prvním vstupu do potu bez tréninku proti typu chybí. */
+  villain?: VillainArchetype;
+  /** EV proti chartům: co by platilo v GTO. */
+  gtoEvs: ActionEvSet<ActionKey>;
+  /** Jak často všichni složí shove hráče. */
+  foldFrequency?: RealVersusGto;
+  /** Jak široko soupeř sám jde all-in, podíl všech kombinací. */
+  shoveShare?: RealVersusGto;
 }
 
 export interface Spot {
@@ -271,6 +288,8 @@ export interface Spot {
   strictCorrect: ActionKey[]; // STRICT (Req 7.2)
   /** Solver EV for every offered action; absent until a reviewed export provides it. */
   actionEvs?: ActionEvSet<ActionKey>;
+  /** Režim REAL: `actionEvs` je pak EV proti soupeři u stolu a tohle srovnání s GTO. */
+  real?: SpotRealPricing;
   explanation: string; // české zdůvodnění
   hint?: string;
   /**
@@ -297,21 +316,9 @@ export interface Filters {
   ante: AnteMode;
   scoringMode: ScoringMode;
   /**
-   * Who the hero is up against, when the player says.
-   *
-   * Absent means unknown, which is what the shipped ranges actually describe -
-   * they are a GTO baseline against no one in particular. Naming an opponent does
-   * not swap in a second set of ranges; it supplies one number, the folds that
-   * opponent gives, and the trainer prices the decision against it. See
-   * `core/opponentStyle`.
-   *
-   * Since 5 Nov 2026 it is derived from `trainingMode` and `villainFocus`
-   * (`opponentStyleFor`): the start screen names a player type, not a quadrant.
-   */
-  opponentStyle?: OpponentStyleId;
-  /**
    * Režim tréninku (Agents/plan-gto-real-2026-11.md): bez něj GTO - soupeři
-   * hrají rovnováhu. REAL staví stůl z typů hráčů.
+   * hrají rovnováhu, jak ji popisují dodané range. REAL staví stůl z typů hráčů
+   * a oceňuje proti nim (`core/preflop/realPricing.ts`).
    */
   trainingMode?: TrainingMode;
   /** REAL: trénink proti typu - soupeř ve hře je vždy tenhle; bez něj živý stůl. */

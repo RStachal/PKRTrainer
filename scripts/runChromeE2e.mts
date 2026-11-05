@@ -684,6 +684,7 @@ try {
   for (const viewport of activeViewports) {
     if (expectedPreflop !== "blocked") {
       nextUiResults.push(await runNextUiScenario(cdp, viewport, browserErrors, contrastAudits));
+      await runNextUiRealEvScenario(cdp, viewport, browserErrors, contrastAudits);
     }
     nextUiPostflopResults.push(await runNextUiPostflopScenario(cdp, viewport, browserErrors, contrastAudits));
     await runNextUiPostflopRealScenario(cdp, viewport, browserErrors);
@@ -1321,6 +1322,71 @@ async function assertStoredVillain(
     stored.archetype === stored.focus,
     `${label}: stored villain ${stored.archetype}, table showed ${stored.focus}`,
   );
+}
+
+/**
+ * Preflop v režimu REAL proti zvolenému typu: all-in spot se hodnotí proti němu
+ * a vyhodnocení řekne, co by platilo v GTO a z čeho to je (plán GTO/REAL, 3.3).
+ */
+async function runNextUiRealEvScenario(
+  client: CdpClient,
+  viewport: Viewport,
+  browserErrors: string[],
+  contrastAudits: Array<{ viewport: string; surface: string; entries: ContrastAuditEntry[] }>,
+): Promise<void> {
+  const input = viewport.mobile ? "touch" : "keyboard";
+  const label = `${viewport.name} next UI REAL EV`;
+  browserErrors.length = 0;
+  await navigate(client, targetUrl);
+  await waitForSelector(client, ".filter-start");
+  await evaluate(client, `(() => {
+    const context = document.querySelector('.filter-context[data-context="VS_ALLIN"]');
+    if (!(context instanceof HTMLInputElement)) throw new Error("Missing VS_ALLIN context");
+    context.click();
+  })()`);
+  await selectRadio(client, '.filter-mode[value="REAL"]', input);
+  await selectRadio(client, '.filter-opponent[value="DICE"]', input);
+  await activate(client, ".filter-start", input);
+
+  // Odhad, který jde proti chartu, se neukazuje, takže první spot nemusí být oceněný.
+  let found = false;
+  for (let spot = 0; spot < 12 && !found; spot += 1) {
+    await waitForSelector(client, `${PREFLOP_ACTION}:not([disabled])`);
+    await activate(client, PREFLOP_ACTION, input);
+    await waitForSelector(client, ".training__game .dx-trainer__feedback:not([hidden])");
+    found = await evaluate<boolean>(client, `document.querySelector(".dx-trainer__real") !== null`);
+    if (!found) {
+      await activate(client, PREFLOP_NEXT, input);
+      await waitForSelector(client, ".training__game .dx-trainer__feedback[hidden]");
+    }
+  }
+  assert(found, `${label}: no spot of 12 showed the comparison with GTO`);
+
+  const shown = await evaluate<{ line: string; origin: string; villain: string | null; source: string | null }>(
+    client,
+    `(() => {
+      const events = JSON.parse(localStorage.getItem("mtt_preflop_events_v1") ?? "[]");
+      return {
+        line: document.querySelector(".dx-trainer__real-line")?.textContent ?? "",
+        origin: document.querySelector(".dx-trainer__origin")?.textContent ?? "",
+        villain: document.querySelector(${JSON.stringify(`.training__game ${FOCUS_SEAT}`)})?.getAttribute("data-player") ?? null,
+        source: events[events.length - 1]?.villainArchetype ?? null
+      };
+    })()`,
+  );
+  assert(shown.line.includes("GTO"), `${label}: comparison says "${shown.line}"`);
+  assert(/kostce/i.test(shown.line), `${label}: comparison does not name the opponent: "${shown.line}"`);
+  assert(shown.origin === "Model hráče (odhad)", `${label}: origin says "${shown.origin}"`);
+  assert(shown.villain === "DICE" && shown.source === "DICE", `${label}: table ${shown.villain}, record ${shown.source}`);
+  contrastAudits.push({
+    viewport: viewport.name,
+    surface: "next-ui-real-ev",
+    entries: await auditContrast(client, viewport.name, label, [
+      ".dx-trainer__real-line",
+      ".dx-trainer__origin",
+    ]),
+  });
+  assert(browserErrors.length === 0, `${label}: ${browserErrors.join(" | ")}`);
 }
 
 /**

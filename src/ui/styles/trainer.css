@@ -155,6 +155,33 @@
   color: var(--dx-text);
 }
 
+/* REAL: GTO vedle odpovědi proti soupeři, důvod a původ čísla. */
+.dx-trainer__real {
+  display: grid;
+  gap: var(--dx-space-1);
+  padding: var(--dx-space-3);
+  border-radius: var(--dx-radius-md);
+  background: var(--dx-surface-raised);
+  font-size: var(--dx-text-sm);
+}
+
+.dx-trainer__real p {
+  margin: 0;
+}
+
+.dx-trainer__real-line {
+  font-weight: var(--dx-weight-medium);
+}
+
+.dx-trainer__real-why {
+  color: var(--dx-text-secondary);
+}
+
+.dx-trainer__origin {
+  color: var(--dx-text-muted);
+  font-size: var(--dx-text-xs);
+}
+
 /* Postflop: co soupeř udělal před otázkou, na vlastním řádku nad ní. */
 .dx-trainer__situation {
   flex-basis: 100%;

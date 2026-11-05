@@ -73,7 +73,7 @@ function row(hand: HandLabel): number[] | undefined {
 }
 
 /** Every two-card combination in a deck. */
-const TOTAL_COMBOS = 1326;
+export const TOTAL_COMBOS = 1326;
 
 /** Combinations in a hand class: 6 for a pair, 4 suited, 12 offsuit. */
 export function combosInClass(hand: HandLabel): number {
@@ -212,6 +212,43 @@ export function shoveEv(
   const evCalled = equityWhenCalled * calledPot - stackBB;
   return {
     jamBB: foldFrequency * potBB + (1 - foldFrequency) * evCalled,
+    foldBB: 0,
+    equityWhenCalled,
+    foldFrequency,
+  };
+}
+
+/**
+ * Shove proti hráčům, kteří mají každý jiný range (režim REAL).
+ *
+ * `callers` jsou range v pořadí, jak hráči jednají, a každý z nich drží cokoli:
+ * ještě nejednali, nebo jsou to volné ruce jako u squeeze. Dorovná první, kdo má
+ * čím, a o všem se rozhodne proti němu. Se stejnými range je výsledek tentýž jako
+ * `shoveEv` proti `opponentsBehind` hráčům.
+ */
+export function shoveEvVsField(
+  hero: HandLabel,
+  callers: readonly (readonly HandLabel[])[],
+  stackBB: number,
+  potBB: number,
+): ShoveEv | undefined {
+  const calledPot = potBB + 2 * stackBB;
+  let foldFrequency = 1;
+  let calledWeight = 0;
+  let equityWeighted = 0;
+  for (const range of callers) {
+    const share = Math.min(1, range.reduce((sum, hand) => sum + combosInClass(hand), 0) / TOTAL_COMBOS);
+    if (share === 0) continue;
+    const equity = equityVsRange(hero, range);
+    if (equity === undefined) return undefined;
+    const weight = foldFrequency * share;
+    calledWeight += weight;
+    equityWeighted += weight * equity;
+    foldFrequency *= 1 - share;
+  }
+  const equityWhenCalled = calledWeight === 0 ? 0 : equityWeighted / calledWeight;
+  return {
+    jamBB: foldFrequency * potBB + equityWeighted * calledPot - calledWeight * stackBB,
     foldBB: 0,
     equityWhenCalled,
     foldFrequency,

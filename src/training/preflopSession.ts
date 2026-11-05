@@ -1,4 +1,5 @@
 import { bucketsWithSpots, resolveSeed, spotSequence } from "../core/drillEngine";
+import { withRealPricing } from "../core/preflop/realPricing";
 import { grade, type Grade } from "../core/scoring";
 import {
   emptySessionScore,
@@ -9,6 +10,7 @@ import {
 import type { TrainingProfile } from "../core/trainingProfile";
 import type { ActionKey, Filters, Spot, StackBucket } from "../core/types";
 import type { VillainFields } from "../core/villain/archetypes";
+import { playerSettings } from "../core/villain/tableCast";
 import { createRangeStoreFromRangePack, type RangeStore } from "../data/rangeStore";
 import type { RangePack } from "../data/ranges/rangePack";
 import { buildProfileAwarePreflopResultRecord } from "../persistence/statsRecordV2";
@@ -123,18 +125,20 @@ export function createPreflopSession(
         };
       }
 
+      // V REAL se ukazuje spot oceněný proti stolu; zásoba zůstává rozdaná jako GTO.
+      const spot = withRealPricing(first.value, playerSettings(filters), rangeStore);
       active = {
         iterator,
         filters,
         profile,
         pack,
         rangeStore,
-        spot: first.value,
+        spot,
         answered: false,
         questionStartedAt: clock.monotonicMs(),
       };
       score = emptySessionScore();
-      return { kind: "STARTED", seed: resolvedSeed, spot: first.value };
+      return { kind: "STARTED", seed: resolvedSeed, spot };
     },
 
     answer(chosen, villain) {
@@ -166,10 +170,10 @@ export function createPreflopSession(
         active = null;
         return null;
       }
-      active.spot = following.value;
+      active.spot = withRealPricing(following.value, playerSettings(active.filters), active.rangeStore);
       active.answered = false;
       active.questionStartedAt = clock.monotonicMs();
-      return following.value;
+      return active.spot;
     },
 
     stop() {

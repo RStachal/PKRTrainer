@@ -162,11 +162,22 @@ describe("preflopový záznam", () => {
     const store = startedSession({
       ...makeFilters({ ante: "ON", positions: ["CO"], contexts: ["RFI"] }),
       trainingMode: "REAL",
-      villainFocus: "WHALE",
     });
     const [record] = store.events();
     expect(record.trainingMode).toBe("REAL");
     expect(record).not.toHaveProperty("villainArchetype");
+  });
+
+  it("první vstup do potu při tréninku proti typu: zvolený typ sedí na big blindu", () => {
+    const store = startedSession({
+      ...makeFilters({ ante: "ON", positions: ["CO"], contexts: ["RFI"] }),
+      trainingMode: "REAL",
+      villainFocus: "WHALE",
+    });
+    const focus = document.querySelector<HTMLElement>('.dx-table__seat[data-focus="true"]');
+    expect(focus?.dataset.position).toBe("BB");
+    expect(focus?.dataset.player).toBe("WHALE");
+    expect(store.events()[0]).toMatchObject(realWhale);
   });
 });
 

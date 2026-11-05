@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
 
-import { OPPONENT_STYLES } from "../../src/core/opponentStyle";
-import type { Filters, Spot } from "../../src/core/types";
+import type { Spot } from "../../src/core/types";
 import { openSizeAtDepth } from "../../src/core/drillEngine";
 import { createRangeStoreFromRangePack } from "../../src/data/rangeStore";
 import { allMttPreflopRangePacks } from "../../src/data/ranges/mttPreflopRangePacks";
+import { CS } from "../../src/ui/cs";
 import { renderDecisionPrice, teachesOpenSizeAtDepth } from "../../src/ui/decisionPricePanel";
 import { STACK_BUCKETS } from "../../src/core/types";
 
@@ -14,22 +14,13 @@ import { STACK_BUCKETS } from "../../src/core/types";
 // and the stack the spot already carries, so there is no spot this cannot price -
 // and no pack that has to ship a number for it.
 
-const filters = (opponentStyle?: Filters["opponentStyle"]): Filters => ({
-  positions: [],
-  buckets: [],
-  contexts: [],
-  ante: "OFF",
-  scoringMode: "STRICT",
-  opponentStyle,
-});
-
 const spot = (context: string, effStack = 10): Spot => ({
   context, effStack, startingPot: 1.5, heroPos: "BTN", hand: "A5s", answers: [],
 } as unknown as Spot);
 
 describe("decision price panel", () => {
   it("prices a shove by the folds it needs", () => {
-    const panel = renderDecisionPrice(document, spot("PUSH_FOLD"), filters())!;
+    const panel = renderDecisionPrice(document, spot("PUSH_FOLD"))!;
     // Risking 10 to win 1.5 needs 10/11.5 folds - about 87 percent. That is the
     // break-even identity, not a number from a table.
     expect(panel.querySelector(".decision-price__headline")?.textContent).toContain("87");
@@ -39,29 +30,32 @@ describe("decision price panel", () => {
   });
 
   it("prices a call by its pot odds", () => {
-    const panel = renderDecisionPrice(document, spot("VS_ALLIN"), filters())!;
+    const panel = renderDecisionPrice(document, spot("VS_ALLIN"))!;
     const text = panel.querySelector(".decision-price__headline")?.textContent ?? "";
     // Calling 10 into a pot of 11.5 needs 10/21.5, about 46.5 percent.
     expect(text).toContain("46,5");
   });
 
-  it("says what the named opponent changes, and how well it is known", () => {
-    const loose = renderDecisionPrice(document, spot("PUSH_FOLD"), filters("LOOSE_PASSIVE"))!;
+  it("says what the players at the table change, and that it is an estimate", () => {
+    const real = (folds: number): Spot => ({
+      ...spot("PUSH_FOLD"),
+      real: {
+        gtoEvs: { source: "ALL_IN_EQUITY", unit: "BB", values: [], equivalentThresholdBb: 0.1, acceptableThresholdBb: 0.3 },
+        foldFrequency: { real: folds, gto: 0.8 },
+      },
+    });
+    const loose = renderDecisionPrice(document, real(0.6))!;
     const verdict = loose.querySelector(".decision-price__verdict");
     expect(verdict).not.toBeNull();
-    // A fish folds 60 percent where this shove needs 87, so it cannot pay for
-    // itself on fold equity - the panel must not claim otherwise.
+    // They fold 60 percent where this shove needs 87, so it cannot pay for itself
+    // on fold equity - the panel must not claim otherwise.
     expect(verdict!.classList.contains("decision-price__verdict--good")).toBe(false);
     expect(verdict!.textContent).toContain("60");
+    expect(loose.querySelector(".decision-price__basis")?.textContent).toBe(CS.training.opponentBasisInterpolated);
 
-    // Two of the four styles are anchored to a published calling width and two
-    // are interpolated. The panel says which rather than presenting all four as
-    // equally known.
-    const measured = OPPONENT_STYLES.LOOSE_PASSIVE.basis === "MEASURED";
-    expect(measured).toBe(true);
-    const rock = renderDecisionPrice(document, spot("PUSH_FOLD"), filters("TIGHT_PASSIVE"))!;
-    expect(rock.querySelector(".decision-price__basis")?.textContent)
-      .not.toBe(loose.querySelector(".decision-price__basis")?.textContent);
+    const folding = renderDecisionPrice(document, real(0.9))!;
+    expect(folding.querySelector(".decision-price__verdict")?.classList.contains("decision-price__verdict--good"))
+      .toBe(true);
   });
 
   it("prices a re-jam, which used to be a number with no explanation", () => {
@@ -71,7 +65,7 @@ describe("decision price panel", () => {
       ...spot("VS_OPEN", 20),
       answers: [{ key: "JAM", label: "Jam" }, { key: "FOLD", label: "Fold" }],
     } as unknown as Spot;
-    const panel = renderDecisionPrice(document, jamSpot, filters())!;
+    const panel = renderDecisionPrice(document, jamSpot)!;
     expect(panel).not.toBeNull();
     // Risking 20 to win the blinds plus a 2x open - 3.5 - needs 20/23.5, about
     // 85 percent. The open is part of the pot, which is the whole difference
@@ -107,7 +101,7 @@ describe("decision price panel", () => {
       answers: [{ key: "JAM", label: "Jam" }, { key: "FOLD", label: "Fold" }],
       tableState: { limpsBefore: 2 },
     } as unknown as Spot;
-    const panel = renderDecisionPrice(document, limpSpot, filters())!;
+    const panel = renderDecisionPrice(document, limpSpot)!;
     // Blinds 1.5 plus two limps is 3.5, so risking 20 needs 20/23.5 - about 85
     // percent - and the pot needs no assumption at all: the spot counted the
     // limpers.
@@ -123,7 +117,7 @@ describe("decision price panel", () => {
         answers: [{ key: "JAM", label: "Jam" }, { key: "FOLD", label: "Fold" }],
         tableState: { limpsBefore },
       } as unknown as Spot;
-      return renderDecisionPrice(document, s, filters())!
+      return renderDecisionPrice(document, s)!
         .querySelector(".decision-price__headline")!.textContent ?? "";
     };
     // Each limper adds dead money, so the shove needs fewer folds. Reading the
@@ -138,7 +132,7 @@ describe("decision price panel", () => {
     // spot leaves open - the table teaches one open size per depth. So the price
     // can be stated even though the expected value cannot, and RFI carried no
     // number at all until this.
-    const panel = renderDecisionPrice(document, spot("RFI", 50), filters())!;
+    const panel = renderDecisionPrice(document, spot("RFI", 50))!;
     expect(panel).not.toBeNull();
     // Risking 2.5 to win 1.5 needs 2.5/4 - 62.5 percent.
     expect(panel.querySelector(".decision-price__headline")?.textContent).toContain("62,5");
@@ -148,7 +142,7 @@ describe("decision price panel", () => {
     // Outside the all-in contexts the bet size is not determined by the spot, and
     // a made-up size reads exactly as authoritative as a real one.
     // A VS_OPEN spot with no shove on offer has no all-in price to state.
-    expect(renderDecisionPrice(document, spot("VS_OPEN"), filters())).toBeNull();
-    expect(renderDecisionPrice(document, spot("SQUEEZE"), filters())).toBeNull();
+    expect(renderDecisionPrice(document, spot("VS_OPEN"))).toBeNull();
+    expect(renderDecisionPrice(document, spot("SQUEEZE"))).toBeNull();
   });
 });

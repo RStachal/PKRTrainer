@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { generateSpot } from "../../src/core/drillEngine";
+import { computeActionEvs } from "../../src/core/preflop/preflopEv";
 import { loadPreflopEquity } from "../../src/core/preflopEquity";
 import { mulberry32 } from "../../src/core/rng";
 import type { ActionKey, Filters, StackBucket } from "../../src/core/types";
@@ -52,8 +53,14 @@ function sample(): Row[] {
     const seen = new Set<string>();
     for (let seed = 1; seed <= 600; seed += 1) {
       const spot = generateSpot(mulberry32(seed), "VS_OPEN", filters(bucket), active);
-      const jam = spot?.actionEvs?.values.find((value) => value.action === ("JAM" as ActionKey));
-      if (spot === null || jam === undefined) continue;
+      if (spot === null) continue;
+      // Přímo model, ne EV ze spotu: tu spot neponese, když s chartem nesouhlasí, a
+      // tenhle test měří právě tu shodu.
+      const jam = computeActionEvs(
+        spot.context, spot.heroPos, spot.hand, spot.effStack, spot.ante, spot.startingPot!,
+        spot.answers.map((answer) => answer.key), active, spot.tableState.callsBefore, spot.tableState.vsSeat,
+      )?.values.find((value) => value.action === ("JAM" as ActionKey));
+      if (jam === undefined) continue;
       const key = `${bucket}|${spot.heroPos}|${spot.hand}`;
       if (seen.has(key)) continue;
       seen.add(key);

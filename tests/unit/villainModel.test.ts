@@ -6,7 +6,6 @@ import {
   ARCHETYPES,
   VILLAIN_ARCHETYPES,
   isVillainArchetype,
-  opponentStyleFor,
   type VillainArchetype,
 } from "../../src/core/villain/archetypes";
 import { castTable, LIVE_TABLE_NINE } from "../../src/core/villain/tableCast";
@@ -43,21 +42,6 @@ describe("typy hráčů (plán GTO/REAL, 3.2)", () => {
     expect(foldToCbet("DICE")).toBeLessThan(foldToCbet("SHARK"));
     expect(foldToCbet("SHARK")).toBeLessThan(foldToCbet("EAGLE"));
     expect(foldToCbet("EAGLE")).toBeLessThan(foldToCbet("ROCK"));
-  });
-
-  it("navazuje na čtyři styly, ze kterých dnes počítá preflopové EV", () => {
-    expect(ARCHETYPES.SHARK.style).toBe("TIGHT_AGGRESSIVE");
-    expect(ARCHETYPES.EAGLE.style).toBe("TIGHT_AGGRESSIVE");
-    expect(ARCHETYPES.ROCK.style).toBe("TIGHT_PASSIVE");
-    expect(ARCHETYPES.DICE.style).toBe("LOOSE_AGGRESSIVE");
-    expect(ARCHETYPES.WHALE.style).toBe("LOOSE_PASSIVE");
-  });
-
-  it("styl jen v REAL se jmenovaným soupeřem; GTO a živý stůl hrají proti rovnováze", () => {
-    expect(opponentStyleFor("GTO", "WHALE")).toBeUndefined();
-    expect(opponentStyleFor("REAL", undefined)).toBeUndefined();
-    expect(opponentStyleFor(undefined, "ROCK")).toBeUndefined();
-    expect(opponentStyleFor("REAL", "WHALE")).toBe("LOOSE_PASSIVE");
   });
 
   it("pozná typ podle jména", () => {

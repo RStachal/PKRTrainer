@@ -126,10 +126,10 @@ export function createModePicker(
       "Player types at the table: shark, eagle, rock, gambler and whale.",
       "U stolu sedí typy hráčů: žralok, orel, kámen, kostka a velryba.",
     ),
-    // Do M3 je tohle celá pravda: hodnocení stojí na GTO a slibovat víc by byla lež.
+    // Dokud je to pravda, musí to tu stát: slibovat víc by byla lež.
     localizedText(
-      "Grading against a type is still being finished; for now a picked opponent changes only all-in EV.",
-      "Hodnocení proti typu se dokončuje; zatím zvolený soupeř mění jen EV all-inu.",
+      "Graded against the type in all-in spots so far; everything else follows GTO.",
+      "Proti typu se zatím hodnotí all-in spoty, ostatní podle GTO.",
     ),
   );
   modes.append(gto.card, real.card);

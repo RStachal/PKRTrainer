@@ -7,9 +7,10 @@
  * preflop equity table for the two contexts where the spot fixes a price, and it
  * is a weaker claim: exact arithmetic over a sampled table, ignoring card removal
  * between ranges. Keeping the two apart means nobody has to guess which they are
- * looking at.
+ * looking at. `VILLAIN_MODEL` is the same arithmetic against ranges shifted by a
+ * player type (mode REAL), so it stands on an estimate and is labelled as one.
  */
-export type ActionEvSource = "SOLVER" | "ALL_IN_EQUITY" | "SOLVED_TREE";
+export type ActionEvSource = "SOLVER" | "ALL_IN_EQUITY" | "SOLVED_TREE" | "VILLAIN_MODEL";
 
 /**
  * Zdroje, které se hráči smějí ukázat.
@@ -24,6 +25,7 @@ export const DISPLAYABLE_ACTION_EV_SOURCES: readonly ActionEvSource[] = [
   "SOLVER",
   "ALL_IN_EQUITY",
   "SOLVED_TREE",
+  "VILLAIN_MODEL",
 ];
 export type ActionEvUnit = "BB";
 

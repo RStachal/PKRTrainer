@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { generateSpot } from "../../src/core/drillEngine";
+import { agreesWithChart, computeActionEvs } from "../../src/core/preflop/preflopEv";
 import { loadPreflopEquity } from "../../src/core/preflopEquity";
 import { mulberry32 } from "../../src/core/rng";
 import type { ActionContext, ActionKey, Filters } from "../../src/core/types";
@@ -13,8 +14,10 @@ import { allMttPreflopRangePacks } from "../../src/data/ranges/mttPreflopRangePa
  * The owner's report was that EV is missing for the other actions after
  * answering. It was: 26 percent of spots carried any, and RFI - the context seen
  * most - carried none. The rule now is that **every spot offering a shove shows
- * one**, because a shove fixes the hero's side of the price and the pot is
- * whatever the spot already records.
+ * one, unless the estimate contradicts the chart**: a shove fixes the hero's side of
+ * the price and the pot is whatever the spot already records, but the estimate is
+ * a one-step model and the chart is the equilibrium (`agreesWithChart`). Grading
+ * prefers EV, so an estimate against the chart marked the chart's answer wrong.
  *
  * VS_4BET used to be the first exception: the pot needs a three-bet and a
  * four-bet size, and the action keys carry neither. That was a missing decision
@@ -59,7 +62,13 @@ const filters: Filters = {
   positions: [], buckets: [], contexts: [], ante: "OFF", scoringMode: "STRICT",
 };
 
-interface Row { context: ActionContext; offersJam: boolean; hasEv: boolean }
+interface Row {
+  context: ActionContext;
+  offersJam: boolean;
+  hasEv: boolean;
+  /** The estimate exists and goes against the chart, so the spot does not carry it. */
+  contradictsChart: boolean;
+}
 
 function sample(): Row[] {
   const active = store();
@@ -68,10 +77,15 @@ function sample(): Row[] {
     const context = CONTEXTS[seed % CONTEXTS.length];
     const spot = generateSpot(mulberry32(seed), context, filters, active);
     if (spot === null) continue;
+    const estimate = computeActionEvs(
+      spot.context, spot.heroPos, spot.hand, spot.effStack, spot.ante, spot.startingPot!,
+      spot.answers.map((answer) => answer.key), active, spot.tableState.callsBefore, spot.tableState.vsSeat,
+    );
     rows.push({
       context,
       offersJam: spot.answers.some((answer) => answer.key === ("JAM" as ActionKey)),
       hasEv: spot.actionEvs !== undefined,
+      contradictsChart: estimate !== undefined && !agreesWithChart(estimate, spot.strictCorrect),
     });
   }
   return rows;
@@ -85,11 +99,15 @@ describe("action EV coverage", () => {
     expect(rows.length).toBeGreaterThan(2000);
   });
 
-  it("prices every shove the data can price", () => {
+  it("prices every shove the data can price, unless the estimate goes against the chart", () => {
     const unpriced = rows.filter((row) => (
-      row.offersJam && !row.hasEv && !UNPRICEABLE_SHOVES.has(row.context)
+      row.offersJam && !row.hasEv && !row.contradictsChart && !UNPRICEABLE_SHOVES.has(row.context)
     ));
     expect([...new Set(unpriced.map((row) => row.context))]).toEqual([]);
+  });
+
+  it("never carries an estimate that goes against the chart", () => {
+    expect(rows.filter((row) => row.hasEv && row.contradictsChart)).toEqual([]);
   });
 
   it("keeps the two unpriceable contexts honest", () => {
@@ -102,10 +120,11 @@ describe("action EV coverage", () => {
     }
   });
 
-  it("covers the contexts a player meets most", () => {
+  it("covers most of the contexts a player meets most", () => {
     for (const context of ["PUSH_FOLD", "VS_ALLIN"] as ActionContext[]) {
       const inContext = rows.filter((row) => row.context === context);
-      expect(inContext.every((row) => row.hasEv), context).toBe(true);
+      const priced = inContext.filter((row) => row.hasEv).length;
+      expect(priced / inContext.length, context).toBeGreaterThan(0.7);
     }
   });
 });

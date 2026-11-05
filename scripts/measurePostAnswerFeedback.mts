@@ -735,9 +735,14 @@ if (!asJson) {
    * | co | naměřeno 27. 8. 2026 | dno |
    * |---|---|---|
    * | EV na rozdaných riverech | 89,7 % | 75 % |
-   * | EV na preflopu | 33,1 % | 28 % |
+   * | EV na preflopu | 22,5 % (5. 11. 2026, dřív 33,1 %) | 19 % |
    * | zastaralých tabulek EV | 0 | 0 |
    * | zamlčených blafů | 0 | 0 |
+   *
+   * Preflop klesl z 33,1 na 22,5 % záměrně: odhad all-inu, který jde proti chartu,
+   * se od 5. 11. 2026 hráči neukazuje a nehodnotí se podle něj (`agreesWithChart`,
+   * deník 347). Dřív squeeze a BVB „doručovaly“ EV, podle které byl fold podle
+   * chartu vždycky chyba. Dno je pod novým měřením ve stejném poměru jako předtím.
    */
   const floor = (name: string, fallback: number): number => {
     const raw = process.env[name];
@@ -774,8 +779,8 @@ if (!asJson) {
       + ` pod dnem ${floor("POST_ANSWER_MIN_PREFLOP_PRICE_PCT", 95)} %`,
     );
   }
-  if (preflopEvShare < floor("POST_ANSWER_MIN_PREFLOP_EV_PCT", 28)) {
-    failures.push(`EV na preflopu ${preflopEvShare.toFixed(1)} % pod dnem ${floor("POST_ANSWER_MIN_PREFLOP_EV_PCT", 28)} %`);
+  if (preflopEvShare < floor("POST_ANSWER_MIN_PREFLOP_EV_PCT", 19)) {
+    failures.push(`EV na preflopu ${preflopEvShare.toFixed(1)} % pod dnem ${floor("POST_ANSWER_MIN_PREFLOP_EV_PCT", 19)} %`);
   }
   if (evStale > 0) {
     failures.push(`${evStale} tabulek EV je spočítaných a zahozených (otisk nesedí na pack)`);

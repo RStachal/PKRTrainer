@@ -4,7 +4,7 @@ import {
 } from "../../core/preflopExplanation";
 import type { ActionKey, Spot } from "../../core/types";
 import type { VillainFields } from "../../core/villain/archetypes";
-import { playerSettings, villainFields } from "../../core/villain/tableCast";
+import { playerSettings, preflopTablePlayers, villainFields } from "../../core/villain/tableCast";
 import type { PreflopAnswer, PreflopSession } from "../../training/preflopSession";
 import { getAppLanguage, localizedText } from "../cs";
 import { renderDecisionPrice } from "../decisionPricePanel";
@@ -14,7 +14,7 @@ import { playingCard } from "../kit/playingCard";
 import { pokerTable } from "../kit/pokerTable";
 import { colorForActionKey } from "../rangeMatrixView";
 import { openPreflopRange } from "./preflopRange";
-import { preflopTablePlayers } from "./tablePlayers";
+import { realComparison } from "./realFeedback";
 import { actionButton, button, createTrainerFrame, el, nextSpotRow } from "./trainerFrame";
 import { POSITION_ORDER } from "../../core/types";
 
@@ -130,6 +130,8 @@ export function createPreflopTrainerView(
         rows.appendChild(row);
       }
       parts.push(rows);
+      const comparison = realComparison(doc, spot);
+      if (comparison !== null) parts.push(comparison);
     } else {
       parts.push(el(
         doc,
@@ -155,8 +157,7 @@ export function createPreflopTrainerView(
         ? buildPreflopExplanationForSpot(spot, language)
         : localizedText("No explanation for this spot.", "K tomuhle spotu vysvětlení nemáme."),
     ));
-    const filters = session.filters;
-    const price = filters === null ? null : renderDecisionPrice(doc, spot, filters);
+    const price = renderDecisionPrice(doc, spot);
     if (price !== null) more.append(price);
     parts.push(more);
 

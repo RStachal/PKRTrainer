@@ -91,7 +91,8 @@ export function buildPreflopCurriculumPlan(
   records: readonly ResultRecordV2[],
   options: PreflopCurriculumOptions = {},
 ): PreflopCurriculumPlan {
-  const allPreflop = records.filter((record) => record.street === "PREFLOP");
+  // Osnova učí charty; odpověď v REAL se hodnotí proti typu, takže o nich nic neříká.
+  const allPreflop = records.filter((record) => record.street === "PREFLOP" && record.trainingMode === undefined);
   // Pooling profiles produced a percentage that was nobody's percentage: a
   // player strong at the ante table and weak away from it was shown the average
   // of the two, attached to a button that drills it wherever they happen to be
@@ -212,7 +213,7 @@ export function buildPreflopSpacedRepetitionQueue(
     lastTs: number;
     lastCorrect: boolean;
   }>();
-  for (const record of records.filter((item) => item.street === "PREFLOP")) {
+  for (const record of records.filter((item) => item.street === "PREFLOP" && item.trainingMode === undefined)) {
     const group = groups.get(record.scenarioId) ?? {
       qid: record.qid,
       attempts: 0,

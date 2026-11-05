@@ -75,7 +75,6 @@ import {
   type TrainingProfile,
   type TrainingStreet,
 } from "../core/trainingProfile";
-import { opponentStyleFor } from "../core/villain/archetypes";
 import { playerSettings } from "../core/villain/tableCast";
 import { renderProfileSelector, type ProfileSelectorView } from "./profileSelector";
 import { CS, localizedText } from "./cs";
@@ -895,7 +894,6 @@ export function renderFilters(
       contexts: collect(CONTEXT_ORDER, contextInputs),
       ante,
       scoringMode,
-      opponentStyle: opponentStyleFor(choice.mode, choice.focus),
       // GTO je výchozí a v datech chybí, ať se dnešní filtry neliší ani bajtem.
       ...(choice.mode === "REAL" ? { trainingMode: choice.mode } : {}),
       ...(choice.focus === undefined ? {} : { villainFocus: choice.focus }),

@@ -83,7 +83,7 @@ export interface ShoveRequirement {
 export function shoveRequirement(
   riskBB: number,
   potBB: number,
-  style?: OpponentStyle,
+  style?: Pick<OpponentStyle, "foldsToShove">,
 ): ShoveRequirement {
   const requiredFolds = requiredFoldFrequency(riskBB, potBB);
   if (style === undefined) return { requiredFolds };

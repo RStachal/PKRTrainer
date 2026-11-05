@@ -83,30 +83,26 @@ describe("collapsible filter groups", () => {
     expect(root.querySelector('.dx-mode[data-mode="GTO"]')?.getAttribute("data-selected")).toBe("false");
   });
 
-  it("turns the picked player type into filters and into the style the shove EV reads", () => {
+  it("turns the picked player type into filters", () => {
     const root = document.createElement("div");
     document.body.appendChild(root);
     const view = renderFilters(root, { onStart: () => undefined });
     expect(view.getFilters().trainingMode).toBeUndefined();
-    expect(view.getFilters().opponentStyle).toBeUndefined();
 
     const mode = (value: string) => root.querySelector<HTMLInputElement>(`.filter-mode[value="${value}"]`)!;
     const opponent = (value: string) => root.querySelector<HTMLInputElement>(`.filter-opponent[value="${value}"]`)!;
     mode("REAL").click();
     expect(view.getFilters()).toMatchObject({ trainingMode: "REAL" });
     expect(view.getFilters().villainFocus).toBeUndefined();
-    // Live table: no single opponent, so the shove is priced as before.
-    expect(view.getFilters().opponentStyle).toBeUndefined();
 
     opponent("WHALE").click();
-    expect(view.getFilters()).toMatchObject({ trainingMode: "REAL", villainFocus: "WHALE", opponentStyle: "LOOSE_PASSIVE" });
+    expect(view.getFilters()).toMatchObject({ trainingMode: "REAL", villainFocus: "WHALE" });
     expect(root.querySelector(".dx-opponents__hint")?.textContent).toContain(archetypeName("WHALE"));
 
     // A type picked while in GTO does not leak: GTO prices against equilibrium.
     mode("GTO").click();
     expect(view.getFilters().trainingMode).toBeUndefined();
     expect(view.getFilters().villainFocus).toBeUndefined();
-    expect(view.getFilters().opponentStyle).toBeUndefined();
     // Back in REAL the picked type is where it was left.
     mode("REAL").click();
     expect(view.getFilters().villainFocus).toBe("WHALE");

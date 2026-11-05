@@ -196,6 +196,7 @@
     "mtt:decisions": "node scripts/run-cli.mjs scripts/renderOwnerDecisions.mts",
     "mtt:decision-answers": "node scripts/run-cli.mjs scripts/applyOwnerDecisionAnswers.mts",
     "mtt:rye-review": "node scripts/run-cli.mjs scripts/renderRyeDraftReview.mts",
+    "mtt:real-pricing": "node scripts/run-cli.mjs scripts/measureRealPricing.mts",
     "mtt:daily": "node scripts/run-cli.mjs scripts/runDailyOrchestrator.mts",
     "mtt:seat-pair-expansion": "node scripts/run-cli.mjs scripts/buildSeatPairExpansionBatch.mts",
     "mtt:board-growth": "node scripts/run-cli.mjs scripts/buildBoardGrowthBatch.mts",

@@ -222,7 +222,7 @@ se jen to, co statistika vyžaduje, a struktura GTO strategie zůstává.
 
 | Místo | Výpočet | Data | Kde běží | Stav |
 |---|---|---|---|---|
-| Preflop all-in (push/fold, rejam, 5-bet jam, call jamu, BvB, squeeze) | přesné EV z equity proti range soupeře upravené archetypem | `preflopEquity.ts`, charty | aplikace | jádro hotové; doplnit archetypy a styl do call jamu, BvB a squeeze |
+| Preflop all-in (push/fold, rejam, 5-bet jam, call jamu, BvB, squeeze) | přesné EV z equity proti range soupeře upravené archetypem | `preflopEquity.ts`, charty | aplikace | hotovo 5. 11. (deník 347), kromě BvB a squeeze: tam odhad jde proti chartu, takže se neukazuje |
 | Preflop open, izolace, 3-bet, call | jeden krok: fold soupeřů × pot + větve odpovědí s equity a realizací (IP/OOP) | equity, charty, konstanty realizace (odhad) | aplikace | nové; **kalibrace:** s GTO statistikami musí model zopakovat chart, jinak se kontext hodnotí jen GTO |
 | River | přesná nejlepší odpověď na vyřešené podhře proti upravené strategii soupeře | stromy rozkladu | ranní cyklus → vrstva | nové |
 | Turn | totéž přes riverové vrstvy (`turnActionEv`) | stromy rozkladu | ranní cyklus → vrstva | nové |
@@ -391,7 +391,7 @@ Dny jsou pracovní dny agenta, odhad. Noci běží souběžně a dnešní plán 
 | M6 6-max v1 a úklid | 10.–16. 12. | 6-max v1, zbytek starých stylů (fáze 5) | 4–7 dní | – |
 | M7 Vydání | 17.–23. 12. | `verify:block`, mobilní šířky, offline, FTP balíček, poznámky k vydání | 2 dny | 1–2 h přejímka |
 
-**Stav 5. 11. 2026:** M2 je hotový: model hráče a avatary u stolu (deník 344), režim s typem soupeře v záznamech statistik (deník 345) a start se dvěma kartami režimu (deník 346). Režim je v nastavení relace, ne v profilu: profil je klíčem packů a statistik a režim obsah nemění. Z fáze 3 redesignu zbývá sjednotit nativní selecty v nastavení a pamatovat si i ostatní volby. Další je M3; s ním zmizí z karty REAL věta, že se hodnocení proti typu dokončuje.
+**Stav 5. 11. 2026:** M2 je hotový: model hráče a avatary u stolu (deník 344), režim s typem soupeře v záznamech statistik (deník 345) a start se dvěma kartami režimu (deník 346). Režim je v nastavení relace, ne v profilu: profil je klíčem packů a statistik a režim obsah nemění. Z fáze 3 redesignu zbývá sjednotit nativní selecty v nastavení a pamatovat si i ostatní volby. Z M3 je hotová část A, all-in spoty proti hráčům u stolu (deník 347); zbývá část B, open, 3-bet, call a izolace s kalibrací proti chartům, s ní i BvB a squeeze. Až bude hotová, zmizí z karty REAL věta, že se proti typu zatím hodnotí jen all-in spoty.
 
 Celkem **28–42 dní agenta**, střed odhadu konec MTT 1.0 kolem 23. 12., rezerva
 do poloviny ledna. **Noci:** dnešní dávka (189 desek) zhruba do konce

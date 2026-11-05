@@ -2,11 +2,11 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { POSITION_ORDER, type Spot, type TableState } from "../../src/core/types";
+import { preflopFocusSeat, preflopTablePlayers } from "../../src/core/villain/tableCast";
 import { setAppLanguage } from "../../src/ui/cs";
 import { avatarName, playerAvatar } from "../../src/ui/kit/avatar";
 import { AVATAR_ART } from "../../src/ui/kit/avatarArt";
 import { pokerTable } from "../../src/ui/kit/pokerTable";
-import { preflopFocusSeat, preflopTablePlayers } from "../../src/ui/trainer/tablePlayers";
 
 afterEach(() => {
   setAppLanguage("CZ");
@@ -134,6 +134,12 @@ describe("stůl s hráči", () => {
   it("soupeř ve hře je jmenovaný soupeř, jinak poslední agresor", () => {
     expect(preflopFocusSeat(spot())).toBe("CO");
     const firstIn = spot({ facing: "NONE", vsSeat: undefined });
-    expect(preflopFocusSeat({ ...firstIn, context: "RFI", id: "RFI|BTN|25|AKs|ON" })).toBeUndefined();
+    expect(preflopFocusSeat(firstIn)).toBeUndefined();
+    // Živý stůl tam soupeře ve hře nemá, trénink proti typu ho posadí na big blind.
+    expect(preflopTablePlayers(firstIn, { mode: "REAL" }).focusSeat).toBeUndefined();
+    const focused = preflopTablePlayers(firstIn, { mode: "REAL", focus: "WHALE" });
+    expect(focused.focusSeat).toBe("BB");
+    expect(focused.cast.BB).toBe("WHALE");
+    expect(preflopTablePlayers(firstIn, { mode: "GTO", focus: "WHALE" }).focusSeat).toBeUndefined();
   });
 });

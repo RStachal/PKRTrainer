@@ -1,5 +1,6 @@
-import { mulberry32 } from "../rng";
-import { POSITION_ORDER, type Position } from "../types";
+import { hashStr, mulberry32 } from "../rng";
+import { deriveSeats } from "../tableSeats";
+import { POSITION_ORDER, type ActionKey, type Position, type Spot } from "../types";
 import type { TrainingMode, VillainArchetype, VillainFields } from "./archetypes";
 
 /**
@@ -112,6 +113,49 @@ export function postflopTablePlayers(
     mode: settings.mode,
     cast: castForPlayers(spot.seed >>> 0, order, spot.heroPosition, settings, spot.villainPosition),
     focusSeat: spot.villainPosition,
+  };
+}
+
+/** Akce, které nikoho nedělají soupeřem ve hře: dorovnání a limp za agresorem. */
+const PASSIVE: ReadonlySet<ActionKey> = new Set<ActionKey>(["CALL", "LIMP", "OVERLIMP", "FOLD"]);
+
+/**
+ * Sedadlo, proti kterému se hráč na preflopu rozhoduje: jmenovaný soupeř spotu,
+ * jinak poslední agresor, a když nikdo nezvyšoval, poslední limper. Bez akce
+ * před hráčem (první vstup do potu) soupeř ve hře není.
+ */
+export function preflopFocusSeat(
+  spot: Pick<Spot, "heroPos" | "tableState">,
+  order: readonly Position[] = POSITION_ORDER,
+): Position | undefined {
+  if (spot.tableState.vsSeat !== undefined) return spot.tableState.vsSeat;
+  const acted = deriveSeats(spot, order).filter((seat) => !seat.isHero && seat.badge !== null);
+  const aggressors = acted.filter((seat) => seat.badge !== null && !PASSIVE.has(seat.badge));
+  const limpers = acted.filter((seat) => seat.badge === "LIMP" || seat.badge === "OVERLIMP");
+  const pool = aggressors.length > 0 ? aggressors : limpers;
+  return pool.length > 0 ? pool[pool.length - 1].position : undefined;
+}
+
+/**
+ * Stůl preflopového spotu; obsazení se míchá podle spotu, takže tentýž spot má
+ * vždy tentýž stůl.
+ *
+ * Trénink proti typu má smysl i při prvním vstupu do potu, kde nikdo nejednal:
+ * zvolený typ pak sedí na big blindu, který hráče brání nejčastěji.
+ */
+export function preflopTablePlayers(
+  spot: Pick<Spot, "id" | "heroPos" | "tableState">,
+  settings: PlayerSettings,
+  order: readonly Position[] = POSITION_ORDER,
+): TablePlayers {
+  const inPlay = preflopFocusSeat(spot, order);
+  const lastSeat = order[order.length - 1];
+  const focusSeat = inPlay
+    ?? (settings.mode === "REAL" && settings.focus !== undefined && lastSeat !== spot.heroPos ? lastSeat : undefined);
+  return {
+    mode: settings.mode,
+    cast: castForPlayers(hashStr(spot.id), order, spot.heroPos, settings, focusSeat),
+    ...(focusSeat === undefined ? {} : { focusSeat }),
   };
 }
 

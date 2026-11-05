@@ -1,6 +1,5 @@
 import { callRequirement, shoveRequirement } from "../core/decisionMaths";
-import { OPPONENT_STYLES } from "../core/opponentStyle";
-import type { Filters, Spot } from "../core/types";
+import type { Spot } from "../core/types";
 import { CS } from "./cs";
 
 /**
@@ -15,12 +14,8 @@ import { CS } from "./cs";
  * through `core/decisionMaths`. Nothing is looked up, so there is no spot this
  * cannot price and no pack that has to ship a number for it.
  *
- * The opponent, when the player names one, moves exactly one thing: the folds the
- * shove is expected to get. The GTO baseline underneath is untouched. That is the
- * same shape as the bubble factor in `core/icmModel` - one number moving one
- * threshold - and it is deliberate, because the alternative is a second set of
- * ranges for every style, which would be four times the material and none of it
- * measured.
+ * In mode REAL the panel adds the folds the shove is expected to get from the players
+ * at the table (`Spot.real`). The GTO baseline underneath is untouched.
  */
 
 /**
@@ -62,13 +57,12 @@ function line(doc: Document, className: string, text: string): HTMLElement {
 export function renderDecisionPrice(
   doc: Document,
   spot: Spot,
-  filters: Filters,
 ): HTMLElement | null {
   const pot = spot.startingPot ?? 1.5;
   const stack = spot.effStack;
-  const style = filters.opponentStyle === undefined
+  const style = spot.real?.foldFrequency === undefined
     ? undefined
-    : OPPONENT_STYLES[filters.opponentStyle];
+    : { foldsToShove: spot.real.foldFrequency.real };
 
   const box = doc.createElement("div");
   box.className = "decision-price";
@@ -184,17 +178,9 @@ export function renderDecisionPrice(
     return null;
   }
 
-  // Where the opponent's number comes from. Two of the four styles are anchored
-  // to a published calling width and two are interpolated between them, and the
-  // panel says which rather than presenting all four as equally known.
+  // Where the opponent's number comes from: the player-type model, an estimate.
   if (style !== undefined) {
-    box.appendChild(line(
-      doc,
-      "decision-price__basis",
-      style.basis === "MEASURED"
-        ? CS.training.opponentBasisMeasured
-        : CS.training.opponentBasisInterpolated,
-    ));
+    box.appendChild(line(doc, "decision-price__basis", CS.training.opponentBasisInterpolated));
   }
 
   return box;

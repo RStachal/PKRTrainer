@@ -22,6 +22,22 @@ export function archetypeName(archetype: VillainArchetype): string {
   }
 }
 
+/** Komu se hraje: „proti velrybě“, „against the whale“. */
+export function archetypeOpponent(archetype: VillainArchetype): string {
+  switch (archetype) {
+    case "SHARK":
+      return localizedText("the shark", "žralokovi");
+    case "EAGLE":
+      return localizedText("the eagle", "orlovi");
+    case "ROCK":
+      return localizedText("the rock", "kameni");
+    case "DICE":
+      return localizedText("the gambler", "kostce");
+    case "WHALE":
+      return localizedText("the whale", "velrybě");
+  }
+}
+
 export function archetypeSummary(archetype: VillainArchetype): string {
   switch (archetype) {
     case "SHARK":
