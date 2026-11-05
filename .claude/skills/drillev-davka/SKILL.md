@@ -42,7 +42,13 @@ description: Dávka pro noční solving DrillEV - stav fronty monolitů, nastago
 - Jeden monolit drží 5-7 logických procesorů z 16 (2. 11. 2026). Od 3. 11.
   běží pokus D6: dvě desky souběžně po 8 vláknech (`--parallel=2 --threads=8`
   v `night-expansion.ps1`), strop a rezerva krát 1,5, druhá deska jen při
-  aspoň 12 GB volné paměti. Vyhodnocuje se řádkem `propustnost:` na konci
-  noci proti 1,35 desky za hodinu (noc 2.-3. 11., jeden monolit). Zpět = smazat
-  oba parametry.
+  aspoň 8 GB volné paměti (do 5. 11. 12 GB: 1,38 desky za hodinu, v průměru
+  1,3 desky naráz). Vyhodnocuje se řádkem `propustnost:` na konci noci proti
+  1,35 desky za hodinu (noc 2.-3. 11., jeden monolit) a řádkem `vytížení
+  procesoru:`. Zpět = smazat oba parametry.
+- Noc NEW_FAMILIES a noc DECOMPOSITION se střídají a víkend se počítá za jednu
+  noc: od pátečního večera do pondělní sedmé jede ten, na koho vyjde páteční
+  řada. Čas stroje to neubírá, rozklad má riverových vrstev na stovky hodin.
+- Fronta se doplňuje sama pod dvě noci: napřed dvojice sedaček, od 5. 11. pak
+  `mtt:board-growth`. 100 bb a 3BP zůstávají rozhodnutí majitele.
 - Solver z relace nespouštěj; ověřuj na logu příští noci.

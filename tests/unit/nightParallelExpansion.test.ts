@@ -135,6 +135,40 @@ describe("souběžné monolity v runneru", () => {
   });
 });
 
+describe("vytížení procesoru za noc", () => {
+  it("průměr se počítá z čítačů, a bez čítačů se nic netvrdí", () => {
+    const interpreter = python();
+    const runner = "Agents/solver-input/decomposition/run_night_decomposition.py";
+    if (interpreter === undefined || !existsSync(runner)) return;
+    const script = [
+      "import importlib.util, json, sys, time",
+      `sys.path.insert(0, ${JSON.stringify("Agents/solver-input/decomposition")})`,
+      `spec = importlib.util.spec_from_file_location("night", ${JSON.stringify(runner)})`,
+      "m = importlib.util.module_from_spec(spec)",
+      "spec.loader.exec_module(m)",
+      "start = m.cpu_times()",
+      "time.sleep(0.3)",
+      "busy = m.cpu_busy_percent(start, m.cpu_times())",
+      "print(json.dumps({",
+      "  'half': m.cpu_busy_percent((100, 1000), (600, 2000)),",
+      "  'missing': m.cpu_busy_percent(None, (1, 2)),",
+      "  'noTime': m.cpu_busy_percent((1, 5), (1, 5)),",
+      "  'real': busy,",
+      "}))",
+    ].join("\n");
+    const result = spawnSync(interpreter, ["-c", script], { encoding: "utf8" });
+    expect(result.status, result.stderr).toBe(0);
+    const out = JSON.parse(result.stdout) as Record<string, number | null>;
+    expect(out.half).toBe(50);
+    expect(out.missing).toBeNull();
+    expect(out.noTime).toBeNull();
+    if (process.platform === "win32") {
+      expect(out.real).toBeGreaterThanOrEqual(0);
+      expect(out.real).toBeLessThanOrEqual(100);
+    }
+  });
+});
+
 describe("čtení souběžné noci z logu", () => {
   const interleaved = [
     "[20:00:00] solving MTT9_40BB_HJ_BB_SRP A72r (vlákna 8, souběžně 2)",

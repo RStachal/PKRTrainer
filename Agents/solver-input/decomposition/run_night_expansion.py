@@ -401,9 +401,15 @@ def trial_threads(family: str, board: str, trial: int) -> int:
 # Minuty souběžné desky nejdou do ceny jedné desky (`boardCost.mts`, podle
 # `souběžně N` v řádku `solving`), jinak by strop rostl dvakrát. Noc se hodnotí
 # propustností: řádek `propustnost:` na konci běhu.
+#
+# 8 GB od 5. 11. 2026 (bylo 12). Noc 4.-5. 11. změřila špičku desky 2,0 až 11,6 GB,
+# průměr 5,9, a volno při čekání 7,1 až 11,5 GB: druhá deska skoro pořád čekala kvůli
+# rezervě, kterou nepotřebuje, a stroj jel v průměru s 1,3 deskami (1,38 desky za
+# hodinu proti 1,35 z jedné). Majitel chce v okně plné využití. Když se sejdou dvě
+# největší, Windows stránkuje a deska může spadnout; to řeší žebřík další noc.
 PARALLEL_THREADS = 8
 PARALLEL_CAP_FACTOR = 1.5
-PARALLEL_MIN_FREE_RAM_GB = 12
+PARALLEL_MIN_FREE_RAM_GB = 8
 PARALLEL_STAGGER_SECONDS = 180
 
 # Souběžné desky píšou z vláken; řádek se nesmí rozpadnout uprostřed.
@@ -901,10 +907,15 @@ def main():
             f"a rezerva krát {PARALLEL_CAP_FACTOR}, další deska až při "
             f"{PARALLEL_MIN_FREE_RAM_GB} GB volné paměti (pokus D6)")
     started = time.time()
+    from run_night_decomposition import cpu_busy_percent, cpu_times
+    cpu_started = cpu_times()
     stats = run_queue(todo[:limit] if limit else todo, deadline, parallel, threads, thread_trial)
     done, failed, slept_minutes = stats["done"], stats["failed"], stats["slept_minutes"]
 
     log(f"expansion: hotovo {done}, selhalo {failed}, zbývá {len(pending_boards())}")
+    busy = cpu_busy_percent(cpu_started, cpu_times())
+    if busy is not None:
+        log(f"vytížení procesoru: průměr {busy:.0f} % za celý běh expanze")
     # Propustnost noci: měřítko pokusu D6. Do 3. 11. 2026 se dala spočítat jen
     # z prvního a posledního řádku logu ručně.
     hours = (time.time() - started) / 3600

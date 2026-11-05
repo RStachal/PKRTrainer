@@ -511,7 +511,8 @@ say(`  rozklad drží ${pairs.size} dvojic sedaček: ${[...pairs.keys()].join(",
  * založení 25bb rodin hlásilo „šířka vyčerpaná", i když na 40 a 50 bb zbývalo
  * 29 rodin. Doporučení, které stroj nečte, není doporučení.
  *
- * Doplňuje se jen na hloubkách se **změřenou cenou desky**. Hloubka bez ceny
+ * Doplňuje se jen na hloubkách se **změřenou cenou desky**: napřed nové dvojice
+ * sedaček, a když dojdou, další desky existujícím rodinám. Hloubka bez ceny
  * (dnes 100 bb, kolem 2,5 h na desku) je rozhodnutí o tom, kam dát desítky
  * nocí, ne mechanika fronty - to se jen nahlásí. Zápis je idempotentní (drží
  * rodiny, které ve frontě leží, a zapisuje za její konec), takže opakovaný běh
@@ -546,11 +547,29 @@ if (nightsBefore < RUNWAY_NIGHTS_MIN) {
     const families = Number(/k založení:\s+\d+ dvojic, (\d+) rodin/.exec(run)?.[1] ?? "0");
     const written = /Zapsáno (\d+) parametrů do .* \(čísla od (\d+)\)/.exec(run);
     if (families === 0) {
-      say(`  POZOR: fronta je pod ${RUNWAY_NIGHTS_MIN} noci a na změřených hloubkách`
-        + ` (${MEASURED_DEPTHS.join(", ")} bb) není co založit.`);
-      say("  Další osa je rozhodnutí, ne mechanika: hloubka bez změřené ceny (100 bb),");
-      say("  další desky existujícím rodinám (mtt:board-growth), nebo 3BP. Do té doby noc");
-      say("  jede rozklad.");
+      /*
+       * Další desky rodinám, které už jsou. Do 5. 11. 2026 tu bylo jen doporučení,
+       * jenže šířka na změřených hloubkách došla a majitel chce každou noc a celý
+       * víkend solvit: rostou rodiny s nejmíň flopy, na hloubkách i šablonách,
+       * které jsou změřené, takže to není rozhodnutí o nových desítkách nocí jako
+       * 100 bb nebo 3BP. Zápis nezdvojí nic, co už ve frontě leží.
+       */
+      const growth = runScript("scripts/buildBoardGrowthBatch.mts", write ? ["--write"] : []);
+      const growthBoards = Number(/k dosolvení: \d+ rodin, (\d+) desek/.exec(growth)?.[1] ?? "0");
+      const grown = /Zapsáno (\d+) parametrů do .* \(čísla od (\d+)\)/.exec(growth);
+      if (grown !== null) {
+        const after = queueRunway(readExpansionQueue({ checkpointBase: CHECKPOINT_ROOT }), planMinutesFor);
+        say(`  DOPLNĚNO růstem desek: ${grown[1]} desek (čísla od ${grown[2]});`
+          + ` fronta teď vydrží ${(after.minutes / NIGHT_WINDOW_MINUTES).toFixed(1)} noci.`);
+      } else if (growthBoards > 0 && !write) {
+        say(`  Fronta je pod ${RUNWAY_NIGHTS_MIN} noci; s --write se doplní ${growthBoards} desek růstem rodin.`);
+      } else {
+        say(`  POZOR: fronta je pod ${RUNWAY_NIGHTS_MIN} noci, na změřených hloubkách`
+          + ` (${MEASURED_DEPTHS.join(", ")} bb) není co založit a růst desek nic nezapsal`
+          + ` (${growthBoards} desek v plánu).`);
+        say("  Další osa je rozhodnutí, ne mechanika: hloubka bez změřené ceny (100 bb)");
+        say("  nebo 3BP. Do té doby noc jede rozklad.");
+      }
     } else if (written !== null) {
       const after = queueRunway(readExpansionQueue({ checkpointBase: CHECKPOINT_ROOT }), planMinutesFor);
       say(`  DOPLNĚNO: ${families} rodin, ${written[1]} desek (čísla od ${written[2]});`

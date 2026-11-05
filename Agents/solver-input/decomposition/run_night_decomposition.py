@@ -943,6 +943,7 @@ def main():
     # Kdy turnová fáze předá okno riveru (od 20. 10. 2026, `--turn-share`).
     turn_until = turn_phase_end(datetime.now(), deadline, turn_share)
     split_reached = False
+    cpu_started = cpu_times()
     if turn_share < 1:
         log(f"turnová fáze do {turn_until:%Y-%m-%d %H:%M} ({turn_share:.0%} okna), pak river podle seznamu turnové EV")
     for family, board in ordered:
@@ -1033,6 +1034,7 @@ def main():
             break
 
     log(f"boards worked {done}, already complete {skipped}, failed {failed}")
+    log_cpu_busy(cpu_started, "turnové fáze")
 
     remaining = (deadline - datetime.now()).total_seconds() / 60
     # Kolik desek s checkpointem je rozložených. Bez toho by se river pouštěl
@@ -1043,6 +1045,7 @@ def main():
     ])
     turn_coverage = decomposed / len(boards) if boards else 0.0
     budget = river_budget_for(river_budget, turn_exhausted, remaining, turn_coverage, split_reached)
+    cpu_started = cpu_times()
     if budget is None:
         if split_reached:
             why = "podíl okna"
@@ -1061,6 +1064,53 @@ def main():
             "river phase se nespouští: turn není hotový "
             f"({turn_coverage * 100:.0f} % desek) a má přednost"
         )
+    if budget is None or budget > 0:
+        log_cpu_busy(cpu_started, "riverové fáze")
+
+
+def cpu_times():
+    """Čas všech procesorů od startu systému jako (nečinný, celkový), nebo `None`.
+
+    Od 5. 11. 2026, kvůli otázce majitele, jestli noc využívá stroj naplno. Z logu
+    se to dosud dalo jen odhadnout přes souběh desek. Čítače běží od startu
+    systému, takže stačí dvě čtení na začátku a na konci běhu a žádný vzorkovač
+    vedle solveru. Čas jádra z `GetSystemTimes` nečinnost obsahuje. Měření nesmí
+    zastavit noc, proto každé selhání znamená jen chybějící řádek v logu.
+    """
+    if os.name != "nt":
+        return None
+    try:
+        import ctypes
+
+        class FileTime(ctypes.Structure):
+            _fields_ = [("low", ctypes.c_ulong), ("high", ctypes.c_ulong)]
+
+        idle, kernel, user = FileTime(), FileTime(), FileTime()
+        if not ctypes.windll.kernel32.GetSystemTimes(
+            ctypes.byref(idle), ctypes.byref(kernel), ctypes.byref(user)
+        ):
+            return None
+        ticks = lambda item: (item.high << 32) + item.low
+        return ticks(idle), ticks(kernel) + ticks(user)
+    except Exception:
+        return None
+
+
+def cpu_busy_percent(start, end):
+    """Průměrné vytížení procesoru mezi dvěma čteními `cpu_times`, nebo `None`."""
+    if start is None or end is None:
+        return None
+    total = end[1] - start[1]
+    if total <= 0:
+        return None
+    return 100 * (1 - (end[0] - start[0]) / total)
+
+
+def log_cpu_busy(started, phase):
+    """Průměrné vytížení procesoru za fázi rozkladu."""
+    busy = cpu_busy_percent(started, cpu_times())
+    if busy is not None:
+        log(f"vytížení procesoru: průměr {busy:.0f} % za celou část {phase}")
 
 
 # Kolik okna musí zbývat, aby mělo smysl začínat další riverovou vrstvu.
