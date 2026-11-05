@@ -67,6 +67,11 @@
   color: var(--dx-on-accent);
 }
 
+/* Box má jen na telefonu (dole); jinde jsou stůl a dok přímo v mřížce. */
+.dx-trainer__play {
+  display: contents;
+}
+
 .dx-trainer__table {
   min-width: 0;
 }
@@ -335,6 +340,13 @@
 }
 
 @media (max-width: 719px) {
+  /* Mez pro lepkavý dok: dlouhé vyhodnocení přejede stůl, ne hlavičku. */
+  .dx-trainer__play {
+    display: grid;
+    gap: var(--dx-space-4);
+    min-width: 0;
+  }
+
   .dx-trainer__dock {
     position: sticky;
     bottom: 0;

@@ -243,6 +243,7 @@ export interface TableState {
 
 import type { ActionEvSet } from "./actionEv";
 import type { OpponentStyleId } from "./opponentStyle";
+import type { TrainingMode, VillainArchetype } from "./villain/archetypes";
 
 /** Jedna nabízená odpověď: 1 Akční_klíč + popisek. */
 export interface Answer {
@@ -303,8 +304,18 @@ export interface Filters {
    * not swap in a second set of ranges; it supplies one number, the folds that
    * opponent gives, and the trainer prices the decision against it. See
    * `core/opponentStyle`.
+   *
+   * Since 5 Nov 2026 it is derived from `trainingMode` and `villainFocus`
+   * (`opponentStyleFor`): the start screen names a player type, not a quadrant.
    */
   opponentStyle?: OpponentStyleId;
+  /**
+   * Režim tréninku (Agents/plan-gto-real-2026-11.md): bez něj GTO - soupeři
+   * hrají rovnováhu. REAL staví stůl z typů hráčů.
+   */
+  trainingMode?: TrainingMode;
+  /** REAL: trénink proti typu - soupeř ve hře je vždy tenhle; bez něj živý stůl. */
+  villainFocus?: VillainArchetype;
 }
 
 export interface SessionConfig {

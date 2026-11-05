@@ -159,7 +159,11 @@ export function createTrainerFrame(doc: Document, options: TrainerFrameOptions):
   feedback.setAttribute("aria-label", localizedText("Result", "Vyhodnocení"));
   feedback.hidden = true;
   dock.append(prompt, actions, feedback);
-  root.append(head, table, dock);
+  // Na telefonu se dok lepí ke spodku a lepkavý prvek neopustí svého rodiče:
+  // s obalem přejede stůl, ale ne hlavičku se „Změnit situaci“.
+  const play = el(doc, "div", "dx-trainer__play");
+  play.append(table, dock);
+  root.append(head, play);
 
   let nextButton: HTMLButtonElement | null = null;
 

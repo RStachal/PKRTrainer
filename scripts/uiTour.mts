@@ -33,6 +33,7 @@ import { QA_VIEWPORTS, type Viewport } from "./lib/viewports.mts";
  *   npm run ui:tour                                 postaví dist/ a projde všechny šířky
  *   npm run ui:tour -- --no-build                   použije existující dist/
  *   npm run ui:tour -- --viewports=desktop-1280,mobile-390
+ *   npm run ui:tour -- --mode=real                  stůl s typy hráčů (režim REAL), snímky do složky s -real
  *
  * Fotí jediné GUI tréninku; klasické se smazalo 4. 11. 2026 a s ním přepínač
  * `--ui`. Starší prohlídky s příponou `-next` jsou totéž GUI.
@@ -60,6 +61,8 @@ const POSTFLOP = {
 interface TourArgs {
   build: boolean;
   viewports: readonly Viewport[];
+  /** Režim tréninku na startu (Agents/plan-gto-real-2026-11.md); výchozí GTO. */
+  mode: "GTO" | "REAL";
 }
 
 interface Shot {
@@ -78,9 +81,12 @@ interface MissingStep {
 function parseArgs(argv: readonly string[]): TourArgs {
   let build = true;
   let viewports: readonly Viewport[] = QA_VIEWPORTS;
+  let mode: TourArgs["mode"] = "GTO";
   for (const arg of argv) {
     if (arg === "--no-build") {
       build = false;
+    } else if (arg === "--mode=real" || arg === "--mode=gto") {
+      mode = arg === "--mode=real" ? "REAL" : "GTO";
     } else if (arg.startsWith("--viewports=")) {
       const names = arg.slice("--viewports=".length).split(",").map((name) => name.trim());
       const unknown = names.filter((name) => !QA_VIEWPORTS.some((viewport) => viewport.name === name));
@@ -91,10 +97,10 @@ function parseArgs(argv: readonly string[]): TourArgs {
       }
       viewports = QA_VIEWPORTS.filter((viewport) => names.includes(viewport.name));
     } else {
-      throw new Error(`neznámý přepínač ${arg}; známé: --no-build, --viewports=a,b`);
+      throw new Error(`neznámý přepínač ${arg}; známé: --no-build, --viewports=a,b, --mode=real|gto`);
     }
   }
-  return { build, viewports };
+  return { build, viewports, mode };
 }
 
 function timestamp(date: Date): string {
@@ -127,8 +133,17 @@ async function click(client: CdpClient, selector: string): Promise<void> {
   })()`);
 }
 
-async function setSeedAndStreet(client: CdpClient, street: "PREFLOP" | "FLOP"): Promise<void> {
+async function setSeedAndStreet(
+  client: CdpClient,
+  street: "PREFLOP" | "FLOP",
+  mode: TourArgs["mode"],
+): Promise<void> {
   await evaluate(client, `(() => {
+    const mode = document.querySelector(".filter-mode");
+    if (mode instanceof HTMLSelectElement && mode.value !== ${JSON.stringify(mode)}) {
+      mode.value = ${JSON.stringify(mode)};
+      mode.dispatchEvent(new Event("change", { bubbles: true }));
+    }
     const select = document.querySelector(".profile-street");
     if (select instanceof HTMLSelectElement && select.value !== ${JSON.stringify(street)}) {
       select.value = ${JSON.stringify(street)};
@@ -175,7 +190,7 @@ async function capture(
  * Kroky prohlídky. Každý staví na předchozím, takže první, který selže,
  * ukončí prohlídku na téhle šířce a zbytek se zapíše jako chybějící.
  */
-function tourSteps(): ReadonlyArray<{ step: string; run: (client: CdpClient) => Promise<void> }> {
+function tourSteps(mode: TourArgs["mode"]): ReadonlyArray<{ step: string; run: (client: CdpClient) => Promise<void> }> {
   const preflop = PREFLOP;
   const postflop = POSTFLOP;
   // Matice range v dialogu (fáze 2).
@@ -195,7 +210,7 @@ function tourSteps(): ReadonlyArray<{ step: string; run: (client: CdpClient) => 
     step: "01-start",
     run: async (client) => {
       await waitForSelector(client, ".filter-start", STEP_TIMEOUT_MS);
-      await setSeedAndStreet(client, "PREFLOP");
+      await setSeedAndStreet(client, "PREFLOP", mode);
     },
   },
   {
@@ -219,7 +234,7 @@ function tourSteps(): ReadonlyArray<{ step: string; run: (client: CdpClient) => 
       await closeRange(client);
       await click(client, preflop.change);
       await waitForSelector(client, ".filter-start", STEP_TIMEOUT_MS);
-      await setSeedAndStreet(client, "FLOP");
+      await setSeedAndStreet(client, "FLOP", mode);
       await click(client, ".filter-start");
       await waitForSelector(client, postflop.action, STEP_TIMEOUT_MS);
     },
@@ -236,8 +251,11 @@ function tourSteps(): ReadonlyArray<{ step: string; run: (client: CdpClient) => 
 }
 
 const args = parseArgs(process.argv.slice(2));
-const STEPS = tourSteps();
-const outDirectory = resolve("artifacts/ui-tour", timestamp(new Date()));
+const STEPS = tourSteps(args.mode);
+const outDirectory = resolve(
+  "artifacts/ui-tour",
+  `${timestamp(new Date())}${args.mode === "REAL" ? "-real" : ""}`,
+);
 const profileDirectory = mkdtempSync(join(tmpdir(), "pkrtrainer-ui-tour-"));
 const shots: Shot[] = [];
 const missing: MissingStep[] = [];
@@ -318,6 +336,7 @@ writeFileSync(join(outDirectory, "index.json"), `${JSON.stringify({
   createdAt: new Date().toISOString(),
   commit: gitCommit(),
   seed: TOUR_SEED,
+  mode: args.mode,
   built: args.build,
   shots,
   missing,

@@ -16,8 +16,10 @@ import { postflopPokerTable } from "../kit/pokerTable";
 import { formatSharePercent, strategyBar, strategyLegend } from "../kit/strategyBar";
 import { postflopModelNotes } from "../postflopModelNotes";
 import { colorForPostflopAction } from "../rangeMatrixView";
+import { POSITION_ORDER } from "../../core/types";
 import { actionText, facingBetBb } from "./postflopActionText";
 import { openPostflopRange } from "./postflopRange";
+import { GTO_PLAYERS, postflopTablePlayers, type PlayerSettings } from "./tablePlayers";
 import { actionButton, button, createTrainerFrame, el, nextSpotRow } from "./trainerFrame";
 
 /**
@@ -41,6 +43,8 @@ export interface PostflopTrainerViewOptions {
   onAnswered: (spot: PostflopTrainingSpot, chosen: PostflopAction, responseMs?: number) => void;
   /** Hodiny pro dobu rozhodnutí v ms; testy si dají vlastní. */
   now?: () => number;
+  /** Režim a soupeř ve hře pro stůl; bez nich GTO (žetony s pozicí). */
+  players?: () => PlayerSettings;
 }
 
 /**
@@ -429,7 +433,8 @@ export function createPostflopTrainerView(
       `SPR ${formatDecimal(spot.spr)}`,
       spot.inPosition ? "IP" : "OOP",
     ].join(" · ");
-    frame.table.replaceChildren(postflopPokerTable(doc, spot));
+    const players = postflopTablePlayers(spot, options.players?.() ?? GTO_PLAYERS);
+    frame.table.replaceChildren(postflopPokerTable(doc, spot, POSITION_ORDER, players));
     const history = line === null ? [] : lineHistory(spot, line.priorActions);
     frame.prompt.replaceChildren(
       ...history.map((sentence) => el(doc, "span", "dx-trainer__line-history", sentence)),

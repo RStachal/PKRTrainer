@@ -43,6 +43,7 @@ import {
   createPostflopTrainerView,
   type PostflopTrainerView,
 } from "./trainer/postflopTrainerView";
+import { GTO_PLAYERS, type PlayerSettings } from "./trainer/tablePlayers";
 import { gradePostflopAction } from "../core/postflopScoring";
 
 const SEED_MAX = 0xffffffff;
@@ -88,6 +89,8 @@ export interface PostflopViewOptions {
     chosen: PostflopAction,
     responseMs?: number,
   ) => void;
+  /** Režim tréninku a soupeř ve hře pro stůl (plán GTO/REAL); bez nich GTO. */
+  players?: PlayerSettings;
 }
 
 /** Nová obrazovka panelu; při dalším vykreslení panelu se odpojí. */
@@ -236,7 +239,14 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
   output.hidden = true;
   wrap.appendChild(output);
 
+  // Rozdání čeká na přípravu ulice a tabulku EV. Každé rozdání i „Změnit
+  // situaci“ si vezme nové pořadí a rozdání, které mezitím něco předběhlo, se
+  // zahodí: pomalé „Další spot“ jinak po návratu přepsalo zadání situace nebo
+  // novější spot.
+  let dealTicket = 0;
+
   const showSituationInput = (): void => {
+    dealTicket += 1;
     output.innerHTML = "";
     output.hidden = true;
     controls.hidden = false;
@@ -252,6 +262,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
         onNext: () => void showNewSpot(),
         onChangeSituation: showSituationInput,
         onAnswered: (spot, chosen, responseMs) => options.onAnswered?.(spot, chosen, responseMs),
+        players: () => options.players ?? GTO_PLAYERS,
       });
       NEXT_VIEWS.set(root, trainerView);
     }
@@ -303,6 +314,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
   };
 
   const showNewSpot = async (): Promise<void> => {
+    const ticket = ++dealTicket;
     const seed = parseSeed(seedInput.value) ?? randomSeed();
     // Seed je jednorázový vstup pro reprodukci konkrétní situace. Po použití
     // jej vyčistíme, aby další generování nebo nový spot nevytvořily znovu
@@ -321,6 +333,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
       const mode = modeSelect.value === "line" ? "line" : "single";
       const preparation = options.beforeGenerate?.(mode, street);
       if (preparation) await preparation;
+      if (ticket !== dealTicket) return;
       if (modeSelect.value === "line") {
         // Postavit linku kolem vyřešeného turnu, když nějaký je. Bez toho se
         // rozdá náhodná deska a resolver ji odmítne - měřeno 0 z 500 linek se
@@ -332,6 +345,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
           ? primeRiverEvForPack(solved.riverPackId)
           : undefined;
         if (linePriming) await linePriming;
+        if (ticket !== dealTicket) return;
         const line = generatePostflopLine({
           seed,
           potType: solved?.potType ?? options.initialPotType,
@@ -367,6 +381,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
       };
       const priming = primePostflopDeal(request, context);
       if (priming) await priming;
+      if (ticket !== dealTicket) return;
       const dealt = dealPostflopSpot(request, context);
       output.hidden = false;
       if (dealt.kind === "UNAVAILABLE") {
@@ -384,6 +399,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
       // catch made every other failure look like that too, so a real defect would
       // have been reported by players as thin coverage and never as a bug.
       if (!(error instanceof PostflopStrategyUnavailableError)) throw error;
+      if (ticket !== dealTicket) return;
       controls.hidden = false;
       output.hidden = false;
       renderUnavailable(output, isResolvingPilotSpot(street, actionNode, {

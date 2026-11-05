@@ -12,7 +12,9 @@ import { playingCard } from "../kit/playingCard";
 import { pokerTable } from "../kit/pokerTable";
 import { colorForActionKey } from "../rangeMatrixView";
 import { openPreflopRange } from "./preflopRange";
+import { preflopTablePlayers } from "./tablePlayers";
 import { actionButton, button, createTrainerFrame, el, nextSpotRow } from "./trainerFrame";
+import { POSITION_ORDER } from "../../core/types";
 
 /**
  * Obrazovka preflopového tréninku (Agents/ui-redesign-plan.md, fáze 1,
@@ -204,7 +206,12 @@ export function createPreflopTrainerView(
     frame.title.textContent = options.title(spot);
     const ante = filters?.ante ?? spot.ante;
     frame.meta.textContent = `${spot.effStack} BB · ${ante === "ON" ? "ante" : localizedText("no ante", "bez ante")}`;
-    frame.table.replaceChildren(pokerTable(doc, spot, ante));
+    // Režim a soupeř ve hře z nastavení relace: GTO žetony, REAL typy hráčů.
+    const players = preflopTablePlayers(spot, {
+      mode: filters?.trainingMode ?? "GTO",
+      ...(filters?.villainFocus === undefined ? {} : { focus: filters.villainFocus }),
+    });
+    frame.table.replaceChildren(pokerTable(doc, spot, ante, POSITION_ORDER, players));
     frame.prompt.replaceChildren(
       `${localizedText("How do you play", "Jak zahraješ")} `,
       ...spot.heroCards.map((card) => playingCard(doc, card, "sm")),

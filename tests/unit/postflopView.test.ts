@@ -263,6 +263,9 @@ describe("postflopView - panel", () => {
     expect(actions(root)).toHaveLength(3);
     expect(document.activeElement).toBe(root.querySelector(ACTION));
     expect(screen.dataset.seed).toBe("42");
+    // Lepkavý dok nesmí na telefonu přejet hlavičku: drží ho obal bez ní.
+    expect(screen.querySelector(".dx-trainer__play .dx-trainer__dock")).not.toBeNull();
+    expect(screen.querySelector(".dx-trainer__play .dx-trainer__change")).toBeNull();
 
     answer(root);
     root.querySelector<HTMLInputElement>(".postflop-seed")!.value = "43";
@@ -276,6 +279,47 @@ describe("postflopView - panel", () => {
     expect(root.querySelector<HTMLElement>(".postflop-controls")?.hidden).toBe(false);
     expect(root.querySelector<HTMLElement>(".postflop-output")?.hidden).toBe(true);
     expect(document.activeElement).toBe(root.querySelector(".postflop-street"));
+    expect(root.querySelector(ACTION)).toBeNull();
+  });
+
+  it("pomalé rozdání nepřepíše novější spot ani „Změnit situaci“", async () => {
+    const root = document.createElement("div");
+    document.body.appendChild(root);
+    const gates: Array<() => void> = [];
+    let slow = false;
+    renderPostflopView(root, {
+      initialSeed: 42,
+      initialStreet: "FLOP",
+      beforeGenerate: () => (slow ? new Promise<void>((resolve) => { gates.push(resolve); }) : undefined),
+    });
+    root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+    await dealt(root);
+    answer(root);
+    slow = true;
+
+    // Dvakrát „Další spot“, než první rozdání doběhne: zůstane to druhé.
+    const seed = root.querySelector<HTMLInputElement>(".postflop-seed")!;
+    const next = root.querySelector<HTMLButtonElement>(`${TRAINER} .dx-trainer__next`)!;
+    seed.value = "43";
+    next.click();
+    seed.value = "44";
+    next.click();
+    gates[1]();
+    await vi.waitFor(() => {
+      expect(root.querySelector<HTMLElement>(TRAINER)?.dataset.seed).toBe("44");
+    });
+    gates[0]();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(root.querySelector<HTMLElement>(TRAINER)?.dataset.seed).toBe("44");
+
+    // „Změnit situaci“, zatímco se rozdává: zadání zůstane na obrazovce.
+    answer(root);
+    root.querySelector<HTMLButtonElement>(`${TRAINER} .dx-trainer__next`)?.click();
+    root.querySelector<HTMLButtonElement>(`${TRAINER} .dx-trainer__change`)?.click();
+    gates[2]();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(root.querySelector<HTMLElement>(".postflop-controls")?.hidden).toBe(false);
+    expect(root.querySelector<HTMLElement>(".postflop-output")?.hidden).toBe(true);
     expect(root.querySelector(ACTION)).toBeNull();
   });
 

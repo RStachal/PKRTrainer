@@ -67,14 +67,20 @@ import {
   type ScoringMode,
   type StackBucket,
 } from "../core/types";
-import type { OpponentStyleId } from "../core/opponentStyle";
 import {
   positionsForFormat,
   type TableFormat,
   type TrainingProfile,
 } from "../core/trainingProfile";
+import {
+  VILLAIN_ARCHETYPES,
+  isVillainArchetype,
+  opponentStyleFor,
+  type TrainingMode,
+} from "../core/villain/archetypes";
 import { renderProfileSelector, type ProfileSelectorView } from "./profileSelector";
-import { CS } from "./cs";
+import { CS, localizedText } from "./cs";
+import { archetypeName } from "./villainText";
 
 // ---------------------------------------------------------------------------
 // Uzavřená sada akčních kontextů + české popisky (Req 13.3, 12.3)
@@ -732,14 +738,38 @@ export function renderFilters(
   scoringLabel.appendChild(scoringSelect);
   configBox.appendChild(scoringLabel);
 
-  // Who the hero is up against.
+  // Režim tréninku a soupeř ve hře (Agents/plan-gto-real-2026-11.md, 3.1).
   //
-  // The shipped ranges are a GTO baseline against nobody in particular, and that
-  // stays the default and stays the answer. Naming an opponent does not swap in a
-  // second set of ranges - there is no second set, and inventing one would be
-  // inventing poker. It supplies one number, the folds that opponent gives, and
-  // the result panel prices the decision against it. See core/opponentStyle for
-  // where the two measured anchors come from and where the interpolation starts.
+  // GTO: soupeři hrají rovnováhu a hodnotí se proti dodaným range - to zůstává
+  // výchozí. REAL: u stolu sedí typy hráčů; soupeř ve hře je živý stůl (mix),
+  // nebo zvolený typ. Zvolený typ dnes posune jediné číslo, které preflopové EV
+  // umí - jak často soupeř folduje proti shove (core/opponentStyle) -, vlastní
+  // výpočet proti typu přijde s REAL preflopem (M3). Až fáze 3 redesignu
+  // postaví start s volbou režimu, tyhle dvě volby se tam přestěhují.
+  const modeLabel = doc.createElement("label");
+  modeLabel.className = "filter-mode-item";
+  modeLabel.style.display = "inline-flex";
+  modeLabel.style.alignItems = "center";
+  modeLabel.style.gap = "4px";
+  modeLabel.style.fontSize = "13px";
+  const modeText = doc.createElement("span");
+  modeText.textContent = localizedText("Mode:", "Režim:");
+  const modeSelect = doc.createElement("select");
+  modeSelect.className = "filter-mode";
+  for (const [value, label] of [
+    ["GTO", localizedText("GTO - balanced opponents", "GTO - soupeři hrají rovnováhu")],
+    ["REAL", localizedText("REAL - player types", "REAL - typy hráčů")],
+  ] as const) {
+    const option = doc.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    modeSelect.appendChild(option);
+  }
+  modeSelect.value = "GTO";
+  modeLabel.appendChild(modeText);
+  modeLabel.appendChild(modeSelect);
+  configBox.appendChild(modeLabel);
+
   const opponentLabel = doc.createElement("label");
   opponentLabel.className = "filter-opponent-item";
   opponentLabel.style.display = "inline-flex";
@@ -751,11 +781,8 @@ export function renderFilters(
   const opponentSelect = doc.createElement("select");
   opponentSelect.className = "filter-opponent";
   for (const [value, label] of [
-    ["", CS.filters.opponentUnknown],
-    ["TIGHT_AGGRESSIVE", CS.filters.opponentTightAggressive],
-    ["TIGHT_PASSIVE", CS.filters.opponentTightPassive],
-    ["LOOSE_AGGRESSIVE", CS.filters.opponentLooseAggressive],
-    ["LOOSE_PASSIVE", CS.filters.opponentLoosePassive],
+    ["", localizedText("Live table (mix)", "Živý stůl (mix)")],
+    ...VILLAIN_ARCHETYPES.map((archetype) => [archetype, archetypeName(archetype)] as const),
   ] as const) {
     const option = doc.createElement("option");
     option.value = value;
@@ -766,6 +793,13 @@ export function renderFilters(
   opponentLabel.appendChild(opponentText);
   opponentLabel.appendChild(opponentSelect);
   configBox.appendChild(opponentLabel);
+
+  // Soupeř ve hře dává smysl jen v REAL; v GTO je soupeřem rovnováha.
+  const refreshOpponent = (): void => {
+    opponentLabel.hidden = modeSelect.value !== "REAL";
+  };
+  modeSelect.addEventListener("change", refreshOpponent);
+  refreshOpponent();
 
   // Seed (Req 6.7 — prázdné = engine vygeneruje).
   const seedLabel = doc.createElement("label");
@@ -857,9 +891,9 @@ export function renderFilters(
     const ante: AnteMode = anteInput.checked ? "ON" : "OFF";
     const scoringMode: ScoringMode =
       scoringSelect.value === "STRICT" ? "STRICT" : "LENIENT";
-    const opponentStyle = opponentSelect.value === ""
-      ? undefined
-      : opponentSelect.value as OpponentStyleId;
+    const trainingMode: TrainingMode = modeSelect.value === "REAL" ? "REAL" : "GTO";
+    const focus = opponentSelect.value;
+    const villainFocus = trainingMode === "REAL" && isVillainArchetype(focus) ? focus : undefined;
     const positionOrder = positionsForFormat(profileSelector.getProfile().tableFormat);
     return {
       positions: collect(positionOrder, positionInputs),
@@ -867,7 +901,10 @@ export function renderFilters(
       contexts: collect(CONTEXT_ORDER, contextInputs),
       ante,
       scoringMode,
-      opponentStyle,
+      opponentStyle: opponentStyleFor(trainingMode, villainFocus),
+      // GTO je výchozí a v datech chybí, ať se dnešní filtry neliší ani bajtem.
+      ...(trainingMode === "REAL" ? { trainingMode } : {}),
+      ...(villainFocus === undefined ? {} : { villainFocus }),
     };
   }
 
@@ -918,7 +955,9 @@ export function renderFilters(
       setCheckedValues(contextInputs, filters.contexts);
       anteInput.checked = filters.ante === "ON";
       scoringSelect.value = filters.scoringMode;
-      opponentSelect.value = filters.opponentStyle ?? "";
+      modeSelect.value = filters.trainingMode ?? "GTO";
+      opponentSelect.value = filters.villainFocus ?? "";
+      refreshOpponent();
       hideWarning();
     },
     getProfile(): TrainingProfile {

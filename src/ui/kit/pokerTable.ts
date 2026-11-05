@@ -5,10 +5,15 @@ import {
 } from "../../core/postflopTrainingSpot";
 import type { AnteMode, Card, Position, Spot } from "../../core/types";
 import { POSITION_ORDER } from "../../core/types";
+import type { TrainingMode } from "../../core/villain/archetypes";
+import type { TableCast } from "../../core/villain/tableCast";
 import { localizedText } from "../cs";
 import { colorForActionKey, colorForPostflopAction } from "../rangeMatrixView";
 import { BADGE_LABEL, deriveSeats, seatSlot, type TableSeat } from "../tableModel";
 import { startingPotBB } from "../tableRenderer";
+import { archetypeName } from "../villainText";
+import { playerAvatar, type AvatarState } from "./avatar";
+import type { AvatarKind } from "./avatarArt";
 import { formatBbAmount } from "./format";
 import { playingCard, playingCardName } from "./playingCard";
 
@@ -49,6 +54,18 @@ interface SeatView {
   badge: SeatBadge | null;
 }
 
+/**
+ * Kdo sedí u stolu (Agents/plan-gto-real-2026-11.md, 3.1). V režimu GTO má
+ * každé sedadlo žeton s pozicí, v REAL kresbu typu hráče z obsazení.
+ */
+export interface TablePlayers {
+  mode: TrainingMode;
+  /** Typ hráče na sedadle; v GTO se nečte. */
+  cast: TableCast;
+  /** Soupeř ve hře, proti kterému se hráč rozhoduje - dostane bílý lem. */
+  focusSeat?: Position;
+}
+
 interface TableView {
   seats: readonly SeatView[];
   heroPosition: Position;
@@ -59,6 +76,20 @@ interface TableView {
   board: readonly Card[];
   /** Popis celého stolu pro čtečku. */
   summary: string;
+  /** Avatary u sedadel; bez nich stůl kreslí jen štítky. */
+  players?: TablePlayers;
+}
+
+function seatAvatarKind(seat: SeatView, players: TablePlayers): AvatarKind {
+  if (players.mode === "GTO") return "GTO";
+  if (seat.isHero) return "HERO";
+  return players.cast[seat.position] ?? "GTO";
+}
+
+function seatAvatarState(seat: SeatView, players: TablePlayers): AvatarState {
+  if (seat.isHero) return "active";
+  if (seat.position === players.focusSeat) return "focus";
+  return "idle";
 }
 
 function seatPoint(slot: number, seatCount: number): { x: number; y: number } {
@@ -75,6 +106,12 @@ function drawTable(doc: Document, view: TableView): HTMLDivElement {
   table.className = "dx-table";
   table.setAttribute("role", "img");
   table.setAttribute("aria-label", view.summary);
+  // Stůl s avatary má vyšší sedadla; CSS mu dá víc místa a karty hráče
+  // přesune na plátno nad jeho sedadlo.
+  if (view.players !== undefined) {
+    table.dataset.players = "true";
+    table.dataset.mode = view.players.mode;
+  }
 
   const felt = doc.createElement("div");
   felt.className = "dx-table__felt";
@@ -108,25 +145,59 @@ function drawTable(doc: Document, view: TableView): HTMLDivElement {
     node.style.setProperty("--seat-x", `${point.x}%`);
     node.style.setProperty("--seat-y", `${point.y}%`);
 
-    const name = doc.createElement("span");
-    name.className = "dx-table__pos";
-    name.textContent = seat.isHero ? `${seat.position} · ${localizedText("you", "ty")}` : seat.position;
-    node.appendChild(name);
-
-    if (seat.active) {
-      const stack = doc.createElement("span");
-      stack.className = "dx-table__stack";
-      stack.textContent = formatBbAmount(seat.stackBb);
-      node.appendChild(stack);
+    const players = view.players;
+    const kind = players === undefined ? undefined : seatAvatarKind(seat, players);
+    if (players !== undefined && kind !== undefined) {
+      node.dataset.player = kind;
+      if (seat.position === players.focusSeat) node.dataset.focus = "true";
+      node.appendChild(playerAvatar(doc, { kind, label: seat.position, state: seatAvatarState(seat, players) }));
     }
 
-    if (seat.badge !== null) {
-      const badge = doc.createElement("span");
+    const name = doc.createElement("span");
+    name.className = "dx-table__pos";
+    if (seat.isHero) {
+      name.textContent = `${seat.position} · ${localizedText("you", "ty")}`;
+    } else if (kind !== undefined && kind !== "GTO" && kind !== "HERO") {
+      // Na desktopu „Kostka · CO“, na telefonu jen „CO“ - typ tam poví kresba.
+      const who = doc.createElement("span");
+      who.className = "dx-table__who";
+      who.textContent = `${archetypeName(kind)} · `;
+      name.append(who, seat.position);
+    } else {
+      name.textContent = seat.position;
+    }
+
+    const stack = seat.active ? doc.createElement("span") : null;
+    if (stack !== null) {
+      stack.className = "dx-table__stack";
+      stack.textContent = formatBbAmount(seat.stackBb);
+    }
+
+    const badge = seat.badge === null ? null : doc.createElement("span");
+    if (badge !== null && seat.badge !== null) {
       badge.className = "dx-table__badge";
       badge.dataset.action = seat.badge.action;
       if (seat.badge.color !== undefined) badge.style.setProperty("--action-accent", seat.badge.color);
       badge.textContent = seat.badge.label;
-      node.appendChild(badge);
+    }
+
+    if (kind === undefined) {
+      node.append(name, ...(stack === null ? [] : [stack]), ...(badge === null ? [] : [badge]));
+    } else {
+      // S avatarem je sedadlo avatar a jmenovka pod ním, jako u pokerového
+      // stolu: pozice nahoře, stack a akce na jednom řádku. Sedadlo tak
+      // nepřeroste mezeru mezi sousedy ani na telefonu (5. 11. 2026).
+      const plate = doc.createElement("div");
+      plate.className = "dx-table__plate";
+      plate.appendChild(name);
+      if (stack !== null || badge !== null) {
+        const line = doc.createElement("span");
+        line.className = "dx-table__line";
+        if (stack !== null) line.appendChild(stack);
+        if (badge !== null) line.appendChild(badge);
+        plate.appendChild(line);
+      }
+      node.appendChild(plate);
     }
 
     if (seat.position === "BTN") {
@@ -174,9 +245,11 @@ export function pokerTable(
   spot: Spot,
   ante: AnteMode,
   positionOrder: readonly Position[] = POSITION_ORDER,
+  players?: TablePlayers,
 ): HTMLDivElement {
   const seats = deriveSeats(spot, positionOrder);
   return drawTable(doc, {
+    ...(players === undefined ? {} : { players }),
     seats: seats.map((seat) => ({
       position: seat.position,
       isHero: seat.isHero,
@@ -237,9 +310,11 @@ export function postflopPokerTable(
   doc: Document,
   spot: PostflopTrainingSpot,
   positionOrder: readonly Position[] = POSITION_ORDER,
+  players?: TablePlayers,
 ): HTMLDivElement {
   const badge = villainBadge(spot, villainActionBeforeHero(spot));
   return drawTable(doc, {
+    ...(players === undefined ? {} : { players }),
     seats: positionOrder.map((position) => ({
       position,
       isHero: position === spot.heroPosition,

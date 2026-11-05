@@ -500,6 +500,11 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       options.filters
     ) ? resolvedProfile : null;
     renderPostflopView(shell.postflopPanel, {
+      // Režim a soupeř ve hře ze startu tréninku (plán GTO/REAL, 3.1).
+      players: {
+        mode: options.filters?.trainingMode ?? "GTO",
+        ...(options.filters?.villainFocus === undefined ? {} : { focus: options.filters.villainFocus }),
+      },
       initialStreet: options.initialStreet ?? "FLOP",
       initialSeed: options.initialSeed,
       initialPositionContext: postflopIntent?.positionContext,

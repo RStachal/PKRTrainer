@@ -948,13 +948,21 @@ async function activate(
     return;
   }
 
-  const point = await evaluate<{ x: number; y: number }>(client, `(() => {
+  const point = await evaluate<{ x: number; y: number; covered: string }>(client, `(() => {
     const element = document.querySelector(${JSON.stringify(selector)});
     if (!(element instanceof HTMLElement)) throw ${missingElementError(selector)};
     element.scrollIntoView({ block: "center" });
     const rect = element.getBoundingClientRect();
-    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    const hit = document.elementFromPoint(x, y);
+    const reached = hit !== null && (hit === element || element.contains(hit));
+    return { x, y, covered: reached ? "" : hit === null ? "nothing" : hit.tagName + "." + hit.className };
   })()`);
+  // Klepnutí dostane to, co na tom místě leží nahoře. Dotykový hráč by trefil
+  // něco jiného, takže zakrytý prvek je chyba obrazovky (5. 11. 2026: dok přes
+  // „Změnit situaci“ rozdával místo zadání další spot).
+  assert(point.covered === "", `A tap on ${selector} would land on ${point.covered}`);
   await client.send("Input.dispatchTouchEvent", {
     type: "touchStart",
     touchPoints: [{ x: point.x, y: point.y }],
@@ -1096,6 +1104,14 @@ async function runNextUiScenario(
   });
   await navigate(client, targetUrl);
   await waitForSelector(client, ".filter-start");
+  // Tenhle scénář jede v režimu REAL (plán GTO/REAL): stůl s typy hráčů musí
+  // projít stejnými šířkami a stejnou kontrolou překryvu jako GTO v hlavním toku.
+  await evaluate(client, `(() => {
+    const mode = document.querySelector(".filter-mode");
+    if (!(mode instanceof HTMLSelectElement)) throw new Error("Missing training mode");
+    mode.value = "REAL";
+    mode.dispatchEvent(new Event("change", { bubbles: true }));
+  })()`);
   await activate(client, ".filter-start", input);
   await waitForSelector(client, ".dx-trainer__actions button");
 
@@ -1106,7 +1122,12 @@ async function runNextUiScenario(
     overflow: number;
     seats: number;
     overlaps: string[];
+    avatars: number;
+    heroAvatars: number;
+    typedAvatars: number;
   }>(client, `(() => {
+    const kinds = [...document.querySelectorAll(".training__game .dx-table__seat .dx-avatar")]
+      .map((avatar) => avatar.getAttribute("data-kind"));
     // Štítky sedadel se nesmějí překrývat na žádné šířce - starý stůl to
     // na 360 px dělal (Agents/ui-redesign-plan.md).
     const seats = [...document.querySelectorAll(".dx-table__seat")];
@@ -1127,7 +1148,10 @@ async function runNextUiScenario(
       feedbackHidden: document.querySelector(".dx-trainer__feedback")?.hidden === true,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       seats: seats.length,
-      overlaps
+      overlaps,
+      avatars: kinds.length,
+      heroAvatars: kinds.filter((kind) => kind === "HERO").length,
+      typedAvatars: kinds.filter((kind) => kind !== "HERO" && kind !== "GTO").length
     };
   })()`);
   assert(question.actions >= 2, `${viewport.name} next UI: only ${question.actions} actions`);
@@ -1135,6 +1159,10 @@ async function runNextUiScenario(
   assert(question.feedbackHidden, `${viewport.name} next UI: feedback visible before an answer`);
   assert(question.overflow <= 1, `${viewport.name} next UI: page overflow ${question.overflow}px`);
   assert(question.seats === 9, `${viewport.name} next UI: ${question.seats} seats on the table`);
+  assert(
+    question.avatars === 9 && question.heroAvatars === 1 && question.typedAvatars === 8,
+    `${viewport.name} next UI REAL: ${question.avatars} avatars, ${question.heroAvatars} hero, ${question.typedAvatars} player types`,
+  );
   assert(
     question.overlaps.length === 0,
     `${viewport.name} next UI: overlapping seats ${question.overlaps.join(", ")}`,
@@ -1452,7 +1480,10 @@ async function runNextUiPostflopScenario(
   // ulici), ale tady v náhledu, tedy v bráně. Linka smí skončit dřív (fold,
   // all-in), proto se jde, dokud se neukáže její konec.
   await activate(client, `${scope} .dx-trainer__change`, input);
-  await waitForSelector(client, ".postflop-generate");
+  // Viditelné zadání, ne jen tlačítko v DOM: schované se nedá stisknout. Dokud
+  // ho CSS neschovávalo (do 5. 11. 2026), „Generovat“ prošlo, i když klepnutí
+  // na „Změnit situaci“ minulo.
+  await waitForSelector(client, ".postflop-controls:not([hidden]) .postflop-generate");
   const lineOffered = await evaluate<boolean>(client, `(() => {
     const mode = document.querySelector(".postflop-mode");
     if (!(mode instanceof HTMLSelectElement)) throw new Error("Missing postflop mode");

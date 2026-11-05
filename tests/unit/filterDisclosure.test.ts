@@ -61,14 +61,50 @@ describe("collapsible filter groups", () => {
     expect(positions.dataset.open).toBe("false");
   });
 
-  it("offers the opponent as a combobox, defaulting to no read", () => {
+  it("starts in GTO, with the opponent offered only in REAL", () => {
     const root = render();
-    const select = root.querySelector<HTMLSelectElement>(".filter-opponent");
-    expect(select).not.toBeNull();
-    // Unknown is the default and the honest one: the shipped ranges are a GTO
-    // baseline against nobody in particular.
-    expect(select!.value).toBe("");
-    expect(select!.options.length).toBe(5);
+    const mode = root.querySelector<HTMLSelectElement>(".filter-mode")!;
+    const select = root.querySelector<HTMLSelectElement>(".filter-opponent")!;
+    const opponentItem = root.querySelector<HTMLElement>(".filter-opponent-item")!;
+    // GTO is the default and the honest one: the shipped ranges are a baseline
+    // against nobody in particular (Agents/plan-gto-real-2026-11.md, 3.1).
+    expect(mode.value).toBe("GTO");
+    expect(opponentItem.hidden).toBe(true);
+    // Live table plus the five player types the owner named.
+    expect([...select.options].map((option) => option.value)).toEqual(["", "SHARK", "EAGLE", "ROCK", "DICE", "WHALE"]);
+
+    mode.value = "REAL";
+    mode.dispatchEvent(new Event("change"));
+    expect(opponentItem.hidden).toBe(false);
+  });
+
+  it("turns the picked player type into filters and into the style the shove EV reads", () => {
+    const root = document.createElement("div");
+    document.body.appendChild(root);
+    const view = renderFilters(root, { onStart: () => undefined });
+    expect(view.getFilters().trainingMode).toBeUndefined();
+    expect(view.getFilters().opponentStyle).toBeUndefined();
+
+    const mode = root.querySelector<HTMLSelectElement>(".filter-mode")!;
+    const select = root.querySelector<HTMLSelectElement>(".filter-opponent")!;
+    mode.value = "REAL";
+    expect(view.getFilters()).toMatchObject({ trainingMode: "REAL" });
+    expect(view.getFilters().villainFocus).toBeUndefined();
+    // Live table: no single opponent, so the shove is priced as before.
+    expect(view.getFilters().opponentStyle).toBeUndefined();
+
+    select.value = "WHALE";
+    expect(view.getFilters()).toMatchObject({ trainingMode: "REAL", villainFocus: "WHALE", opponentStyle: "LOOSE_PASSIVE" });
+
+    // A type picked while in GTO does not leak: GTO prices against equilibrium.
+    mode.value = "GTO";
+    expect(view.getFilters().villainFocus).toBeUndefined();
+    expect(view.getFilters().opponentStyle).toBeUndefined();
+
+    view.setFilters({ ...view.getFilters(), trainingMode: "REAL", villainFocus: "ROCK" });
+    expect(mode.value).toBe("REAL");
+    expect(select.value).toBe("ROCK");
+    expect(root.querySelector<HTMLElement>(".filter-opponent-item")!.hidden).toBe(false);
   });
 
   it("names the picks on the header rather than counting them", () => {

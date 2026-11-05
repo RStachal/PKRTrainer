@@ -20,6 +20,9 @@
   background:linear-gradient(180deg,rgba(20,28,43,.96),rgba(12,17,27,.98));
   border:1px solid rgba(148,163,184,.18);border-radius:12px;
   padding:14px 16px;margin-bottom:16px;box-shadow:0 18px 44px rgba(0,0,0,.2);}
+/* Zadání se po rozdání schová (`controls.hidden`); display:flex výš by atribut
+   hidden přebil a zadání by zůstalo nad obrazovkou tréninku (5. 11. 2026). */
+.postflop-controls[hidden]{display:none;}
 .postflop-field{display:flex;flex-direction:column;gap:4px;font-size:12px;
   color:#9aa6c2;font-weight:700;}
 .postflop-street,.postflop-situation,.postflop-seed,.postflop-mode{box-sizing:border-box;min-width:130px;border:1px solid
