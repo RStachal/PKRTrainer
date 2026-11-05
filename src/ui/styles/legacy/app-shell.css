@@ -11,7 +11,9 @@
    green is what tells a player at a glance which app they are in. Kept low in
    saturation so the action colours, which carry meaning, stay the brightest
    thing on screen. */
-body{margin:0;background:
+/* min-height: pozadí se dlaždicuje podle výšky body, takže stránka kratší než
+   okno by ho začala znovu a uprostřed obrazovky by zůstal šev. */
+body{margin:0;min-height:100vh;background:
   radial-gradient(ellipse at 50% -12%,rgba(34,150,96,.20),rgba(34,150,96,0) 42%),
   radial-gradient(circle at 12% 8%,rgba(43,213,118,.10),rgba(43,213,118,0) 30%),
   radial-gradient(circle at 90% 2%,rgba(123,211,255,.09),rgba(123,211,255,0) 32%),
@@ -93,10 +95,6 @@ body{margin:0;background:
   border-radius:12px;padding:16px 18px;}
 .fatal__title{font-size:16px;font-weight:900;margin-bottom:6px;color:#ffb4b4;}
 .fatal__message{font-size:13px;color:#e8ecf7;line-height:1.5;}
-.filter-start{appearance:none;border:0;border-radius:12px;background:linear-gradient(180deg,#45e58c,#20bd65);
-  color:#082817;min-height:42px;box-shadow:0 14px 28px rgba(43,213,118,.22),
-  inset 0 1px 0 rgba(255,255,255,.35);}
-.filter-start:hover{filter:brightness(1.04);transform:translateY(-1px);}
 @media (max-width:720px){
   .app{width:min(100% - 20px,1120px);padding:18px 0 40px;}
   .app__header{align-items:center;gap:10px;}
@@ -112,10 +110,8 @@ body{margin:0;background:
   .filter-ante-item,.filter-scoring-item,.filter-seed-item{width:100%;box-sizing:border-box;
     justify-content:space-between;}
   .filter-scoring,.filter-seed{width:min(56%,220px);}
-  .filter-start{width:100%;font-size:15px!important;}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;
     animation-duration:.01ms!important;animation-iteration-count:1!important;}
-  .filter-start:hover{filter:none;transform:none;}
 }

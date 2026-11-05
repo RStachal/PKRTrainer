@@ -177,7 +177,7 @@ try {
     }))()`);
     assert(czechLanguage.lang === "cs", `${viewport.name}: CZ language did not update document.lang`);
     assert(czechLanguage.stored === "CZ", `${viewport.name}: CZ language was not persisted`);
-    assert(czechLanguage.start === "Start training", `${viewport.name}: CZ mode translated a control label`);
+    assert(czechLanguage.start === "Spustit trénink", `${viewport.name}: CZ start label is "${czechLanguage.start}"`);
     assert(
       czechLanguage.subtitle !== englishLanguage.subtitle,
       `${viewport.name}: CZ explanatory copy did not change`,
@@ -187,10 +187,21 @@ try {
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       fatal: document.querySelector(".fatal")?.textContent ?? "",
       profileStatus: document.querySelector(".profile-selector__note")?.getAttribute("data-status"),
-      profileText: document.querySelector(".profile-selector__note")?.textContent ?? ""
+      profileText: document.querySelector(".profile-selector__note")?.textContent ?? "",
+      startBottom: (document.querySelector(".filter-start")?.getBoundingClientRect().bottom ?? Infinity) + window.scrollY,
+      windowHeight: window.innerHeight,
+      emptyTrainer: document.querySelector(".training__game")?.getBoundingClientRect().height ?? 0,
+      settingsOpen: document.querySelector(".filters__settings")?.open ?? null
     }))()`);
     assert(initial.overflow <= 1, `${viewport.name}: page has horizontal overflow ${initial.overflow}px`);
     assert(initial.fatal === "", `${viewport.name}: fatal bootstrap error: ${initial.fatal}`);
+    // Plán redesignu, fáze 3: trénink se spustí jedním klepnutím z výchozího stavu.
+    assert(
+      initial.startBottom <= initial.windowHeight,
+      `${viewport.name}: start button ends at ${Math.round(initial.startBottom)}px, below the ${initial.windowHeight}px screen`,
+    );
+    assert(initial.settingsOpen === false, `${viewport.name}: settings are not folded on the start screen`);
+    assert(initial.emptyTrainer === 0, `${viewport.name}: an empty trainer is showing under the start`);
     if (expectedPreflop === "blocked") {
       assert(initial.profileStatus === "blocked", `${viewport.name}: unloaded preflop must fail closed`);
     } else if (expectedPreflop === "production") {
@@ -224,6 +235,10 @@ try {
         "h1",
         ".profile-selector__note",
         ".filter-start",
+        ".dx-mode__name",
+        ".dx-mode__text",
+        ".dx-mode__note",
+        ".filters__settings-title",
       ]),
     });
 
@@ -709,7 +724,8 @@ try {
       "mtt_preflop_postflop_events_v1",
       "mtt_preflop_postflop_line_events_v1",
       "mtt_preflop_hh_v1",
-      "mtt_preflop_hh_reviews_v1"
+      "mtt_preflop_hh_reviews_v1",
+      "pkrtrainer.ui.player-choice.v1"
     ]) localStorage.setItem(key, "{broken-json");
   })()`);
   await reload(cdp);
@@ -975,6 +991,34 @@ async function activate(
   });
 }
 
+/** Zvolí přepínač skutečným vstupem: dotykem, nebo mezerníkem (Enter ho nepřepne). */
+async function selectRadio(
+  client: CdpClient,
+  selector: string,
+  mode: "keyboard" | "touch",
+): Promise<void> {
+  if (mode === "touch") {
+    await activate(client, selector, mode);
+    return;
+  }
+  await evaluate(client, `(() => {
+    const element = document.querySelector(${JSON.stringify(selector)});
+    if (!(element instanceof HTMLElement)) throw ${missingElementError(selector)};
+    element.scrollIntoView({ block: "center" });
+    element.focus();
+  })()`);
+  const key = {
+    key: " ",
+    code: "Space",
+    text: " ",
+    unmodifiedText: " ",
+    windowsVirtualKeyCode: 32,
+    nativeVirtualKeyCode: 32,
+  };
+  await client.send("Input.dispatchKeyEvent", { type: "keyDown", ...key });
+  await client.send("Input.dispatchKeyEvent", { type: "keyUp", ...key });
+}
+
 async function auditContrast(
   client: CdpClient,
   viewport: string,
@@ -1108,12 +1152,26 @@ async function runNextUiScenario(
   await waitForSelector(client, ".filter-start");
   // Tenhle scénář jede v režimu REAL (plán GTO/REAL): stůl s typy hráčů musí
   // projít stejnými šířkami a stejnou kontrolou překryvu jako GTO v hlavním toku.
-  await evaluate(client, `(() => {
-    const mode = document.querySelector(".filter-mode");
-    if (!(mode instanceof HTMLSelectElement)) throw new Error("Missing training mode");
-    mode.value = "REAL";
-    mode.dispatchEvent(new Event("change", { bubbles: true }));
-  })()`);
+  await selectRadio(client, '.filter-mode[value="REAL"]', input);
+  await waitForSelector(client, ".dx-opponents:not([hidden]) .filter-opponent");
+  // I s řadou soupeřů se spuštění vejde na první obrazovku (plán redesignu, fáze 3).
+  const startFit = await evaluate<{ bottom: number; height: number }>(client, `(() => ({
+    bottom: document.querySelector(".filter-start").getBoundingClientRect().bottom + window.scrollY,
+    height: window.innerHeight
+  }))()`);
+  assert(
+    startFit.bottom <= startFit.height,
+    `${viewport.name} next UI REAL: start button ends at ${Math.round(startFit.bottom)}px, below the ${startFit.height}px screen`,
+  );
+  contrastAudits.push({
+    viewport: viewport.name,
+    surface: "next-ui-opponents",
+    entries: await auditContrast(client, viewport.name, "next UI opponents", [
+      ".dx-opponents__legend",
+      ".dx-opponent__name",
+      ".dx-opponents__hint",
+    ]),
+  });
   await activate(client, ".filter-start", input);
   await waitForSelector(client, ".dx-trainer__actions button");
 
@@ -1286,15 +1344,12 @@ async function runNextUiPostflopRealScenario(
     if (!(select instanceof HTMLSelectElement)) throw new Error("Missing street selector");
     select.value = "FLOP";
     select.dispatchEvent(new Event("change", { bubbles: true }));
-    const mode = document.querySelector(".filter-mode");
-    if (!(mode instanceof HTMLSelectElement)) throw new Error("Missing training mode");
-    mode.value = "REAL";
-    mode.dispatchEvent(new Event("change", { bubbles: true }));
     const seed = document.querySelector(".filter-seed");
     if (!(seed instanceof HTMLInputElement)) throw new Error("Missing seed input");
     seed.value = ${JSON.stringify(postflopSeed)};
     seed.dispatchEvent(new Event("input", { bubbles: true }));
   })()`);
+  await selectRadio(client, '.filter-mode[value="REAL"]', input);
   await activate(client, ".filter-start", input);
   await waitForSelector(client, `${scope} .dx-trainer__actions button`);
 
@@ -1335,6 +1390,15 @@ async function runNextUiPostflopRealScenario(
   await activate(client, `${scope} .dx-trainer__actions button`, input);
   await waitForSelector(client, `${scope} .dx-trainer__feedback:not([hidden])`);
   await assertStoredVillain(client, "mtt_preflop_postflop_events_v1", `${scope} ${FOCUS_SEAT}`, label);
+
+  // Volba režimu se pamatuje (plán GTO/REAL, 3.1): po znovunačtení je start v REAL.
+  await navigate(client, targetUrl);
+  await waitForSelector(client, ".filter-start");
+  const remembered = await evaluate<{ real: boolean; opponents: boolean }>(client, `(() => ({
+    real: document.querySelector('.filter-mode[value="REAL"]')?.checked === true,
+    opponents: document.querySelector(".dx-opponents")?.hidden === false
+  }))()`);
+  assert(remembered.real && remembered.opponents, `${label}: the mode was not remembered after a reload`);
   assert(browserErrors.length === 0, `${label}: ${browserErrors.join(" | ")}`);
 }
 
@@ -1465,6 +1529,8 @@ async function runNextUiPostflopScenario(
     seed.value = ${JSON.stringify(postflopSeed)};
     seed.dispatchEvent(new Event("input", { bubbles: true }));
   })()`);
+  // Scénář jede v GTO; preflopový před ním nechal zapamatované REAL.
+  await selectRadio(client, '.filter-mode[value="GTO"]', input);
   await activate(client, ".filter-start", input);
   await waitForSelector(client, `${scope} .dx-trainer__actions button`);
   // Do 4. 11. 2026 jednotlivý spot vyřešené packy nenačetl vůbec - ani s licencí

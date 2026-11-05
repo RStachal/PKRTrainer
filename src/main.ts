@@ -1245,6 +1245,7 @@ function setupTraining(
     clearActiveQuestion();
     gameBox.hidden = true;
     filtersBox.hidden = false;
+    filtersView.openSettings();
     focusElement(filtersBox.querySelector<HTMLElement>(".profile-variant"));
   }
 

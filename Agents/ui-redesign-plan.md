@@ -4,6 +4,9 @@
 i s přepínačem `?ui=` (4. 11. 2026, deník 340). Nové GUI je od 3. 11. výchozí
 (deník 333) a teď jediné; matice range se vejde na 360 px (deník 334). CSS
 kleslo z 79,96 na 51,52 KiB, takže fáze 3 (nastavení) se do rozpočtu vejde.
+Z fáze 3 je hotový start: režim, ulice a spuštění jedním klepnutím, zbytek sbalený
+(5. 11. 2026, deník 346, CSS 57,16 KiB); zbývají jednotné prvky místo nativních
+selectů v nastavení a paměť ostatních voleb.
 Vlastník návrh 22. 10. schválil: „myslím, že to vypadá dobře, můžeš
 pokračovat." Průběh a naměřená čísla jsou na konci dokumentu.
 

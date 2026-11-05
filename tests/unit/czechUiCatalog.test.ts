@@ -25,7 +25,7 @@ describe("EN/CZ UI language contract", () => {
     });
     expect(czech.app.tabs).toEqual(english.app.tabs);
     expect(czech.profile.title).toBe("Training profile");
-    expect(czech.filters.start).toBe("Start training");
+    expect(czech.filters.all).toBe(english.filters.all);
     expect(czech.hh.analyze).toBe("Analyze");
     expect(czech.postflop.heroBucket).toBe("Hero hand bucket");
 
@@ -68,7 +68,7 @@ describe("EN/CZ UI language contract", () => {
     values.set(APP_LANGUAGE_STORAGE_KEY, "CZ");
     expect(initializeAppLanguage(storage)).toBe("CZ");
     expect(CS.system.errorTitle).toBe("Došlo k chybě");
-    expect(CS.filters.start).toBe("Start training");
+    expect(CS.profile.title).toBe("Training profile");
   });
 
   it("routes visible UI modules through the central live catalog", () => {

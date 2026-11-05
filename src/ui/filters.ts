@@ -54,6 +54,8 @@
  * - `.filter-start` — tlačítko Start (jediný spouštěč `onStart`, Req 13.4).
  * - `.filter-empty-warning` — upozornění na prázdný průnik (Req 13.6); ve
  *   výchozím stavu skryté (`hidden`), zobrazí je `showEmptyResult()`.
+ * - `.filter-mode`, `.filter-opponent` — přepínače režimu (`GTO` / `REAL`) a
+ *   soupeře (`""` = živý stůl, jinak typ hráče), `trainer/modePicker.ts`.
  *
  * _Requirements: 13.1, 13.2, 13.3, 13.4, 13.6_
  */
@@ -71,16 +73,14 @@ import {
   positionsForFormat,
   type TableFormat,
   type TrainingProfile,
+  type TrainingStreet,
 } from "../core/trainingProfile";
-import {
-  VILLAIN_ARCHETYPES,
-  isVillainArchetype,
-  opponentStyleFor,
-  type TrainingMode,
-} from "../core/villain/archetypes";
+import { opponentStyleFor } from "../core/villain/archetypes";
+import { playerSettings } from "../core/villain/tableCast";
 import { renderProfileSelector, type ProfileSelectorView } from "./profileSelector";
 import { CS, localizedText } from "./cs";
-import { archetypeName } from "./villainText";
+import { segmentedControl } from "./kit/segmentedControl";
+import { createModePicker, loadPlayerChoice, savePlayerChoice } from "./trainer/modePicker";
 
 // ---------------------------------------------------------------------------
 // Uzavřená sada akčních kontextů + české popisky (Req 13.3, 12.3)
@@ -171,8 +171,23 @@ export interface FiltersView {
   /** Vrátí aktuálně zvolený profil tréninku pro budoucí multi-variant režimy. */
   getProfile(): TrainingProfile;
   setProfile(profile: TrainingProfile): void;
+  /** Rozbalí nastavení; „Změnit situaci“ vede právě tam. */
+  openSettings(): void;
   /** Odstraní vykreslené DOM a posluchače. */
   destroy(): void;
+}
+
+/** Možnosti vykreslení; bez úložiště se volba režimu jen nepamatuje. */
+export interface FiltersViewOptions {
+  storage?: Pick<Storage, "getItem" | "setItem"> | null;
+}
+
+function defaultStorage(): Storage | null {
+  try {
+    return typeof localStorage === "undefined" ? null : localStorage;
+  } catch {
+    return null;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -527,19 +542,64 @@ function parseSeed(raw: string): number | null {
 export function renderFilters(
   root: HTMLElement,
   callbacks: FiltersViewCallbacks,
+  options: FiltersViewOptions = {},
 ): FiltersView {
   const doc = root.ownerDocument ?? document;
   root.innerHTML = "";
 
+  // Start (plán redesignu, fáze 3): režim, ulice a spuštění jsou vidět hned,
+  // trénink začne jedním klepnutím. Všechno ostatní je sbalené v nastavení.
   const wrap = el(doc, "div", "filters");
+  const start = el(doc, "div", "dx-start");
+  const settings = doc.createElement("details");
+  settings.className = "filters__settings";
+  const settingsTitle = doc.createElement("summary");
+  settingsTitle.className = "filters__settings-title";
+  settingsTitle.textContent = localizedText("Settings", "Nastavení");
+  settings.appendChild(settingsTitle);
+  wrap.append(start, settings);
+
+  const storage = options.storage === undefined ? defaultStorage() : options.storage;
+  const modePicker = createModePicker(doc, loadPlayerChoice(storage), (choice) => {
+    hideWarning();
+    savePlayerChoice(storage, choice);
+  });
+  start.appendChild(modePicker.element);
+
   const profileBox = el(doc, "div", "filters__profile");
   const profileSelector: ProfileSelectorView = renderProfileSelector(profileBox, {
     onChange: (profile) => {
       renderPositionControls(profile.tableFormat);
+      syncStreet(profile);
       hideWarning();
     },
   });
-  wrap.appendChild(profileBox);
+  settings.appendChild(profileBox);
+
+  // Ulice je nejčastější změna, proto je na startu. Ostatní proměnné profilu
+  // zůstávají v nastavení a jeho select je dál jediným zdrojem hodnoty.
+  const streetControl = segmentedControl<TrainingStreet>(doc, {
+    label: localizedText("Street", "Ulice"),
+    options: [
+      { value: "PREFLOP", label: "Preflop" },
+      { value: "FLOP", label: "Flop" },
+      { value: "TURN", label: "Turn" },
+      { value: "RIVER", label: "River" },
+    ],
+    value: profileSelector.getProfile().street,
+    onChange: (street) => {
+      const profile = { ...profileSelector.getProfile(), street };
+      profileSelector.setProfile(profile);
+      renderPositionControls(profile.tableFormat);
+      hideWarning();
+    },
+  });
+
+  /** Postflop umí jen MTT; jinde by přepínač sliboval ulice, které nejdou spustit. */
+  function syncStreet(profile: TrainingProfile): void {
+    streetControl.setValue(profile.street);
+    streetControl.element.hidden = profile.gameVariant !== "MTT";
+  }
 
   // Reference na vstupy pro pozdější čtení stavu.
   const positionInputs = new Map<Position, HTMLInputElement>();
@@ -588,7 +648,7 @@ export function renderFilters(
   const posBox = el(doc, "div", "filter-group--positions");
   posGroup.body.appendChild(posBox);
   renderPositionControls(profileSelector.getProfile().tableFormat);
-  wrap.appendChild(posGroup.root);
+  settings.appendChild(posGroup.root);
 
   // --- Sekce: Hloubkové koše (Req 13.2) ---
   const bucketBulk = makeBulkToggles(
@@ -637,7 +697,7 @@ export function renderFilters(
     bucketBox.appendChild(label);
   }
   bucketGroup.refresh();
-  wrap.appendChild(bucketGroup.root);
+  settings.appendChild(bucketGroup.root);
 
   // --- Sekce: Akční kontexty (Req 13.3) ---
   const ctxBulk = makeBulkToggles(
@@ -686,10 +746,10 @@ export function renderFilters(
     ctxBox.appendChild(label);
   }
   ctxGroup.refresh();
-  wrap.appendChild(ctxGroup.root);
+  settings.appendChild(ctxGroup.root);
 
   // --- Sekce: Konfigurace (ante, scoring, seed) ---
-  wrap.appendChild(sectionTitle(doc, CS.filters.configuration));
+  settings.appendChild(sectionTitle(doc, CS.filters.configuration));
   const configBox = el(doc, "div", "filter-group filter-group--config");
   configBox.style.display = "flex";
   configBox.style.flexWrap = "wrap";
@@ -738,69 +798,6 @@ export function renderFilters(
   scoringLabel.appendChild(scoringSelect);
   configBox.appendChild(scoringLabel);
 
-  // Režim tréninku a soupeř ve hře (Agents/plan-gto-real-2026-11.md, 3.1).
-  //
-  // GTO: soupeři hrají rovnováhu a hodnotí se proti dodaným range - to zůstává
-  // výchozí. REAL: u stolu sedí typy hráčů; soupeř ve hře je živý stůl (mix),
-  // nebo zvolený typ. Zvolený typ dnes posune jediné číslo, které preflopové EV
-  // umí - jak často soupeř folduje proti shove (core/opponentStyle) -, vlastní
-  // výpočet proti typu přijde s REAL preflopem (M3). Až fáze 3 redesignu
-  // postaví start s volbou režimu, tyhle dvě volby se tam přestěhují.
-  const modeLabel = doc.createElement("label");
-  modeLabel.className = "filter-mode-item";
-  modeLabel.style.display = "inline-flex";
-  modeLabel.style.alignItems = "center";
-  modeLabel.style.gap = "4px";
-  modeLabel.style.fontSize = "13px";
-  const modeText = doc.createElement("span");
-  modeText.textContent = localizedText("Mode:", "Režim:");
-  const modeSelect = doc.createElement("select");
-  modeSelect.className = "filter-mode";
-  for (const [value, label] of [
-    ["GTO", localizedText("GTO - balanced opponents", "GTO - soupeři hrají rovnováhu")],
-    ["REAL", localizedText("REAL - player types", "REAL - typy hráčů")],
-  ] as const) {
-    const option = doc.createElement("option");
-    option.value = value;
-    option.textContent = label;
-    modeSelect.appendChild(option);
-  }
-  modeSelect.value = "GTO";
-  modeLabel.appendChild(modeText);
-  modeLabel.appendChild(modeSelect);
-  configBox.appendChild(modeLabel);
-
-  const opponentLabel = doc.createElement("label");
-  opponentLabel.className = "filter-opponent-item";
-  opponentLabel.style.display = "inline-flex";
-  opponentLabel.style.alignItems = "center";
-  opponentLabel.style.gap = "4px";
-  opponentLabel.style.fontSize = "13px";
-  const opponentText = doc.createElement("span");
-  opponentText.textContent = CS.filters.opponent;
-  const opponentSelect = doc.createElement("select");
-  opponentSelect.className = "filter-opponent";
-  for (const [value, label] of [
-    ["", localizedText("Live table (mix)", "Živý stůl (mix)")],
-    ...VILLAIN_ARCHETYPES.map((archetype) => [archetype, archetypeName(archetype)] as const),
-  ] as const) {
-    const option = doc.createElement("option");
-    option.value = value;
-    option.textContent = label;
-    opponentSelect.appendChild(option);
-  }
-  opponentSelect.value = "";
-  opponentLabel.appendChild(opponentText);
-  opponentLabel.appendChild(opponentSelect);
-  configBox.appendChild(opponentLabel);
-
-  // Soupeř ve hře dává smysl jen v REAL; v GTO je soupeřem rovnováha.
-  const refreshOpponent = (): void => {
-    opponentLabel.hidden = modeSelect.value !== "REAL";
-  };
-  modeSelect.addEventListener("change", refreshOpponent);
-  refreshOpponent();
-
   // Seed (Req 6.7 — prázdné = engine vygeneruje).
   const seedLabel = doc.createElement("label");
   seedLabel.className = "filter-seed-item";
@@ -820,7 +817,7 @@ export function renderFilters(
   seedLabel.appendChild(seedInput);
   configBox.appendChild(seedLabel);
 
-  wrap.appendChild(configBox);
+  settings.appendChild(configBox);
 
   // --- Upozornění na prázdný průnik (Req 13.6) ---
   const warning = el(doc, "div", "filter-empty-warning");
@@ -834,19 +831,18 @@ export function renderFilters(
   warning.style.color = "#ffd15b";
   warning.style.fontSize = "13px";
   warning.style.overflowWrap = "anywhere";
-  wrap.appendChild(warning);
 
   // --- Tlačítko Start (Req 13.4 — jediný spouštěč onStart) ---
   const startBtn = doc.createElement("button");
   startBtn.type = "button";
-  startBtn.className = "filter-start";
-  startBtn.textContent = CS.filters.start;
-  startBtn.style.marginTop = "8px";
-  startBtn.style.padding = "8px 18px";
-  startBtn.style.fontWeight = "700";
-  startBtn.style.fontSize = "14px";
-  startBtn.style.cursor = "pointer";
-  wrap.appendChild(startBtn);
+  startBtn.className = "dx-btn dx-btn--primary filter-start";
+  startBtn.textContent = localizedText("Start training", "Spustit trénink");
+
+  const go = el(doc, "div", "dx-start__go");
+  go.append(streetControl.element, startBtn);
+  // Věta o stavu profilu patří ke spuštění: říká, co se bude trénovat a z jakých dat.
+  start.append(go, warning, profileSelector.note);
+  syncStreet(profileSelector.getProfile());
 
   // ----- Čtení stavu -----
 
@@ -891,9 +887,7 @@ export function renderFilters(
     const ante: AnteMode = anteInput.checked ? "ON" : "OFF";
     const scoringMode: ScoringMode =
       scoringSelect.value === "STRICT" ? "STRICT" : "LENIENT";
-    const trainingMode: TrainingMode = modeSelect.value === "REAL" ? "REAL" : "GTO";
-    const focus = opponentSelect.value;
-    const villainFocus = trainingMode === "REAL" && isVillainArchetype(focus) ? focus : undefined;
+    const choice = modePicker.settings();
     const positionOrder = positionsForFormat(profileSelector.getProfile().tableFormat);
     return {
       positions: collect(positionOrder, positionInputs),
@@ -901,10 +895,10 @@ export function renderFilters(
       contexts: collect(CONTEXT_ORDER, contextInputs),
       ante,
       scoringMode,
-      opponentStyle: opponentStyleFor(trainingMode, villainFocus),
+      opponentStyle: opponentStyleFor(choice.mode, choice.focus),
       // GTO je výchozí a v datech chybí, ať se dnešní filtry neliší ani bajtem.
-      ...(trainingMode === "REAL" ? { trainingMode } : {}),
-      ...(villainFocus === undefined ? {} : { villainFocus }),
+      ...(choice.mode === "REAL" ? { trainingMode: choice.mode } : {}),
+      ...(choice.focus === undefined ? {} : { villainFocus: choice.focus }),
     };
   }
 
@@ -955,9 +949,7 @@ export function renderFilters(
       setCheckedValues(contextInputs, filters.contexts);
       anteInput.checked = filters.ante === "ON";
       scoringSelect.value = filters.scoringMode;
-      modeSelect.value = filters.trainingMode ?? "GTO";
-      opponentSelect.value = filters.villainFocus ?? "";
-      refreshOpponent();
+      modePicker.setSettings(playerSettings(filters));
       hideWarning();
     },
     getProfile(): TrainingProfile {
@@ -966,7 +958,11 @@ export function renderFilters(
     setProfile(profile: TrainingProfile): void {
       profileSelector.setProfile(profile);
       renderPositionControls(profile.tableFormat);
+      syncStreet(profile);
       hideWarning();
+    },
+    openSettings(): void {
+      settings.open = true;
     },
     destroy(): void {
       profileSelector.destroy();

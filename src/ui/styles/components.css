@@ -16,11 +16,13 @@
 }
 
 /*
- * Atribut hidden musí skrýt i prvek, kterému pravidlo dává display:flex nebo
- * grid - jinak by skrytý panel vyhodnocení zůstal vidět jako prázdný rámeček.
+ * Atribut hidden musí skrýt i prvek, kterému pravidlo nebo inline styl dává
+ * display:flex či grid. Platí pro celou aplikaci: staré styly ho přebíjely na
+ * více místech a vypadalo to, že věci fungují - zadání postflopu se po rozdání
+ * neschovalo, prázdná obrazovka tréninku visela pod startem a skupiny filtrů se
+ * nesbalily (5. 11. 2026).
  */
-.dx-root [hidden],
-.dx-root[hidden] {
+[hidden] {
   display: none !important;
 }
 

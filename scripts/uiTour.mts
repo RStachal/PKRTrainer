@@ -139,11 +139,7 @@ async function setSeedAndStreet(
   mode: TourArgs["mode"],
 ): Promise<void> {
   await evaluate(client, `(() => {
-    const mode = document.querySelector(".filter-mode");
-    if (mode instanceof HTMLSelectElement && mode.value !== ${JSON.stringify(mode)}) {
-      mode.value = ${JSON.stringify(mode)};
-      mode.dispatchEvent(new Event("change", { bubbles: true }));
-    }
+    document.querySelector(${JSON.stringify(`.filter-mode[value="${mode}"]`)})?.click();
     const select = document.querySelector(".profile-street");
     if (select instanceof HTMLSelectElement && select.value !== ${JSON.stringify(street)}) {
       select.value = ${JSON.stringify(street)};
@@ -214,8 +210,16 @@ function tourSteps(mode: TourArgs["mode"]): ReadonlyArray<{ step: string; run: (
     },
   },
   {
+    step: "01b-settings",
+    run: (client) => evaluate(client, `(() => {
+      document.querySelector(".filters__settings").open = true;
+      for (const toggle of document.querySelectorAll(".filter-disclosure__toggle")) toggle.click();
+    })()`),
+  },
+  {
     step: "02-preflop-question",
     run: async (client) => {
+      await evaluate(client, `document.querySelector(".filters__settings").open = false`);
       await click(client, ".filter-start");
       await waitForSelector(client, preflop.action, STEP_TIMEOUT_MS);
     },

@@ -67,7 +67,6 @@ const CZ_CATALOG = {
     none: "Žádné",
     selectAll: (section: string) => `Vybrat vše: ${section}`,
     clearAll: (section: string) => `Zrušit výběr: ${section}`,
-    opponent: "Soupeř:",
     noneSelected: "nic nevybráno",
     allSelected: (total: number) => `vše (${total})`,
     someSelected: (picked: number, total: number) => `${picked} z ${total}`,
@@ -77,7 +76,6 @@ const CZ_CATALOG = {
     strict: "Přísné",
     seed: "Seed:",
     random: "náhodný",
-    start: "Spustit trénink",
     empty:
       "Vybrané filtry neodpovídají žádnému spotu. Upravte pozice, hloubky stacku nebo kontext akce.",
     // Mezera je na naší straně, ne ve výběru hráče, tak se to tak i řekne.
@@ -385,7 +383,6 @@ const EN_CATALOG: UiCatalog = {
     none: "None",
     selectAll: (section: string) => `Select all: ${section}`,
     clearAll: (section: string) => `Clear all: ${section}`,
-    opponent: "Opponent:",
     noneSelected: "none selected",
     allSelected: (total: number) => `all (${total})`,
     someSelected: (picked: number, total: number) => `${picked} of ${total}`,
@@ -395,7 +392,6 @@ const EN_CATALOG: UiCatalog = {
     strict: "Strict",
     seed: "Seed:",
     random: "random",
-    start: "Start training",
     empty:
       "The selected filters do not match any spot. Adjust positions, stack depths, or the action context.",
     emptyDepths: (depths: readonly number[]) =>

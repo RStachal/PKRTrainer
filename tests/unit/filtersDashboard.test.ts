@@ -128,7 +128,7 @@ describe("filters - DOM start gate", () => {
     expect(root.querySelector(".filters")?.textContent).toContain("Positions");
     expect(root.querySelector(".filters")?.textContent).toContain("Stack depths (BB)");
     expect(root.querySelector(".filters")?.textContent).toContain("Action context");
-    expect(root.querySelector(".filters")?.textContent).toContain("Start training");
+    expect(root.querySelector(".filter-start")?.textContent).toBe("Spustit trénink");
     expect(root.querySelector(".filters")?.textContent).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
     expect(Array.from(root.querySelectorAll<HTMLButtonElement>(".filter-bulk-all"))
       .map((button) => button.getAttribute("aria-label"))).toEqual([

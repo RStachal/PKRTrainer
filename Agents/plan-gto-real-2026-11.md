@@ -391,7 +391,7 @@ Dny jsou pracovní dny agenta, odhad. Noci běží souběžně a dnešní plán 
 | M6 6-max v1 a úklid | 10.–16. 12. | 6-max v1, zbytek starých stylů (fáze 5) | 4–7 dní | – |
 | M7 Vydání | 17.–23. 12. | `verify:block`, mobilní šířky, offline, FTP balíček, poznámky k vydání | 2 dny | 1–2 h přejímka |
 
-**Stav 5. 11. 2026:** z M2 je hotový model hráče, volba režimu a soupeře na startu, avatary u stolu (deník 344) a režim s typem soupeře v záznamech statistik (deník 345). Režim je v nastavení relace, ne v profilu: profil je klíčem packů a statistik a režim obsah nemění. Zbývá start s velkou volbou režimu (fáze 3).
+**Stav 5. 11. 2026:** M2 je hotový: model hráče a avatary u stolu (deník 344), režim s typem soupeře v záznamech statistik (deník 345) a start se dvěma kartami režimu (deník 346). Režim je v nastavení relace, ne v profilu: profil je klíčem packů a statistik a režim obsah nemění. Z fáze 3 redesignu zbývá sjednotit nativní selecty v nastavení a pamatovat si i ostatní volby. Další je M3; s ním zmizí z karty REAL věta, že se hodnocení proti typu dokončuje.
 
 Celkem **28–42 dní agenta**, střed odhadu konec MTT 1.0 kolem 23. 12., rezerva
 do poloviny ledna. **Noci:** dnešní dávka (189 desek) zhruba do konce

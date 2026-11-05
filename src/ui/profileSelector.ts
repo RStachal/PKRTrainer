@@ -15,6 +15,8 @@ import { trainingCapabilityForProfile } from "../data/ranges/trainingCapability"
 import { CS } from "./cs";
 
 export interface ProfileSelectorView {
+  /** Věta o stavu profilu; start ji ukazuje i se sbaleným nastavením. */
+  note: HTMLElement;
   getProfile(): TrainingProfile;
   setProfile(profile: TrainingProfile): void;
   destroy(): void;
@@ -180,6 +182,7 @@ export function renderProfileSelector(
   }
 
   return {
+    note,
     getProfile,
     setProfile,
     destroy(): void {
