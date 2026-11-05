@@ -9,8 +9,10 @@
  * between ranges. Keeping the two apart means nobody has to guess which they are
  * looking at. `VILLAIN_MODEL` is the same arithmetic against ranges shifted by a
  * player type (mode REAL), so it stands on an estimate and is labelled as one.
+ * `NASH_PUSH_FOLD` is the shove-or-fold equilibrium (`preflop/nashPushFold.ts`): a real
+ * calculation rather than a one-step estimate, so it may overrule a chart.
  */
-export type ActionEvSource = "SOLVER" | "ALL_IN_EQUITY" | "SOLVED_TREE" | "VILLAIN_MODEL";
+export type ActionEvSource = "SOLVER" | "ALL_IN_EQUITY" | "SOLVED_TREE" | "VILLAIN_MODEL" | "NASH_PUSH_FOLD";
 
 /**
  * Zdroje, které se hráči smějí ukázat.
@@ -26,6 +28,7 @@ export const DISPLAYABLE_ACTION_EV_SOURCES: readonly ActionEvSource[] = [
   "ALL_IN_EQUITY",
   "SOLVED_TREE",
   "VILLAIN_MODEL",
+  "NASH_PUSH_FOLD",
 ];
 export type ActionEvUnit = "BB";
 

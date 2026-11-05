@@ -54,7 +54,7 @@ const EVERY_CONTEXT: readonly ActionContext[] = [
 function pricedSpots(context: ActionContext): Spot[] {
   const filters: Filters = makeFilters({ ante: "OFF", contexts: [context], scoringMode: "STRICT" });
   return buildPool(1, context, filters, store, { maxSize: 400 })
-    .filter((spot) => spot.actionEvs?.source === "ALL_IN_EQUITY");
+    .filter((spot) => spot.actionEvs?.source === "ALL_IN_EQUITY" || spot.actionEvs?.source === "NASH_PUSH_FOLD");
 }
 
 afterEach(() => {
@@ -73,7 +73,8 @@ describe("spot oceněný proti stolu", () => {
   });
 
   it.each(ALL_IN_CONTEXTS)("identita: bez typů i se žraloky na všech místech EV z chartů (%s)", (context) => {
-    const spots = pricedSpots(context);
+    // Kde rozhoduje rovnováha (`nashPushFold.test.ts`), EV z chartů spot nenese.
+    const spots = pricedSpots(context).filter((spot) => spot.actionEvs?.source === "ALL_IN_EQUITY");
     expect(spots.length, "kontext bez oceněných spotů").toBeGreaterThan(0);
     for (const spot of spots) {
       const price = (players?: PreflopPricingPlayers) => priceActions(
@@ -95,14 +96,16 @@ describe("spot oceněný proti stolu", () => {
     }
   });
 
-  it.each(EVERY_CONTEXT)("v GTO není odpověď podle chartu nikdy chyba (%s)", (context) => {
+  it.each(EVERY_CONTEXT)("v GTO odhad nikdy nepřebije chart (%s)", (context) => {
     // Známkování dává EV přednost před chartem. Do 5. 11. 2026 tak byl fold podle
     // chartu chyba v 490 z 490 spotů squeeze, s doporučením jít all-in s KTo.
+    // Výjimkou je Nashova rovnováha: chart je základ, ne zákon (rozhodnutí majitele
+    // 5. 11. 2026) a rovnováha je samostatný výpočet, ne jednokrokový odhad.
     const filters = makeFilters({ ante: "OFF", contexts: [context], scoringMode: "STRICT" });
     const spots = buildPool(1, context, filters, store, { maxSize: 400 });
     expect(spots.length).toBeGreaterThan(0);
     for (const spot of spots) {
-      if (spot.strictCorrect.length !== 1) continue;
+      if (spot.strictCorrect.length !== 1 || spot.actionEvs?.source === "NASH_PUSH_FOLD") continue;
       expect(grade(spot, spot.strictCorrect[0], "STRICT").correct, spot.id).toBe(true);
     }
   });
@@ -230,7 +233,7 @@ describe("relace a vyhodnocení v REAL", () => {
   it("v GTO spot nic navíc nenese", () => {
     const { started } = session(makeFilters({ ante: "OFF", contexts: ["PUSH_FOLD"], scoringMode: "STRICT" }));
     expect(started.spot.real).toBeUndefined();
-    expect(started.spot.actionEvs?.source).toBe("ALL_IN_EQUITY");
+    expect(["ALL_IN_EQUITY", "NASH_PUSH_FOLD"]).toContain(started.spot.actionEvs?.source);
   });
 
   it("vyhodnocení řekne GTO, odpověď proti typu, důvod i původ", () => {

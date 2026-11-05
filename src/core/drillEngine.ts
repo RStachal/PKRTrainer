@@ -94,9 +94,11 @@ import { preflopActionKindToKey } from "./preflopActionOptions";
 import { questionId } from "./questionId";
 import { mulberry32, hashStr } from "./rng";
 import { buildPreflopExplanation } from "./preflopExplanation";
-import { cloneActionEvSet, isActionEvSetComplete } from "./actionEv";
+import { bestActionsForActionEv, cloneActionEvSet, isActionEvSetComplete } from "./actionEv";
 import { ACTION_KEY_LABEL } from "./actionKeyLabels";
+import { nashActionEvs } from "./preflop/nashTable";
 import { REJAM_EV_OPENER_BY_HERO, agreesWithChart, computeActionEvs, openSizeAtDepth } from "./preflop/preflopEv";
+import { preflopFocusSeat } from "./villain/tableCast";
 import { rangeStore, type RangeKey, type RangeStore } from "../data/rangeStore";
 
 export { REJAM_EV_OPENER_BY_HERO, openSizeAtDepth };
@@ -711,8 +713,19 @@ export function generateSpot(
   // Under an ICM scenario nothing is priced at all: the chip-EV equity model
   // would put a chip price on a $EV question (owner's decision 5b, 2026-09-22:
   // ranges only, no price, until payouts are known).
+  const nashEvs = isActionEvSetComplete(candidateActionEvs, offeredActionKeys) || entry.stackSetupId !== undefined
+    ? undefined
+    : nashActionEvs({
+      context,
+      heroPos,
+      hand,
+      effStack,
+      ante,
+      offered: offeredActionKeys,
+      ...(context === "VS_ALLIN" ? { shover: preflopFocusSeat({ heroPos, tableState }) } : {}),
+    });
   const computedActionEvs = isActionEvSetComplete(candidateActionEvs, offeredActionKeys) ||
-    entry.stackSetupId !== undefined
+    entry.stackSetupId !== undefined || nashEvs !== undefined
     ? undefined
     : computeActionEvs(
       context,
@@ -728,15 +741,16 @@ export function generateSpot(
     );
   const actionEvs = isActionEvSetComplete(candidateActionEvs, offeredActionKeys)
     ? cloneActionEvSet(candidateActionEvs)
-    : computedActionEvs !== undefined && agreesWithChart(computedActionEvs, strictCorrect)
+    : nashEvs ?? (computedActionEvs !== undefined && agreesWithChart(computedActionEvs, strictCorrect)
       ? computedActionEvs
-      : undefined;
+      : undefined);
   const explanation = buildPreflopExplanation({
     context,
     heroPos,
     effStack,
     hand,
-    recommended: strictCorrect,
+    // Kde rozhoduje rovnováha, musí text říkat totéž co známka.
+    recommended: nashEvs === undefined ? strictCorrect : bestActionsForActionEv(nashEvs),
     tableState,
     ...(seatStacks === undefined ? {} : { seatStacks }),
   });

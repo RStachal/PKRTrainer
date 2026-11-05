@@ -84,10 +84,11 @@ function allInPricing(spot: Spot, players: PreflopPricingPlayers, store: RangeSt
   const gto = price();
   const real = price(players);
   if (gto === undefined || real === undefined) return undefined;
-  // Kalibrace (plán, 4.4): co model neumí zopakovat v GTO, to proti typu netvrdí.
-  if (!agreesWithChart(gto.evs, spot.strictCorrect)) return undefined;
-
   const base = spot.actionEvs;
+  // Kalibrace (plán, 4.4): co model neumí zopakovat v GTO, to proti typu netvrdí. Nad
+  // rovnováhou se z modelu bere jen rozdíl proti typu, kotvou je rovnováha, ne chart.
+  if (base?.source !== "NASH_PUSH_FOLD" && !agreesWithChart(gto.evs, spot.strictCorrect)) return undefined;
+
   const evs = base === undefined || base.source === "ALL_IN_EQUITY"
     ? real.evs
     : shiftedByModel(base, gto.evs, real.evs);

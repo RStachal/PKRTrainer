@@ -25,7 +25,8 @@ export function isLazyMttProductionAsset(fileName: string): boolean {
  */
 export function isPreflopEquityAsset(fileName: string): boolean {
   const baseName = fileName.replace(/\\/g, "/").split("/").pop() ?? "";
-  return /^preflop-equity-[a-zA-Z0-9_-]{8,}\.js$/.test(baseName);
+  // Tabulka Nashovy rovnováhy se načítá s equity a platí pro ni totéž.
+  return /^preflop-(equity|nash)-[a-zA-Z0-9_-]{8,}\.js$/.test(baseName);
 }
 
 /**

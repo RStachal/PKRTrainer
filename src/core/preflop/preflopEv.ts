@@ -59,9 +59,13 @@ export interface PricedActions {
   shoveShare?: number;
 }
 
-function allInEvs(action: ActionKey, evBb: number): ActionEvSet<ActionKey> {
+export function allInEvs(
+  action: ActionKey,
+  evBb: number,
+  source: "ALL_IN_EQUITY" | "NASH_PUSH_FOLD" = "ALL_IN_EQUITY",
+): ActionEvSet<ActionKey> {
   return {
-    source: "ALL_IN_EQUITY",
+    source,
     unit: "BB",
     values: [
       { action, evBb: Math.round(evBb * 100) / 100 },

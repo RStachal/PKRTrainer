@@ -43,17 +43,29 @@ let loading: Promise<boolean> | undefined;
 export function loadPreflopEquity(): Promise<boolean> {
   if (table !== undefined) return Promise.resolve(true);
   if (loading !== undefined) return loading;
-  loading = import("../data/ranges/preflopEquity.generated")
-    .then((module) => {
+  loading = Promise.all([
+    import("../data/ranges/preflopEquity.generated"),
+    // Bez tabulky rovnováhy se trénuje dál, jen s odhadem all-inu jako dřív.
+    import("../data/ranges/nashPushFold.generated").catch(() => undefined),
+  ])
+    .then(([module, nash]) => {
       table = {
         index: new Map(module.EQUITY_CLASSES.map((hand, position) => [hand, position])),
         raw: module.PREFLOP_EQUITY,
         rows: new Map(),
       };
+      nashRows = nash?.NASH_PUSH_FOLD;
       return true;
     })
     .catch(() => false);
   return loading;
+}
+
+let nashRows: Readonly<Record<string, string>> | undefined;
+
+/** Řádek rovnováhy z `nashPushFold.generated.ts`; čte ho `preflop/nashTable.ts`. */
+export function nashRow(key: string): string | undefined {
+  return nashRows?.[key];
 }
 
 /** True once equity is available, so a caller can decide whether to offer EV. */

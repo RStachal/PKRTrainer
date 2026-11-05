@@ -368,10 +368,10 @@ je to dobrý základ, ale výstupům z TexasSolveru můžeme věřit.“):** cha
 základ, ne zákon. Postflop rozhoduje TexasSolver. Preflop neřeší, takže výstup
 solveru tam nemáme a platí tohle pořadí:
 
-1. **Nash push/fold** nad 169 třídami pro 9-max i 6-max. Do 15–20 bb je rozhodčí:
-   kde se rozejde s chartem, hodnotí se podle výpočtu a rozpor jde majiteli ke
-   čtení. V tomhle pásmu nahradí pravidlo `agreesWithChart` z M3 a odpoví na
-   otázku typu KTo při 4–8 bb.
+1. **Nash push/fold** nad 169 třídami pro 9-max i 6-max, hotovo 5. 11. (deník 349).
+   Do 20 bb je rozhodčí: kde se rozejde s chartem, hodnotí se podle výpočtu a rozpor
+   jde majiteli ke čtení. V tomhle pásmu nahradil pravidlo `agreesWithChart` z M3.
+   Zbývá možné zpřesnění o víc dorovnávajících a zobrazení rovnováhy v prohlížeči range.
 2. **Zjednodušený preflopový solver** pro hlubší stacky. Realizace se má
    kalibrovat z toho, co už TexasSolver vyřešil, místo pevné konstanty; jestli to
    data unesou, se teprve ověří. Kontrola proti 9-max chartům. Tentýž výpočet dá
@@ -405,7 +405,7 @@ Dny jsou pracovní dny agenta, odhad. Noci běží souběžně a dnešní plán 
 | M6 6-max v1 a úklid | 10.–16. 12. | 6-max v1, zbytek starých stylů (fáze 5) | 4–7 dní | – |
 | M7 Vydání | 17.–23. 12. | `verify:block`, mobilní šířky, offline, FTP balíček, poznámky k vydání | 2 dny | 1–2 h přejímka |
 
-**Stav 5. 11. 2026:** M2 je hotový: model hráče a avatary u stolu (deník 344), režim s typem soupeře v záznamech statistik (deník 345) a start se dvěma kartami režimu (deník 346). Režim je v nastavení relace, ne v profilu: profil je klíčem packů a statistik a režim obsah nemění. Z fáze 3 redesignu zbývá sjednotit nativní selecty v nastavení a pamatovat si i ostatní volby. Z M3 je hotová část A, all-in spoty proti hráčům u stolu (deník 347), a část B, open, 3-bet a call jako jeden krok kotvený na chart (deník 348). Zbývají VS_LIMP, BvB a squeeze; karta REAL říká, že se zatím hodnotí podle GTO. Konstanty modelu jsou odhad a doladí se čtením spotů (4.6).
+**Stav 5. 11. 2026:** M2 je hotový: model hráče a avatary u stolu (deník 344), režim s typem soupeře v záznamech statistik (deník 345) a start se dvěma kartami režimu (deník 346). Režim je v nastavení relace, ne v profilu: profil je klíčem packů a statistik a režim obsah nemění. Z fáze 3 redesignu zbývá sjednotit nativní selecty v nastavení a pamatovat si i ostatní volby. Z M3 je hotová část A, all-in spoty proti hráčům u stolu (deník 347), a část B, open, 3-bet a call jako jeden krok kotvený na chart (deník 348). Zbývají VS_LIMP, BvB a squeeze; karta REAL říká, že se zatím hodnotí podle GTO. Konstanty modelu jsou odhad a doladí se čtením spotů (4.6). Nash push/fold z 7.1 je hotový a do 20 BB rozhoduje shove a dorovnání (deník 349).
 
 Celkem **28–42 dní agenta**, střed odhadu konec MTT 1.0 kolem 23. 12., rezerva
 do poloviny ledna. **Noci:** dnešní dávka (189 desek) zhruba do konce

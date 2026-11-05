@@ -49,8 +49,8 @@ describe("action EV on a generated spot", () => {
   it("prices push-or-fold spots once equity is available", () => {
     const generated = spots(12);
     expect(generated.length).toBe(12);
-    // Unpriced is only a spot where the estimate goes against the chart
-    // (`agreesWithChart`, pinned in actionEvCoverage.test.ts).
+    // Unpriced is only a spot the equilibrium table does not cover and where the
+    // estimate goes against the chart (`agreesWithChart`, actionEvCoverage.test.ts).
     const priced = generated.filter((spot) => spot.actionEvs !== undefined);
     expect(priced.length).toBeGreaterThan(6);
     for (const spot of priced) {
@@ -58,8 +58,8 @@ describe("action EV on a generated spot", () => {
       expect(actions).toContain("JAM");
       expect(actions).toContain("FOLD");
       // Computed here, not reviewed from a solver export. The distinction is the
-      // reason ActionEvSource has two members.
-      expect(spot.actionEvs!.source).toBe("ALL_IN_EQUITY");
+      // reason ActionEvSource keeps them apart.
+      expect(["ALL_IN_EQUITY", "NASH_PUSH_FOLD"]).toContain(spot.actionEvs!.source);
     }
   });
 

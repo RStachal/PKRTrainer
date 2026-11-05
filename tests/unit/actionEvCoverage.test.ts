@@ -85,7 +85,10 @@ function sample(): Row[] {
       context,
       offersJam: spot.answers.some((answer) => answer.key === ("JAM" as ActionKey)),
       hasEv: spot.actionEvs !== undefined,
-      contradictsChart: estimate !== undefined && !agreesWithChart(estimate, spot.strictCorrect),
+      // Nash equilibrium is its own calculation, not this estimate, and may overrule the
+      // chart (owner's decision, 2026-11-05: the chart is a base, not the law).
+      contradictsChart: spot.actionEvs?.source !== "NASH_PUSH_FOLD"
+        && estimate !== undefined && !agreesWithChart(estimate, spot.strictCorrect),
     });
   }
   return rows;

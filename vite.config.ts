@@ -102,6 +102,9 @@ export default defineConfig({
           if (id.split("\\").join("/").endsWith("/src/data/ranges/preflopEquity.generated.ts")) {
             return "preflop-equity";
           }
+          if (id.split("\\").join("/").endsWith("/src/data/ranges/nashPushFold.generated.ts")) {
+            return "preflop-nash";
+          }
           return undefined;
         },
       },
