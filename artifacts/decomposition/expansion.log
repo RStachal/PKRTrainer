@@ -3917,3 +3917,57 @@ UnicodeDecodeError: 'charmap' codec can't decode byte 0x88 in position 1122: cha
 [08:00:15] spusteni mimo okno 20:00-06:45, koncim bez prace
 [08:12:18] spusteni mimo okno 20:00-06:45, koncim bez prace
 [08:12:28] spusteni mimo okno 20:00-06:45, koncim bez prace
+[16:16:01] spusteni mimo okno 20:00-06:45, koncim bez prace
+[20:01:10] napajeni: sit
+[20:01:10] viko na siti: nedelat nic (overeno v registru)
+[20:01:11] na siti: neuspavat necinnosti, casovace probuzeni povolene (overeno v registru)
+[20:01:13] konec okna 2026-11-05T07:00 (vikendovy rozvrh: True)
+[20:02:14] nastagováno 189 desek bez checkpointu; deadline Thu 05.11. 07:00
+[20:02:14] na disku volno 890.3 GB (hranice 8 GB)
+[20:02:15] stroj se drží vzhůru po dobu běhu
+[20:02:15] napájení: síť
+[20:02:15] souběh: 2 desky naráz po 8 vláknech, strop a rezerva krát 1.5, další deska až při 12 GB volné paměti (pokus D6)
+[20:02:15] cena desky změřena 2026-11-03 07:04 na 977 deskách: 25 bb 6.4 min, 40 bb 28.9 min, 50 bb 25.5 min
+[20:02:15] solving MTT9_50BB_HJ_BB_SRP K98tt (přesnost 1.0 %, strop 135 min, vlákna 8, souběžně 2)
+[20:05:15] souběh: čekám na paměť - volných 9.4 GB, další deska vedle běžící chce aspoň 12
+[21:00:43]   hotovo za 58.5 min, checkpoint 184 MB, paměť 8.4 GB [MTT9_50BB_HJ_BB_SRP K98tt]
+[21:00:43] solving MTT9_50BB_HJ_BTN_SRP A72r (přesnost 1.0 %, strop 135 min, vlákna 8, souběžně 2)
+[21:03:43] souběh: čekám na paměť - volných 11.4 GB, další deska vedle běžící chce aspoň 12
+[22:08:20]   hotovo za 67.6 min, checkpoint 87 MB, paměť 6.1 GB [MTT9_50BB_HJ_BTN_SRP A72r]
+[22:08:20] solving MTT9_50BB_HJ_BTN_SRP 883r (přesnost 1.0 %, strop 135 min, vlákna 8, souběžně 2)
+[22:11:20] solving MTT9_50BB_HJ_BTN_SRP 986tt (přesnost 1.0 %, strop 135 min, vlákna 8, souběžně 2)
+[23:06:15]   hotovo za 54.9 min, checkpoint 90 MB, paměť 4.0 GB [MTT9_50BB_HJ_BTN_SRP 986tt]
+[23:06:15] solving MTT9_50BB_HJ_BTN_SRP AT4mono (přesnost 1.0 %, strop 135 min, vlákna 8, souběžně 2)
+[23:26:40]   hotovo za 78.3 min, checkpoint 92 MB, paměť 4.2 GB [MTT9_50BB_HJ_BTN_SRP 883r]
+[23:26:40] solving MTT9_50BB_HJ_BTN_SRP 742r (přesnost 1.0 %, strop 135 min, vlákna 8, souběžně 2)
+[23:35:09]   hotovo za 28.9 min, checkpoint 63 MB, paměť 2.0 GB [MTT9_50BB_HJ_BTN_SRP AT4mono]
+[23:35:09] souběh: čekám na paměť - volných 10.6 GB, další deska vedle běžící chce aspoň 12
+[00:17:41]   hotovo za 51.0 min, checkpoint 93 MB, paměť 6.6 GB [MTT9_50BB_HJ_BTN_SRP 742r]
+[00:17:41] solving MTT9_50BB_HJ_BTN_SRP K98tt (přesnost 1.0 %, strop 135 min, vlákna 8, souběžně 2)
+[00:20:41] solving MTT9_50BB_UTG_1_BB_SRP A72r (přesnost 1.0 %, strop 135 min, vlákna 8, souběžně 2)
+[01:12:16]   hotovo za 54.6 min, checkpoint 86 MB, paměť 3.9 GB [MTT9_50BB_HJ_BTN_SRP K98tt]
+[01:12:16] souběh: čekám na paměť - volných 7.3 GB, další deska vedle běžící chce aspoň 12
+[01:54:31]   hotovo za 93.8 min, checkpoint 156 MB, paměť 11.2 GB [MTT9_50BB_UTG_1_BB_SRP A72r]
+[01:54:31] solving MTT9_50BB_UTG_1_BB_SRP 883r (přesnost 1.0 %, strop 135 min, vlákna 8, souběžně 2)
+[01:57:31] souběh: čekám na paměť - volných 11.3 GB, další deska vedle běžící chce aspoň 12
+[03:09:16]   hotovo za 74.7 min, checkpoint 165 MB, paměť 7.4 GB [MTT9_50BB_UTG_1_BB_SRP 883r]
+[03:09:16] solving MTT9_50BB_UTG_1_BB_SRP 986tt (přesnost 1.0 %, strop 135 min, vlákna 8, souběžně 2)
+[03:12:16] souběh: čekám na paměť - volných 11.2 GB, další deska vedle běžící chce aspoň 12
+[03:59:11]   hotovo za 49.9 min, checkpoint 164 MB, paměť 7.3 GB [MTT9_50BB_UTG_1_BB_SRP 986tt]
+[03:59:11] solving MTT9_50BB_UTG_1_BB_SRP AT4mono (přesnost 1.0 %, strop 135 min, vlákna 8, souběžně 2)
+[04:02:11] solving MTT9_50BB_UTG_1_BB_SRP 742r (přesnost 1.0 %, strop 135 min, vlákna 8, souběžně 2)
+[04:47:58]   hotovo za 48.8 min, checkpoint 118 MB, paměť 3.6 GB [MTT9_50BB_UTG_1_BB_SRP AT4mono]
+[04:47:58] souběh: čekám na paměť - volných 7.1 GB, další deska vedle běžící chce aspoň 12
+[05:38:17]   hotovo za 96.1 min, checkpoint 169 MB, paměť 11.6 GB [MTT9_50BB_UTG_1_BB_SRP 742r]
+[05:38:17] solving MTT9_50BB_UTG_1_BB_SRP K98tt (přesnost 1.0 %, strop 135 min, vlákna 8, souběžně 2)
+[05:41:17] souběh: čekám na paměť - volných 11.5 GB, další deska vedle běžící chce aspoň 12
+[06:27:55]   hotovo za 49.6 min, checkpoint 154 MB, paměť 7.1 GB [MTT9_50BB_UTG_1_BB_SRP K98tt]
+[06:27:55] solving MTT9_25BB_UTG_BB_SRP A72r (vlákna 8, souběžně 2)
+[06:30:55] solving MTT9_25BB_UTG_BB_SRP 883r (vlákna 8, souběžně 2)
+[06:46:29]   hotovo za 18.6 min, checkpoint 65 MB, paměť 3.3 GB [MTT9_25BB_UTG_BB_SRP A72r]
+[06:46:29] končím 14 min před deadline: deska potřebuje asi 21
+[06:54:37]   hotovo za 23.7 min, checkpoint 62 MB, paměť 2.3 GB [MTT9_25BB_UTG_BB_SRP 883r]
+[06:54:37] expansion: hotovo 15, selhalo 0, zbývá 174
+[06:54:37] propustnost: 15 desek za 10.9 h, 1.38 desky za hodinu při souběhu 2
+[06:54:37] fronta není prázdná, rozkladu okno nepředávám
+[07:01:08] spusteni mimo okno 20:00-06:45, koncim bez prace

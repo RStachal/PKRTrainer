@@ -129,6 +129,14 @@ u platební brány a texty mají dlouhou dobu náběhu a na agentovi nezávisí.
 | P7 | Limit zařízení a offline grace | 3 zařízení, 14 dní |
 | P8 | Právní a daňový rámec: obchodní podmínky, ochrana osobních údajů (GDPR), kdo je prodávající, 18+ | konzultace s účetním a právníkem; MoR část zjednoduší |
 
+**Rozhodnuto 5. 11. 2026.** Majitel: „Souhlasím, pokračuj“ – P1–P8 platí podle
+doporučení. MTT 1.0 jde v prosinci jako beta s pozvánkami přes dnešní
+staging, placený vstup v lednu. **Na majiteli teď** (doba náběhu nezávisí na
+agentovi): účet u platební brány (Merchant of Record) s ověřením firmy, účet
+pro správu uživatelů v EU, doména, konzultace s účetním a právníkem
+a podklady k obchodním podmínkám a ochraně osobních údajů (P8). Technické
+kroky P-B až P-G začnou po MTT 1.0.
+
 ## 7. Rizika
 
 - **Nepodepsaná licence** (oddíl 2) – do placeného spuštění opravit, jinak je
