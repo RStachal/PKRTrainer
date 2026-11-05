@@ -2,15 +2,15 @@ import { bestActionsForActionEv } from "../src/core/actionEv";
 import { buildPool } from "../src/core/drillEngine";
 import { withRealPricing } from "../src/core/preflop/realPricing";
 import { loadPreflopEquity } from "../src/core/preflopEquity";
-import type { ActionContext, Filters, Spot } from "../src/core/types";
+import type { ActionContext, ActionKey, Filters, Spot } from "../src/core/types";
 import { VILLAIN_ARCHETYPES, type VillainArchetype } from "../src/core/villain/archetypes";
 import { preflopVillainModel } from "../src/core/villain/preflopModel";
 import { createRangeStoreFromRangePack } from "../src/data/rangeStore";
 import { currentMttPreflopRangePack } from "../src/data/ranges/mttPreflopRangePacks";
 
 /**
- * Co režim REAL dělá s preflopovými all-in spoty (Agents/plan-gto-real-2026-11.md,
- * 4.6): jak často se proti typu změní nejlepší akce a o kolik.
+ * Co režim REAL dělá s preflopem (Agents/plan-gto-real-2026-11.md, 4.6): jak často
+ * se proti typu změní doporučená akce a o kolik, kde se to dá říct v BB.
  *
  *   npm run mtt:real-pricing
  *
@@ -19,19 +19,19 @@ import { currentMttPreflopRangePack } from "../src/data/ranges/mttPreflopRangePa
  * Ukázky jsou ke čtení: dá se u nich říct, jestli to tak hráč opravdu hraje.
  */
 
-const CONTEXTS: readonly ActionContext[] = ["PUSH_FOLD", "RFI", "VS_ALLIN", "VS_OPEN", "VS_4BET", "BVB", "SQUEEZE"];
+const CONTEXTS: readonly ActionContext[] = [
+  "RFI", "VS_OPEN", "VS_3BET", "VS_4BET", "PUSH_FOLD", "VS_ALLIN", "VS_LIMP", "BVB", "SQUEEZE",
+];
 const POOL = 1500;
 
 const store = createRangeStoreFromRangePack(currentMttPreflopRangePack("ON"));
 
-function sameActions(left: Spot["actionEvs"], right: Spot["actionEvs"]): boolean {
-  const a = bestActionsForActionEv(left!);
-  const b = bestActionsForActionEv(right!);
-  return a.length === b.length && a.every((key) => b.includes(key));
+function recommended(spot: Spot): readonly ActionKey[] {
+  return spot.actionEvs === undefined ? spot.strictCorrect : bestActionsForActionEv(spot.actionEvs);
 }
 
-function bestName(set: Spot["actionEvs"]): string {
-  return bestActionsForActionEv(set!).join("/");
+function same(left: readonly ActionKey[], right: readonly ActionKey[]): boolean {
+  return left.length === right.length && left.every((key) => right.includes(key));
 }
 
 await loadPreflopEquity();
@@ -47,35 +47,43 @@ for (const context of CONTEXTS) {
     positions: [], buckets: [], contexts: [context], ante: "ON", scoringMode: "LENIENT",
   };
   const spots = buildPool(1, context, filters, store, { maxSize: POOL })
-    .filter((spot) => spot.actionEvs !== undefined && spot.tableState.stackSetupId === undefined);
-  console.log(`\n${context}: ${spots.length} spotů s cenou`);
+    .filter((spot) => spot.tableState.stackSetupId === undefined);
+  console.log(`\n${context}: ${spots.length} spotů`);
   if (spots.length === 0) continue;
 
   const line = (name: string, price: (spot: Spot) => Spot): void => {
     let priced = 0;
     let flipped = 0;
+    let withEv = 0;
     let shift = 0;
     const samples: string[] = [];
     for (const spot of spots) {
       const real = price(spot);
       if (real.real === undefined) continue;
       priced += 1;
-      const best = Math.max(...real.actionEvs!.values.map((item) => item.evBb));
-      const baseline = Math.max(...real.real.gtoEvs.values.map((item) => item.evBb));
-      shift += Math.abs(best - baseline);
-      if (!sameActions(real.actionEvs, real.real.gtoEvs)) {
+      if (real.actionEvs !== undefined && real.real.gtoEvs !== undefined) {
+        withEv += 1;
+        const best = Math.max(...real.actionEvs.values.map((item) => item.evBb));
+        const baseline = Math.max(...real.real.gtoEvs.values.map((item) => item.evBb));
+        shift += Math.abs(best - baseline);
+      }
+      if (!same(recommended(real), real.real.gtoActions)) {
         flipped += 1;
         if (samples.length < 3) {
-          const values = real.actionEvs!.values.map((item) => `${item.action} ${item.evBb.toFixed(2)}`).join(", ");
           samples.push(
-            `      ${spot.heroPos} ${spot.effStack} BB ${spot.hand}: GTO ${bestName(real.real.gtoEvs)}, proti typu ${bestName(real.actionEvs)} (${values})`,
+            `      ${spot.heroPos} ${spot.effStack} BB ${spot.hand}: GTO ${real.real.gtoActions.join("/")}, proti typu ${recommended(real).join("/")}`,
           );
         }
       }
     }
-    if (priced === 0) return;
+    if (priced === 0) {
+      console.log(`  ${name.padEnd(10)} bez ocenění`);
+      return;
+    }
     const rate = ((flipped / priced) * 100).toFixed(1);
-    console.log(`  ${name.padEnd(10)} změna ${rate.padStart(5)} %  průměrný posun ${(shift / priced).toFixed(2)} BB`);
+    const share = ((priced / spots.length) * 100).toFixed(0);
+    const bb = withEv === 0 ? "" : `, průměrný posun ${(shift / withEv).toFixed(2)} BB`;
+    console.log(`  ${name.padEnd(10)} oceněno ${share.padStart(3)} %, změna ${rate.padStart(5)} %${bb}`);
     for (const sample of samples) console.log(sample);
   };
 

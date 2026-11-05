@@ -11,7 +11,8 @@ import { el } from "./trainerFrame";
  * v GTO, co proti tomuhle soupeři a proč, a že to stojí na modelu hráče.
  *
  * Hráč se má naučit, kdy a o kolik se od rovnováhy odchýlit, proto je GTO vidět vždy.
- * Heuristika se nesmí vydávat za solver, proto je u toho původ.
+ * Heuristika se nesmí vydávat za solver, proto je u toho původ. Číslo v BB je jen
+ * tam, kde se dá spočítat (all-in spoty); u open, 3-betu a callu model říká směr.
  */
 
 /** Rozdíl pod zaokrouhlením se neukazuje: „složí 78 % místo 78 %“ nic neříká. */
@@ -21,12 +22,12 @@ function moved(value: RealVersusGto): boolean {
 
 export function realComparison(doc: Document, spot: Spot): HTMLElement | null {
   const { real, actionEvs } = spot;
-  if (real === undefined || actionEvs === undefined) return null;
+  if (real === undefined) return null;
 
   const label = (key: ActionKey): string => spot.answers.find((answer) => answer.key === key)?.label ?? key;
   const names = (keys: readonly ActionKey[]): string => keys.map(label).join(" / ");
-  const gtoBest = bestActionsForActionEv(real.gtoEvs);
-  const realBest = bestActionsForActionEv(actionEvs);
+  const gtoBest = real.gtoActions;
+  const realBest = actionEvs === undefined ? spot.strictCorrect : bestActionsForActionEv(actionEvs);
   const same = gtoBest.length === realBest.length && gtoBest.every((key) => realBest.includes(key));
 
   const villain = real.villain;
@@ -42,11 +43,13 @@ export function realComparison(doc: Document, spot: Spot): HTMLElement | null {
     );
   } else {
     // O kolik se odchylka vyplácí proti tomuhle soupeři, ne proti rovnováze.
-    const evOf = (key: ActionKey): number => actionEvs.values.find((item) => item.action === key)?.evBb ?? 0;
-    const gain = formatSignedBb(evOf(realBest[0]) - evOf(gtoBest[0]), 2);
+    const evOf = (key: ActionKey): number | undefined => actionEvs?.values.find((item) => item.action === key)?.evBb;
+    const best = evOf(realBest[0]);
+    const baseline = evOf(gtoBest[0]);
+    const gain = best === undefined || baseline === undefined ? "" : `, ${formatSignedBb(best - baseline, 2)}`;
     comparison = localizedText(
-      `GTO: ${names(gtoBest)}. Against ${against}: ${names(realBest)}, ${gain}.`,
-      `GTO: ${names(gtoBest)}. Proti ${against}: ${names(realBest)}, ${gain}.`,
+      `GTO: ${names(gtoBest)}. Against ${against}: ${names(realBest)}${gain}.`,
+      `GTO: ${names(gtoBest)}. Proti ${against}: ${names(realBest)}${gain}.`,
     );
   }
 
@@ -55,21 +58,31 @@ export function realComparison(doc: Document, spot: Spot): HTMLElement | null {
 
   const whoEn = villain === undefined ? "The table" : `The ${archetypeName(villain).toLowerCase()}`;
   const whoCs = villain === undefined ? "Stůl" : archetypeName(villain);
+  const why = (english: string, czech: string): void => {
+    block.append(el(doc, "p", "dx-trainer__real-why", localizedText(`${whoEn} ${english}`, `${whoCs} ${czech}`)));
+  };
+  if (real.raiseShare !== undefined && moved(real.raiseShare)) {
+    const share = formatSharePercent(real.raiseShare.real);
+    const baseline = formatSharePercent(real.raiseShare.gto);
+    if (real.raiseKind === "3BET") {
+      why(`3-bets ${share} of hands instead of ${baseline}.`, `3-betuje ${share} rukou místo ${baseline}.`);
+    } else {
+      why(`opens ${share} of hands instead of ${baseline}.`, `otevírá ${share} rukou místo ${baseline}.`);
+    }
+  }
   if (real.foldFrequency !== undefined && moved(real.foldFrequency)) {
     const folds = formatSharePercent(real.foldFrequency.real);
     const baseline = formatSharePercent(real.foldFrequency.gto);
-    block.append(el(doc, "p", "dx-trainer__real-why", localizedText(
-      `${whoEn} folds ${folds} instead of ${baseline}.`,
-      `${whoCs} složí ${folds} místo ${baseline}.`,
-    )));
+    const to = real.foldAgainst === undefined ? "" : real.foldAgainst === "3BET" ? "3-bet" : "4-bet";
+    why(
+      `folds ${folds}${to === "" ? "" : ` to a ${to}`} instead of ${baseline}.`,
+      `${to === "" ? "" : `na ${to} `}složí ${folds} místo ${baseline}.`,
+    );
   }
   if (real.shoveShare !== undefined && moved(real.shoveShare)) {
     const share = formatSharePercent(real.shoveShare.real);
     const baseline = formatSharePercent(real.shoveShare.gto);
-    block.append(el(doc, "p", "dx-trainer__real-why", localizedText(
-      `${whoEn} goes all-in with ${share} of hands instead of ${baseline}.`,
-      `${whoCs} jde all-in s ${share} rukou místo ${baseline}.`,
-    )));
+    why(`goes all-in with ${share} of hands instead of ${baseline}.`, `jde all-in s ${share} rukou místo ${baseline}.`);
   }
   block.append(el(
     doc,

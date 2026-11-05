@@ -130,8 +130,6 @@ export function createPreflopTrainerView(
         rows.appendChild(row);
       }
       parts.push(rows);
-      const comparison = realComparison(doc, spot);
-      if (comparison !== null) parts.push(comparison);
     } else {
       parts.push(el(
         doc,
@@ -143,6 +141,9 @@ export function createPreflopTrainerView(
         ),
       ));
     }
+
+    const comparison = realComparison(doc, spot);
+    if (comparison !== null) parts.push(comparison);
 
     const language = getAppLanguage();
     parts.push(el(doc, "p", "dx-trainer__plan", preflopActionPlanForSpot(spot, language)));

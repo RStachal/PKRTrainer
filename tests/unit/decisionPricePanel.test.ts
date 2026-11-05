@@ -40,6 +40,7 @@ describe("decision price panel", () => {
     const real = (folds: number): Spot => ({
       ...spot("PUSH_FOLD"),
       real: {
+        gtoActions: [],
         gtoEvs: { source: "ALL_IN_EQUITY", unit: "BB", values: [], equivalentThresholdBb: 0.1, acceptableThresholdBb: 0.3 },
         foldFrequency: { real: folds, gto: 0.8 },
       },

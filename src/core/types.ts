@@ -260,12 +260,19 @@ export interface RealVersusGto {
 export interface SpotRealPricing {
   /** Soupeř ve hře; při prvním vstupu do potu bez tréninku proti typu chybí. */
   villain?: VillainArchetype;
-  /** EV proti chartům: co by platilo v GTO. */
-  gtoEvs: ActionEvSet<ActionKey>;
-  /** Jak často všichni složí shove hráče. */
+  /** Co by platilo v GTO. */
+  gtoActions: readonly ActionKey[];
+  /** EV proti chartům, kde se dá spočítat; u open, 3-betu a callu číslo není, jen směr. */
+  gtoEvs?: ActionEvSet<ActionKey>;
+  /** Jak často všichni složí akci hráče. */
   foldFrequency?: RealVersusGto;
+  /** Na co skládají, když to není shove ani open. */
+  foldAgainst?: "3BET" | "4BET";
   /** Jak široko soupeř sám jde all-in, podíl všech kombinací. */
   shoveShare?: RealVersusGto;
+  /** Jak široko soupeř zvýšil, podíl všech kombinací. */
+  raiseShare?: RealVersusGto;
+  raiseKind?: "OPEN" | "3BET";
 }
 
 export interface Spot {

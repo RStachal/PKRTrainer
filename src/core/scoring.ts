@@ -120,7 +120,10 @@ export function grade(spot: Spot, chosen: ActionKey, mode: ScoringMode): Grade {
     correct,
     acceptable: acceptable.slice(),
     strict: strict.slice(),
-    recommended: actionEv ? [...actionEv.bestActions] : buildRecommended(strict, acceptable),
+    // V REAL je GTO akce přijatelná, ale doporučuje se odchylka proti soupeři.
+    recommended: actionEv
+      ? [...actionEv.bestActions]
+      : spot.real !== undefined ? strict.slice() : buildRecommended(strict, acceptable),
     explanationAvailable: hasExplanation(spot.explanation),
     ...(actionEv ? { actionEv } : {}),
   };

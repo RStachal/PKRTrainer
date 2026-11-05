@@ -128,8 +128,8 @@ export function createModePicker(
     ),
     // Dokud je to pravda, musí to tu stát: slibovat víc by byla lež.
     localizedText(
-      "Graded against the type in all-in spots so far; everything else follows GTO.",
-      "Proti typu se zatím hodnotí all-in spoty, ostatní podle GTO.",
+      "Preflop is graded against the type; limps, squeezes and postflop still follow GTO.",
+      "Preflop se hodnotí proti typu; limpy, squeeze a postflop zatím podle GTO.",
     ),
   );
   modes.append(gto.card, real.card);

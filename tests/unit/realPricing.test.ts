@@ -162,12 +162,12 @@ describe("spot oceněný proti stolu", () => {
       .toBeGreaterThan(jam(withRealPricing(spot, { mode: "REAL", focus: "WHALE" }, store)));
   });
 
-  it("nepřesahuje do spotů bez ceny a do scénářů s ICM", () => {
-    const open = generateSpot(mulberry32(3), "VS_3BET", makeFilters({ ante: "OFF", contexts: ["VS_3BET"] }), store);
-    expect(open).not.toBeNull();
-    if (open!.actionEvs === undefined) {
-      expect(withRealPricing(open!, { mode: "REAL", focus: "WHALE" }, store)).toBe(open);
-    }
+  it("nepřesahuje do spotů, které model neumí, a do scénářů s ICM", () => {
+    // Limp model nemá: ani cenu all-inu, ani jeden krok nad chartem.
+    const limp = generateSpot(mulberry32(3), "VS_LIMP", makeFilters({ ante: "OFF", contexts: ["VS_LIMP"] }), store);
+    expect(limp).not.toBeNull();
+    expect(limp!.actionEvs).toBeUndefined();
+    expect(withRealPricing(limp!, { mode: "REAL", focus: "WHALE" }, store)).toBe(limp);
     const [spot] = pricedSpots("PUSH_FOLD");
     const icm = { ...spot, tableState: { ...spot.tableState, stackSetupId: "ICM" } };
     expect(withRealPricing(icm, { mode: "REAL", focus: "WHALE" }, store)).toBe(icm);
@@ -242,6 +242,7 @@ describe("relace a vyhodnocení v REAL", () => {
       },
       real: {
         villain: "ROCK",
+        gtoActions: ["FOLD"],
         gtoEvs: {
           source: "ALL_IN_EQUITY", unit: "BB", equivalentThresholdBb: 0.1, acceptableThresholdBb: 0.3,
           values: [{ action: "JAM" as ActionKey, evBb: -0.5 }, { action: "FOLD" as ActionKey, evBb: 0 }],
@@ -268,7 +269,7 @@ describe("relace a vyhodnocení v REAL", () => {
     const spot = {
       answers: [{ key: "JAM", label: "Jam" }, { key: "FOLD", label: "Fold" }],
       actionEvs: evs(2),
-      real: { gtoEvs: evs(1.8), foldFrequency: { real: 0.701, gto: 0.702 } },
+      real: { gtoActions: ["JAM"], gtoEvs: evs(1.8), foldFrequency: { real: 0.701, gto: 0.702 } },
     } as unknown as Spot;
     const block = realComparison(document, spot)!;
     expect(block.querySelector(".dx-trainer__real-line")?.textContent).toBe("GTO i proti tomuhle stolu: Jam.");
